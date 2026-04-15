@@ -1,0 +1,640 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import re
+from typing import Any, Optional
+from jinja2 import Environment, StrictUndefined
+
+from coder.costeer.evolving_strategy import (
+    MultiProcessEvolvingStrategy,
+)
+from coder.costeer.knowledge_management import (
+    CoSTEERQueriedKnowledge,
+    CoSTEERQueriedKnowledgeV2,
+)
+from factors.coder.config import FACTOR_COSTEER_SETTINGS
+from factors.coder.factor import FactorFBWorkspace, FactorTask
+from core.prompts import Prompts
+from core.template import CodeTemplate
+from llm.config import LLM_SETTINGS
+from llm.client import LocalLLMBackend
+from core.utils import multiprocessing_wrapper
+from core.conf import RD_AGENT_SETTINGS
+from log import logger
+
+code_template = CodeTemplate(template_path=Path(__file__).parent / "template.jinjia2")
+implement_prompts = Prompts(file_path=Path(__file__).parent / "prompts.yaml")
+
+#* untuk FactorCoSTEER
+# tradisional = full LLM generate kode Python
+class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.num_loop = 0
+        self.haveSelected = False
+
+
+    def error_summary(
+        self,
+        target_task: FactorTask,
+        queried_former_failed_knowledge_to_render: list,
+        queried_similar_error_knowledge_to_render: list,
+    ) -> str:
+        error_summary_system_prompt = (
+            Environment(undefined=StrictUndefined)
+            .from_string(implement_prompts["evolving_strategy_error_summary_v2_system"])
+            .render(
+                scenario=self.scen.get_scenario_all_desc(target_task),
+                factor_information_str=target_task.get_task_information(),
+                code_and_feedback=queried_former_failed_knowledge_to_render[-1].get_implementation_and_feedback_str(),
+            )
+            .strip("\n")
+        )
+        for _ in range(10):  # max attempt to reduce the length of error_summary_user_prompt
+            error_summary_user_prompt = (
+                Environment(undefined=StrictUndefined)
+                .from_string(implement_prompts["evolving_strategy_error_summary_v2_user"])
+                .render(
+                    queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                )
+                .strip("\n")
+            )
+            if (
+                LocalLLMBackend().build_messages_and_calculate_token(
+                    user_prompt=error_summary_user_prompt, system_prompt=error_summary_system_prompt
+                )
+                < LLM_SETTINGS.chat_token_limit
+            ):
+                break
+            elif len(queried_similar_error_knowledge_to_render) > 0:
+                queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
+        error_summary_critics = LocalLLMBackend(
+            use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
+        ).build_messages_and_create_chat_completion(
+            user_prompt=error_summary_user_prompt, system_prompt=error_summary_system_prompt, json_mode=False
+        )
+        return error_summary_critics
+
+    # generate kode untuk SATU faktor task
+    def implement_one_task(
+        self,
+        target_task: FactorTask,
+        queried_knowledge: CoSTEERQueriedKnowledge,
+    ) -> str:
+        target_factor_task_information = target_task.get_task_information()
+
+        # Knowledge dari CosSTEER
+        queried_similar_successful_knowledge = (
+            queried_knowledge.task_to_similar_task_successful_knowledge[target_factor_task_information]
+            if queried_knowledge is not None
+            else []
+        )  # A list, [success task implement knowledge]
+
+        if isinstance(queried_knowledge, CoSTEERQueriedKnowledgeV2):
+            queried_similar_error_knowledge = (
+                queried_knowledge.task_to_similar_error_successful_knowledge[target_factor_task_information]
+                if queried_knowledge is not None
+                else {}
+            )  # A dict, {{error_type:[[error_imp_knowledge, success_imp_knowledge],...]},...}
+        else:
+            queried_similar_error_knowledge = {}
+
+        queried_former_failed_knowledge = (
+            queried_knowledge.task_to_former_failed_traces[target_factor_task_information][0]
+            if queried_knowledge is not None
+            else []
+        )
+
+        queried_former_failed_knowledge_to_render = queried_former_failed_knowledge
+
+        latest_attempt_to_latest_successful_execution = queried_knowledge.task_to_former_failed_traces[
+            target_factor_task_information
+        ][1]
+
+        system_prompt = (
+            Environment(undefined=StrictUndefined)
+            .from_string(
+                implement_prompts["evolving_strategy_factor_implementation_v1_system"],
+            )
+            .render(
+                scenario=self.scen.get_scenario_all_desc(target_task, filtered_tag="feature"),
+                queried_former_failed_knowledge=queried_former_failed_knowledge_to_render,
+            )
+        )
+        
+        queried_similar_successful_knowledge_to_render = queried_similar_successful_knowledge
+        queried_similar_error_knowledge_to_render = queried_similar_error_knowledge
+        
+        #* buid user prompt dengan semua knowledge -> check token count
+        for _ in range(10):
+            # Optional error summary
+            if (
+                isinstance(queried_knowledge, CoSTEERQueriedKnowledgeV2)
+                and FACTOR_COSTEER_SETTINGS.v2_error_summary
+                and len(queried_similar_error_knowledge_to_render) != 0
+                and len(queried_former_failed_knowledge_to_render) != 0
+            ):
+                error_summary_critics = self.error_summary(
+                    target_task,
+                    queried_former_failed_knowledge_to_render,
+                    queried_similar_error_knowledge_to_render,
+                )
+            else:
+                error_summary_critics = None
+            similar_successful_factor_description = ""
+            similar_successful_expression = ""
+            if len(queried_similar_successful_knowledge_to_render) > 0:
+                similar_successful_factor_description = queried_similar_successful_knowledge_to_render[0].target_task.get_task_description()
+                similar_successful_expression = self.extract_expr(queried_similar_successful_knowledge_to_render[0].implementation.code)
+            
+            user_prompt = (
+                Environment(undefined=StrictUndefined)
+                .from_string(
+                    implement_prompts["evolving_strategy_factor_implementation_v2_user"],
+                )
+                .render(
+                    # factor_information_str=target_factor_task_information,
+                    # queried_similar_successful_knowledge=queried_similar_successful_knowledge_to_render,
+                    # queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                    # error_summary_critics=error_summary_critics,
+                    # latest_attempt_to_latest_successful_execution=latest_attempt_to_latest_successful_execution,
+                    factor_information_str=target_task.get_task_description(),
+                    queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                    error_summary_critics=error_summary_critics,
+                    similar_successful_factor_description=similar_successful_factor_description,
+                    similar_successful_expression=similar_successful_expression,
+                    latest_attempt_to_latest_successful_execution=latest_attempt_to_latest_successful_execution,
+                )
+                .strip("\n")
+            )
+            if (
+                LocalLLMBackend().build_messages_and_calculate_token(user_prompt=user_prompt, system_prompt=system_prompt)
+                < LLM_SETTINGS.chat_token_limit
+            ):
+                break
+            elif len(queried_former_failed_knowledge_to_render) > 1:
+                queried_former_failed_knowledge_to_render = queried_former_failed_knowledge_to_render[1:]
+            elif len(queried_similar_successful_knowledge_to_render) > len(
+                queried_similar_error_knowledge_to_render,
+            ):
+                queried_similar_successful_knowledge_to_render = queried_similar_successful_knowledge_to_render[:-1]
+            elif len(queried_similar_error_knowledge_to_render) > 0:
+                queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
+        for _ in range(10):
+            try:
+                code = json.loads(
+                    LocalLLMBackend(
+                        use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
+                    ).build_messages_and_create_chat_completion(
+                        user_prompt=user_prompt, system_prompt=system_prompt, json_mode=True
+                    )
+                )["code"]
+                return code
+            except json.decoder.JSONDecodeError:
+                pass
+        else:
+            return ""  # return empty code if failed to get code after 10 attempts
+
+    # inject kode ke workspace masing-masing task
+    def assign_code_list_to_evo(self, code_list, evo):
+        for index in range(len(evo.sub_tasks)):
+            if code_list[index] is None:
+                continue
+            if evo.sub_workspace_list[index] is None:
+                evo.sub_workspace_list[index] = FactorFBWorkspace(target_task=evo.sub_tasks[index])
+            evo.sub_workspace_list[index].inject_code(**{"factor.py": code_list[index]})
+        return evo
+
+
+#! dipakai QuantaAlpha
+#* parsing template dulu, LLM hanya fix expression jika error
+qa_implement_prompts = Prompts(file_path=Path(__file__).parent / "qa_prompts.yaml")
+class FactorParsingStrategy(MultiProcessEvolvingStrategy):
+    """
+    Evolving strategy untuk AlphaAgent pipeline.
+
+    Run pertama: render template dari ekspresi (tanpa LLM).
+    Jika gagal: panggil LLM untuk perbaiki ekspresi.
+
+    Latent pipeline (llm_backend is not None):
+      - LLM calls menggunakan build_messages_and_run() dengan KV-cache
+      - KV dari construct step di-inject sebagai konteks awal
+      - KV akumulasi antar LLM calls dalam evolve loop
+      - Evolve berjalan sequential (bukan multiprocessing) karena
+        GPU tensor tidak bisa cross process boundaries
+      - last_kv property expose KV terakhir untuk downstream (feedback)
+    """
+
+    def __init__(self, *args,
+                 llm_backend: Optional[Any] = None,
+                 latent_steps: Optional[int] = None,
+                 temperature: Optional[float] = None,
+                 **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.num_loop = 0
+        self.haveSelected = False
+
+        # ── Latent pipeline state ────────────────────────────────────
+        self._llm_backend: Optional[Any] = llm_backend
+        self._past_kv: Optional[Any] = None        # KV input dari construct step
+        self._last_kv: Optional[Any] = None         # KV output terakhir
+        self._latent_steps: Optional[int] = latent_steps
+        self._temperature: Optional[float] = temperature
+
+    # ── Latent setters (dipanggil dari CoSTEER.develop) ──────────────
+
+    def set_llm_backend(self, backend: Any) -> None:
+        self._llm_backend = backend
+
+    def set_past_kv(self, kv: Optional[Any]) -> None:
+        """Set KV-cache dari construct step."""
+        self._past_kv = kv
+
+    @property
+    def last_kv(self) -> Optional[Any]:
+        """KV-cache output terakhir dari LLM call dalam evolve loop."""
+        return self._last_kv
+
+    @property
+    def _is_latent(self) -> bool:
+        """Apakah latent pipeline aktif."""
+        return (
+            self._llm_backend is not None
+            and hasattr(self._llm_backend, "build_messages_and_run")
+        )
+
+    # ── Helper: get backend for LLM calls ────────────────────────────
+
+    def _get_backend(self, use_cache: bool = True) -> LocalLLMBackend:
+        """Return shared llm_backend jika latent, else buat baru."""
+        if self._llm_backend is not None:
+            return self._llm_backend
+        return LocalLLMBackend(use_chat_cache=use_cache)
+
+    def _call_llm(self, user_prompt: str, system_prompt: str,
+                   json_mode: bool = True, reasoning_flag: bool = False) -> str:
+        """
+        Unified LLM call — auto-detect latent vs text-only.
+
+        Latent path: build_messages_and_run() dengan KV-cache.
+          - Menerima _past_kv (dari construct atau LLM call sebelumnya)
+          - Update _last_kv setelah call
+          - Mode kv_and_text: generate text DAN KV-cache
+
+        Text-only path: build_messages_and_create_chat_completion().
+          - Behavior identik dengan kode original
+        """
+        if self._is_latent:
+            result = self._llm_backend.build_messages_and_run(
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+                json_mode=json_mode,
+                past_key_values=self._past_kv,
+                mode="kv_and_text",
+                role="coder",
+                latent_steps=self._latent_steps,
+                temperature=self._temperature,
+            )
+            # Update KV state: chain ke LLM call berikutnya
+            self._last_kv = result.kv_cache
+            self._past_kv = result.kv_cache
+            logger.info(
+                f"[LatentCoder] mode=kv_and_text, "
+                f"has_kv={result.has_kv}, text_len={len(result.text or '')}"
+            )
+            return result.text or ""
+        else:
+            return LocalLLMBackend(
+                use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
+            ).build_messages_and_create_chat_completion(
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+                json_mode=json_mode,
+                reasoning_flag=reasoning_flag,
+            )
+
+    def error_summary(
+        self,
+        target_task: FactorTask,
+        queried_former_failed_knowledge_to_render: list,
+        queried_similar_error_knowledge_to_render: list,
+    ) -> str:
+        """Summarize errors from previous attempts. Latent-aware."""
+        error_summary_system_prompt = (
+            Environment(undefined=StrictUndefined)
+            .from_string(implement_prompts["evolving_strategy_error_summary_v2_system"])
+            .render(
+                scenario=self.scen.get_scenario_all_desc(target_task),
+                factor_information_str=target_task.get_task_information(),
+                code_and_feedback=queried_former_failed_knowledge_to_render[-1].get_implementation_and_feedback_str(),
+            )
+            .strip("\n")
+        )
+        for _ in range(10):
+            error_summary_user_prompt = (
+                Environment(undefined=StrictUndefined)
+                .from_string(implement_prompts["evolving_strategy_error_summary_v2_user"])
+                .render(
+                    queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                )
+                .strip("\n")
+            )
+            if (
+                self._get_backend().build_messages_and_calculate_token(
+                    user_prompt=error_summary_user_prompt, system_prompt=error_summary_system_prompt
+                )
+                < LLM_SETTINGS.chat_token_limit
+            ):
+                break
+            elif len(queried_similar_error_knowledge_to_render) > 0:
+                queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
+
+        return self._call_llm(
+            user_prompt=error_summary_user_prompt,
+            system_prompt=error_summary_system_prompt,
+            json_mode=False,
+        )
+
+    def extract_expr(self, code_str: str) -> str:
+        """Extract expr from code (expr = \"...\" or expr = '...')."""
+        pattern = r'expr\s*=\s*["\']([^"\']*)["\']'
+        match = re.search(pattern, code_str)
+        if match:
+            return match.group(1)
+        else:
+            return ""
+
+
+    def implement_one_task(
+        self,
+        target_task: FactorTask,
+        queried_knowledge: CoSTEERQueriedKnowledge,
+    ) -> str:
+        """Generate code for one factor task. First run: template; on error: give LLM feedback and cases."""
+        target_factor_task_information = target_task.get_task_information()
+
+        queried_similar_successful_knowledge = (
+            queried_knowledge.task_to_similar_task_successful_knowledge[target_factor_task_information]
+            if queried_knowledge is not None
+            else []
+        )
+
+        if isinstance(queried_knowledge, CoSTEERQueriedKnowledgeV2):
+            queried_similar_error_knowledge = (
+                queried_knowledge.task_to_similar_error_successful_knowledge[target_factor_task_information]
+                if queried_knowledge is not None
+                else {}
+            )  # A dict, {{error_type:[[error_imp_knowledge, success_imp_knowledge],...]},...}
+        else:
+            queried_similar_error_knowledge = {}
+
+        queried_former_failed_knowledge = (
+            queried_knowledge.task_to_former_failed_traces[target_factor_task_information][0]
+            if queried_knowledge is not None
+            else []
+        )
+
+        queried_former_failed_knowledge_to_render = queried_former_failed_knowledge
+
+        #* RUN PERTAMA langsung render template TANPA LLM
+        if len(queried_former_failed_knowledge) == 0:
+            rendered_code = code_template.render(
+                expression=target_task.factor_expression,
+                factor_name=target_task.factor_name
+            )
+            return rendered_code
+
+        #* RETRY(setelah gagal): panggil LLM untuk perbaiki
+        else:
+            latest_attempt_to_latest_successful_execution = queried_knowledge.task_to_former_failed_traces[
+                target_factor_task_information
+            ][1]
+
+            system_prompt = (
+                Environment(undefined=StrictUndefined)
+                .from_string(
+                    qa_implement_prompts["evolving_strategy_factor_implementation_v1_system"],
+                )
+                .render(
+                    scenario=self.scen.get_scenario_all_desc(target_task, filtered_tag="feature"),
+                )
+            )
+            queried_similar_successful_knowledge_to_render = queried_similar_successful_knowledge
+            queried_similar_error_knowledge_to_render = queried_similar_error_knowledge
+
+            for _ in range(10):
+                if (
+                    isinstance(queried_knowledge, CoSTEERQueriedKnowledgeV2)
+                    and FACTOR_COSTEER_SETTINGS.v2_error_summary
+                    and len(queried_similar_error_knowledge_to_render) != 0
+                    and len(queried_former_failed_knowledge_to_render) != 0
+                ):
+                    error_summary_critics = self.error_summary(
+                        target_task,
+                        queried_former_failed_knowledge_to_render,
+                        queried_similar_error_knowledge_to_render,
+                    )
+                else:
+                    error_summary_critics = None
+
+                similar_successful_factor_description = ""
+                similar_successful_expression = ""
+                if len(queried_similar_successful_knowledge_to_render) > 0:
+                    similar_successful_factor_description = queried_similar_successful_knowledge_to_render[-1].target_task.get_task_description()
+                    similar_successful_expression = self.extract_expr(queried_similar_successful_knowledge_to_render[-1].implementation.code)
+
+                user_prompt = (
+                    Environment(undefined=StrictUndefined)
+                    .from_string(
+                        qa_implement_prompts["evolving_strategy_factor_implementation_v2_user"],
+                    )
+                    .render(
+                        factor_information_str=target_task.get_task_description(),
+                        queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                        former_expression=self.extract_expr(queried_former_failed_knowledge_to_render[-1].implementation.code),
+                        former_feedback=queried_former_failed_knowledge_to_render[-1].feedback,
+                        error_summary_critics=error_summary_critics,
+                        similar_successful_factor_description=similar_successful_factor_description,
+                        similar_successful_expression=similar_successful_expression,
+                        latest_attempt_to_latest_successful_execution=latest_attempt_to_latest_successful_execution,
+                    )
+                    .strip("\n")
+                )
+
+                if (
+                    self._get_backend().build_messages_and_calculate_token(
+                        user_prompt=user_prompt, system_prompt=system_prompt
+                    )
+                    < LLM_SETTINGS.chat_token_limit
+                ):
+                    break
+                elif len(queried_former_failed_knowledge_to_render) > 1:
+                    queried_former_failed_knowledge_to_render = queried_former_failed_knowledge_to_render[1:]
+                elif len(queried_similar_successful_knowledge_to_render) > len(
+                    queried_similar_error_knowledge_to_render,
+                ):
+                    queried_similar_successful_knowledge_to_render = queried_similar_successful_knowledge_to_render[:-1]
+                elif len(queried_similar_error_knowledge_to_render) > 0:
+                    queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
+
+            for _ in range(10):
+                try:
+                    # Call LLM for new expression (latent or text-only)
+                    raw = self._call_llm(
+                        user_prompt=user_prompt,
+                        system_prompt=system_prompt,
+                        json_mode=True,
+                        reasoning_flag=False,
+                    )
+                    expr = json.loads(raw)["expr"]
+
+                    # Render code template with new expression
+                    rendered_code = code_template.render(
+                        expression=expr,
+                        factor_name=target_task.factor_name
+                    )
+                    return rendered_code
+
+                except json.decoder.JSONDecodeError:
+                    pass  # JSON parse failed, retry
+
+    def evolve(
+        self,
+        *,
+        evo,
+        queried_knowledge=None,
+        **kwargs,
+    ):
+        """Override evolve() untuk sequential mode saat latent aktif.
+
+        GPU tensor (KV-cache) tidak bisa cross process boundaries
+        via multiprocessing.Queue. Saat latent pipeline aktif,
+        jalankan implement_one_task secara sequential (n=1).
+        Text-only path tetap pakai multiprocessing seperti biasa.
+        """
+        from coder.costeer.evolvable_subjects import EvolvingItem
+
+        # Find tasks to evolve
+        to_be_finished_task_index = []
+        for index, target_task in enumerate(evo.sub_tasks):
+            target_task_desc = target_task.get_task_information()
+            if queried_knowledge is not None and target_task_desc in queried_knowledge.success_task_to_knowledge_dict:
+                evo.sub_workspace_list[index] = queried_knowledge.success_task_to_knowledge_dict[
+                    target_task_desc
+                ].implementation
+            elif (
+                queried_knowledge is None
+                or (
+                    target_task_desc not in queried_knowledge.success_task_to_knowledge_dict
+                    and target_task_desc not in queried_knowledge.failed_task_info_set
+                )
+            ):
+                to_be_finished_task_index.append(index)
+
+        # Selection: if over limit, select a subset
+        if self.settings.select_threshold < len(to_be_finished_task_index):
+            to_be_finished_task_index = self.select_one_round_tasks(
+                to_be_finished_task_index, evo, self.settings.select_threshold, queried_knowledge, self.scen
+            )
+
+        if self._is_latent:
+            # ── Latent: sequential mode ──────────────────────────────
+            # KV-cache accumulates across tasks: setiap task menerima
+            # KV dari task sebelumnya, sehingga model punya konteks
+            # dari semua expression fixes dalam satu evolve round.
+            result = []
+            for target_index in to_be_finished_task_index:
+                code = self.implement_one_task(evo.sub_tasks[target_index], queried_knowledge)
+                result.append(code)
+            logger.info(
+                f"[LatentCoder] Sequential evolve: {len(to_be_finished_task_index)} tasks, "
+                f"has_kv={self._last_kv is not None}"
+            )
+        else:
+            # ── Text-only: parallel mode (original behavior) ─────────
+            result = multiprocessing_wrapper(
+                [
+                    (self.implement_one_task, (evo.sub_tasks[target_index], queried_knowledge))
+                    for target_index in to_be_finished_task_index
+                ],
+                n=RD_AGENT_SETTINGS.multi_proc_n,
+            )
+
+        code_list = [None for _ in range(len(evo.sub_tasks))]
+        for index, target_index in enumerate(to_be_finished_task_index):
+            code_list[target_index] = result[index]
+
+        evo = self.assign_code_list_to_evo(code_list, evo)
+        evo.corresponding_selection = to_be_finished_task_index
+
+        return evo
+
+    def assign_code_list_to_evo(self, code_list, evo):
+        for index in range(len(evo.sub_tasks)):
+            if code_list[index] is None:
+                continue
+            if evo.sub_workspace_list[index] is None:
+                evo.sub_workspace_list[index] = FactorFBWorkspace(target_task=evo.sub_tasks[index])
+            evo.sub_workspace_list[index].inject_code(**{"factor.py": code_list[index]})
+        return evo
+    
+    
+    
+class FactorRunningStrategy(MultiProcessEvolvingStrategy):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.num_loop = 0
+        self.haveSelected = False
+
+
+    def implement_one_task(
+        self,
+        target_task: FactorTask,
+        queried_knowledge: CoSTEERQueriedKnowledge,
+    ) -> str:
+
+        rendered_code = code_template.render(
+            expression=target_task.factor_expression, 
+            factor_name=target_task.factor_name 
+        )
+        return rendered_code
+        
+    
+    def assign_code_list_to_evo(self, code_list, evo):
+        for index in range(len(evo.sub_tasks)):
+            if code_list[index] is None:
+                continue
+            if evo.sub_workspace_list[index] is None:
+                evo.sub_workspace_list[index] = FactorFBWorkspace(target_task=evo.sub_tasks[index])
+            evo.sub_workspace_list[index].inject_code(**{"factor.py": code_list[index]})
+        return evo
+    
+    
+    def evolve(
+        self,
+        *,
+        evo: EvolvingItem,
+        queried_knowledge: CoSTEERQueriedKnowledge | None = None,
+        **kwargs,
+    ) -> EvolvingItem:
+        # Find tasks to evolve
+        to_be_finished_task_index = []
+        for index, target_task in enumerate(evo.sub_tasks):
+            to_be_finished_task_index.append(index)
+
+        result = multiprocessing_wrapper(
+            [
+                (self.implement_one_task, (evo.sub_tasks[target_index], queried_knowledge))
+                for target_index in to_be_finished_task_index
+            ],
+            n=RD_AGENT_SETTINGS.multi_proc_n,
+        )
+        code_list = [None for _ in range(len(evo.sub_tasks))]
+        for index, target_index in enumerate(to_be_finished_task_index):
+            code_list[target_index] = result[index]
+
+        evo = self.assign_code_list_to_evo(code_list, evo)
+        evo.corresponding_selection = to_be_finished_task_index
+
+        return evo
