@@ -27,6 +27,8 @@ books/
 *.gguf
 
 # logs & runtime artifacts
+*.log
+*.jsonl
 backend/logs/
 backend/debug/logs/
 backend/workspace/
@@ -36,7 +38,6 @@ backend/factors/data_template/daily_pv*.h5
 # model checkpoints / cache
 .cache/
 huggingface/
-~/.cache/
 
 # IDE
 .vscode/
