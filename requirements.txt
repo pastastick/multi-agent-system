@@ -1,3 +1,46 @@
-vllm-cpu
+# ── LLM Inference ─────────────────────────────────────────────────────────────
+vllm
+transformers
 tiktoken
+accelerate
+sentencepiece
+
+# ── Data & Analysis ───────────────────────────────────────────────────────────
 numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+seaborn
+pandarallel
+joblib
+
+# ── Agent Framework ───────────────────────────────────────────────────────────
+rdagent
+langchain-community
+
+# ── API & Web ─────────────────────────────────────────────────────────────────
+requests
+python-dotenv
+fastapi
+uvicorn[standard]
+docker
+fire
+
+# ── Document & Image Processing ───────────────────────────────────────────────
+pymupdf
+pillow
+azure-ai-formrecognizer
+
+# ── Utilities ─────────────────────────────────────────────────────────────────
+pydantic
+pydantic-settings
+jinja2
+pyyaml
+rich
+tqdm
+filelock
+dill
+pyparsing
+fuzzywuzzy
+setuptools-scm

@@ -1,10 +1,78 @@
 [project]
 name = "ai-agent"
 version = "0.1.0"
-description = "Add your description here"
+description = "QuantaAlpha — Latent Multi-Agent System for quantitative factor mining"
 readme = "README.md"
 requires-python = ">=3.10"
+license = { text = "MIT" }
 dependencies = [
-    "numpy>=2.2.6",
+    # LLM Inference
+    "vllm",
+    "transformers",
     "tiktoken>=0.12.0",
+    "accelerate",
+    "sentencepiece",
+    # Data & Analysis
+    "numpy>=2.2.6",
+    "pandas",
+    "scipy",
+    "scikit-learn",
+    "matplotlib",
+    "seaborn",
+    "pandarallel",
+    "joblib",
+    # Agent Framework
+    "rdagent",
+    "langchain-community",
+    # API & Web
+    "requests",
+    "python-dotenv",
+    "fastapi",
+    "uvicorn[standard]",
+    "docker",
+    "fire",
+    # Document & Image Processing
+    "pymupdf",
+    "pillow",
+    "azure-ai-formrecognizer",
+    # Utilities
+    "pydantic",
+    "pydantic-settings",
+    "jinja2",
+    "pyyaml",
+    "rich",
+    "tqdm",
+    "filelock",
+    "dill",
+    "pyparsing",
+    "fuzzywuzzy",
+    "setuptools-scm",
 ]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+    "mypy",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]
