@@ -1,0 +1,45 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+.uv/
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+.env
+.env.*
+!.env.example
+
+# heavy
+books/
+*.pkl
+*.h5
+*.pt
+*.ckpt
+*.parquet
+*.db
+*.safetensors
+*.bin
+*.gguf
+
+# logs & runtime artifacts
+backend/logs/
+backend/debug/logs/
+backend/workspace/
+backend/__session__/
+backend/factors/data_template/daily_pv*.h5
+
+# model checkpoints / cache
+.cache/
+huggingface/
+~/.cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
