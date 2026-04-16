@@ -113,6 +113,24 @@ class _LatentMixin:
             return self.last_result.kv_cache
         return None
 
+    def __getstate__(self):
+        """Exclude unpicklable attributes saat rdagent logger.log_object() dipanggil.
+
+        llm_backend berisi PyTorch model dengan thread locks → tidak bisa di-pickle.
+        _past_kv dan last_result berisi GPU tensors → tidak bisa di-pickle.
+        Pola ini sama dengan LoopBase._non_picklable_attrs di utils/workflow.py.
+        """
+        state = self.__dict__.copy()
+        for key in ("llm_backend", "_past_kv", "last_result"):
+            state.pop(key, None)
+        return state
+
+    def __setstate__(self, state):
+        self.__dict__.update(state)
+        self.llm_backend = None
+        self._past_kv = None
+        self.last_result = None
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # LatentHypothesisGen

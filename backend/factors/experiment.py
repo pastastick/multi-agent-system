@@ -80,6 +80,22 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
     KONTEN teks yang masuk ke prompt.
     """
 
+    def get_runtime_environment(self) -> str:
+        """Override rdagent's get_runtime_environment() yang butuh conda.
+        Kita pakai venv, bukan conda — jadi generate deskripsi environment sendiri.
+        Output ini hanya teks informatif yang masuk ke background prompt LLM.
+        """
+        import sys
+        import subprocess
+        try:
+            pkgs = subprocess.check_output(
+                [sys.executable, "-m", "pip", "list", "--format=freeze"],
+                text=True, timeout=10
+            )
+        except Exception:
+            pkgs = "unavailable"
+        return f"Python {sys.version}\nExecutable: {sys.executable}\nInstalled packages:\n{pkgs}"
+
     def __init__(self, use_local: bool = True, *args, **kwargs):
         from rdagent.core.scenario import Scenario
         from factors.qlib_utils import get_data_folder_intro as local_get_data_folder_intro

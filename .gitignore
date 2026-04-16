@@ -44,3 +44,4 @@ huggingface/
 .idea/
 *.swp
 .DS_Store
+hf_data/*.zip

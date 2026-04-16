@@ -5,6 +5,7 @@ Maps alphaagent.log to rdagent.log so all alphaagent.log imports work.
 Provides AlphaAgent-specific APIs: log_trace_path, set_trace_path.
 """
 
+import pickle
 from pathlib import Path
 from rdagent.log import rdagent_logger as _rdagent_logger
 from rdagent.log.utils import LogColors
@@ -28,6 +29,19 @@ class _AlphaAgentLoggerWrapper:
         """Set new log trace path."""
         from rdagent.log.storage import FileStorage
         self._inner.storage = FileStorage(Path(path)) #*ubah path penyimpanan log
+
+    # ---------- Safe log_object (skip unpicklable) ----------
+    def log_object(self, obj, *, tag: str = "") -> None:
+        """Wrap rdagent log_object: skip gracefully if object can't be pickled.
+
+        Latent pipeline objects (coder, hypothesis_generator, etc.) hold
+        references to PyTorch models with thread locks — these can never
+        be pickled. Crashing the pipeline for debug logging is not worth it.
+        """
+        try:
+            self._inner.log_object(obj, tag=tag)
+        except (TypeError, pickle.PicklingError) as exc:
+            pass  # silently skip unpicklable objects
 
     # ---------- Delegate to rdagent_logger ----------
     def __getattr__(self, name):
