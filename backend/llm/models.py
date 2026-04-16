@@ -79,7 +79,7 @@ class ModelWrapper:
         with torch.no_grad():
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                torch_dtype=(torch.bfloat16 if torch.cuda.is_available() else torch.float32),
+                dtype=(torch.bfloat16 if torch.cuda.is_available() else torch.float32),
             )
         if len(self.tokenizer) != self.model.get_input_embeddings().weight.shape[0]:
             self.model.resize_token_embeddings(len(self.tokenizer))

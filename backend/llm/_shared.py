@@ -37,8 +37,19 @@ OutputMode = Literal["kv_only", "text_only", "kv_and_text"]  # mode output fleks
 # KV-cache helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
-def _past_length(past_key_values: Optional[KVCache]) -> int:
-    """Berapa token yang sudah ada di KV-cache."""
+def _past_length(past_key_values) -> int:
+    """Berapa token yang sudah ada di KV-cache.
+
+    Mendukung dua format:
+    - Legacy tuple: Tuple[Tuple[Tensor, Tensor], ...] (format lama HF)
+    - DynamicCache: objek Cache dari transformers >= 4.36 (Qwen3, dll.)
+    """
+    if past_key_values is None:
+        return 0
+    # New transformers Cache API (DynamicCache, StaticCache, etc.)
+    if hasattr(past_key_values, 'get_seq_length'):
+        return past_key_values.get_seq_length()
+    # Legacy tuple format
     if not past_key_values:
         return 0
     return past_key_values[0][0].shape[-2]

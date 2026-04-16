@@ -565,7 +565,7 @@ class _CoreEngine:
         with torch.no_grad():
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
-                torch_dtype=torch.bfloat16 if torch.cuda.is_available()
+                dtype=torch.bfloat16 if torch.cuda.is_available()
                              else torch.float32,
             )
 
@@ -657,6 +657,13 @@ class _CoreEngine:
         need_hidden: bool = True,
     ) -> Tuple[KVCache, Optional[torch.Tensor]]:
         """Satu forward pass. Return (past_kv_baru, last_hidden atau None)."""
+        # Transformers >= 4.36 (Qwen3) menggunakan DynamicCache API.
+        # KV-cache yang disimpan dari step sebelumnya mungkin masih format
+        # tuple lama — konversi ke DynamicCache sebelum di-pass ke model.
+        if isinstance(past_kv, tuple):
+            from transformers import DynamicCache
+            past_kv = DynamicCache.from_legacy_cache(past_kv)
+
         out = self.model(
             input_ids=input_ids,
             attention_mask=attn_mask,
@@ -669,7 +676,12 @@ class _CoreEngine:
         if need_hidden:
             # [B, seq, d] -> ambil posisi terakhir -> [B, d]
             last_hidden = out.hidden_states[-1][:, -1, :]
-        return out.past_key_values, last_hidden
+        # Konversi output DynamicCache → tuple agar semua code downstream
+        # (kv_truncate, kv_knn_filter, _kv_to_cpu, dll) tetap pakai format lama.
+        kv_out = out.past_key_values
+        if hasattr(kv_out, 'to_legacy_cache'):
+            kv_out = kv_out.to_legacy_cache()
+        return kv_out, last_hidden
 
     # ── Latent pass ──────────────────────────────────────────────────────────
 
@@ -734,7 +746,7 @@ class _CoreEngine:
         vecs: List[torch.Tensor] = []
 
         for _ in range(_n_steps):
-            latent_vec   = self.realigner.apply(last_hidden)  # [B, d]
+            latent_vec   = self.realigner.apply(last_hidden, self.model)  # [B, d]
             latent_embed = latent_vec.unsqueeze(1)             # [B, 1, d]
 
             if record_vecs:
@@ -797,6 +809,10 @@ class _CoreEngine:
                 strategy=self.knn_strategy,
             )
 
+        if isinstance(past_kv, tuple):
+            from transformers import DynamicCache
+            past_kv = DynamicCache.from_legacy_cache(past_kv)
+
         past_len      = _past_length(past_kv)
         ext_mask      = self._extend_mask(mask, past_len)
         cache_position = None
@@ -827,6 +843,8 @@ class _CoreEngine:
             text = self._strip_thinking(text)
 
         kv_out = out.past_key_values if return_kv else None
+        if kv_out is not None and hasattr(kv_out, 'to_legacy_cache'):
+            kv_out = kv_out.to_legacy_cache()
         return text, ids, generated_ids.unsqueeze(0), kv_out
 
     # ── Generation from existing KV (kv_and_text mode) ──────────────────
@@ -894,6 +912,10 @@ class _CoreEngine:
         prefix_ids = self._get_generation_prefix_ids(messages)
         prefix_len = prefix_ids.shape[-1]
 
+        if isinstance(past_kv, tuple):
+            from transformers import DynamicCache
+            past_kv = DynamicCache.from_legacy_cache(past_kv)
+
         past_len = _past_length(past_kv)
         mask = torch.ones(
             (1, past_len + prefix_len), dtype=torch.long, device=self.device,
@@ -925,6 +947,8 @@ class _CoreEngine:
             text = self._strip_thinking(text)
 
         kv_out = out.past_key_values if return_kv else None
+        if kv_out is not None and hasattr(kv_out, 'to_legacy_cache'):
+            kv_out = kv_out.to_legacy_cache()
         return text, prefix_ids, generated_ids.unsqueeze(0), kv_out
 
     @staticmethod
