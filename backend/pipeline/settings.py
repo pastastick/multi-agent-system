@@ -116,7 +116,11 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # karena harus "berpikir" lebih dalam sebelum generate ekspresi matematika.
     latent_steps_propose: Optional[int] = None
     latent_steps_construct: Optional[int] = None
-    latent_steps_coder: Optional[int] = None
+    # Coder: set ke 0 untuk skip latent virtual-token injection.
+    # Coder mengerjakan code generation (deterministic), bukan abstract reasoning
+    # — latent steps kurang berguna di sini dan memakan VRAM signifikan.
+    # Coder tetap menerima construct_kv sebagai past_key_values (konteks penuh).
+    latent_steps_coder: Optional[int] = 0
     latent_steps_feedback: Optional[int] = None
 
     # ── Latent realignment ───────────────────────────────────────────────
@@ -131,11 +135,31 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     enable_thinking: bool = False
 
     # ── KV-cache management ──────────────────────────────────────────────
-    # Max KV tokens yang di-carry antar iterasi loop.
-    # Setelah feedback, KV di-truncate ke jumlah ini sebelum
-    # dikirim ke propose step di iterasi berikutnya.
-    # Terlalu kecil: hilang konteks.  Terlalu besar: lambat + OOM.
-    kv_max_tokens: int = 2048
+    # PENTING: KV bertumbuh akumulatif per step dalam satu iterasi:
+    #   pipeline_kv → propose_kv → construct_kv → coder → feedback → pipeline_kv
+    # Setiap cap di bawah diterapkan di TRANSISI step-nya masing-masing,
+    # bukan global. Lihat loop.py untuk titik penerapannya.
+    #
+    # Estimasi ukuran KV (Qwen3-4B, bfloat16):
+    #   36 layers × 2 (K+V) × 32 heads × 128 head_dim × 2 bytes = 0.56 MB/token
+    #   1024 tok = 0.57 GB  |  1536 tok = 0.86 GB  |  2048 tok = 1.15 GB
+
+    # Cap KV antar ITERASI (feedback → propose berikutnya).
+    # Diterapkan di loop.py feedback() setelah summarizer selesai.
+    kv_max_tokens: int = 1024
+
+    # Cap propose_kv sebelum dikirim ke construct step.
+    # Diterapkan di loop.py factor_construct() SEBELUM convert() dipanggil.
+    propose_kv_max_tokens: int = 1024
+
+    # Cap construct_kv setelah construct selesai, sebelum dikirim ke coder.
+    # Diterapkan di loop.py factor_construct() SETELAH convert() selesai.
+    construct_kv_max_tokens: int = 1536
+
+    # Cap tambahan (berlapis) untuk construct_kv saat masuk ke coder.
+    # Berlaku di factor_calculate sebagai safety net.
+    # None = tidak ada cap tambahan di titik ini.
+    coder_kv_max_tokens: Optional[int] = 2048
 
     # Simpan KV-cache ke disk (untuk resume/debugging).
     # Pakai KVCacheStore di llm/client.py.
@@ -156,7 +180,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Diterapkan transparan di _CoreEngine sebelum setiap forward pass
     # yang menerima past_kv dari step sebelumnya.
     knn_enabled: bool = True
-    knn_percentage: float = 0.8       # fraksi token yang dipertahankan (0.0-1.0)
+    knn_percentage: float = 0.5       # fraksi token yang dipertahankan (0.0-1.0)
     knn_min_keep: int = 5             # minimum token terbaru selalu dipertahankan
     knn_strategy: str = "top"         # "top" (paling mirip), "bottom", "random"
 

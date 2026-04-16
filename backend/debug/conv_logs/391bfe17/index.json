@@ -1,0 +1,15 @@
+[
+  {
+    "step": 0,
+    "role": "coder_eval",
+    "file": "step_000_coder_eval.pt",
+    "has_text": true,
+    "has_hidden": false,
+    "has_latent": false,
+    "metadata": {
+      "mode": "text_only",
+      "model": "Qwen/Qwen3-4B",
+      "ts": 1776326745.5138052
+    }
+  }
+]

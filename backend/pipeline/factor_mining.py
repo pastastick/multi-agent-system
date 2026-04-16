@@ -20,6 +20,9 @@ from functools import wraps #* agar nama fungsi asli terjaga
 import time
 import ctypes
 import os
+# PYTORCH_ALLOC_CONF harus di-set sebelum CUDA pertama kali diinisialisasi.
+# setdefault: tidak override jika user sudah set di shell sebelum launch.
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 import pickle
 from pipeline.settings import ALPHA_AGENT_FACTOR_PROP_SETTING 
 from pipeline.planning import generate_parallel_directions
@@ -741,6 +744,13 @@ def run_evolution_loop(
                 # fallback ke planning KV dari external agent.
                 task_kv = task.get("parent_kv") or _planning_kv
 
+                # KV-cache mungkin sudah di-offload ke CPU setelah task sebelumnya.
+                # Pindah kembali ke GPU sebelum dipakai oleh model inference.
+                if task_kv is not None:
+                    import torch as _torch
+                    from llm._shared import _kv_to_device
+                    task_kv = _kv_to_device(task_kv, _torch.device('cuda'))
+
                 traj_data = _run_evolution_task(
                     task=task,
                     directions=directions,
@@ -781,6 +791,18 @@ def run_evolution_loop(
                             )
                     except Exception:
                         pass
+
+                # CPU offload: pindah KV-cache trajectory ke CPU untuk bebaskan GPU VRAM.
+                # KV-cache Qwen3-4B 28-layer × 2048 token = ~1.87 GB GPU.
+                # Tanpa ini, VRAM habis di task berikutnya (direction=1, mutation, crossover).
+                import gc as _gc, torch as _torch
+                if trajectory.kv_cache is not None:
+                    from llm._shared import _kv_to_cpu
+                    trajectory.kv_cache = _kv_to_cpu(trajectory.kv_cache)
+                del traj_data  # lepas referensi GPU tensors dari pipeline run
+                _gc.collect()
+                _torch.cuda.empty_cache()
+                logger.info("[GPU] trajectory KV-cache di-offload ke CPU, GPU cache dibersihkan")
 
             except Exception as e:
                 logger.error(f"Task failed: {e}")

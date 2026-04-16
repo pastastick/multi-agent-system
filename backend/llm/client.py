@@ -758,15 +758,24 @@ class _CoreEngine:
                 dtype=torch.long, device=self.device,
             )
 
+            # Konversi tuple → DynamicCache sebelum model call (Qwen3 requirement)
+            past_for_model = past
+            if isinstance(past_for_model, tuple):
+                from transformers import DynamicCache
+                past_for_model = DynamicCache.from_legacy_cache(past_for_model)
+
             out = self.model(
                 inputs_embeds=latent_embed,
                 attention_mask=latent_mask,
-                past_key_values=past,
+                past_key_values=past_for_model,
                 use_cache=True,
                 output_hidden_states=True,
                 return_dict=True,
             )
-            past        = out.past_key_values
+            # Konversi output DynamicCache → tuple agar downstream code konsisten
+            past = out.past_key_values
+            if hasattr(past, 'to_legacy_cache'):
+                past = past.to_legacy_cache()
             last_hidden = out.hidden_states[-1][:, -1, :]
 
         latent_tensor = None

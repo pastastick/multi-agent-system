@@ -45,3 +45,5 @@ huggingface/
 *.swp
 .DS_Store
 hf_data/*.zip
+
+git_ignore_folder/
