@@ -2,6 +2,7 @@ import uuid
 from pathlib import Path
 from typing import List, Tuple, Union
 
+import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine
 
@@ -45,10 +46,13 @@ class KnowledgeMetaData:
 
         """
         if self.embedding is None:
-            self.embedding = LocalLLMBackend().create_embedding(input_content=self.content)
+            raw_embedding = LocalLLMBackend().create_embedding(input_content=self.content)
+            self.embedding = np.array(raw_embedding).reshape(-1).tolist()
 
     def from_dict(self, data: dict):
         for key, value in data.items():
+            if key == "embedding" and value is not None:
+                value = np.array(value).reshape(-1).tolist()
             setattr(self, key, value)
         return self
 
