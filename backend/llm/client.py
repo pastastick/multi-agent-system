@@ -521,6 +521,50 @@ class LLMResult:
 # BAGIAN 6 -- CORE ENGINE
 # =============================================================================
 
+_MODEL_CACHE: Dict[Tuple[str, str], Tuple[Any, Any]] = {}
+_MODEL_CACHE_LOCK = threading.Lock()
+
+
+def _load_or_get_cached_model(
+    model_name: str,
+    device: torch.device,
+) -> Tuple[Any, Any]:
+    """Return shared (model, tokenizer) for (model_name, device).
+
+    Why: Multiple LocalLLMBackend instances on the same GPU previously
+    each reloaded ~8 GB of Qwen3-4B weights, causing OOM. This cache
+    keeps a single copy per (model, device) and hands it to every
+    _CoreEngine that asks for the same pair.
+    """
+    cache_key = (model_name, str(device))
+    with _MODEL_CACHE_LOCK:
+        cached = _MODEL_CACHE.get(cache_key)
+        if cached is not None:
+            print(f"[CoreEngine] Reusing cached {model_name} on {device}")
+            return cached
+
+        print(f"[CoreEngine] Loading {model_name} on {device} ...")
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        _ensure_pad_token(tokenizer)
+
+        with torch.no_grad():
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name,
+                dtype=torch.bfloat16 if torch.cuda.is_available()
+                             else torch.float32,
+            )
+
+        if len(tokenizer) != model.get_input_embeddings().weight.shape[0]:
+            model.resize_token_embeddings(len(tokenizer))
+
+        model.to(device).eval()
+        if hasattr(model.config, "use_cache"):
+            model.config.use_cache = True
+
+        _MODEL_CACHE[cache_key] = (model, tokenizer)
+        return model, tokenizer
+
+
 class _CoreEngine:
     """
     Engine internal: model HuggingFace + tokenizer + realigner.
@@ -531,6 +575,9 @@ class _CoreEngine:
         Untuk pipeline QuantaAlpha yang parse JSON output, thinking harus dimatikan
         dengan menambahkan '/no_think' di system prompt (instruksi resmi Qwen3).
       - Chat template Qwen3 sudah proper -- tidak perlu fallback manual.
+
+    Model+tokenizer di-share via _MODEL_CACHE: instance kedua dengan
+    (model_name, device) yang sama tidak reload bobot dari disk/GPU.
     """
 
     QWEN3_NOTHINK_SUFFIX = "/no_think"
@@ -558,23 +605,7 @@ class _CoreEngine:
         self.knn_min_keep   = knn_min_keep
         self.knn_strategy   = knn_strategy
 
-        print(f"[CoreEngine] Loading {model_name} on {device} ...")
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
-        _ensure_pad_token(self.tokenizer)
-
-        with torch.no_grad():
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_name,
-                dtype=torch.bfloat16 if torch.cuda.is_available()
-                             else torch.float32,
-            )
-
-        if len(self.tokenizer) != self.model.get_input_embeddings().weight.shape[0]:
-            self.model.resize_token_embeddings(len(self.tokenizer))
-
-        self.model.to(device).eval()
-        if hasattr(self.model.config, "use_cache"):
-            self.model.config.use_cache = True
+        self.model, self.tokenizer = _load_or_get_cached_model(model_name, device)
 
         self.realigner: Optional[LatentRealigner] = None
         if latent_steps > 0:
