@@ -75,8 +75,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     # Setelah load, atribut ini jadi None — caller harus re-inject.
     _non_picklable_attrs = (
         "_pipeline_kv",
-        "_saved_construct_kv",
-        "_truncated_construct_kv",
         "llm_backend",
         "hypothesis_generator",
         "factor_constructor",
@@ -185,10 +183,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             # Baca per-step latent_steps dan temperature dari PROP_SETTING.
             # getattr() dengan fallback agar tetap kompatibel jika settings
             # belum punya field latent (misal BaseFacSetting).
-            self._kv_max_tokens = getattr(PROP_SETTING, 'kv_max_tokens', 1024)
-            self._coder_kv_max_tokens = getattr(PROP_SETTING, 'coder_kv_max_tokens', 2048)
-            self._propose_kv_max_tokens = getattr(PROP_SETTING, 'propose_kv_max_tokens', 1024)
-            self._construct_kv_max_tokens = getattr(PROP_SETTING, 'construct_kv_max_tokens', 1536)
+            self._kv_max_tokens = getattr(PROP_SETTING, 'kv_max_tokens', 2048)  
 
             # ── Instantiate proposal classes ─────────────────────────────
             # When llm_backend is provided, use Latent variants with
@@ -285,57 +280,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         logger.info(f"Loaded AlphaAgentLoop, backtest in {'local' if use_local else 'Docker'}")
         return instance
 
-    # ── KV-cache memory helpers ──────────────────────────────────────────
-
-    @staticmethod
-    def _safe_truncate_clone(kv, max_tokens):
-        """
-        Truncate KV-cache ke max_tokens token terakhir, lalu clone hasilnya.
-
-        kv_truncate() mengembalikan VIEW (slice) dari tensor original — tensor
-        asli tetap hidup di GPU selama view ada. clone() membuat salinan
-        independen sehingga tensor original bisa di-free tanpa risiko.
-
-        Dipanggil di setiap transisi step sebelum KV dikirim ke step berikutnya.
-        Returns kv apa adanya jika max_tokens None, kv None, atau kv_truncate
-        tidak tersedia.
-        """
-        if kv is None or kv_truncate is None:
-            return kv
-        if max_tokens is not None:
-            kv = kv_truncate(kv, max_tokens)
-        return tuple(tuple(t.clone() for t in layer) for layer in kv)
-
-    def _release_kv(self, *objs) -> None:
-        """
-        Null-kan referensi KV-cache GPU dari objs, lalu bersihkan VRAM.
-
-        Masalah "zombie tensor":
-          - Python refcount turun ke 0 → tensor eligible untuk dihapus
-          - Tapi CUDA allocator menyimpan blok di "free pool" internal
-          - nvidia-smi masih lapor memori sebagai terpakai
-          - gc.collect() → destruktor PyTorch jalan → tensor masuk free pool
-          - torch.cuda.empty_cache() → free pool dikosongkan ke CUDA driver
-
-        Urutan WAJIB: gc.collect() DULU, baru empty_cache().
-        Kalau terbalik, destruktor belum jalan → free pool kosong → tidak ada
-        yang dikembalikan ke driver.
-
-        Bisa dipanggil tanpa argumen (hanya gc+cuda) atau dengan objek-objek
-        yang atribut last_result dan _past_kv-nya akan di-null-kan dulu.
-        """
-        for obj in objs:
-            if obj is None:
-                continue
-            if hasattr(obj, 'last_result'):
-                obj.last_result = None
-            if hasattr(obj, '_past_kv'):
-                obj._past_kv = None
-        import gc as _gc
-        import torch as _torch
-        _gc.collect()
-        _torch.cuda.empty_cache()
-
     @measure_time
     @stop_event_check
     def factor_propose(self, prev_out: dict[str, Any]):
@@ -379,36 +323,14 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         """Construct multiple factors from the hypothesis."""
         _mon = _get_monitor() if _HAS_MONITOR else None
         with logger.tag("r"):
-            # Truncate + clone propose_kv SEBELUM dikirim ke construct.
-            # Tanpa ini: propose_kv (~2-3K tok) masuk ke attention construct,
-            # lalu construct menambahkan prompt+output-nya sendiri → KV membengkak.
-            propose_kv = self._safe_truncate_clone(
-                self.hypothesis_generator.last_kv, self._propose_kv_max_tokens
-            )
-            self.factor_constructor.set_past_kv(propose_kv)
+            self.factor_constructor.set_past_kv(self.hypothesis_generator.last_kv)
 
             if _mon:
-                _mon.track_kv_cache(propose_kv, step_name="construct_input", source="propose_kv")
-
-            # Bebaskan propose refs SEBELUM construct dimulai.
-            # propose_kv yang dikirim ke factor_constructor sudah merupakan
-            # clone independen — original di hypothesis_generator bisa dibebaskan.
-            # Ini membebaskan ~1-2 GB VRAM sebelum construct menambahkan miliknya.
-            self._release_kv(self.hypothesis_generator)
+                _mon.track_kv_cache(self.hypothesis_generator.last_kv,
+                                    step_name="construct_input", source="propose_kv")
 
             with _mon.track_step("factor_construct") if _mon else _nullcontext():
                 factor = self.factor_constructor.convert(prev_out["factor_propose"], self.trace)
-
-            # Truncate + clone construct_kv segera setelah construct selesai.
-            # Disimpan ke _truncated_construct_kv untuk dipakai factor_calculate.
-            # Tanpa clone: kv_truncate() membuat view → original tidak bisa dibebaskan.
-            self._truncated_construct_kv = self._safe_truncate_clone(
-                getattr(self.factor_constructor, 'last_kv', None),
-                self._construct_kv_max_tokens,
-            )
-
-            # Bebaskan construct refs — hanya _truncated_construct_kv yang dibutuhkan.
-            self._release_kv(self.factor_constructor)
 
             logger.log_object(factor.sub_tasks, tag="experiment generation")
 
@@ -427,22 +349,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         _mon = _get_monitor() if _HAS_MONITOR else None
         with logger.tag("d"):  # develop
 
-            # construct_kv sudah di-truncate + di-clone di factor_construct
-            # (di sana juga hypothesis_generator dan factor_constructor sudah dibebaskan).
-            # Tambahkan satu lapis cap coder_kv_max_tokens sebagai safety net.
-            construct_kv = self._safe_truncate_clone(
-                getattr(self, '_truncated_construct_kv', None),
-                self._coder_kv_max_tokens,
-            )
-
-            # Simpan untuk feedback fallback: jika coder tidak menghasilkan KV
-            # (latent_steps_coder=0 → text_only → kv_cache=None), feedback
-            # menggunakan construct_kv ini sebagai konteks latent penggantinya.
-            self._saved_construct_kv = construct_kv
-            self._truncated_construct_kv = None   # clear ref lama, sudah dipindah ke _saved
-
-            # Null-kan _pipeline_kv (sudah di-absorb oleh propose di awal iterasi ini).
-            self._pipeline_kv = None
+            construct_kv = getattr(self.factor_constructor, 'last_kv', None)
 
             if _mon:
                 _mon.track_kv_cache(construct_kv, step_name="calculate_input", source="construct_kv")
@@ -487,9 +394,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         _mon = _get_monitor() if _HAS_MONITOR else None
 
         coder_kv = getattr(self.coder, 'last_kv', None)
-        # factor_constructor.last_result sudah di-free di factor_calculate.
-        # Gunakan _saved_construct_kv (truncated + cloned) sebagai fallback.
-        construct_kv = getattr(self, '_saved_construct_kv', None)
+        construct_kv = getattr(self.factor_constructor, 'last_kv', None)
         feedback_input_kv = coder_kv if coder_kv is not None else construct_kv
         self.summarizer.set_past_kv(feedback_input_kv)
         if feedback_input_kv is not None:
@@ -518,14 +423,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 from llm._shared import _past_length
                 before_len = _past_length(feedback_kv)
 
-            _raw_pipeline_kv = kv_truncate(feedback_kv, self._kv_max_tokens)
-            # Clone WAJIB: kv_truncate() membuat VIEW dari tensor summarizer.
-            # Jika summarizer.last_result di-free sebelum clone, view menjadi
-            # invalid → crash atau korupsi saat iterasi berikutnya dijalankan.
-            # Setelah clone, _pipeline_kv berdiri sendiri dan summarizer bisa dibebaskan.
-            self._pipeline_kv = tuple(
-                tuple(t.clone() for t in layer) for layer in _raw_pipeline_kv
-            )
+            self._pipeline_kv = kv_truncate(feedback_kv, self._kv_max_tokens)
             logger.info(
                 f"[LatentPipeline] Chained feedback KV → next propose "
                 f"(truncated to {self._kv_max_tokens} tokens)"
@@ -602,19 +500,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             logger.info(f"Saved factors to library: {library_path} (phase={evolution_phase})")
         except Exception as e:
             logger.warning(f"Failed to save factors to library: {e}")
-
-        # Bebaskan semua KV GPU dari iterasi ini.
-        # Hanya _pipeline_kv (sudah di-clone di atas) yang dibawa ke iterasi berikutnya.
-        # summarizer.last_result berisi feedback KV penuh (~2-6K tok, ~1-3 GB).
-        # coder evolving_strategy menyimpan _last_kv dan _past_kv yang sama tensornya.
-        self._release_kv(self.summarizer)
-        _coder_es = getattr(self.coder, 'evolving_strategy', None)
-        if _coder_es is not None:
-            for _attr in ('_last_kv', '_past_kv', 'last_result'):
-                if hasattr(_coder_es, _attr):
-                    setattr(_coder_es, _attr, None)
-        self._saved_construct_kv = None
-
+    
     def _get_trajectory_data(self) -> dict[str, Any]:
         """
         Get trajectory data for the current round (used by evolution controller).
