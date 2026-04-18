@@ -48,3 +48,6 @@ huggingface/
 hf_data/*.zip
 
 git_ignore_folder/
+
+## output agent
+~
