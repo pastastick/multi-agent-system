@@ -30,7 +30,8 @@ books/
 *.log
 *.jsonl
 backend/logs/
-backend/debug/logs/
+backend/log/
+backend/debug/conv_logs/
 backend/workspace/
 backend/__session__/
 backend/factors/data_template/daily_pv*.h5
