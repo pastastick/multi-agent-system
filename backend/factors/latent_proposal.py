@@ -161,11 +161,17 @@ class LatentHypothesisGen(_LatentMixin, AlphaAgentHypothesisGen):
     def _get_scenario_desc(self) -> str:
         """Compact scenario untuk latent mode.
 
-        Pakai get_compact_desc("propose") yang hanya menyertakan
-        background + strategy dengan section markers — jauh lebih
-        ringkas dari get_scenario_all_desc(). Prompt lebih pendek
-        menyisakan kapasitas KV-cache untuk latent reasoning.
+        Dua cabang:
+          - past_kv is None (first iter, fresh pipeline): compact desc penuh
+            (background + strategy dengan section markers).
+          - past_kv is not None (iter >1): past_kv berasal dari feedback step
+            iter sebelumnya yang sudah encode background via
+            get_compact_desc("feedback") = background + experiment_setting.
+            Jadi background DUPLIKAT di KV — cukup kirim strategy saja.
+            Prompt lebih pendek = lebih banyak kapasitas KV + hemat VRAM.
         """
+        if self._past_kv is not None and getattr(self.scen, "_strategy", None):
+            return f"<scenario_strategy>\n{self.scen.strategy}\n</scenario_strategy>"
         if hasattr(self.scen, "get_compact_desc"):
             return self.scen.get_compact_desc("propose")
         # Fallback jika scenario bukan QlibAlphaAgentScenario
@@ -293,15 +299,17 @@ class LatentFeedback(_LatentMixin, AlphaAgentQlibFactorHypothesisExperiment2Feed
     def _get_scenario_desc(self) -> str:
         """Compact scenario untuk latent feedback mode.
 
-        Pakai get_compact_desc("feedback") yang menyertakan background +
-        experiment_setting dengan section markers — cukup untuk konteks
-        evaluasi tanpa overhead full scenario dump.
-
-        Background sudah ada di KV-cache dari construct step (di-chain
-        via _past_kv), tapi disertakan kembali di teks karena feedback
-        perlu menyatakan ulang konteks market secara eksplisit untuk
-        evaluasi yang tepat.
+        Dua cabang:
+          - past_kv is None (rare — feedback biasanya selalu di-chain): compact
+            penuh (background + experiment_setting).
+          - past_kv is not None (normal path): past_kv dari construct membawa
+            chain background (dari propose compact) + interface/output_format
+            (dari construct compact). Background DUPLIKAT → kirim
+            experiment_setting saja. Hemat token yang tidak perlu untuk
+            re-encode background di setiap iterasi feedback.
         """
+        if self._past_kv is not None and getattr(self.scen, "_experiment_setting", None):
+            return f"<scenario_experiment>\n{self.scen.experiment_setting}\n</scenario_experiment>"
         if hasattr(self.scen, "get_compact_desc"):
             return self.scen.get_compact_desc("feedback")
         return self.scen.get_scenario_all_desc()

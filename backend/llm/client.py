@@ -656,14 +656,12 @@ class _CoreEngine:
         past_kv    : Optional[KVCache],
         need_hidden: bool = True,
     ) -> Tuple[KVCache, Optional[torch.Tensor]]:
-        """Satu forward pass. Return (past_kv_baru, last_hidden atau None)."""
-        # Transformers >= 4.36 (Qwen3) menggunakan DynamicCache API.
-        # KV-cache yang disimpan dari step sebelumnya mungkin masih format
-        # tuple lama — konversi ke DynamicCache sebelum di-pass ke model.
-        if isinstance(past_kv, tuple):
-            from transformers import DynamicCache
-            past_kv = DynamicCache.from_legacy_cache(past_kv)
+        """Satu forward pass. Return (past_kv_baru, last_hidden atau None).
 
+        past_kv diasumsikan sudah DynamicCache (dinormalisasi di LocalLLMBackend.run
+        entry). Engine internal bekerja penuh dalam format DynamicCache; konversi
+        ke tuple hanya dilakukan sekali di run() exit.
+        """
         out = self.model(
             input_ids=input_ids,
             attention_mask=attn_mask,
@@ -676,12 +674,7 @@ class _CoreEngine:
         if need_hidden:
             # [B, seq, d] -> ambil posisi terakhir -> [B, d]
             last_hidden = out.hidden_states[-1][:, -1, :]
-        # Konversi output DynamicCache → tuple agar semua code downstream
-        # (kv_truncate, kv_knn_filter, _kv_to_cpu, dll) tetap pakai format lama.
-        kv_out = out.past_key_values
-        if hasattr(kv_out, 'to_legacy_cache'):
-            kv_out = kv_out.to_legacy_cache()
-        return kv_out, last_hidden
+        return out.past_key_values, last_hidden
 
     # ── Latent pass ──────────────────────────────────────────────────────────
 
@@ -758,24 +751,15 @@ class _CoreEngine:
                 dtype=torch.long, device=self.device,
             )
 
-            # Konversi tuple → DynamicCache sebelum model call (Qwen3 requirement)
-            past_for_model = past
-            if isinstance(past_for_model, tuple):
-                from transformers import DynamicCache
-                past_for_model = DynamicCache.from_legacy_cache(past_for_model)
-
             out = self.model(
                 inputs_embeds=latent_embed,
                 attention_mask=latent_mask,
-                past_key_values=past_for_model,
+                past_key_values=past,
                 use_cache=True,
                 output_hidden_states=True,
                 return_dict=True,
             )
-            # Konversi output DynamicCache → tuple agar downstream code konsisten
             past = out.past_key_values
-            if hasattr(past, 'to_legacy_cache'):
-                past = past.to_legacy_cache()
             last_hidden = out.hidden_states[-1][:, -1, :]
 
         latent_tensor = None
@@ -818,10 +802,6 @@ class _CoreEngine:
                 strategy=self.knn_strategy,
             )
 
-        if isinstance(past_kv, tuple):
-            from transformers import DynamicCache
-            past_kv = DynamicCache.from_legacy_cache(past_kv)
-
         past_len      = _past_length(past_kv)
         ext_mask      = self._extend_mask(mask, past_len)
         cache_position = None
@@ -852,8 +832,6 @@ class _CoreEngine:
             text = self._strip_thinking(text)
 
         kv_out = out.past_key_values if return_kv else None
-        if kv_out is not None and hasattr(kv_out, 'to_legacy_cache'):
-            kv_out = kv_out.to_legacy_cache()
         return text, ids, generated_ids.unsqueeze(0), kv_out
 
     # ── Generation from existing KV (kv_and_text mode) ──────────────────
@@ -921,10 +899,6 @@ class _CoreEngine:
         prefix_ids = self._get_generation_prefix_ids(messages)
         prefix_len = prefix_ids.shape[-1]
 
-        if isinstance(past_kv, tuple):
-            from transformers import DynamicCache
-            past_kv = DynamicCache.from_legacy_cache(past_kv)
-
         past_len = _past_length(past_kv)
         mask = torch.ones(
             (1, past_len + prefix_len), dtype=torch.long, device=self.device,
@@ -956,8 +930,6 @@ class _CoreEngine:
             text = self._strip_thinking(text)
 
         kv_out = out.past_key_values if return_kv else None
-        if kv_out is not None and hasattr(kv_out, 'to_legacy_cache'):
-            kv_out = kv_out.to_legacy_cache()
         return text, prefix_ids, generated_ids.unsqueeze(0), kv_out
 
     @staticmethod
@@ -1236,6 +1208,14 @@ class LocalLLMBackend:
         with self._lock:
             result = LLMResult(mode=mode)
 
+            # ── Normalize past_kv ke DynamicCache (boundary masuk) ────
+            # Engine internal bekerja penuh dalam DynamicCache; konversi
+            # dilakukan SEKALI di sini (bukan di setiap method _CoreEngine)
+            # untuk menghindari alokasi wrapper berulang & fragmentasi.
+            if past_key_values is not None and isinstance(past_key_values, tuple):
+                from transformers import DynamicCache
+                past_key_values = DynamicCache.from_legacy_cache(past_key_values)
+
             # ── KNN filter logging ────────────────────────────────────
             if (self._engine.knn_enabled
                     and past_key_values is not None
@@ -1329,6 +1309,14 @@ class LocalLLMBackend:
                         "ts"   : time.time(),
                     },
                 ))
+
+            # ── Konversi DynamicCache → tuple (boundary keluar) ────────
+            # Downstream code (loop.py, evolution, trajectory) pakai format
+            # tuple legacy. Konversi dilakukan SEKALI di sini, bukan di tiap
+            # method _CoreEngine. `to_legacy_cache()` cuma restructure
+            # reference list — tidak menyalin tensor.
+            if result.kv_cache is not None and hasattr(result.kv_cache, 'to_legacy_cache'):
+                result.kv_cache = result.kv_cache.to_legacy_cache()
 
             # ── In-memory KV-cache truncation ─────────────────────────
             if result.kv_cache is not None and self._kv_max_seq_len is not None:

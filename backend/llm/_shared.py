@@ -92,15 +92,19 @@ def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
     KV shape per layer: (key, value) each [batch, n_heads, seq_len, head_dim]
     Slices on dim=-2 (seq_len).
 
-    Useful for preventing unbounded KV-cache growth during long pipelines.
+    Preserves input format: tuple in → tuple out, DynamicCache in → DynamicCache out.
     """
     seq_len = _past_length(kv)
     if seq_len <= max_tokens:
         return kv
-    return tuple(
+    truncated = tuple(
         tuple(t[..., -max_tokens:, :] for t in layer)
         for layer in kv
     )
+    if hasattr(kv, 'to_legacy_cache'):
+        from transformers import DynamicCache
+        return DynamicCache.from_legacy_cache(truncated)
+    return truncated
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -254,11 +258,11 @@ def _kv_select_indices(kv: KVCache, indices: torch.Tensor) -> KVCache:
     Pilih posisi tertentu dari setiap layer KV-cache.
 
     Args:
-        kv      : Standard HF KV-cache tuple.
+        kv      : KV-cache (tuple atau DynamicCache).
         indices : [batch, k] indeks posisi yang akan dipertahankan.
 
     Returns:
-        Filtered KV-cache tuple.
+        Filtered KV-cache dalam format yang sama dengan input.
     """
     k = indices.shape[1]
     filtered = []
@@ -271,7 +275,11 @@ def _kv_select_indices(kv: KVCache, indices: torch.Tensor) -> KVCache:
             torch.gather(key, dim=2, index=idx_exp),
             torch.gather(value, dim=2, index=idx_exp),
         ))
-    return tuple(filtered)
+    filtered = tuple(filtered)
+    if hasattr(kv, 'to_legacy_cache'):
+        from transformers import DynamicCache
+        return DynamicCache.from_legacy_cache(filtered)
+    return filtered
 
 
 # ─────────────────────────────────────────────────────────────────────────────
