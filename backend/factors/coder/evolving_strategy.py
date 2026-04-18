@@ -273,7 +273,8 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         return LocalLLMBackend(use_chat_cache=use_cache)
 
     def _call_llm(self, user_prompt: str, system_prompt: str,
-                   json_mode: bool = True, reasoning_flag: bool = False) -> str:
+                   json_mode: bool = True, reasoning_flag: bool = False,
+                   temperature: Optional[float] = None) -> str:
         """
         Unified LLM call — auto-detect latent vs text-only.
 
@@ -294,7 +295,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 mode="kv_and_text",
                 role="coder",
                 latent_steps=self._latent_steps,
-                temperature=self._temperature,
+                temperature=temperature if temperature is not None else self._temperature,
             )
             # Update KV state: chain ke LLM call berikutnya
             self._last_kv = result.kv_cache
@@ -399,6 +400,8 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
 
         #* RUN PERTAMA langsung render template TANPA LLM
         if len(queried_former_failed_knowledge) == 0:
+            logger.info(f"[LatentCoder] first-run template path, expr={target_task.factor_expression}")
+            
             rendered_code = code_template.render(
                 expression=target_task.factor_expression,
                 factor_name=target_task.factor_name
@@ -407,6 +410,8 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
 
         #* RETRY(setelah gagal): panggil LLM untuk perbaiki
         else:
+            logger.info(f"[LatentCoder] retry path, former_expr={self.extract_expr(queried_former_failed_knowledge[-1].implementation.code)}")
+            
             latest_attempt_to_latest_successful_execution = queried_knowledge.task_to_former_failed_traces[
                 target_factor_task_information
             ][1]
@@ -478,18 +483,48 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 elif len(queried_similar_error_knowledge_to_render) > 0:
                     queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
 
-            for _ in range(10):
+            # Capture former_expr untuk validasi anti-mirroring
+            former_expr_norm = self.extract_expr(
+                queried_former_failed_knowledge_to_render[-1].implementation.code
+            ).replace(" ", "").lower()
+
+            # Temperature escalation: 0.3 → 0.7 → 1.0 setelah mirror / JSON fail
+            temp_schedule = [None, 0.7, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+            mirror_hint = ""
+            last_expr = None
+
+            for attempt in range(10):
                 try:
-                    # Call LLM for new expression (latent or text-only)
+                    # Inject mirror-warning ke user prompt bila attempt sebelumnya mirror
+                    effective_user_prompt = user_prompt + mirror_hint
+
                     raw = self._call_llm(
-                        user_prompt=user_prompt,
+                        user_prompt=effective_user_prompt,
                         system_prompt=system_prompt,
                         json_mode=True,
                         reasoning_flag=False,
+                        temperature=temp_schedule[attempt],
                     )
                     expr = json.loads(raw)["expr"]
+                    expr_norm = expr.replace(" ", "").lower()
 
-                    # Render code template with new expression
+                    # Validasi: tolak kalau identik dengan former_expr
+                    if expr_norm == former_expr_norm:
+                        last_expr = expr
+                        mirror_hint = (
+                            f"\n\n**PREVIOUS ATTEMPT RETURNED THE SAME EXPRESSION "
+                            f"({last_expr}) — THIS IS A FAILURE. You MUST change operator, "
+                            f"window size, or base variable. Try a structurally different "
+                            f"expression now.**"
+                        )
+                        logger.warning(
+                            f"[LatentCoder] attempt {attempt+1}: LLM mirrored former_expr, retrying with temp={temp_schedule[min(attempt+1, 9)]}"
+                        )
+                        continue
+
+                    logger.info(
+                        f"[LatentCoder] attempt {attempt+1}: new expr accepted (diff from former)"
+                    )
                     rendered_code = code_template.render(
                         expression=expr,
                         factor_name=target_task.factor_name
@@ -497,7 +532,26 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     return rendered_code
 
                 except json.decoder.JSONDecodeError:
-                    pass  # JSON parse failed, retry
+                    logger.warning(f"[LatentCoder] attempt {attempt+1}: JSON parse failed, retrying")
+                    continue
+
+            # Fallback: semua 10 attempt mirror/fail → pakai expr terakhir dengan
+            # warning agar pipeline tetap jalan (evaluator akan reject kalau beneran bad)
+            if last_expr is not None:
+                logger.error(
+                    f"[LatentCoder] all 10 attempts mirrored former_expr, "
+                    f"falling back to last output: {last_expr}"
+                )
+                return code_template.render(
+                    expression=last_expr,
+                    factor_name=target_task.factor_name
+                )
+            # Kalau semua JSON fail, return template dengan former (biarkan evaluator tolak)
+            logger.error("[LatentCoder] all 10 attempts failed JSON parse, using former_expr")
+            return code_template.render(
+                expression=former_expr_norm,
+                factor_name=target_task.factor_name
+            )
 
     def evolve(
         self,

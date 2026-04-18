@@ -131,6 +131,12 @@ evolving_strategy_factor_implementation_v1_system: |-
 
   **Your task is to correct or rewrite your expression based on your former latest attempt below which consists of your former expression and code feedback.**
 
+  **CRITICAL RULES (violation = auto-reject):**
+  1. Your new expression MUST be structurally DIFFERENT from `former_expression`. Returning an identical or trivially-renamed expression means no learning happened and will be rejected.
+  2. Analyze the feedback FIRST — identify the root cause of failure (wrong operator, wrong window size, missing scaling, wrong variable, etc.), then propose a concrete modification that addresses THAT root cause.
+  3. Prefer meaningful structural changes: swap operators (e.g., TS_STD → TS_MAD), adjust windows (10 → 20/60), combine with a different base variable ($close → $volume/$high/$low), add normalization (RANK/ZSCORE), or change the factor family entirely if feedback indicates the formulation is unsalvageable.
+  4. Do NOT simply add `+ 1e-8`, wrap with `ABS()`, or rename variables as your "fix" — those are cosmetic and will be rejected.
+
   **Only the following operations are allowed in expression:**
   ### **Cross-sectional Functions**
   - **RANK(A)**: Ranking of each element in the cross-sectional dimension of A.
