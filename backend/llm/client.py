@@ -1008,7 +1008,7 @@ class LocalLLMBackend:
 
     def __init__(
         self,
-        model_name     : str   = "Qwen/Qwen3-4B",
+        model_name     : str   = "Qwen/Qwen3-14B",
         device         : str   = "cuda",
         latent_steps   : int   = 0,
         use_realign    : bool  = False,
@@ -1017,6 +1017,7 @@ class LocalLLMBackend:
         store_kv       : bool  = False,
         conv_dir       : str   = "./debug/conv_logs",
         kv_dir         : str   = "./debug/kv_store",
+        output_log_dir : str   = "./debug/llm_outputs",
         max_new_tokens : int   = 2048,
         temperature    : float = 0.6,
         top_p          : float = 0.95,
@@ -1058,6 +1059,21 @@ class LocalLLMBackend:
         )
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
         self._kv_store = KVCacheStore(kv_dir)        if store_kv    else None
+
+        # ── Per-call LLM output log (append-mode JSONL) ──────────────────
+        # Ditulis SEGERA setelah text di-generate (bukan di akhir loop),
+        # sehingga crash tengah jalan pun tetap meninggalkan jejak output
+        # LLM yang sudah tereksekusi. Berguna untuk debugging proposal/
+        # coder yang gagal validasi berulang.
+        try:
+            _log_dir = Path(output_log_dir)
+            _log_dir.mkdir(parents=True, exist_ok=True)
+            _date_stamp = time.strftime("%Y%m%d_%H%M%S")
+            self._output_log_path: Optional[Path] = (
+                _log_dir / f"llm_outputs_{_date_stamp}.jsonl"
+            )
+        except Exception:
+            self._output_log_path = None
 
     # ── Kompatibilitas APIBackend ──────────────────────────────────────────
 
@@ -1324,6 +1340,16 @@ class LocalLLMBackend:
                 result.hidden_last = last_hidden
                 result.latent_vecs = latent_vecs
 
+            # ── Simpan output LLM ke disk SEGERA (flush per-call) ─────
+            # Tulis append-mode sebelum proses lain — kalau pipeline crash
+            # di tensor logging / KV store, snapshot text tetap persisten.
+            if result.text is not None and mode != "kv_only":
+                self._save_output_snapshot(
+                    conv_id=_conv_id, step=step, role=role, mode=mode,
+                    messages=messages, text=result.text,
+                    temperature=_temp, has_past_kv=past_key_values is not None,
+                )
+
             # ── Logging tensor ─────────────────────────────────────────
             if self._conv_mgr is not None:
                 self._conv_mgr.save(ConvRecord(
@@ -1520,31 +1546,103 @@ class LocalLLMBackend:
             embeddings.append(pooled.squeeze(0).float().cpu().tolist())
         return embeddings
 
+    def _save_output_snapshot(
+        self,
+        conv_id     : str,
+        step        : int,
+        role        : str,
+        mode        : str,
+        messages    : List[Dict[str, str]],
+        text        : str,
+        temperature : float,
+        has_past_kv : bool,
+    ) -> None:
+        """Append satu baris JSONL berisi output LLM ke file log.
+
+        Ditulis dengan flush eksplisit supaya isi segera ada di disk
+        (bukan ditahan di buffer) — kalau pipeline crash tengah iterasi,
+        riwayat output yang sudah tereksekusi tetap bisa di-review.
+
+        Tidak pernah raise: exception di-swallow agar logging tidak
+        mematikan pipeline utama.
+        """
+        if self._output_log_path is None:
+            return
+        try:
+            # Ambil user/system prompt dari messages list. Tidak truncate —
+            # prompt bisa panjang, tapi JSONL satu baris per record aman.
+            sys_prompt = ""
+            usr_prompt = ""
+            for m in messages:
+                if m.get("role") == "system" and not sys_prompt:
+                    sys_prompt = m.get("content", "") or ""
+                elif m.get("role") == "user":
+                    usr_prompt = m.get("content", "") or ""
+            record = {
+                "ts"          : time.strftime("%Y-%m-%d %H:%M:%S"),
+                "conv_id"     : conv_id,
+                "step"        : step,
+                "role"        : role,
+                "mode"        : mode,
+                "temperature" : temperature,
+                "has_past_kv" : has_past_kv,
+                "text_len"    : len(text),
+                "text"        : text,
+                "system_prompt": sys_prompt,
+                "user_prompt" : usr_prompt,
+            }
+            with open(self._output_log_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+                f.flush()
+                os.fsync(f.fileno())  # paksa write ke disk, tahan crash
+        except Exception:
+            # Logging TIDAK boleh mematikan pipeline
+            pass
+
     @staticmethod
     def _fix_json(text: str) -> str:
-        """Ekstrak + perbaiki JSON. Diadaptasi dari client.py."""
+        """Ekstrak + perbaiki JSON dari output LLM.
+
+        Mencari pasangan {…} dari kanan ke kiri supaya JSON yang muncul
+        di akhir response (setelah penjelasan panjang) tetap bisa diekstrak.
+        """
         t = text.strip()
         fence = re.search(r"```json\s*(.*?)```", t, re.DOTALL | re.IGNORECASE)
         if fence:
             t = fence.group(1).strip()
-        s, e = t.find("{"), t.rfind("}")
-        if s != -1 and e > s:
-            t = t[s: e + 1]
-        try:
-            json.loads(t)
-            return t
-        except json.JSONDecodeError:
-            pass
-        fixed = t
-        for cmd in ["text","frac","left","right","times","cdot",
-                    "sqrt","sum","prod","int","alpha","beta","gamma","delta"]:
-            fixed = re.sub(rf"(?<!\\)\\({cmd})", r"\\\\\1", fixed)
-        fixed = re.sub(r"(?<!\\)\\([_\{}\[\]])", r"\\\\\1", fixed)
-        try:
-            json.loads(fixed)
-            return fixed
-        except json.JSONDecodeError:
-            return text
+
+        def _try_latex_fix(s: str) -> Optional[str]:
+            fixed = s
+            for cmd in ["text","frac","left","right","times","cdot",
+                        "sqrt","sum","prod","int","alpha","beta","gamma","delta"]:
+                fixed = re.sub(rf"(?<!\\)\\({cmd})", r"\\\\\1", fixed)
+            fixed = re.sub(r"(?<!\\)\\([_\{}\[\]])", r"\\\\\1", fixed)
+            try:
+                json.loads(fixed)
+                return fixed
+            except json.JSONDecodeError:
+                return None
+
+        # Scan dari kanan ke kiri: coba setiap pasangan } … { yang valid
+        end = len(t)
+        while end > 0:
+            e = t.rfind("}", 0, end)
+            if e == -1:
+                break
+            s = t.rfind("{", 0, e + 1)
+            if s == -1:
+                break
+            candidate = t[s:e + 1]
+            try:
+                json.loads(candidate)
+                return candidate
+            except json.JSONDecodeError:
+                fixed = _try_latex_fix(candidate)
+                if fixed is not None:
+                    return fixed
+            end = e  # geser pointer sebelum } ini, coba pasangan berikutnya
+
+        return text
 
 
 # =============================================================================
@@ -1591,7 +1689,7 @@ class LocalChatSession:
 # =============================================================================
 
 def get_local_backend(
-    model_name  : str  = "Qwen/Qwen3-4B",
+    model_name  : str  = "Qwen/Qwen3-14B",
     latent_steps: int  = 0,
     use_realign : bool = False,
     device      : str  = "cuda",
