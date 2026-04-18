@@ -286,17 +286,12 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
           - Behavior identik dengan kode original
         """
         if self._is_latent:
-            # Jika latent_steps=0 (koder tidak perlu virtual-token injection),
-            # gunakan text_only: skip latent_pass, langsung generate_text.
-            # Konteks tetap penuh — construct_kv diterima via past_key_values.
-            # kv_and_text hanya dipakai kalau latent_steps > 0 (ada reasoning tambahan).
-            _coder_mode = "text_only" if (self._latent_steps == 0) else "kv_and_text"
             result = self._llm_backend.build_messages_and_run(
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,
                 past_key_values=self._past_kv,
-                mode=_coder_mode,
+                mode="kv_and_text",
                 role="coder",
                 latent_steps=self._latent_steps,
                 temperature=self._temperature,
@@ -305,7 +300,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             self._last_kv = result.kv_cache
             self._past_kv = result.kv_cache
             logger.info(
-                f"[LatentCoder] mode={_coder_mode}, "
+                f"[LatentCoder] mode=kv_and_text, "
                 f"has_kv={result.has_kv}, text_len={len(result.text or '')}"
             )
             return result.text or ""
