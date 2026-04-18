@@ -101,7 +101,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
 
     # Model HuggingFace untuk LocalLLMBackend.
     # Di-load sekali, di-share ke semua step dalam satu loop.
-    latent_model_name: str = "Qwen/Qwen3-4B"
+    latent_model_name: str = "Qwen/Qwen3-14B"
     latent_device: str = "cuda"
 
     # ── Latent reasoning steps ───────────────────────────────────────────
@@ -180,6 +180,11 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Debug: simpan tensor (input_ids, output_ids, hidden_last) ke disk.
     log_tensors: bool = True
 
+    # Debug: simpan output text LLM per-call ke JSONL.
+    # Ditulis SEGERA setelah generation (flush + fsync) — sehingga
+    # crash tengah iterasi pun tetap meninggalkan jejak lengkap.
+    output_log_dir: str = "./debug/llm_outputs"
+
     # ── Factory methods ──────────────────────────────────────────────────
 
     def get_latent_steps_for(self, step: str) -> Optional[int]:
@@ -230,6 +235,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
             knn_percentage=self.knn_percentage,
             knn_min_keep=self.knn_min_keep,
             knn_strategy=self.knn_strategy,
+            output_log_dir=self.output_log_dir,
         )
 
 

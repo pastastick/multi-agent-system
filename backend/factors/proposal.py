@@ -628,36 +628,48 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
         #* Detect duplicated sub-expressions
         flag = False    # semua faktor valid?
         expression_duplication_prompt = None    # feedback duplikasi(kumulatif)
+        _MAX_CONSTRUCT_RETRIES = 6
+        _construct_retries = 0
         while True:
             if flag:
                 break   #* semua faktor sudah valid -> keluar loop
-                
+
+            if _construct_retries >= _MAX_CONSTRUCT_RETRIES:
+                # Setelah N retry tanpa perbaikan, terima faktor yang sudah
+                # valid (jika ada) atau paksa keluar agar pipeline tidak macet.
+                logger.warning(
+                    f"[Construct] max retries ({_MAX_CONSTRUCT_RETRIES}) reached, "
+                    f"accepting {len(proposed_names)} valid factor(s) found so far."
+                )
+                break
+            _construct_retries += 1
+
             #* panggil LLM => generate faktor
             resp = self._call_llm(user_prompt, system_prompt, json_flag)
-            
+
             try:
                 # parse JSON => dict
                 response_dict = robust_json_parse(resp)
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON parse failed: {e}, retrying...")
                 continue
-            
+
             proposed_names = [] # nama faktor yang valid
             proposed_exprs = [] # ekspresi faktor yang valid
-            
+
             for i, factor_name in enumerate(response_dict):
                 factor_data = response_dict.get(factor_name, {})
                 if not isinstance(factor_data, dict):
                     continue
-                
+
                 expr = factor_data.get("expression", "")
                 description = factor_data.get("description", "")
                 formulation = factor_data.get("formulation", "")
                 variables = factor_data.get("variables", {})
-                
+
                 #* Check if expression is parsable
                 if not self.factor_regulator.is_parsable(expr):
-                    logger.info(f"Failed to parse expr: {expr}, retrying...")
+                    logger.warning(f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: not parsable: {expr!r}")
                     break
                 
                 #   evaluate() melakukan:
@@ -706,6 +718,13 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                 # If expression has problems, regenerate with feedback
                 # check acceptability (duplikasi + kompleksity)
                 if not self.factor_regulator.is_expression_acceptable(eval_dict):
+                    logger.warning(
+                        f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: "
+                        f"not acceptable: {expr!r} | "
+                        f"dup_size={eval_dict.get('duplicated_subtree_size')}, "
+                        f"sl={eval_dict.get('symbol_length')}, "
+                        f"base_feat={eval_dict.get('num_base_features')}"
+                    )
                     
                     # Calculate ratios for feedback
                     num_all_nodes = eval_dict['num_all_nodes']

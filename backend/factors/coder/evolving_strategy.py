@@ -488,6 +488,23 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 queried_former_failed_knowledge_to_render[-1].implementation.code
             ).replace(" ", "").lower()
 
+            # Snapshot KV-cache SEBELUM retry loop. Setiap attempt harus fresh
+            # dari baseline yang sama — kalau kita biarkan _past_kv terupdate
+            # oleh attempt gagal, KV menumpuk prompt+jawaban buruk dan attempt
+            # berikutnya bisa collapse (text_len=0) karena self-contradiction
+            # antara mirror_hint dan KV yang sudah menyimpan jawaban mirror.
+            kv_baseline = self._past_kv
+
+            # Paksa model output HANYA JSON — tanpa penjelasan sebelumnya.
+            # Qwen3-4B di large KV context (>13k tok) cenderung generate verbose
+            # analysis dulu baru JSON di akhir. _fix_json bisa gagal ekstrak
+            # kalau JSON tertimbun di teks panjang.
+            json_only_suffix = (
+                "\n\nOUTPUT INSTRUCTION: Respond with ONLY the raw JSON object "
+                "on a single line. No explanation, no preamble, no analysis. "
+                'Example: {"expr": "TS_STD($close, 20)"}'
+            )
+
             # Temperature escalation: 0.3 → 0.7 → 1.0 setelah mirror / JSON fail
             temp_schedule = [None, 0.7, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
             mirror_hint = ""
@@ -495,8 +512,12 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
 
             for attempt in range(10):
                 try:
+                    # Reset KV ke baseline pre-retry supaya attempt ini tidak
+                    # melihat prompt/jawaban dari attempt sebelumnya.
+                    self._past_kv = kv_baseline
+
                     # Inject mirror-warning ke user prompt bila attempt sebelumnya mirror
-                    effective_user_prompt = user_prompt + mirror_hint
+                    effective_user_prompt = user_prompt + json_only_suffix + mirror_hint
 
                     raw = self._call_llm(
                         user_prompt=effective_user_prompt,
