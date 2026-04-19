@@ -1,0 +1,64 @@
+# Test case: coder_evaluator/coder_error_summary
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+User is trying to implement some factors in the following scenario:
+Background: Penelitian mining alpha factor di pasar saham Indonesia (IDX).
+Data daily OHLCV tersedia untuk ±800 saham liquid. Target: menghasilkan
+ekspresi faktor yang menggeneralisir di out-of-sample dengan IC stabil.
+
+Source Data:
+  - Variabel yang tersedia di ekspresi faktor: $open, $close, $high, $low, $volume, $return
+  - Granularitas: daily
+
+Interface:
+  - Ekspresi faktor ditulis dengan fungsi yang tersedia di function library.
+  - Output faktor adalah DataFrame ber-index (datetime, instrument), satu kolom nilai faktor.
+
+Output Format:
+  - Hasil backtest dievaluasi dengan IC, IR, annualized return, max drawdown.
+
+User is doing the following task: 
+Momentum_Volume_Confirm_5D: ranking momentum 5 hari dikalikan sign volume growth 5 hari.
+
+You have written some code but it meets errors like the following:
+=====Code=====
+import pandas as pd
+from qlib.contrib.alpha_expr_engine.expr_engine import ExprEngine
+
+expr = "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"
+
+def factor_func(df: pd.DataFrame) -> pd.DataFrame:
+    engine = ExprEngine()
+    return engine.evaluate(expr, df)
+
+=====Feedback=====
+ValueError: NaN encountered in output at >5% of rows.
+Traceback (most recent call last):
+  File "factor.py", line 7, in factor_func
+    return engine.evaluate(expr, df)
+ValueError: 'TS_PCTCHANGE' returned infinite values — denominator is zero.
+
+The user has found some tasks that met similar errors, and their final correct solutions.
+Please refer to these similar errors and their solutions, provide some clear, short and accurate critics that might help you solve the issues in your code.
+
+You suggestion should not include any code, just some clear and short suggestions. Please point out very critical issues in your response, ignore non-important issues to avoid confusion. If no big issue found in the code, you can response "No critics found".
+
+Please response the critic in the following format. Here is an example structure for the output:
+critic 1: The critic message to critic 1
+critic 2: The critic message to critic 2
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Refer to the system prompt above. Provide critics addressing the root cause of the failure. No code, just short bullets.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

@@ -1,0 +1,33 @@
+# Test case: external/technical_analyze
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a technical analysis expert. Analyze the following market data and provide:
+1. Key technical signals (momentum, trend, volume, volatility)
+2. Notable chart patterns or indicator divergences
+3. Cross-asset correlation signals
+4. Actionable quantitative factor ideas based on technical analysis
+5. DIRECTION HINT: one sentence suggesting a factor strategy direction based on current technical signals
+Be concise. Focus on quantifiable signals.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Analyze these technical analysis data points:
+
+[1] IHSG 50-day MA menembus 200-day MA ke bawah (death cross).
+[2] BBCA RSI(14) = 62, uptrend intact.
+[3] Volume rata-rata turun 15% MoM; sinyal likuiditas lemah.
+[4] Bollinger band width menyempit di indeks → potensi breakout.
+[5] Sektor komoditas menunjukkan rotasi positif dalam 30 hari terakhir.
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)
