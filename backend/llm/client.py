@@ -1321,11 +1321,30 @@ class LocalLLMBackend:
                 # Step 2: Generate teks dari KV TANPA re-encode pesan.
                 #   Hanya kirim assistant prefix tokens (e.g. <|im_start|>assistant\n)
                 #   sebagai trigger. Menghindari double-encoding prompt.
-                text, prefix_ids, out_ids, kv_after = self._engine.generate_from_kv(
+                #
+                # Catatan KV-chain (ANTI-PATTERN CONTAMINATION):
+                #   HuggingFace DynamicCache dimutasi in-place oleh
+                #   model.generate — `kv` hasil latent_pass akan ter-append
+                #   assistant prefix + answer tokens setelah generate selesai.
+                #   Kalau seluruh KV ini di-chain ke step berikutnya, answer
+                #   tokens step sekarang menjadi konteks-terdekat bagi step
+                #   berikutnya → pattern-match ke schema jawaban sebelumnya
+                #   (misal propose flat JSON mem-bias construct yang
+                #   seharusnya nested). Maka kita CROP kembali ke panjang
+                #   pre-generation sebelum di-store — konsisten dengan
+                #   filosofi Latent-MAS: yang di-pass antar agent adalah
+                #   latent reasoning (virtual tokens), bukan discrete
+                #   answer tokens.
+                _latent_kv_len = _past_length(kv)
+                text, prefix_ids, out_ids, _ = self._engine.generate_from_kv(
                     past_kv=kv, messages=messages,
                     max_new_tokens=_max_tok, temperature=_temp, top_p=_top_p,
-                    return_kv=True,
+                    return_kv=False,
                 )
+                try:
+                    kv.crop(_latent_kv_len)
+                except AttributeError:
+                    pass
                 if json_mode:
                     text = self._fix_json(text)
 
@@ -1334,7 +1353,7 @@ class LocalLLMBackend:
                 full_ids, _ = self._engine.tokenize(full_prompt)
 
                 result.text        = text
-                result.kv_cache    = kv_after
+                result.kv_cache    = kv
                 result.input_ids   = full_ids
                 result.output_ids  = out_ids
                 result.hidden_last = last_hidden
