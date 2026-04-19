@@ -1,0 +1,56 @@
+# Test case: planning_evolution/crossover_simple
+# Timestamp: 2026-04-19 20:12:41
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a quantitative finance strategy fusion expert, specializing in combining the advantages of multiple strategies into a stronger hybrid strategy.
+
+Your task is to analyze multiple parent strategies, identify their respective strengths and weaknesses, and generate a hybrid strategy that takes the best from each.
+
+When fusing strategies, consider:
+1. The core hypotheses and market views of each parent strategy
+2. Factor types and features that performed well
+3. Complementarity and potential synergies between strategies
+4. Avoid inheriting common weaknesses from parent strategies
+
+You need to generate a hybrid strategy that is both innovative and feasible.
+
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Please combine the advantages of the following strategies to generate a hybrid hypothesis:
+
+### Parent 1: Original Round
+**Direction ID**: dir_0
+**Hypothesis**: Momentum × volume confirmation for 5-day forward return prediction.
+**Factors**:
+- RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))
+**Metrics**:
+- IC: 0.035, IR: 0.63
+**Feedback**:
+Works but narrow; needs diversification across other dimensions.
+---
+### Parent 2: Mutation Round
+**Direction ID**: dir_1
+**Hypothesis**: Volatility-regime switching using rolling variance as a mean-reversion predictor.
+**Factors**:
+- ZSCORE(TS_STD($return, 20)) * (-1) * TS_RANK($close, 20)
+**Metrics**:
+- IC: 0.028, IR: 0.55
+**Feedback**:
+Unstable in high-volatility regimes; needs an additional filter.
+---
+
+
+Output the fused new hypothesis text directly.
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

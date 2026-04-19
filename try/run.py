@@ -28,12 +28,11 @@ import time
 from typing import Callable
 
 from .config import CONFIG, TEST_REGISTRY
-from . import test_external, test_planning_evolution, test_proposal_feedback, test_coder_evaluator
+from . import test_planning_evolution, test_proposal_feedback, test_coder_evaluator
 
 
 # Map group → modul test (sumber CASES dict)
 _GROUP_MODULES = {
-    "external": test_external,
     "planning_evolution": test_planning_evolution,
     "proposal_feedback": test_proposal_feedback,
     "coder_evaluator": test_coder_evaluator,

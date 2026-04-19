@@ -1,0 +1,132 @@
+[
+  {
+    "group": "planning_evolution",
+    "case": "planning",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/planning_evolution/planning_20260419_201241.txt"
+  },
+  {
+    "group": "planning_evolution",
+    "case": "mutation_detailed",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/planning_evolution/mutation_detailed_20260419_201241.txt"
+  },
+  {
+    "group": "planning_evolution",
+    "case": "mutation_simple",
+    "json_mode": false,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/planning_evolution/mutation_simple_20260419_201241.txt"
+  },
+  {
+    "group": "planning_evolution",
+    "case": "crossover_detailed",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/planning_evolution/crossover_detailed_20260419_201241.txt"
+  },
+  {
+    "group": "planning_evolution",
+    "case": "crossover_simple",
+    "json_mode": false,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/planning_evolution/crossover_simple_20260419_201241.txt"
+  },
+  {
+    "group": "proposal_feedback",
+    "case": "propose",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/proposal_feedback/propose_20260419_201241.txt"
+  },
+  {
+    "group": "proposal_feedback",
+    "case": "construct",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/proposal_feedback/construct_20260419_201241.txt"
+  },
+  {
+    "group": "proposal_feedback",
+    "case": "feedback",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/proposal_feedback/feedback_20260419_201241.txt"
+  },
+  {
+    "group": "coder_evaluator",
+    "case": "coder_retry",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/coder_evaluator/coder_retry_20260419_201241.txt"
+  },
+  {
+    "group": "coder_evaluator",
+    "case": "coder_error_summary",
+    "json_mode": false,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/coder_evaluator/coder_error_summary_20260419_201241.txt"
+  },
+  {
+    "group": "coder_evaluator",
+    "case": "code_feedback",
+    "json_mode": false,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/coder_evaluator/code_feedback_20260419_201241.txt"
+  },
+  {
+    "group": "coder_evaluator",
+    "case": "output_format",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/coder_evaluator/output_format_20260419_201241.txt"
+  },
+  {
+    "group": "coder_evaluator",
+    "case": "final_decision",
+    "json_mode": true,
+    "ok_format": null,
+    "response": null,
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/coder_evaluator/final_decision_20260419_201241.txt"
+  }
+]

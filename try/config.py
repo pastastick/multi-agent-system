@@ -9,7 +9,7 @@ Pemakaian:
     python -m try.run --group proposal_feedback --case propose
     python -m try.run --group coder_evaluator --case code_feedback
     python -m try.run --all
-    python -m try.run --group external --dry-run   # tidak call LLM; cuma print prompt
+    python -m try.run --group planning_evolution --dry-run   # tidak call LLM; cuma print prompt
 
 Ganti parameter global di sini (model, max_tokens, temperature, output dir, dll).
 """
@@ -29,7 +29,7 @@ class TestConfig:
     device: str = os.environ.get("TEST_DEVICE", "cuda")
 
     # ── Sampling ─────────────────────────────────────────────────────────
-    max_new_tokens: int = 1024
+    max_new_tokens: int = 3600
     temperature: float = 0.6
     top_p: float = 0.95
 
@@ -63,13 +63,6 @@ CONFIG = TestConfig()
 # Setiap case = satu panggilan LLM yang diuji secara terpisah.
 
 TEST_REGISTRY: dict[str, list[str]] = {
-    "external": [
-        "makro_analyze",        # eksternal/makro.py:504
-        "news_analyze",         # eksternal/news.py:228
-        "fundamental_analyze",  # eksternal/fundamental.py:228
-        "technical_analyze",    # eksternal/technical.py:229
-        "manager_synthesize",   # eksternal/manager.py:319
-    ],
     "planning_evolution": [
         "planning",             # pipeline/planning.py:148
         "mutation_detailed",    # pipeline/evolution/mutation.py:190 (user prompt)

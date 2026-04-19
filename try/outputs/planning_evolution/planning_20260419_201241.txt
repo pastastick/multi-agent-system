@@ -1,0 +1,27 @@
+# Test case: planning_evolution/planning
+# Timestamp: 2026-04-19 20:12:41
+# json_mode: True
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a senior quant researcher. Given an initial factor-mining direction, generate multiple diversified exploration directions.
+Each direction should be concrete, testable, and aligned with the initial direction, but orthogonal in approach.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Initial direction:
+Explore momentum-volume factors on daily equities with short windows (≤5 days) to capture short-term reversal in high-beta names.
+
+Generate EXACTLY 4 diversified exploration directions. Requirements:
+1) Diversity: directions must differ in data signals, time horizons, or reasoning frameworks.
+2) Actionability: each direction must be specific enough to generate a hypothesis.
+3) Format: return JSON wrapped in a ```json code block.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

@@ -1,0 +1,78 @@
+# Test case: planning_evolution/mutation_detailed
+# Timestamp: 2026-04-19 20:12:55
+# json_mode: True
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a quantitative finance strategy expert specializing in generating diversified factor mining strategies.
+
+Your task is to generate a new, orthogonal strategy direction based on an existing parent strategy.
+
+"Orthogonal" means the new strategy should:
+1. Explore a completely different market hypothesis from the parent
+2. Use different data dimensions or feature types
+3. Be based on different investment logic or market perspectives
+4. Avoid generating factors highly correlated with the parent strategy
+
+You need to ensure the generated strategy has sufficient differentiation to expand the diversity of the exploration space.
+
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Based on the following parent strategy, generate an orthogonal new strategy direction.
+
+## Parent Strategy Information
+
+### Hypothesis
+Stocks with positive short-term momentum AND increasing trading volume tend to outperform over the next 5 days.
+
+### Factor Expressions
+- Momentum_Volume_Confirm_5D: RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))
+  Description: 5-day momentum rank multiplied by sign of 5-day volume growth.
+
+
+### Backtest Metrics
+- IC: 0.0351
+- annualized_return: 0.1150
+- information_ratio: 0.6310
+- max_drawdown: 0.0842
+
+
+### Evaluation Feedback
+Factor works but leans too heavily on short-term momentum. Consider exploring liquidity or volatility-regime dimensions for diversification.
+
+---
+
+## Requirements
+
+Please generate a new strategy direction that is **orthogonal** to the parent strategy, including:
+
+1. **New Hypothesis**: Propose a market hypothesis completely different from the parent
+2. **Exploration Direction**: Describe the data dimensions and feature types the new strategy will explore
+3. **Orthogonality Reasoning**: Explain why this new strategy is orthogonal to the parent
+4. **Expected Characteristics**: Expected characteristics of factors from the new strategy
+
+Please ensure:
+- The new strategy has minimal correlation with the parent
+- Explore market patterns not covered by the parent
+- Maintain feasibility and reasonableness
+
+Output in JSON format:
+```json
+{
+    "new_hypothesis": "Description of the new market hypothesis",
+    "exploration_direction": "Exploration direction description",
+    "orthogonality_reason": "Reasoning for orthogonality with parent",
+    "expected_characteristics": "Expected factor characteristics"
+}
+```
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

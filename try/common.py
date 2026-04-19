@@ -81,7 +81,7 @@ def get_backend(config: TestConfig = CONFIG):
     """Lazy-init LocalLLMBackend. Load model hanya sekali per proses."""
     global _BACKEND_INSTANCE
     if _BACKEND_INSTANCE is None:
-        from llm.client import LocalLLMBackend
+        from backend.llm.client import LocalLLMBackend
         print(f"[common] Loading LocalLLMBackend model={config.model_name} device={config.device} ...")
         _BACKEND_INSTANCE = LocalLLMBackend(
             model_name=config.model_name,
