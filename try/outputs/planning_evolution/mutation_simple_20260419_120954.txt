@@ -1,0 +1,40 @@
+# Test case: planning_evolution/mutation_simple
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a quantitative finance strategy expert specializing in generating diversified factor mining strategies.
+
+Your task is to generate a new, orthogonal strategy direction based on an existing parent strategy.
+
+"Orthogonal" means the new strategy should:
+1. Explore a completely different market hypothesis from the parent
+2. Use different data dimensions or feature types
+3. Be based on different investment logic or market perspectives
+4. Avoid generating factors highly correlated with the parent strategy
+
+You need to ensure the generated strategy has sufficient differentiation to expand the diversity of the exploration space.
+
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Based on the following information, generate an orthogonal factor mining hypothesis:
+
+Parent Hypothesis: Saham dengan momentum positif jangka pendek dan volume meningkat cenderung out-perform 5 hari ke depan.
+
+Parent Factors: - Momentum_Volume_Confirm_5D: RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))
+  Description: Ranking momentum 5-hari dikalikan sign volume growth 5-hari.
+
+
+Please propose a new hypothesis that is completely different from the above direction to explore new factor space. Output the new hypothesis text directly.
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

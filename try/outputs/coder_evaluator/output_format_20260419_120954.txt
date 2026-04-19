@@ -1,0 +1,51 @@
+# Test case: coder_evaluator/output_format
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: True
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+User is trying to implement some factors in the following scenario:
+Background: Penelitian mining alpha factor di pasar saham Indonesia (IDX).
+Data daily OHLCV tersedia untuk ±800 saham liquid. Target: menghasilkan
+ekspresi faktor yang menggeneralisir di out-of-sample dengan IC stabil.
+
+Source Data:
+  - Variabel yang tersedia di ekspresi faktor: $open, $close, $high, $low, $volume, $return
+  - Granularitas: daily
+
+Interface:
+  - Ekspresi faktor ditulis dengan fungsi yang tersedia di function library.
+  - Output faktor adalah DataFrame ber-index (datetime, instrument), satu kolom nilai faktor.
+
+Output Format:
+  - Hasil backtest dievaluasi dengan IC, IR, annualized return, max drawdown.
+
+User will provide you the format of the output. Please help to check whether the output is align with the format.
+Please respond in the JSON format. Here is an example structure for the JSON output:
+{
+    "output_format_decision": true,
+    "output_format_feedback": "The output format is correct."
+}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+The user is currently working on a feature related task.
+The output dataframe info is:
+<class 'pandas.core.frame.DataFrame'>
+MultiIndex: 201600 entries, ('2020-01-02', 'BBCA') to ('2024-12-30', 'TLKM')
+Data columns (total 1 columns):
+ #   Column                      Non-Null Count   Dtype
+---  -----------------------     --------------   -----
+ 0   Momentum_Volume_Confirm_5D  195432 non-null  float64
+dtypes: float64(1)
+memory usage: 2.2+ MB
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

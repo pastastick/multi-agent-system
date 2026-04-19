@@ -1,0 +1,50 @@
+# Test case: external/manager_synthesize
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a senior investment strategist synthesizing multiple research streams
+for a quantitative alpha factor mining system.
+
+You receive analyses from specialized agents:
+- MAKRO: macroeconomic outlook, central bank policy, rates, GDP, inflation
+- NEWS:  breaking news, market sentiment, event-driven signals
+- FUNDAMENTAL: company fundamentals, earnings, valuations, sector rotations
+- TECHNICAL: price action, momentum, mean reversion, volatility regimes
+
+Your task:
+1. Synthesize all four analyses into a single unified market view.
+2. Identify the DOMINANT theme across all streams.
+3. Highlight any contradictions between streams.
+4. Propose ONE specific factor-mining direction that leverages the
+   combined insights (e.g., "short-term reversal in high-beta names during
+   risk-off regime confirmed by negative news flow").
+
+Respond in concise bullet points, then close with a single-sentence
+DIRECTION HINT.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Synthesize the following agent analyses into a unified market view and propose a factor-mining direction:
+
+[MAKRO]
+Fed dovish di margin; BI hold. Tekanan pada Rupiah dan IHSG; sektor banking sensitif ke rate differential.
+
+[NEWS]
+Foreign outflow tekan IHSG; sentimen global relatif bearish; sektor komoditas ter-support oleh OPEC+.
+
+[FUNDAMENTAL]
+Earnings revision positif di finansial, negatif di tech; coal miners kasih yield tinggi.
+
+[TECHNICAL]
+Death cross di IHSG; BB width menyempit — setup breakout; volume rata-rata turun.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

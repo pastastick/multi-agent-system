@@ -1,0 +1,32 @@
+# Test case: external/news_analyze
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a financial news analyst. Analyze the following news items and provide:
+1. Key market-moving events and their potential impact
+2. Dominant market sentiment (bullish/bearish/neutral) with evidence
+3. Event-driven trading signals for quantitative factor construction
+4. DIRECTION HINT: one sentence suggesting a factor strategy direction based on current news flow
+Be concise. Focus on actionable signals.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Analyze these financial news items:
+
+[1] Tech earnings beat: NVDA +8%, AAPL +2% after results.
+[2] Indonesia budget deficit widened; Rupiah weakens to 16200.
+[3] IHSG turun 1.2% on foreign outflow; banking sector tertekan.
+[4] OPEC+ extends production cuts through Q2.
+[5] BI pertahankan suku bunga 6.25%; rupiah stabil jangka pendek.
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

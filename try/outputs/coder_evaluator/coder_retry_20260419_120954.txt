@@ -1,0 +1,159 @@
+# Test case: coder_evaluator/coder_retry
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: True
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+User is trying to implement some factors by writing factor expressions in the following scenario:
+Background: Penelitian mining alpha factor di pasar saham Indonesia (IDX).
+Data daily OHLCV tersedia untuk ±800 saham liquid. Target: menghasilkan
+ekspresi faktor yang menggeneralisir di out-of-sample dengan IC stabil.
+
+Source Data:
+  - Variabel yang tersedia di ekspresi faktor: $open, $close, $high, $low, $volume, $return
+  - Granularitas: daily
+
+Interface:
+  - Ekspresi faktor ditulis dengan fungsi yang tersedia di function library.
+  - Output faktor adalah DataFrame ber-index (datetime, instrument), satu kolom nilai faktor.
+
+Output Format:
+  - Hasil backtest dievaluasi dengan IC, IR, annualized return, max drawdown.
+
+
+An executable factor expression is expected to align the factor descrption if it is possible to implement using available data and operations. 
+
+To help you write the correct expressions, the user might provide multiple information that helps you write the correct expression:
+1. The user might provide you the correct expression to similar factors. Your should learn from these expression to write the correct expression.
+2. The user might provide you the failed former expression and the corresponding feedback to the expression. The feedback contains to the execution, the expression and the factor value. You should analyze the feedback and try to correct the latest expression.
+3. The user might provide you the suggestion to the latest fail expression and some similar fail to correct pairs. Each pair contains the fail expression with similar error and the corresponding corrected version expression. You should learn from these suggestion to write the correct expression.
+4. Other parts of the code snippet is a fixed jinja2 template. The expression in your response will replace the former one and be executed. 
+
+
+**Your task is to correct or rewrite your expression based on your former latest attempt below which consists of your former expression and code feedback.**
+
+**CRITICAL RULES (violation = auto-reject):**
+1. Your new expression MUST be structurally DIFFERENT from `former_expression`. Returning an identical or trivially-renamed expression means no learning happened and will be rejected.
+2. Analyze the feedback FIRST — identify the root cause of failure (wrong operator, wrong window size, missing scaling, wrong variable, etc.), then propose a concrete modification that addresses THAT root cause.
+3. Prefer meaningful structural changes: swap operators (e.g., TS_STD → TS_MAD), adjust windows (10 → 20/60), combine with a different base variable ($close → $volume/$high/$low), add normalization (RANK/ZSCORE), or change the factor family entirely if feedback indicates the formulation is unsalvageable.
+4. Do NOT simply add `+ 1e-8`, wrap with `ABS()`, or rename variables as your "fix" — those are cosmetic and will be rejected.
+
+**Only the following operations are allowed in expression:**
+### **Cross-sectional Functions**
+- **RANK(A)**: Ranking of each element in the cross-sectional dimension of A.
+- **ZSCORE(A)**: Z-score of each element in the cross-sectional dimension of A.
+- **MEAN(A)**: Mean value of each element in the cross-sectional dimension of A.
+- **STD(A)**: Standard deviation in the cross-sectional dimension of A.
+- **SKEW(A)**: Skewness in the cross-sectional dimension of A.
+- **KURT(A)**: Kurtosis in the cross-sectional dimension of A.
+- **MAX(A)**: Maximum value in the cross-sectional dimension of A.
+- **MIN(A)**: Minimum value in the cross-sectional dimension of A.
+- **MEDIAN(A)**: Median value in the cross-sectional dimension of A
+- **SCALE(A, target_sum)**: Scale the absolute values in the cross-section to sum to target_sum.
+
+### **Time-Series Functions**
+- **DELTA(A, n)**: Change in value of A over n periods.
+- **DELAY(A, n)**: Value of A delayed by n periods.
+- **TS_MEAN(A, n)**: Mean value of sequence A over the past n days.
+- **TS_SUM(A, n)**: Sum of sequence A over the past n days.
+- **TS_RANK(A, n)**: Time-series rank of the last value of A in the past n days.
+- **TS_ZSCORE(A, n)**: Z-score for each sequence in A over the past n days.
+- **TS_MEDIAN(A, n)**: Median value of sequence A over the past n days.
+- **TS_PCTCHANGE(A, p)**: Percentage change in the value of sequence A over p periods.
+- **TS_MIN(A, n)**: Minimum value of A in the past n days.
+- **TS_MAX(A, n)**: Maximum value of A in the past n days.
+- **TS_ARGMAX(A, n)**: The index (relative to the current time) of the maximum value of A over the past n days.
+- **TS_ARGMIN(A, n)**: The index (relative to the current time) of the minimum value of A over the past n days.
+- **TS_QUANTILE(A, p, q)**: Rolling quantile of sequence A over the past p periods, where q is the quantile value between 0 and 1.
+- **TS_STD(A, n)**: Standard deviation of sequence A over the past n days.
+- **TS_VAR(A, p)**: Rolling variance of sequence A over the past p periods.
+- **TS_CORR(A, B, n)**: Correlation coefficient between sequences A and B over the past n days.
+- **TS_COVARIANCE(A, B, n)**: Covariance between sequences A and B over the past n days.
+- **TS_MAD(A, n)**: Rolling Median Absolute Deviation of sequence A over the past n days.
+- **PERCENTILE(A, q, p)**: Quantile of sequence A, where q is the quantile value between 0 and 1. If p is provided, it calculates the rolling quantile over the past p periods.
+- **HIGHDAY(A, n)**: Number of days since the highest value of A in the past n days.
+- **LOWDAY(A, n)**: Number of days since the lowest value of A in the past n days.
+- **SUMAC(A, n)**: Cumulative sum of A over the past n days.
+
+### **Moving Averages and Smoothing Functions**
+- **SMA(A, n, m)**: Simple moving average of A over n periods with modifier m.
+- **WMA(A, n)**: Weighted moving average of A over n periods, with weights decreasing from 0.9 to 0.9^(n).
+- **EMA(A, n)**: Exponential moving average of A over n periods, where the decay factor is 2/(n+1).
+- **DECAYLINEAR(A, d)**: Linearly weighted moving average of A over d periods, with weights increasing from 1 to d.
+
+### **Mathematical Operations**
+- **PROD(A, n)**: Product of values in A over the past n days. Use `*` for general multiplication.
+- **LOG(A)**: Natural logarithm of each element in A.
+- **SQRT(A)**: Square root of each element in A.
+- **POW(A, n)**: Raise each element in A to the power of n.
+- **SIGN(A)**: Sign of each element in A, one of 1, 0, or -1.
+- **EXP(A)**: Exponential of each element in A.
+- **ABS(A)**: Absolute value of A.
+- **MAX(A, B)**: Maximum value between A and B.
+- **MIN(A, B)**: Minimum value between A and B.
+- **INV(A)**: Reciprocal (1/x) of each element in sequence A.
+- **FLOOR(A)**: Floor of each element in sequence A.
+
+### **Conditional and Logical Functions**
+- **COUNT(C, n)**: Count of samples satisfying condition C in the past n periods. Here, C is a logical expression, e.g., `$close > $open`.
+- **SUMIF(A, n, C)**: Sum of A over the past n periods if condition C is met. Here, C is a logical expression.
+- **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is presented in a logical expression form, with the same size as A.
+- **(C1)&&(C2)**: Logical operation "and". Both C1 and C2 are logical expressions, such as A > B.
+- **(C1)||(C2)**: Logical operation "or". Both C1 and C2 are logical expressions, such as A > B.
+- **(C1)?(A):(B)**: Logical operation "If condition C1 holds, then A, otherwise B". C1 is a logical expression, such as A > B.
+
+### **Regression and Residual Functions**
+- **SEQUENCE(n)**: A single-column sequence of length n, ranging from 1 to integer n. `SEQUENCE()` should always be nested in `REGBETA()` or `REGRESI()` as argument B.
+- **REGBETA(A, B, n)**: Regression coefficient of A on B using the past n samples, where A MUST be a multi-column sequence and B a single-column or multi-column sequence.
+- **REGRESI(A, B, n)**: Residual of regression of A on B using the past n samples, where A MUST be a multi-column sequence and B a single-column or multi-column sequence.
+
+### **Technical Indicators**
+- **RSI(A, n)**: Relative Strength Index of sequence A over n periods. Measures momentum by comparing the magnitude of recent gains to recent losses.
+- **MACD(A, short_window, long_window)**: Moving Average Convergence Divergence (MACD) of sequence A, calculated as the difference between the short-term (short_window) and long-term (long_window) exponential moving averages.
+- **BB_MIDDLE(A, n)**: Middle Bollinger Band, calculated as the n-period simple moving average of sequence A.
+- **BB_UPPER(A, n)**: Upper Bollinger Band, calculated as middle band plus two standard deviations of sequence A over n periods.
+- **BB_LOWER(A, n)**: Lower Bollinger Band, calculated as middle band minus two standard deviations of sequence A over n periods.
+
+
+
+Note that:
+- Only the variables provided in data (e.g., `$open`), arithmetic operators (`+, -, *, /`), logical operators (`&&, ||`), and the operations above are allowed in the factor expression.
+- Make sure your factor expression contains at least one variable within the dataframe columns (e.g., $open), combined with registered operations above. Do NOT use any undeclared variable (e.g., `n`, `w_1`) and undefined symbols (e.g., `=`) in the expression.
+- Pay attention to the distinction between operations with the TS prefix (e.g., TS_STD()) and those without (e.g., `STD()`).
+
+Please response the corrected expression in the following json format. Here is the structure for the JSON output:
+{
+    "expr": "[CORRECTED_FACTOR_EXPRESSION]"
+}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+--------------Target factor information:---------------
+Momentum_Volume_Confirm_5D: ranking momentum 5 hari dikalikan sign volume growth 5 hari.
+
+
+
+--------------Your former latest attempt:---------------
+=====Expression to the former implementation=====
+TS_MEAN($return, 5)
+
+=====Feedback to the former implementation=====
+Execution OK, tetapi nilai faktor tidak ter-normalisasi lintas saham.
+Value feedback: IC = 0.008, terlalu rendah; distribusi nilai skewed karena tidak ada ranking cross-sectional. Pertimbangkan RANK() dan kombinasi dengan volume.
+
+
+
+
+
+
+
+OUTPUT INSTRUCTION: Respond with ONLY the raw JSON object on a single line. No explanation, no preamble, no analysis. Example: {"expr": "TS_STD($close, 20)"}
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

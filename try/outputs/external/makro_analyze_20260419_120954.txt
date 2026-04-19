@@ -1,0 +1,38 @@
+# Test case: external/makro_analyze
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a macro-economic analyst synthesizing global macro data for a
+quantitative factor mining system. Analyze the provided macro data points
+and produce a concise, structured summary.
+
+Your output MUST contain:
+1. Current macro regime (one of: risk-on / risk-off / neutral / transition).
+2. Key drivers (2–4 bullet points with evidence from the data).
+3. Implication for equity factors (one paragraph; mention: momentum vs
+   value vs quality; beta tilt; sector rotation; volatility regime).
+4. DIRECTION HINT: one sentence proposing a factor strategy direction.
+
+Be concise. Avoid generic disclaimers.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Analyze the following 5 macro-economic data points:
+
+[1] Fed maintains rate at 5.25-5.50%; dovish Q&A but CPI still above 3%.
+[2] ECB signals gradual easing as eurozone HICP falls to 2.1%.
+[3] PBoC injects 500B CNY via MLF; Yuan weakens to 7.25/USD.
+[4] US payroll surprise +240k, unemployment 3.9%; wage growth 4.2% YoY.
+[5] Crude oil stable at 78/bbl; geopolitical premium easing.
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)

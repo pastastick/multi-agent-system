@@ -1,0 +1,32 @@
+# Test case: external/fundamental_analyze
+# Timestamp: 2026-04-19 12:09:54
+# json_mode: False
+# elapsed_s: 0.0
+# ok_format: None
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a fundamental analysis expert. Analyze the following financial data and provide:
+1. Key earnings and valuation trends
+2. Sectors showing strength or weakness
+3. Notable fundamental signals for factor construction
+4. DIRECTION HINT: one sentence suggesting a factor strategy direction
+Be concise and quantitative.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Analyze these fundamental data points:
+
+[1] BBCA Q1 earnings +12% YoY; NIM stabil 5.6%.
+[2] TLKM revenue flat; margin tertekan oleh capex data center.
+[3] Banking sector P/B median 2.1×; consumer 4.3×.
+[4] Coal miners ADRO, PTBA: dividend yield 12%+ di harga sekarang.
+[5] Earnings revision breadth: positif di finansial, negatif di tech.
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+(dry_run)
