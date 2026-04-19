@@ -222,12 +222,70 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         selalu KV dari attempt terakhir (untuk feedback step chain).
     """
 
+    # Compact output-format spec yang menggantikan
+    # `factor_experiment_output_format` di prompts.yaml untuk construct.
+    # Alasan: spec default berisi contoh konkret (Normalized_Intraday_Range_Factor_10D)
+    # dengan inner `variables` dict yang di-pattern-match model → output hanya
+    # flat dict `{"$close": "...", "TS_STD(A, n)": "..."}` tanpa wrapper faktor.
+    # Versi compact ini: tanpa contoh konkret, placeholder abstrak, dan instruksi
+    # eksplisit soal struktur outer-wrapper. Taruh di ujung system_prompt supaya
+    # dominan via recency bias tanpa pattern yang bisa ditiru.
+    _COMPACT_OUTPUT_FORMAT = """Output must be ONE raw JSON object — no markdown fences, no commentary.
+Produce 2 to 3 factors. The JSON has this shape:
+
+{
+    "<factor_name_A>": {"description": "...", "variables": {...}, "formulation": "...", "expression": "..."},
+    "<factor_name_B>": {"description": "...", "variables": {...}, "formulation": "...", "expression": "..."}
+}
+
+Rules for every factor entry:
+  - OUTER key = factor name you invent (camelCase or Snake_Case, e.g. VolMomentumInterplay_20D).
+  - OUTER key is NEVER `$close`, `$open`, `variables`, `description`, or an operator name.
+  - Inner dict contains EXACTLY these 4 keys in this order: description, variables, formulation, expression.
+  - `variables` is a nested dict mapping each symbol used in `expression` to a one-sentence meaning.
+  - `expression` uses only the allowed $features and operators; length should stay ≤ 250 characters.
+
+The FIRST two characters of your response MUST be `{"` followed immediately by your chosen factor name.
+Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whitespace."""
+
+    # Short reminder di ujung user_prompt — menegaskan yang sudah ada di
+    # system_prompt (_COMPACT_OUTPUT_FORMAT). Tetap dipertahankan untuk
+    # menekan salah-mulai di token pertama.
+    _FORMAT_REMINDER = """
+
+Remember: begin your reply with `{"<YourFactorName>":` and NOT with `{"$` or `{"variables`.
+"""
+
+    _RETRY_WARNING = """
+
+!!! RETRY: last attempt emitted only a `variables`-like flat dict. This time,
+start your JSON with an OUTER factor name key whose VALUE is the 4-field dict.
+Pick a different factor idea (different operators / lookback / variables combo).
+
+"""
+
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
                  temperature: Optional[float] = None, **kwargs):
         AlphaAgentHypothesis2FactorExpression.__init__(self, *args, **kwargs)
         self._init_latent_state(llm_backend, default_mode="kv_and_text",
                                 latent_steps=latent_steps, temperature=temperature)
+        self._attempt_idx: int = 0
+
+    def set_past_kv(self, kv):
+        """Override: reset attempt counter saat KV baru di-set (= step construct baru)."""
+        super().set_past_kv(kv)
+        self._attempt_idx = 0
+
+    def prepare_context(self, hypothesis, trace, history_limit=None):
+        """Replace default output-format (berisi contoh konkret yang
+        di-pattern-match model) dengan _COMPACT_OUTPUT_FORMAT."""
+        from factors.proposal import DEFAULT_HISTORY_LIMIT
+        if history_limit is None:
+            history_limit = DEFAULT_HISTORY_LIMIT
+        ctx, json_flag = super().prepare_context(hypothesis, trace, history_limit)
+        ctx["experiment_output_format"] = self._COMPACT_OUTPUT_FORMAT
+        return ctx, json_flag
 
     def _get_scenario_desc(self, trace) -> str:
         """Compact scenario untuk latent construct mode.
@@ -247,20 +305,37 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         return trace.scen.background
 
     def _call_llm(self, user_prompt: str, system_prompt: str, json_mode: bool = False) -> str:
+        self._attempt_idx += 1
+
+        # Append format reminder AT END (recency bias counters the long
+        # operator list). Pada retry, prepend warning untuk dorong variasi.
+        effective_user_prompt = user_prompt + self._FORMAT_REMINDER
+        if self._attempt_idx > 1:
+            effective_user_prompt = self._RETRY_WARNING + effective_user_prompt
+
+        # Retry strategy: escalate temperature untuk dorong variasi.
+        # past_kv dari propose step TETAP dipakai di semua attempt — filosofi
+        # Latent-MAS: chain latent reasoning antar step. Drop past_kv malah
+        # buang konteks yang dibutuhkan construct untuk mengikuti hypothesis.
+        base_temp = self._temperature if self._temperature is not None else 0.3
+        temp_override = min(base_temp + 0.15 * (self._attempt_idx - 1), 1.0)
+        past_kv = self._past_kv
+
         result = self.llm_backend.build_messages_and_run(
-            user_prompt=user_prompt,
+            user_prompt=effective_user_prompt,
             system_prompt=system_prompt,
             json_mode=json_mode,
-            past_key_values=self._past_kv,
+            past_key_values=past_kv,
             mode=self._mode,
             role="construct",
             latent_steps=self._latent_steps,
-            temperature=self._temperature,
+            temperature=temp_override,
         )
         self.last_result = result
         logger.info(
-            f"[LatentHypothesis2Experiment] mode={self._mode}, "
-            f"has_kv={result.has_kv}, text_len={len(result.text or '')}"
+            f"[LatentHypothesis2Experiment] attempt={self._attempt_idx}, "
+            f"mode={self._mode}, has_kv_in={past_kv is not None}, "
+            f"temp={temp_override:.2f}, text_len={len(result.text or '')}"
         )
         return result.text or ""
 
