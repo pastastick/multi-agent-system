@@ -1,0 +1,48 @@
+# Test case: planning_evolution/planning
+# Timestamp: 2026-04-19 11:39:23
+# json_mode: True
+# elapsed_s: 112.87
+# ok_format: False
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are a senior quant researcher. Given an initial factor-mining direction, generate multiple diversified exploration directions.
+Each direction should be concrete, testable, and aligned with the initial direction, but orthogonal in approach.
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Initial direction:
+Eksplorasi faktor momentum-volume pada saham IDX dengan window pendek (≤5 hari) untuk menangkap short-term reversal pada high-beta names.
+
+Generate EXACTLY 4 diversified exploration directions. Requirements:
+1) Diversity: directions must differ in data signals, time horizons, or reasoning frameworks.
+2) Actionability: each direction must be specific enough to generate a hypothesis.
+3) Format: return JSON wrapped in a ```json code block.
+
+==============================================================================
+RESPONSE
+==============================================================================
+{
+      "title": "Evaluasi Faktor Momentum-Volume dalam Konteks Pemrosesan Data Real-Time pada High-Beta Saham",
+      "description": "Menguji kemampuan faktor momentum-volume dalam memprediksi reversal real-time pada high-beta saham dengan data streaming. Fokus pada window 1-2 hari dan uji hipotesis bahwa data real-time meningkatkan akurasi prediksi.",
+      "data_signals": ["Momentum (1-2 hari)", "Volume (real-time)", "Indikator order flow"],
+      "time_horizon": "1-2 hari",
+      "reasoning_framework": "Pemrosesan data real-time dan analisis order flow"
+    }
+
+==============================================================================
+PARSED JSON
+==============================================================================
+{
+  "title": "Evaluasi Faktor Momentum-Volume dalam Konteks Pemrosesan Data Real-Time pada High-Beta Saham",
+  "description": "Menguji kemampuan faktor momentum-volume dalam memprediksi reversal real-time pada high-beta saham dengan data streaming. Fokus pada window 1-2 hari dan uji hipotesis bahwa data real-time meningkatkan akurasi prediksi.",
+  "data_signals": [
+    "Momentum (1-2 hari)",
+    "Volume (real-time)",
+    "Indikator order flow"
+  ],
+  "time_horizon": "1-2 hari",
+  "reasoning_framework": "Pemrosesan data real-time dan analisis order flow"
+}

@@ -1,0 +1,17 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "construct",
+    "json_mode": true,
+    "ok_format": true,
+    "response": "{\n            \"$return\": \"Daily return of the stock on that day.\",\n            \"TS_MEAN($return, 20)\": \"Mean value of daily returns over the past 20 days.\",\n            \"TS_PCTCHANGE($volume, 5)\": \"Percentage change in volume over the past 5 days.\",\n            \"ZSCORE(A)\": \"Z-score of each element in the cross-sectional dimension of A.\"\n        }",
+    "parsed": {
+      "$return": "Daily return of the stock on that day.",
+      "TS_MEAN($return, 20)": "Mean value of daily returns over the past 20 days.",
+      "TS_PCTCHANGE($volume, 5)": "Percentage change in volume over the past 5 days.",
+      "ZSCORE(A)": "Z-score of each element in the cross-sectional dimension of A."
+    },
+    "elapsed_s": 76.39,
+    "log_path": "/home/ubuntu/multi-agent-system/try/outputs/proposal_feedback/construct_20260420_081250.txt"
+  }
+]

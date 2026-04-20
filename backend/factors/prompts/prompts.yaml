@@ -136,18 +136,18 @@ factor_experiment_output_format: |-
           "variables": {
               "variable or function name 1": "description of variable or function 1",
               "variable or function name 2": "description of variable or function 2"
-          }
+          },
           "formulation": "A LaTeX formula of factor 1",
-          "expression": "An expression of factor 1, based on functions and variable mentioned",
+          "expression": "An expression of factor 1, based on functions and variable mentioned"
       },
       "factor name 2": {
           "description": "description of factor 2",
           "variables": {
               "variable or function name 1": "description of variable or function 1",
               "variable or function name 2": "description of variable or function 2"
-          }
+          },
           "formulation": "A LaTeX formula of factor 2",
-          "expression": "An expression of factor 2, based on functions and variable mentioned",
+          "expression": "An expression of factor 2, based on functions and variable mentioned"
       }
       # Don't add ellipsis (...) or any filler text that might cause JSON parsing errors here!
   }
@@ -161,9 +161,9 @@ factor_experiment_output_format: |-
               "$open": "Open price of the stock on that day.",
               "ABS(A)": "Absolute value of A.",
               "TS_STD(A, n)": "Standard deviation of sequence A over the past n days."
-          }
+          },
           "formulation": "NIR_\\text{10D} = \\frac{\\text{ABS}(\\text{close} - \\text{open})}{\\text{STD}(\\text{close}, 10)}",
-          "expression": "ABS($close - $open) / (TS_STD($close, 10) + 1e-8)",
+          "expression": "ABS($close - $open) / (TS_STD($close, 10) + 1e-8)"
       },
       "Volume_Range_Correlation_Factor_20D": {
           "description": "This factor measures the correlation between the candlestick range (high - low) and the trading volume over a 20-day period, aiming to capture the relationship between price range and market participation.",
@@ -172,9 +172,9 @@ factor_experiment_output_format: |-
               "$low": "Low price of the stock on that day.",
               "$volume": "Volume of the stock on that day.",
               "TS_CORR(A, B, n)": "Correlation coefficient between sequences A and B over the past n days."
-          }
+          },
           "formulation": "VRC_\\text{20D} = \\text{TS_CORR}(\\text{high} - \\text{low}, \\text{volume}, 20)",
-          "expression": "TS_CORR($high - $low, $volume, 20)",
+          "expression": "TS_CORR($high - $low, $volume, 20)"
       }
   }
 

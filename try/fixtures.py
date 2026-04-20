@@ -45,13 +45,31 @@ from backend.factors.coder.factor import FactorTask                    # real ta
 #    - Or replace the whole RealScenario class with an inline string.
 # ═════════════════════════════════════════════════════════════════════════
 
+import importlib.util as _ilu
 import yaml as _yaml
 from jinja2 import Environment as _Env, StrictUndefined as _SU
 
-_RDAGENT_PROMPTS = Path(
-    "/root/projects/first-experiment/ai-agent/.venv/lib/python3.10/"
-    "site-packages/rdagent/scenarios/qlib/experiment/prompts.yaml"
-)
+
+def _find_rdagent_prompts() -> Path:
+    spec = _ilu.find_spec("rdagent")
+    if spec and spec.submodule_search_locations:
+        candidate = Path(next(iter(spec.submodule_search_locations))) / "scenarios" / "qlib" / "experiment" / "prompts.yaml"
+        if candidate.exists():
+            return candidate
+    # fallback: hardcoded legacy path
+    fallback = Path(
+        "/root/projects/first-experiment/ai-agent/.venv/lib/python3.10/"
+        "site-packages/rdagent/scenarios/qlib/experiment/prompts.yaml"
+    )
+    if fallback.exists():
+        return fallback
+    raise FileNotFoundError(
+        "rdagent prompts.yaml tidak ditemukan. "
+        "Pastikan rdagent terinstall di environment aktif (pip install rdagent)."
+    )
+
+
+_RDAGENT_PROMPTS = _find_rdagent_prompts()
 
 with _RDAGENT_PROMPTS.open() as _f:
     _RDAGENT_YAML = _yaml.safe_load(_f)
