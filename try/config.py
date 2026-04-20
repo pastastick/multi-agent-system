@@ -25,11 +25,11 @@ from dataclasses import dataclass, field
 class TestConfig:
     # ── Backend LLM ──────────────────────────────────────────────────────
     # Set sesuai environment (Qwen3-4B / Qwen3-14B / etc.)
-    model_name: str = os.environ.get("TEST_MODEL", "Qwen/Qwen3-14B")
+    model_name: str = os.environ.get("TEST_MODEL", "Qwen/Qwen3-30B-A3B")
     device: str = os.environ.get("TEST_DEVICE", "cuda")
 
     # ── Sampling ─────────────────────────────────────────────────────────
-    max_new_tokens: int = 3600
+    max_new_tokens: int = 360000
     temperature: float = 0.8
     top_p: float = 0.95
 
