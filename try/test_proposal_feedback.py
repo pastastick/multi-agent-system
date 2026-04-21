@@ -165,6 +165,246 @@ def test_feedback():
     )
 
 
+
+# ═════════════════════════════════════════════════════════════════════════
+# Guided JSON decoding for construct (vs free-form JSON)
+#
+# Root cause of construct failure in small models (< ~70B):
+#   Schema misalignment — model outputs flat dict of variable descriptions
+#   (the innermost "variables" sub-field) instead of the full nested schema:
+#     { factor_name → {description, variables, formulation, expression} }
+#   Anchoring bias — "$close", "$return", "TS_MEAN" tokens dominate the prompt
+#   (hundreds of lines), pulling the model toward those patterns.
+#
+# Fix: Guided decoding via lm-format-enforcer's JsonSchemaParser.
+#   Works as a `prefix_allowed_tokens_fn` logits filter on model.generate().
+#   At each step, only tokens that advance a valid JSON parse are allowed.
+#   Model physically cannot output invalid structure.
+#
+# Note: lm-format-enforcer's transformers integration breaks on our
+#   transformers version (PreTrainedTokenizerBase import path changed).
+#   We replicate the 3 needed functions inline using the core API instead.
+#
+# Runtime overhead: ~10-20% latency for deeply nested schemas (token-by-token
+#   grammar check). NOT "zero cost" — but correctness gain outweighs it.
+# ═════════════════════════════════════════════════════════════════════════
+
+# ── JSON schema for construct output (matches factor_experiment_output_format) ──
+CONSTRUCT_JSON_SCHEMA = {
+    "type": "object",
+    "additionalProperties": {
+        "type": "object",
+        "properties": {
+            "description": {"type": "string"},
+            "variables": {
+                "type": "object",
+                "additionalProperties": {"type": "string"},
+            },
+            "formulation": {"type": "string"},
+            "expression": {"type": "string"},
+        },
+        "required": ["description", "variables", "formulation", "expression"],
+        "additionalProperties": False,
+    },
+    "minProperties": 1,
+}
+
+
+def _build_guided_prefix_fn(tokenizer):
+    """
+    Build `prefix_allowed_tokens_fn` that enforces CONSTRUCT_JSON_SCHEMA.
+
+    Bypasses the lmformatenforcer.integrations.transformers module which
+    fails on our transformers version due to a changed import path.
+    We replicate the three needed helpers from its source directly.
+    """
+    import functools
+    from lmformatenforcer import JsonSchemaParser, TokenEnforcer, TokenEnforcerTokenizerData
+
+    vocab_size = len(tokenizer)
+    token_0 = tokenizer.encode("0")[-1]
+
+    regular_tokens = []
+    for token_idx in range(vocab_size):
+        if token_idx in tokenizer.all_special_ids:
+            continue
+        decoded_after_0 = tokenizer.decode([token_0, token_idx])[1:]
+        decoded_regular = tokenizer.decode([token_idx])
+        is_word_start = len(decoded_after_0) > len(decoded_regular)
+        regular_tokens.append((token_idx, decoded_after_0, is_word_start))
+
+    decode_fn = functools.partial(
+        lambda tok, ids: tok.decode(ids).rstrip("\ufffd"),
+        tokenizer,
+    )
+    tokenizer_data = TokenEnforcerTokenizerData(
+        regular_tokens, decode_fn, tokenizer.eos_token_id,
+    )
+
+    parser = JsonSchemaParser(CONSTRUCT_JSON_SCHEMA)
+    enforcer = TokenEnforcer(tokenizer_data, parser)
+
+    def prefix_fn(batch_id: int, sent):
+        return enforcer.get_allowed_tokens(sent.tolist()).allowed_tokens
+
+    return prefix_fn
+
+
+def test_construct_guided_vs_free() -> dict:
+    """
+    Compare construct output: free-form JSON (current baseline) vs guided JSON decoding.
+
+    Mode A (free): backend generates JSON without structural constraints;
+      relies on the model following the schema from the prompt.
+    Mode B (guided): lm-format-enforcer JsonSchemaParser enforces
+      CONSTRUCT_JSON_SCHEMA token-by-token — structurally invalid output
+      is impossible.
+
+    Both modes use temperature=0 for determinism.
+    Result saved side-by-side to outputs/proposal_feedback/.
+    """
+    import time
+    import json as _json
+    import torch
+
+    group = "proposal_feedback"
+    case = "construct_guided_vs_free"
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = CONFIG.output_dir / group
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log_path = out_dir / f"{case}_{ts}.txt"
+
+    print("\n" + "═" * 78)
+    print(f"▶ [{group}] {case}")
+    print(f"  log={log_path}")
+    print("═" * 78)
+
+    if CONFIG.dry_run:
+        print("── SKIPPED (dry_run=True) ──")
+        return {
+            "group": group, "case": case, "ok_format": True,
+            "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0,
+            "log_path": str(log_path),
+        }
+
+    # Build construct prompt (uses fixture hypothesis, same as test_construct)
+    ctor_sys, ctor_usr = _build_construct_messages(target_hypothesis=fx.HYPOTHESIS_STR)
+    temp = 0.0
+    top_p = 1.0
+
+    # ── MODE A: FREE-FORM JSON ────────────────────────────────────────────
+    print("── MODE A (free-form JSON) ──")
+    backend = get_latent_backend()      # shares model weights with text backend
+    t0 = time.time()
+    result_A = backend.build_messages_and_run(
+        user_prompt=ctor_usr,
+        system_prompt=ctor_sys,
+        json_mode=True,
+        mode="text_only",
+        temperature=temp, top_p=top_p,
+        role="construct_free",
+    )
+    text_A = result_A.text or ""
+    elapsed_A = round(time.time() - t0, 2)
+    json_A = _extract_json(text_A)
+    print(f"  elapsed={elapsed_A}s  len={len(text_A)}  valid_json={json_A is not None}")
+
+    # ── MODE B: GUIDED JSON DECODING ─────────────────────────────────────
+    print("── MODE B (guided JSON via lm-format-enforcer) ──")
+    engine = backend._engine     # _CoreEngine — access model + tokenizer directly
+    tokenizer = engine.tokenizer
+    model = engine.model
+
+    # Format + tokenize the prompt
+    msgs = backend.build_messages(
+        user_prompt=ctor_usr,
+        system_prompt=ctor_sys,
+    )
+    prompt_str = engine.format_messages(msgs)
+    input_ids, attn_mask = engine.tokenize(prompt_str)
+
+    # Build guided prefix function
+    prefix_fn = _build_guided_prefix_fn(tokenizer)
+
+    t0 = time.time()
+    with torch.no_grad():
+        out = model.generate(
+            input_ids=input_ids,
+            attention_mask=attn_mask,
+            max_new_tokens=CONFIG.max_new_tokens,
+            temperature=temp if temp > 0 else None,
+            do_sample=(temp > 0),
+            pad_token_id=tokenizer.pad_token_id,
+            prefix_allowed_tokens_fn=prefix_fn,
+        )
+    generated_ids = out[0, input_ids.shape[-1]:]
+    text_B = tokenizer.decode(generated_ids, skip_special_tokens=True).strip()
+    elapsed_B = round(time.time() - t0, 2)
+    json_B = _extract_json(text_B)
+    print(f"  elapsed={elapsed_B}s  len={len(text_B)}  valid_json={json_B is not None}")
+
+    # ── SCHEMA VALIDATION ─────────────────────────────────────────────────
+    # Check that guided output actually matches expected nested structure.
+    def _has_correct_schema(parsed: dict | None) -> bool:
+        if not parsed or not isinstance(parsed, dict):
+            return False
+        for v in parsed.values():
+            if not isinstance(v, dict):
+                return False
+            if not all(k in v for k in ("description", "variables", "formulation", "expression")):
+                return False
+            if not isinstance(v.get("variables"), dict):
+                return False
+        return True
+
+    schema_ok_A = _has_correct_schema(json_A)
+    schema_ok_B = _has_correct_schema(json_B)
+
+    # ── SIDE-BY-SIDE LOG ──────────────────────────────────────────────────
+    lines = [
+        f"# construct: guided vs free  ({ts})",
+        f"# temperature=0.0 (greedy)",
+        "",
+        "=" * 78,
+        "MODE A — FREE-FORM JSON (json_mode=True, no structural constraint)",
+        "=" * 78,
+        f"elapsed={elapsed_A}s  valid_json={json_A is not None}  correct_schema={schema_ok_A}",
+        "",
+        text_A,
+        "",
+        "=" * 78,
+        "MODE B — GUIDED JSON (lm-format-enforcer JsonSchemaParser)",
+        "=" * 78,
+        f"elapsed={elapsed_B}s  valid_json={json_B is not None}  correct_schema={schema_ok_B}",
+        "",
+        text_B,
+        "",
+        "=" * 78,
+        "PARSED — MODE A",
+        "=" * 78,
+        _json.dumps(json_A, indent=2, ensure_ascii=False) if json_A else "(parse failed)",
+        "",
+        "=" * 78,
+        "PARSED — MODE B",
+        "=" * 78,
+        _json.dumps(json_B, indent=2, ensure_ascii=False) if json_B else "(parse failed)",
+    ]
+    log_path.write_text("\n".join(lines), encoding="utf-8")
+    print(f"\n── LOG SAVED ── {log_path}")
+    print(f"Schema correct: A={schema_ok_A}  B={schema_ok_B}")
+
+    return {
+        "group": group,
+        "case": case,
+        "ok_format": schema_ok_B,   # B is the one we're testing
+        "elapsed_s": elapsed_A + elapsed_B,
+        "log_path": str(log_path),
+        "mode_a": {"elapsed_s": elapsed_A, "valid_json": json_A is not None, "correct_schema": schema_ok_A},
+        "mode_b": {"elapsed_s": elapsed_B, "valid_json": json_B is not None, "correct_schema": schema_ok_B},
+        "parsed": json_B,
+    }
+
+
 # ═════════════════════════════════════════════════════════════════════════
 # Compare propose → construct: Text-only (TextMAS) vs Latent (LatentMAS)
 #
@@ -434,5 +674,6 @@ CASES = {
     "propose": test_propose,
     "construct": test_construct,
     "feedback": test_feedback,
+    "construct_guided_vs_free": test_construct_guided_vs_free,
     "compare_latent_vs_text": test_propose_construct_compare,
 }
