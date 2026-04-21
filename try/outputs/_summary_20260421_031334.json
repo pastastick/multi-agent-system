@@ -1,0 +1,42 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "construct_guided_vs_free",
+    "latent_steps": 0,
+    "ok_format": true,
+    "elapsed_s": 186.73000000000002,
+    "log_path": "/home/ubuntu/multi-agent-system/try/outputs/proposal_feedback/construct_guided_vs_free_20260421_031010.txt",
+    "mode_a": {
+      "elapsed_s": 90.15,
+      "valid_json": true,
+      "correct_schema": false
+    },
+    "mode_b": {
+      "elapsed_s": 96.58,
+      "valid_json": true,
+      "correct_schema": true
+    },
+    "parsed": {
+      "Short_Term_Momentum_Volume_Factor_5D": {
+        "description": "This factor combines short-term price momentum with volume confirmation to predict future returns. It uses a 5-day window for momentum and checks for positive volume change to validate the trend strength",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "$volume": "Volume of the stock on that day",
+          "TS_PCTCHANGE($volume, 5)": "Percentage change in volume over the past 5 days"
+        },
+        "formulation": "STMV_\\text{5D} = \\frac{\\text{TS_MEAN}($return, 5)}{\\text{TS_PCTCHANGE}($volume, 5) + 1e-8} \\times \\text{SIGN}(\\text{TS_PCTCHANGE}($volume, 5))",
+        "expression": "TS_MEAN($return, 5) / (TS_PCTCHANGE($volume, 5) + 1e-8) * SIGN(TS_PCTCHANGE($volume, 5))"
+      },
+      "Volume_Growth_Momentum_Factor_10D": {
+        "description": "This factor measures the relationship between volume growth and short-term momentum. It uses a 10-day window for momentum and requires positive volume growth to validate the trend",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "$volume": "Volume of the stock on that day",
+          "TS_PCTCHANGE($volume, 10)": "Percentage change in volume over the past 10 days"
+        },
+        "formulation": "VGM_\\text{10D} = \\text{TS_MEAN}($return, 10) \\times \\text{SIGN}(\\text{TS_PCTCHANGE}($volume, 10))",
+        "expression": "TS_MEAN($return, 10) * SIGN(TS_PCTCHANGE($volume, 10))"
+      }
+    }
+  }
+]

@@ -1,0 +1,108 @@
+# construct: guided vs free  (20260421_031452)
+# latent_steps=20  temperature=0.7  top_p=0.95
+
+==============================================================================
+MODE A -- FREE-FORM JSON (json_mode=True, no structural constraint)
+==============================================================================
+elapsed=83.61s  valid_json=True  correct_schema=False
+
+{
+            "$return": "Daily return of the stock on that day.",
+            "TS_MEAN($return, 20)": "Mean of daily returns over the past 20 days.",
+            "TS_PCTCHANGE($volume, 20)": "Percentage change in volume over the past 20 days.",
+            "TS_ZSCORE($return, 20)": "Z-score of daily returns over the past 20 days."
+        }
+
+==============================================================================
+MODE B -- GUIDED JSON (guided + latent=20)
+==============================================================================
+elapsed=220.86s  valid_json=True  correct_schema=True
+
+{
+    "Momentum_Volume_Confirmation_Factor_5D": {
+        "description": "This factor combines 5-day price momentum with normalized volume growth to capture trending strength and market participation. The momentum is derived from the 5-day return mean, while volume growth is standardized using Z-score to enhance signal robustness across different market conditions",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "$volume": "Volume of the stock on that day",
+          "TS_MEAN($return, 5)": "Mean of daily returns over the past 5 days",
+          "TS_PCTCHANGE($volume, 5)": "Percentage change in volume over the past 5 days",
+          "ZSCORE(TS_PCTCHANGE($volume, 5), 20)": "Z-score of volume change standardized over 20 days"
+        },
+        "formulation": "MVC_\\text{5D} = \\frac{TS_MEAN(\\text{\\$return}, 5)}{\\text{ZSCORE}(TS_PCTCHANGE(\\text{\\$volume}, 5), 20)}",
+        "expression": "TS_MEAN($return, 5) / (ZSCORE(TS_PCTCHANGE($volume, 5), 20) + 1e-8)"
+    },
+    "Cross-sectional_Momentum_Volume_Factor_20D": {
+        "description": "This factor evaluates the cross-sectional correlation between 20-day price momentum and volume growth to identify persistent trends. By using cross-sectional correlation, it captures both directional and magnitude information about price movements and market participation",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "TS_MEAN($return, 20)": "Mean of daily returns over the past 20 days",
+          "TS_PCTCHANGE($volume, 20)": "Percentage change in volume over the past 20 days",
+          "TS_CORR(TS_MEAN($return, 20), TS_PCTCHANGE($volume, 20), 20)": "Correlation between momentum and volume growth over 20 days"
+        },
+        "formulation": "CMV_\\text{20D} = \\text{TS_CORR}(TS_MEAN(\\text{\\$return}, 20), \\text{TS_PCTCHANGE}(\\text{\\$volume}, 20), 20)",
+        "expression": "TS_CORR(TS_MEAN($return, 20), TS_PCTCHANGE($volume, 20), 20)"
+    },
+    "Normalized_Momentum_Volume_Factor_15D": {
+        "description": "This factor normalizes the product of 15-day price momentum and volume growth to create a stable, interpretable signal. Normalization ensures that the factor is not skewed by extreme values in either momentum or volume components",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "TS_MEAN($return, 15)": "Mean of daily returns over the past 15 days",
+          "TS_PCTCHANGE($volume, 15)": "Percentage change in volume over the past 15 days",
+          "ZSCORE(TS_MEAN($return, 15), 20)": "Z-score of momentum standardized over 20 days",
+          "ZSCORE(TS_PCTCHANGE($volume, 15), 20)": "Z-score of volume growth standardized over 20 days"
+        },
+        "formulation": "NMV_\\text{15D} = \\frac{ZSCORE(TS_MEAN(\\text{\\$return}, 15), 20) \\times ZSCORE(TS_PCTCHANGE(\\text{\\$volume}, 15), 20)}{\\sqrt{\\left(ZSCORE(TS_MEAN(\\text{\\$return}, 15), 20)\\right)^2 + \\left(ZSCORE(TS_PCTCHANGE(\\text{\\$volume}, 15), 20)\\right)^2}}",
+        "expression": "ZSCORE(TS_MEAN($return, 15), 20) * ZSCORE(TS_PCTCHANGE($volume, 15), 20) / (SQRT( (ZSCORE(TS_MEAN($return, 15), 20))^2 + (ZSCORE(TS_PCTCHANGE($volume, 15), 20))^2 ) + 1e-8)"
+    }
+}
+
+==============================================================================
+PARSED -- MODE A
+==============================================================================
+{
+  "$return": "Daily return of the stock on that day.",
+  "TS_MEAN($return, 20)": "Mean of daily returns over the past 20 days.",
+  "TS_PCTCHANGE($volume, 20)": "Percentage change in volume over the past 20 days.",
+  "TS_ZSCORE($return, 20)": "Z-score of daily returns over the past 20 days."
+}
+
+==============================================================================
+PARSED -- MODE B
+==============================================================================
+{
+  "Momentum_Volume_Confirmation_Factor_5D": {
+    "description": "This factor combines 5-day price momentum with normalized volume growth to capture trending strength and market participation. The momentum is derived from the 5-day return mean, while volume growth is standardized using Z-score to enhance signal robustness across different market conditions",
+    "variables": {
+      "$return": "Daily return of the stock on that day",
+      "$volume": "Volume of the stock on that day",
+      "TS_MEAN($return, 5)": "Mean of daily returns over the past 5 days",
+      "TS_PCTCHANGE($volume, 5)": "Percentage change in volume over the past 5 days",
+      "ZSCORE(TS_PCTCHANGE($volume, 5), 20)": "Z-score of volume change standardized over 20 days"
+    },
+    "formulation": "MVC_\\text{5D} = \\frac{TS_MEAN(\\text{\\$return}, 5)}{\\text{ZSCORE}(TS_PCTCHANGE(\\text{\\$volume}, 5), 20)}",
+    "expression": "TS_MEAN($return, 5) / (ZSCORE(TS_PCTCHANGE($volume, 5), 20) + 1e-8)"
+  },
+  "Cross-sectional_Momentum_Volume_Factor_20D": {
+    "description": "This factor evaluates the cross-sectional correlation between 20-day price momentum and volume growth to identify persistent trends. By using cross-sectional correlation, it captures both directional and magnitude information about price movements and market participation",
+    "variables": {
+      "$return": "Daily return of the stock on that day",
+      "TS_MEAN($return, 20)": "Mean of daily returns over the past 20 days",
+      "TS_PCTCHANGE($volume, 20)": "Percentage change in volume over the past 20 days",
+      "TS_CORR(TS_MEAN($return, 20), TS_PCTCHANGE($volume, 20), 20)": "Correlation between momentum and volume growth over 20 days"
+    },
+    "formulation": "CMV_\\text{20D} = \\text{TS_CORR}(TS_MEAN(\\text{\\$return}, 20), \\text{TS_PCTCHANGE}(\\text{\\$volume}, 20), 20)",
+    "expression": "TS_CORR(TS_MEAN($return, 20), TS_PCTCHANGE($volume, 20), 20)"
+  },
+  "Normalized_Momentum_Volume_Factor_15D": {
+    "description": "This factor normalizes the product of 15-day price momentum and volume growth to create a stable, interpretable signal. Normalization ensures that the factor is not skewed by extreme values in either momentum or volume components",
+    "variables": {
+      "$return": "Daily return of the stock on that day",
+      "TS_MEAN($return, 15)": "Mean of daily returns over the past 15 days",
+      "TS_PCTCHANGE($volume, 15)": "Percentage change in volume over the past 15 days",
+      "ZSCORE(TS_MEAN($return, 15), 20)": "Z-score of momentum standardized over 20 days",
+      "ZSCORE(TS_PCTCHANGE($volume, 15), 20)": "Z-score of volume growth standardized over 20 days"
+    },
+    "formulation": "NMV_\\text{15D} = \\frac{ZSCORE(TS_MEAN(\\text{\\$return}, 15), 20) \\times ZSCORE(TS_PCTCHANGE(\\text{\\$volume}, 15), 20)}{\\sqrt{\\left(ZSCORE(TS_MEAN(\\text{\\$return}, 15), 20)\\right)^2 + \\left(ZSCORE(TS_PCTCHANGE(\\text{\\$volume}, 15), 20)\\right)^2}}",
+    "expression": "ZSCORE(TS_MEAN($return, 15), 20) * ZSCORE(TS_PCTCHANGE($volume, 15), 20) / (SQRT( (ZSCORE(TS_MEAN($return, 15), 20))^2 + (ZSCORE(TS_PCTCHANGE($volume, 15), 20))^2 ) + 1e-8)"
+  }
+}

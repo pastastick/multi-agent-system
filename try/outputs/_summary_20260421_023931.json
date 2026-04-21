@@ -1,0 +1,31 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "compare_latent10_vs_text",
+    "latent_steps": 10,
+    "ok_format": true,
+    "mode_a": {
+      "propose_elapsed_s": 37.66,
+      "construct_elapsed_s": 62.89,
+      "construct_valid_json": true,
+      "construct_parsed": {
+        "$volume": "Volume of the stock on that day.",
+        "TS_PCTCHANGE(A, p)": "Percentage change in the value of sequence A over p periods."
+      }
+    },
+    "mode_b": {
+      "propose_elapsed_s": 2.12,
+      "construct_elapsed_s": 88.77,
+      "construct_valid_json": true,
+      "construct_parsed": {
+        "$return": "Daily return of the stock on that day.",
+        "$volume": "Volume of the stock on that day.",
+        "TS_ZSCORE($volume, 20)": "Z-score of volume over the past 20 days.",
+        "TS_MEAN($return, 20)": "Mean return over the past 20 days."
+      },
+      "kv_len_tokens": 1835
+    },
+    "elapsed_s": 191.44,
+    "log_path": "/home/ubuntu/multi-agent-system/try/outputs/proposal_feedback/compare_latent10_vs_text_20260421_023543.txt"
+  }
+]

@@ -1,0 +1,44 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "construct_guided_vs_free",
+    "latent_steps": 0,
+    "ok_format": true,
+    "elapsed_s": 199.12,
+    "log_path": "/home/ubuntu/multi-agent-system/try/outputs/proposal_feedback/construct_guided_vs_free_20260421_025528.txt",
+    "mode_a": {
+      "elapsed_s": 91.25,
+      "valid_json": true,
+      "correct_schema": false
+    },
+    "mode_b": {
+      "elapsed_s": 107.87,
+      "valid_json": true,
+      "correct_schema": true
+    },
+    "parsed": {
+      "ShortTermMomentumVolumeSignal_5D": {
+        "description": "This factor combines short-term price momentum with volume growth to capture the strength of recent price movements and increasing market participation. It uses a 5-day window for momentum and a 5-day window for volume change, then applies cross-sectional ranking to identify the strongest signals",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "$volume": "Volume of the stock on that day",
+          "TS_MEAN($return, 5)": "Mean return over the past 5 days",
+          "TS_PCTCHANGE($volume, 5)": "Percentage change in volume over the past 5 days"
+        },
+        "formulation": "STMVS_\\text{5D} = \\text{RANK}(\\text{TS_MEAN}(\\text{$return}, 5) \\times \\text{SIGN}(\\text{TS_PCTCHANGE}(\\text{$volume}, 5)))",
+        "expression": "RANK(TS_MEAN($return, 5) * SIGN(TS_PCTCHANGE($volume, 5)))"
+      },
+      "VolumeGrowthMomentum_20D": {
+        "description": "This factor integrates volume growth with 20-day momentum to provide a more stable signal for long-term trend identification. It uses a 20-day window for momentum and a 5-day window for volume change, then applies Z-score normalization to reduce noise and enhance interpretability",
+        "variables": {
+          "$return": "Daily return of the stock on that day",
+          "$volume": "Volume of the stock on that day",
+          "TS_MEAN($return, 20)": "Mean return over the past 20 days",
+          "TS_PCTCHANGE($volume, 5)": "Percentage change in volume over the past 5 days"
+        },
+        "formulation": "VGM_\\text{20D} = \\text{ZSCORE}(\\text{TS_MEAN}(\\text{$return}, 20) \\times \\text{TS_PCTCHANGE}(\\text{$volume}, 5))",
+        "expression": "ZSCORE(TS_MEAN($return, 20) * TS_PCTCHANGE($volume, 5))"
+      }
+    }
+  }
+]

@@ -25,7 +25,7 @@ from dataclasses import dataclass, field
 class TestConfig:
     # ── Backend LLM ──────────────────────────────────────────────────────
     # Set sesuai environment (Qwen3-4B / Qwen3-14B / etc.)
-    model_name: str = os.environ.get("TEST_MODEL", "Qwen/Qwen3-30B-A3B")
+    model_name: str = os.environ.get("TEST_MODEL", "Qwen/Qwen3-4B")
     device: str = os.environ.get("TEST_DEVICE", "cuda")
 
     # ── Sampling ─────────────────────────────────────────────────────────
