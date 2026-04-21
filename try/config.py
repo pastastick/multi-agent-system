@@ -74,6 +74,7 @@ TEST_REGISTRY: dict[str, list[str]] = {
         "propose",              # factors/proposal.py:380 (hypothesis_gen)
         "construct",            # factors/proposal.py:648 (hypothesis2experiment)
         "feedback",             # factors/feedback.py:365 (factor_feedback_generation)
+        "compare_latent_vs_text",  # propose→construct: text_only vs kv_only+kv_and_text
     ],
     "coder_evaluator": [
         "coder_retry",          # factors/coder/evolving_strategy.py:522 (LLM fix expression)

@@ -1,0 +1,11 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "compare_latent2_vs_text",
+    "ok_format": true,
+    "response": "(dry_run)",
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/root/projects/first-experiment/ai-agent/try/outputs/proposal_feedback/compare_latent2_vs_text_20260420_220901.txt"
+  }
+]

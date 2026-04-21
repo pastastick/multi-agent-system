@@ -75,10 +75,15 @@ PROMPT_PATHS = {
 # ═════════════════════════════════════════════════════════════════════════
 
 _BACKEND_INSTANCE = None
+_LATENT_BACKEND_INSTANCE = None
 
 
 def get_backend(config: TestConfig = CONFIG):
-    """Lazy-init LocalLLMBackend. Load model hanya sekali per proses."""
+    """Lazy-init LocalLLMBackend. Load model hanya sekali per proses.
+
+    Text-only backend (latent_steps=0). Dipakai oleh run_case untuk
+    semua test yang hanya butuh text generation biasa.
+    """
     global _BACKEND_INSTANCE
     if _BACKEND_INSTANCE is None:
         from backend.llm.client import LocalLLMBackend
@@ -94,6 +99,36 @@ def get_backend(config: TestConfig = CONFIG):
         )
         print("[common] Backend ready.")
     return _BACKEND_INSTANCE
+
+
+def get_latent_backend(config: TestConfig = CONFIG, latent_steps_init: int = 10):
+    """Lazy-init LocalLLMBackend dengan latent support aktif.
+
+    Kenapa terpisah dari get_backend(): latent butuh `use_realign=True` dan
+    `latent_steps>0` saat __init__ supaya LatentRealigner (W_a projection
+    matrix) dibangun. Model weights di-share via _MODEL_CACHE, jadi hanya
+    overhead realigner build (~few seconds, negligible VRAM).
+
+    latent_steps_init hanya menentukan default engine — bisa di-override
+    per-call via run(..., latent_steps=N).
+    """
+    global _LATENT_BACKEND_INSTANCE
+    if _LATENT_BACKEND_INSTANCE is None:
+        from backend.llm.client import LocalLLMBackend
+        print(f"[common] Loading LATENT LocalLLMBackend (use_realign=True) ...")
+        _LATENT_BACKEND_INSTANCE = LocalLLMBackend(
+            model_name=config.model_name,
+            device=config.device,
+            max_new_tokens=config.max_new_tokens,
+            temperature=config.temperature,
+            top_p=config.top_p,
+            latent_steps=latent_steps_init,
+            use_realign=True,
+            log_tensors=False,
+            store_kv=False,
+        )
+        print("[common] Latent backend ready.")
+    return _LATENT_BACKEND_INSTANCE
 
 
 # ═════════════════════════════════════════════════════════════════════════
