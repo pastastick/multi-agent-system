@@ -177,6 +177,21 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     temperature_coder: float = 0.3                  # rendah: expression fix presisi
     temperature_feedback: Optional[float] = None    # None = pakai temperature global
 
+    # ── Guided JSON decoding (construct step) ───────────────────────────
+    # Paksa output construct mengikuti schema nested
+    #   {factor_name → {description, variables, formulation, expression}}
+    # via lm-format-enforcer prefix_allowed_tokens_fn.
+    #
+    # Alasan: Qwen3-4B (dan model <~70B umumnya) sering "pattern-match" ke
+    # inner `variables` dict karena token $close/TS_MEAN/dst dominan di
+    # prompt → output meluncur ke flat dict tanpa outer factor wrapper.
+    # Sudah dibuktikan di ai-agent/try/test_proposal_feedback.py
+    # (test_construct_guided_vs_free): free=gagal schema, guided=benar.
+    #
+    # Overhead ~10–20% latency karena grammar check per-token, tapi
+    # correctness gain jauh lebih penting untuk pipeline yang parse formula.
+    guided_construct_enabled: bool = True
+
     # Debug: simpan tensor (input_ids, output_ids, hidden_last) ke disk.
     log_tensors: bool = True
 

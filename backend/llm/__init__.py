@@ -36,6 +36,12 @@ from llm.client import (
     calculate_embedding_distance_between_str_list,
 )
 
+# Guided JSON decoding (untuk construct step khususnya)
+from llm.guided_decoding import (
+    CONSTRUCT_FACTOR_JSON_SCHEMA,
+    build_guided_json_prefix_fn,
+)
+
 __all__ = [
     # Types
     "KVCache",
@@ -58,4 +64,7 @@ __all__ = [
     "LocalChatSession",
     "get_local_backend",
     "calculate_embedding_distance_between_str_list",
+    # Guided decoding
+    "CONSTRUCT_FACTOR_JSON_SCHEMA",
+    "build_guided_json_prefix_fn",
 ]

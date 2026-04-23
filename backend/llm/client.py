@@ -811,9 +811,16 @@ class _CoreEngine:
         temperature    : float = 0.6,
         top_p          : float = 0.95,
         return_kv      : bool  = False,
+        prefix_allowed_tokens_fn: Optional[Any] = None,
     ) -> Tuple[str, torch.Tensor, torch.Tensor, Optional[KVCache]]:
         """
         Generate teks. Opsional kembalikan KV-cache sesudah generate.
+
+        Args:
+            prefix_allowed_tokens_fn: Callable (batch_id, input_ids) -> list[int]
+                yang membatasi token boleh-keluar di setiap step dekoder.
+                Diteruskan ke model.generate() untuk guided decoding
+                (contoh: enforce JSON schema via lm-format-enforcer).
 
         Returns:
             (text, input_ids [1,L], output_ids [1,G], kv atau None)
@@ -854,6 +861,7 @@ class _CoreEngine:
             output_scores=False,
             past_key_values=past_kv,
             cache_position=cache_position,
+            prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
         )
 
         generated_ids = out.sequences[0, prompt_len:]
@@ -908,6 +916,7 @@ class _CoreEngine:
         temperature    : float = 0.6,
         top_p          : float = 0.95,
         return_kv      : bool  = True,
+        prefix_allowed_tokens_fn: Optional[Any] = None,
     ) -> Tuple[str, torch.Tensor, torch.Tensor, Optional[KVCache]]:
         """
         Generate teks dari KV-cache yang sudah ada TANPA re-encode pesan.
@@ -951,6 +960,7 @@ class _CoreEngine:
             pad_token_id=self.tokenizer.pad_token_id,
             return_dict_in_generate=True,
             output_scores=False,
+            prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
         )
 
         # out.sequences = [prefix_ids + generated_ids]
@@ -1107,6 +1117,7 @@ class LocalLLMBackend:
         role           : str = "assistant",
         mode           : Optional[OutputMode] = None,
         latent_steps   : Optional[int] = None,
+        json_schema    : Optional[Dict[str, Any]] = None,
     ) -> str:
         """
         Drop-in replacement untuk APIBackend.build_messages_and_create_chat_completion.
@@ -1132,7 +1143,7 @@ class LocalLLMBackend:
             past_key_values=past_key_values,
             max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p,
             json_mode=json_mode, conv_id=conv_id, step=step, role=role,
-            latent_steps=latent_steps,
+            latent_steps=latent_steps, json_schema=json_schema,
         )
         return result.text or ""
 
@@ -1152,6 +1163,7 @@ class LocalLLMBackend:
         role           : str = "assistant",
         mode           : Optional[OutputMode] = None,
         latent_steps   : Optional[int] = None,
+        json_schema    : Optional[Dict[str, Any]] = None,
     ) -> LLMResult:
         """
         Sama seperti build_messages_and_create_chat_completion, tapi return
@@ -1172,7 +1184,7 @@ class LocalLLMBackend:
             past_key_values=past_key_values,
             max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p,
             json_mode=json_mode, conv_id=conv_id, step=step, role=role,
-            latent_steps=latent_steps,
+            latent_steps=latent_steps, json_schema=json_schema,
         )
 
     # ── Titik masuk fleksibel ──────────────────────────────────────────────
@@ -1192,6 +1204,7 @@ class LocalLLMBackend:
         role               : str  = "agent",
         kv_n_selective     : int  = 64,
         latent_steps       : Optional[int] = None,
+        json_schema        : Optional[Dict[str, Any]] = None,
     ) -> LLMResult:
         """
         Titik masuk tunggal untuk semua mode.
@@ -1227,6 +1240,22 @@ class LocalLLMBackend:
         _max_tok = max_new_tokens or self.max_new_tokens
         _temp    = temperature    or self.temperature
         _top_p   = top_p          or self.top_p
+
+        # ── Build guided-decoding prefix_fn (opsional) ──────────────────────
+        # Jika `json_schema` di-supply, bangun prefix_allowed_tokens_fn dari
+        # lm-format-enforcer — di setiap step dekoder, hanya token yang
+        # melanjutkan parse JSON valid terhadap schema yang boleh keluar.
+        # Diterapkan hanya pada mode yang generate text (bukan kv_only).
+        _prefix_fn = None
+        if json_schema is not None and mode != "kv_only":
+            from llm.guided_decoding import build_guided_json_prefix_fn
+            _prefix_fn = build_guided_json_prefix_fn(
+                self._engine.tokenizer, json_schema,
+            )
+            print(
+                f"[GuidedDecoding] role={role}, mode={mode}: "
+                f"enforcing JSON schema via prefix_allowed_tokens_fn"
+            )
 
         # Pipeline monitor (safe — no-op if unavailable)
         try:
@@ -1300,6 +1329,7 @@ class LocalLLMBackend:
                     messages, past_key_values,
                     max_new_tokens=_max_tok, temperature=_temp, top_p=_top_p,
                     return_kv=False,
+                    prefix_allowed_tokens_fn=_prefix_fn,
                 )
                 if json_mode:
                     text = self._fix_json(text)
@@ -1340,6 +1370,7 @@ class LocalLLMBackend:
                     past_kv=kv, messages=messages,
                     max_new_tokens=_max_tok, temperature=_temp, top_p=_top_p,
                     return_kv=False,
+                    prefix_allowed_tokens_fn=_prefix_fn,
                 )
                 try:
                     kv.crop(_latent_kv_len)

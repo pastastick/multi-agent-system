@@ -210,6 +210,12 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     # Construct: temperature rendah → formula lebih presisi.
                     # Output di-parse oleh QlibFactorParser menjadi Python code.
                     temperature=_get_temp("construct") if _get_temp else None,
+                    # Guided JSON decoding — struktur output dipaksa valid
+                    # via lm-format-enforcer (prefix_allowed_tokens_fn).
+                    # Default True: model kecil butuh constraint struktural.
+                    guided_decoding=getattr(
+                        PROP_SETTING, "guided_construct_enabled", True,
+                    ),
                 )
                 self.summarizer = LatentFeedback(
                     scen, llm_backend=llm_backend,

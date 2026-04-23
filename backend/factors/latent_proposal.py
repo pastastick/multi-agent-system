@@ -266,11 +266,19 @@ Pick a different factor idea (different operators / lookback / variables combo).
 
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
-                 temperature: Optional[float] = None, **kwargs):
+                 temperature: Optional[float] = None,
+                 guided_decoding: bool = True, **kwargs):
         AlphaAgentHypothesis2FactorExpression.__init__(self, *args, **kwargs)
         self._init_latent_state(llm_backend, default_mode="kv_and_text",
                                 latent_steps=latent_steps, temperature=temperature)
         self._attempt_idx: int = 0
+        # Guided JSON decoding via lm-format-enforcer.
+        # Model kecil (<~70B) sering gagal menghasilkan struktur nested
+        # {factor_name → {description, variables, formulation, expression}}
+        # karena anchoring pada token $close/TS_MEAN/dst di prompt → output
+        # meluncur ke flat variables dict. Guided decoding memaksa struktur
+        # via prefix_allowed_tokens_fn di model.generate().
+        self._guided_decoding: bool = guided_decoding
 
     def set_past_kv(self, kv):
         """Override: reset attempt counter saat KV baru di-set (= step construct baru)."""
@@ -321,6 +329,13 @@ Pick a different factor idea (different operators / lookback / variables combo).
         temp_override = min(base_temp + 0.15 * (self._attempt_idx - 1), 1.0)
         past_kv = self._past_kv
 
+        # Guided JSON schema — paksa struktur output nested 4-field per factor.
+        # Hanya resolve saat diperlukan (None → backend skip build prefix_fn).
+        json_schema = None
+        if self._guided_decoding:
+            from llm.guided_decoding import CONSTRUCT_FACTOR_JSON_SCHEMA
+            json_schema = CONSTRUCT_FACTOR_JSON_SCHEMA
+
         result = self.llm_backend.build_messages_and_run(
             user_prompt=effective_user_prompt,
             system_prompt=system_prompt,
@@ -330,12 +345,14 @@ Pick a different factor idea (different operators / lookback / variables combo).
             role="construct",
             latent_steps=self._latent_steps,
             temperature=temp_override,
+            json_schema=json_schema,
         )
         self.last_result = result
         logger.info(
             f"[LatentHypothesis2Experiment] attempt={self._attempt_idx}, "
             f"mode={self._mode}, has_kv_in={past_kv is not None}, "
-            f"temp={temp_override:.2f}, text_len={len(result.text or '')}"
+            f"temp={temp_override:.2f}, guided={self._guided_decoding}, "
+            f"text_len={len(result.text or '')}"
         )
         return result.text or ""
 
