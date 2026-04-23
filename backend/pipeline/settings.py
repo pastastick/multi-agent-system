@@ -101,7 +101,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
 
     # Model HuggingFace untuk LocalLLMBackend.
     # Di-load sekali, di-share ke semua step dalam satu loop.
-    latent_model_name: str = "Qwen/Qwen3-14B"
+    latent_model_name: str = "Qwen/Qwen3-4B"
     latent_device: str = "cuda"
 
     # ── Latent reasoning steps ───────────────────────────────────────────
@@ -109,13 +109,13 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # ke KV-cache tanpa generate text) per LLM call.
     # Lebih tinggi = reasoning lebih dalam, tapi lebih lambat.
     # Referensi: LatentMASMethod.latent_steps di core/latent/latent_method.py
-    latent_steps: int = 2                      # default global untuk _CoreEngine
+    latent_steps: int = 10                      # default global untuk _CoreEngine
 
     # Per-step override (None = pakai latent_steps global).
     # Construct (formula generation) mungkin butuh lebih banyak latent steps
     # karena harus "berpikir" lebih dalam sebelum generate ekspresi matematika.
     latent_steps_propose: Optional[int] = None
-    latent_steps_construct: Optional[int] = None
+    latent_steps_construct: Optional[int] = 20
     latent_steps_coder: Optional[int] = None
     latent_steps_feedback: Optional[int] = None
 
@@ -135,7 +135,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Setelah feedback, KV di-truncate ke jumlah ini sebelum
     # dikirim ke propose step di iterasi berikutnya.
     # Terlalu kecil: hilang konteks.  Terlalu besar: lambat + OOM.
-    kv_max_tokens: int = 2048
+    kv_max_tokens: int = 64000
 
     # Simpan KV-cache ke disk (untuk resume/debugging).
     # Pakai KVCacheStore di llm/client.py.
@@ -161,8 +161,8 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     knn_strategy: str = "top"         # "top" (paling mirip), "bottom", "random"
 
     # ── Generation parameters ────────────────────────────────────────────
-    max_new_tokens: int = 2048
-    temperature: float = 0.6
+    max_new_tokens: int = 36000
+    temperature: float = 0.8
     top_p: float = 0.95
 
     # Per-step temperature override.
@@ -173,8 +173,8 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # output coder juga berupa ekspresi yang harus bisa di-parse.
     # Propose: bisa lebih tinggi untuk eksplorasi hipotesis yang beragam.
     temperature_propose: Optional[float] = None     # None = pakai temperature global
-    temperature_construct: float = 0.3              # rendah: formula presisi
-    temperature_coder: float = 0.3                  # rendah: expression fix presisi
+    temperature_construct: float = 0.6              # rendah: formula presisi
+    temperature_coder: float = 0.6                  # rendah: expression fix presisi
     temperature_feedback: Optional[float] = None    # None = pakai temperature global
 
     # ── Guided JSON decoding (construct step) ───────────────────────────

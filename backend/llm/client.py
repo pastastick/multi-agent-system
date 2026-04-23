@@ -243,9 +243,11 @@ class KVCacheStore:
 
     def _index_add(self, conv_id: str, step: int, tier: str,
                    filepath: Path, kv: KVCache, metadata: Dict) -> None:
+        from llm._shared import _is_dynamic_cache, _kv_pairs
         seq_len    = _past_length(kv)
-        n_layers   = len(kv)
-        hidden_dim = kv[0][0].shape[-1] if kv else 0
+        kv_pairs   = _kv_pairs(kv) if kv else []
+        n_layers   = len(kv_pairs)
+        hidden_dim = kv_pairs[0][0].shape[-1] if kv_pairs else 0
         size_bytes = filepath.stat().st_size if filepath.exists() else 0
         self.conn.execute(
             """INSERT INTO kv_index
@@ -312,13 +314,14 @@ class KVCacheStore:
           Konteks terkini paling relevan untuk prediksi berikutnya
           tersimpan di sini.
         """
+        from llm._shared import _kv_pairs
         metadata = metadata or {}
         seq_len  = _past_length(kv)
         keep     = min(n_tokens, seq_len)
 
         selective: KVCache = tuple(
-            tuple(t[..., -keep:, :].cpu() for t in layer)
-            for layer in kv
+            (k[..., -keep:, :].cpu(), v[..., -keep:, :].cpu())
+            for k, v in _kv_pairs(kv)
         )
 
         filepath = self.sel_dir / f"{conv_id}_{step:03d}_sel.pt"
@@ -842,12 +845,6 @@ class _CoreEngine:
 
         past_len      = _past_length(past_kv)
         ext_mask      = self._extend_mask(mask, past_len)
-        cache_position = None
-        if past_len > 0:
-            cache_position = torch.arange(
-                past_len, past_len + ids.shape[-1],
-                dtype=torch.long, device=self.device,
-            )
 
         out = self.model.generate(
             input_ids=ids,
@@ -860,7 +857,6 @@ class _CoreEngine:
             return_dict_in_generate=True,
             output_scores=False,
             past_key_values=past_kv,
-            cache_position=cache_position,
             prefix_allowed_tokens_fn=prefix_allowed_tokens_fn,
         )
 
@@ -943,16 +939,11 @@ class _CoreEngine:
         mask = torch.ones(
             (1, past_len + prefix_len), dtype=torch.long, device=self.device,
         )
-        cache_position = torch.arange(
-            past_len, past_len + prefix_len,
-            dtype=torch.long, device=self.device,
-        )
 
         out = self.model.generate(
             input_ids=prefix_ids,
             attention_mask=mask,
             past_key_values=past_kv,
-            cache_position=cache_position,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
@@ -1290,7 +1281,7 @@ class LocalLLMBackend:
             # untuk menghindari alokasi wrapper berulang & fragmentasi.
             if past_key_values is not None and isinstance(past_key_values, tuple):
                 from transformers import DynamicCache
-                past_key_values = DynamicCache.from_legacy_cache(past_key_values)
+                past_key_values = DynamicCache(ddp_cache_data=past_key_values)
 
             # ── KNN filter logging ────────────────────────────────────
             if (self._engine.knn_enabled
@@ -1416,14 +1407,6 @@ class LocalLLMBackend:
                         "ts"   : time.time(),
                     },
                 ))
-
-            # ── Konversi DynamicCache → tuple (boundary keluar) ────────
-            # Downstream code (loop.py, evolution, trajectory) pakai format
-            # tuple legacy. Konversi dilakukan SEKALI di sini, bukan di tiap
-            # method _CoreEngine. `to_legacy_cache()` cuma restructure
-            # reference list — tidak menyalin tensor.
-            if result.kv_cache is not None and hasattr(result.kv_cache, 'to_legacy_cache'):
-                result.kv_cache = result.kv_cache.to_legacy_cache()
 
             # ── In-memory KV-cache truncation ─────────────────────────
             if result.kv_cache is not None and self._kv_max_seq_len is not None:

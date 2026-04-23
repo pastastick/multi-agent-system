@@ -55,18 +55,45 @@ def _past_length(past_key_values) -> int:
     return past_key_values[0][0].shape[-2]
 
 
+def _is_dynamic_cache(kv) -> bool:
+    """True jika kv adalah transformers 5.x DynamicCache (punya .layers list)."""
+    return kv is not None and hasattr(kv, 'layers') and isinstance(kv.layers, list)
+
+
 def _kv_to_cpu(kv: KVCache) -> KVCache:
-    """Pindahkan KV-cache ke CPU untuk disimpan."""
+    """Pindahkan KV-cache ke CPU untuk disimpan.
+
+    transformers 5.x: DynamicCache.__iter__ yield (keys, values, optional_sliding)
+    where optional_sliding is None for full-attention layers. Kita hanya simpan
+    (keys, values) per layer yang sudah diinisialisasi.
+    """
+    if kv is None:
+        return None
+    if _is_dynamic_cache(kv):
+        return tuple(
+            (layer.keys.cpu(), layer.values.cpu())
+            for layer in kv.layers
+            if getattr(layer, 'is_initialized', False) and layer.keys is not None
+        )
+    # Legacy tuple format: Tuple[Tuple[Tensor, ...], ...]
     return tuple(
-        tuple(t.cpu() for t in layer)
+        tuple(t.cpu() for t in layer if t is not None)
         for layer in kv
     )
 
 
 def _kv_to_device(kv: KVCache, device: torch.device) -> KVCache:
     """Pindahkan KV-cache dari CPU ke device target."""
+    if kv is None:
+        return None
+    if _is_dynamic_cache(kv):
+        return tuple(
+            (layer.keys.to(device), layer.values.to(device))
+            for layer in kv.layers
+            if getattr(layer, 'is_initialized', False) and layer.keys is not None
+        )
     return tuple(
-        tuple(t.to(device) for t in layer)
+        tuple(t.to(device) for t in layer if t is not None)
         for layer in kv
     )
 
@@ -77,11 +104,21 @@ def kv_seq_len(kv: KVCache) -> int:
 
 
 def kv_size_bytes(kv: KVCache) -> int:
-    """Estimate total bytes used by a KV-cache tuple (all layers, CPU or GPU)."""
+    """Estimate total bytes used by a KV-cache (all layers, CPU or GPU)."""
+    if kv is None:
+        return 0
+    if _is_dynamic_cache(kv):
+        total = 0
+        for layer in kv.layers:
+            if getattr(layer, 'is_initialized', False) and layer.keys is not None:
+                total += layer.keys.nelement() * layer.keys.element_size()
+                total += layer.values.nelement() * layer.values.element_size()
+        return total
     total = 0
     for layer in kv:
         for t in layer:
-            total += t.nelement() * t.element_size()
+            if t is not None:
+                total += t.nelement() * t.element_size()
     return total
 
 
@@ -92,24 +129,56 @@ def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
     KV shape per layer: (key, value) each [batch, n_heads, seq_len, head_dim]
     Slices on dim=-2 (seq_len).
 
-    Preserves input format: tuple in → tuple out, DynamicCache in → DynamicCache out.
+    transformers 5.x DynamicCache: dimodifikasi in-place (layer tensors di-slice)
+    dan dikembalikan sebagai DynamicCache agar bisa langsung dipakai sebagai
+    past_key_values di model.generate() / model.forward() berikutnya.
     """
     seq_len = _past_length(kv)
     if seq_len <= max_tokens:
         return kv
-    truncated = tuple(
-        tuple(t[..., -max_tokens:, :] for t in layer)
+    if _is_dynamic_cache(kv):
+        for layer in kv.layers:
+            if getattr(layer, 'is_initialized', False) and layer.keys is not None:
+                layer.keys = layer.keys[..., -max_tokens:, :]
+                layer.values = layer.values[..., -max_tokens:, :]
+        return kv
+    # Legacy tuple format
+    return tuple(
+        tuple(t[..., -max_tokens:, :] for t in layer if t is not None)
         for layer in kv
     )
-    if hasattr(kv, 'to_legacy_cache'):
-        from transformers import DynamicCache
-        return DynamicCache.from_legacy_cache(truncated)
-    return truncated
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # KNN-based KV-cache selective filtering
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _kv_pairs(kv) -> list:
+    """Extract list of (key, value) tensor pairs from any KV cache format.
+
+    transformers 5.x DynamicCache: iterate over .layers and extract tensors.
+    Legacy tuple format: each item is (key, value[, ...]).
+    """
+    if _is_dynamic_cache(kv):
+        return [
+            (layer.keys, layer.values)
+            for layer in kv.layers
+            if getattr(layer, 'is_initialized', False) and layer.keys is not None
+        ]
+    return [(item[0], item[1]) for item in kv]
+
+
+def _kv_from_pairs(pairs: list, original_kv) -> KVCache:
+    """Reconstruct KV cache from (key, value) pairs.
+
+    If original was DynamicCache, returns a new DynamicCache via ddp_cache_data.
+    Otherwise returns a tuple.
+    """
+    if _is_dynamic_cache(original_kv):
+        from transformers import DynamicCache
+        return DynamicCache(ddp_cache_data=pairs)
+    return tuple(pairs)
+
 
 @torch.no_grad()
 def kv_knn_filter(
@@ -165,12 +234,15 @@ def kv_knn_filter(
     if k >= seq_len:
         return kv
 
+    # Normalize ke list of (key, value) pairs untuk komputasi seragam
+    pairs = _kv_pairs(kv)
+
     # Gunakan keys dari middle layer untuk similarity computation.
     # Middle layer dipilih karena representasinya paling seimbang
     # antara low-level (awal) dan high-level (akhir) features.
-    num_layers = len(kv)
+    num_layers = len(pairs)
     mid_idx = num_layers // 2
-    keys = kv[mid_idx][0]  # [batch, n_heads, seq_len, head_dim]
+    keys = pairs[mid_idx][0]  # [batch, n_heads, seq_len, head_dim]
     batch_size, num_heads, _, head_dim = keys.shape
 
     # Rata-rata keys across heads: [batch, seq_len, head_dim]
@@ -250,23 +322,24 @@ def kv_knn_filter(
             seq_len - k, seq_len, device=device,
         ).unsqueeze(0).expand(batch_size, -1)
 
-    return _kv_select_indices(kv, selected)
+    return _kv_select_indices(kv, pairs, selected)
 
 
-def _kv_select_indices(kv: KVCache, indices: torch.Tensor) -> KVCache:
+def _kv_select_indices(kv: KVCache, pairs: list, indices: torch.Tensor) -> KVCache:
     """
     Pilih posisi tertentu dari setiap layer KV-cache.
 
     Args:
-        kv      : KV-cache (tuple atau DynamicCache).
+        kv      : KV-cache asli (untuk deteksi format dan rekonstruksi).
+        pairs   : List of (key, value) tensors dari _kv_pairs(kv).
         indices : [batch, k] indeks posisi yang akan dipertahankan.
 
     Returns:
-        Filtered KV-cache dalam format yang sama dengan input.
+        Filtered KV-cache dalam format yang sama dengan kv.
     """
     k = indices.shape[1]
     filtered = []
-    for key, value in kv:
+    for key, value in pairs:
         batch_size, num_heads, _, head_dim = key.shape
         idx_exp = indices.unsqueeze(1).unsqueeze(-1).expand(
             batch_size, num_heads, k, head_dim,
@@ -275,11 +348,7 @@ def _kv_select_indices(kv: KVCache, indices: torch.Tensor) -> KVCache:
             torch.gather(key, dim=2, index=idx_exp),
             torch.gather(value, dim=2, index=idx_exp),
         ))
-    filtered = tuple(filtered)
-    if hasattr(kv, 'to_legacy_cache'):
-        from transformers import DynamicCache
-        return DynamicCache.from_legacy_cache(filtered)
-    return filtered
+    return _kv_from_pairs(filtered, kv)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

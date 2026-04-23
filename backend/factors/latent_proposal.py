@@ -248,22 +248,6 @@ Rules for every factor entry:
 The FIRST two characters of your response MUST be `{"` followed immediately by your chosen factor name.
 Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whitespace."""
 
-    # Short reminder di ujung user_prompt — menegaskan yang sudah ada di
-    # system_prompt (_COMPACT_OUTPUT_FORMAT). Tetap dipertahankan untuk
-    # menekan salah-mulai di token pertama.
-    _FORMAT_REMINDER = """
-
-Remember: begin your reply with `{"<YourFactorName>":` and NOT with `{"$` or `{"variables`.
-"""
-
-    _RETRY_WARNING = """
-
-!!! RETRY: last attempt emitted only a `variables`-like flat dict. This time,
-start your JSON with an OUTER factor name key whose VALUE is the 4-field dict.
-Pick a different factor idea (different operators / lookback / variables combo).
-
-"""
-
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
                  temperature: Optional[float] = None,
@@ -315,12 +299,6 @@ Pick a different factor idea (different operators / lookback / variables combo).
     def _call_llm(self, user_prompt: str, system_prompt: str, json_mode: bool = False) -> str:
         self._attempt_idx += 1
 
-        # Append format reminder AT END (recency bias counters the long
-        # operator list). Pada retry, prepend warning untuk dorong variasi.
-        effective_user_prompt = user_prompt + self._FORMAT_REMINDER
-        if self._attempt_idx > 1:
-            effective_user_prompt = self._RETRY_WARNING + effective_user_prompt
-
         # Retry strategy: escalate temperature untuk dorong variasi.
         # past_kv dari propose step TETAP dipakai di semua attempt — filosofi
         # Latent-MAS: chain latent reasoning antar step. Drop past_kv malah
@@ -337,7 +315,7 @@ Pick a different factor idea (different operators / lookback / variables combo).
             json_schema = CONSTRUCT_FACTOR_JSON_SCHEMA
 
         result = self.llm_backend.build_messages_and_run(
-            user_prompt=effective_user_prompt,
+            user_prompt=user_prompt,
             system_prompt=system_prompt,
             json_mode=json_mode,
             past_key_values=past_kv,
