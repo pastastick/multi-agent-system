@@ -1,16 +1,19 @@
+from pathlib import Path
 from typing import Optional
 
 from coder.costeer.config import CoSTEERSettings
 from core.conf import ExtendedSettingsConfigDict
 
+_git_ignore = Path(__file__).resolve().parent.parent.parent / "git_ignore_folder"
+
 
 class FactorCoSTEERSettings(CoSTEERSettings):
     model_config = ExtendedSettingsConfigDict(env_prefix="FACTOR_CoSTEER_")
 
-    data_folder: str = "git_ignore_folder/factor_implementation_source_data"
+    data_folder: str = str(_git_ignore / "factor_implementation_source_data")
     """Path to the folder containing financial data (default is fundamental data in Qlib)"""
 
-    data_folder_debug: str = "git_ignore_folder/factor_implementation_source_data_debug"
+    data_folder_debug: str = str(_git_ignore / "factor_implementation_source_data_debug")
     """Path to the folder containing partial financial data (for debugging)"""
 
     simple_background: bool = True

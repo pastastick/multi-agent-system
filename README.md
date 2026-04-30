@@ -96,16 +96,23 @@ Edit `.env` sesuai environment JarvisLabs:
 nano .env   # atau vim, code, dsb.
 ```
 
-Isi minimal yang **wajib** diset:
+Isi minimal yang **wajib** diset (ganti `/workspace/ai-agent` dengan path proyek kamu):
 
 ```env
 # === Paths ===
-QLIB_DATA_DIR=/workspace/ai-agent/data/qlib/cn_data
-DATA_RESULTS_DIR=/workspace/ai-agent/data/results
-QLIB_PROVIDER_URI=/workspace/ai-agent/data/qlib/cn_data
+QLIB_DATA_DIR=/workspace/ai-agent/backend/data/qlib/cn_data
+QLIB_PROVIDER_URI=/workspace/ai-agent/backend/data/qlib/cn_data
+
+# === Workspace & cache (auto-derive dari lokasi file jika tidak di-set) ===
+WORKSPACE_PATH=/workspace/ai-agent/backend/data/results/workspace
+PICKLE_CACHE_FOLDER_PATH_STR=/workspace/ai-agent/backend/data/results/pickle_cache
+
+# === Data HDF5 untuk factor mining (auto-derive jika tidak di-set) ===
+FACTOR_CoSTEER_DATA_FOLDER=/workspace/ai-agent/backend/git_ignore_folder/factor_implementation_source_data
+FACTOR_CoSTEER_DATA_FOLDER_DEBUG=/workspace/ai-agent/backend/git_ignore_folder/factor_implementation_source_data_debug
 
 # === HuggingFace ===
-HF_TOKEN=.....
+HF_TOKEN=hf_...
 
 # === LLM API (opsional jika latent_enabled=true) ===
 # Dibutuhkan hanya jika latent.enabled=false di experiment.yaml
@@ -114,6 +121,8 @@ OPENAI_BASE_URL=https://your-llm-provider/v1
 CHAT_MODEL=your-model-name
 REASONING_MODEL=your-model-name
 ```
+
+> Variabel `WORKSPACE_PATH`, `PICKLE_CACHE_FOLDER_PATH_STR`, `FACTOR_CoSTEER_DATA_FOLDER`, dan `FACTOR_CoSTEER_DATA_FOLDER_DEBUG` **tidak wajib** diset jika kamu tidak mengubah struktur folder — nilainya otomatis di-derive dari lokasi instalasi.
 
 > Jika `latent.enabled: true` di `configs/experiment.yaml` (default), pipeline menggunakan model lokal Qwen3 — API key tidak diperlukan untuk step utama (propose, construct, feedback).
 
@@ -196,7 +205,7 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), '| GPU:', tor
 
 ```bash
 cd /workspace/ai-agent
-source .venv/bin/activateF
+source .venv/bin/activate
 
 # Mode standar (latent pipeline dengan Qwen3)
 PYTHONPATH=backend python launcher.py mine \
@@ -337,9 +346,10 @@ nvidia-smi -l 1
 ### ImportError / ModuleNotFoundError
 
 ```bash
-# Pastikan PYTHONPATH sudah di-set
+# Pastikan PYTHONPATH sudah di-set (sesuaikan dengan path proyek kamu)
 export PYTHONPATH=/workspace/ai-agent/backend
-# Atau jalankan selalu dari /workspace/ai-agent dengan prefix PYTHONPATH=backend
+# Atau jalankan selalu dari root proyek dengan prefix PYTHONPATH=backend
+PYTHONPATH=backend python launcher.py mine ...
 ```
 
 ### HDF5 file not found
@@ -376,23 +386,28 @@ tmux new -s mining
 
 ```
 /workspace/ai-agent/
-├── .env                          # konfigurasi environment
+├── .env                          # konfigurasi environment (dari configs/.env.example)
 ├── launcher.py                   # entry point utama
 ├── configs/
 │   ├── experiment.yaml           # parameter experiment & latent pipeline
-│   └── backtest.yaml             # parameter backtest
+│   ├── backtest.yaml             # parameter backtest
+│   └── .env.example              # template konfigurasi environment
 ├── backend/
 │   ├── pipeline/
 │   │   ├── factor_mining.py      # orchestrator utama
 │   │   └── settings.py           # konfigurasi class pipeline
 │   ├── llm/
 │   │   └── client.py             # LocalLLMBackend (Qwen3 inference)
-│   ├── data/                     # [git-ignored] hasil unzip cn_data
-│   │   ├── qlib/cn_data/         # Qlib market data
+│   ├── core/
+│   │   └── conf.py               # RDAgentSettings (workspace/cache paths)
+│   ├── data/                     # [git-ignored]
+│   │   ├── qlib/cn_data/         # Qlib market data (hasil unzip cn_data.zip)
 │   │   │   ├── calendars/
 │   │   │   ├── features/
 │   │   │   └── instruments/
-│   │   └── results/              # output experiment
+│   │   └── results/              # output experiment (auto-created)
+│   │       ├── workspace/        # temp workspace per coding task
+│   │       └── pickle_cache/     # cache komputasi
 │   ├── hf_data/                  # [git-ignored] cache HuggingFace dataset
 │   ├── log/                      # [git-ignored] trace logs per iterasi
 │   ├── debug/llm_outputs/        # [TRACKED] snapshot per LLM call (JSON)

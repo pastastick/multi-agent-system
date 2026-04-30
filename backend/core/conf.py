@@ -3,7 +3,7 @@ from __future__ import annotations
 # TODO: use pydantic for other modules in Qlib
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, ClassVar
 
 if TYPE_CHECKING:
     from pydantic.fields import FieldInfo
@@ -68,21 +68,19 @@ class RDAgentSettings(ExtendedBaseSettings):
     max_output_duplicate_factor_group: int = 20
     max_kmeans_group_number: int = 40
 
-    # workspace conf: from env WORKSPACE_PATH, default project data/results
-    workspace_path: Path = Path(
-        os.environ.get("WORKSPACE_PATH",
-                       str(Path(os.environ.get("DATA_RESULTS_DIR", "data/results")) / "workspace"))
-    )
+    # Default absolut berdasarkan lokasi file ini — tidak bergantung CWD maupun DATA_RESULTS_DIR
+    # Override via env var WORKSPACE_PATH atau PICKLE_CACHE_FOLDER_PATH_STR
+    _abs_data_root: ClassVar[Path] = Path(__file__).resolve().parent.parent / "data" / "results"
+
+    workspace_path: Path = _abs_data_root / "workspace"
 
     # multi processing conf
     multi_proc_n: int = 1
 
-    # pickle cache conf: from env PICKLE_CACHE_FOLDER_PATH_STR
-    cache_with_pickle: bool = True  # whether to use pickle cache
-    pickle_cache_folder_path_str: str = os.environ.get(
-        "PICKLE_CACHE_FOLDER_PATH_STR",
-        str(Path(os.environ.get("DATA_RESULTS_DIR", "data/results")) / "pickle_cache")
-    )
+    # pickle cache conf
+    cache_with_pickle: bool = True
+    pickle_cache_folder_path_str: str = str(_abs_data_root / "pickle_cache")
+
     use_file_lock: bool = (
         True  # when calling the function with same parameters, whether to use file lock to avoid
         # executing the function multiple times

@@ -939,19 +939,11 @@ class _CoreEngine:
         mask = torch.ones(
             (1, past_len + prefix_len), dtype=torch.long, device=self.device,
         )
-        # cache_position wajib diisi saat past_key_values diberikan manual;
-        # tanpanya transformers 5.7+ meneruskan input_ids yang salah ke
-        # prefix_allowed_tokens_fn sehingga TokenEnforcer masuk escape-hatch
-        # (semua token diizinkan) dan guided decoding menjadi tidak aktif.
-        cache_position = torch.arange(
-            past_len, past_len + prefix_len, dtype=torch.long, device=self.device,
-        )
 
         out = self.model.generate(
             input_ids=prefix_ids,
             attention_mask=mask,
             past_key_values=past_kv,
-            cache_position=cache_position,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
@@ -1695,13 +1687,23 @@ class LocalLLMBackend:
     def _fix_json(text: str) -> str:
         """Ekstrak + perbaiki JSON dari output LLM.
 
-        Mencari pasangan {…} dari kanan ke kiri supaya JSON yang muncul
-        di akhir response (setelah penjelasan panjang) tetap bisa diekstrak.
+        Strategi (urut prioritas):
+            1. Parse full text apa adanya — output guided-decoding biasanya
+               sudah valid utuh, tidak butuh ekstraksi.
+            2. Strip code fence ```json ... ``` jika ada.
+            3. Outermost match: first `{` → last `}`. Ini menangani kasus
+               "prose + JSON di akhir" tanpa mengorbankan nested structure.
+            4. Balanced-bracket scan dari kanan: untuk setiap `}` paling
+               kanan, hitung mundur sampai kurung balanced — itulah `{`
+               struktural pasangannya. Mengganti `rfind` greedy yang dulu
+               salah (selalu landing di inner-dict `variables`).
         """
-        t = text.strip()
-        fence = re.search(r"```json\s*(.*?)```", t, re.DOTALL | re.IGNORECASE)
-        if fence:
-            t = fence.group(1).strip()
+        def _try_parse(s: str) -> Optional[str]:
+            try:
+                json.loads(s)
+                return s
+            except json.JSONDecodeError:
+                return _try_latex_fix(s)
 
         def _try_latex_fix(s: str) -> Optional[str]:
             fixed = s
@@ -1715,24 +1717,50 @@ class LocalLLMBackend:
             except json.JSONDecodeError:
                 return None
 
-        # Scan dari kanan ke kiri: coba setiap pasangan } … { yang valid
+        t = text.strip()
+
+        # 1. Try the whole thing — guided decoding sudah memproduksi JSON valid.
+        if (parsed := _try_parse(t)) is not None:
+            return parsed
+
+        # 2. Strip ```json fence``` jika ada.
+        fence = re.search(r"```json\s*(.*?)```", t, re.DOTALL | re.IGNORECASE)
+        if fence:
+            t = fence.group(1).strip()
+            if (parsed := _try_parse(t)) is not None:
+                return parsed
+
+        # 3. Outermost {…} match: first `{` → last `}`.
+        first_open = t.find("{")
+        last_close = t.rfind("}")
+        if first_open != -1 and last_close > first_open:
+            if (parsed := _try_parse(t[first_open:last_close + 1])) is not None:
+                return parsed
+
+        # 4. Balanced-bracket scan dari kanan. Untuk tiap `}` paling kanan,
+        # cari `{` yang BALANCE secara struktural (bukan rfind greedy yang
+        # selalu landing di inner-dict).
         end = len(t)
         while end > 0:
             e = t.rfind("}", 0, end)
             if e == -1:
                 break
-            s = t.rfind("{", 0, e + 1)
+            depth = 0
+            s = -1
+            for i in range(e, -1, -1):
+                ch = t[i]
+                if ch == "}":
+                    depth += 1
+                elif ch == "{":
+                    depth -= 1
+                    if depth == 0:
+                        s = i
+                        break
             if s == -1:
                 break
-            candidate = t[s:e + 1]
-            try:
-                json.loads(candidate)
-                return candidate
-            except json.JSONDecodeError:
-                fixed = _try_latex_fix(candidate)
-                if fixed is not None:
-                    return fixed
-            end = e  # geser pointer sebelum } ini, coba pasangan berikutnya
+            if (parsed := _try_parse(t[s:e + 1])) is not None:
+                return parsed
+            end = e
 
         return text
 
