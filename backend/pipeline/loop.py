@@ -300,7 +300,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                                  direction_id=self.direction_id,
                                  phase=self.evolution_phase,
                                  round_idx=self.round_idx)
-                _mon.track_kv_cache(self._pipeline_kv, step_name="propose_input", source="pipeline_kv")
 
             with _mon.track_step("factor_propose", has_kv_input=self._pipeline_kv is not None) if _mon else _nullcontext():
                 idea = self.hypothesis_generator.gen(self.trace)
@@ -308,18 +307,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             logger.log_object(idea, tag="hypothesis generation")
             self._last_hypothesis = idea
 
-            # Monitor: analisis output LLM & hidden state
             if _mon:
                 _mon.analyze_llm_output(str(idea), caller="propose")
-                _propose_hidden = getattr(
-                    getattr(self.hypothesis_generator, 'last_result', None),
-                    'hidden_last', None
-                )
-                if _propose_hidden is not None:
-                    _mon.check_tensor(_propose_hidden, name="propose_hidden_last")
-                    _mon.check_drift(_propose_hidden, name="propose_hidden",
-                                     step_name="factor_propose",
-                                     iteration=getattr(self, 'loop_idx', 0))
 
         return idea
 
@@ -330,10 +319,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         _mon = _get_monitor() if _HAS_MONITOR else None
         with logger.tag("r"):
             self.factor_constructor.set_past_kv(self.hypothesis_generator.last_kv)
-
-            if _mon:
-                _mon.track_kv_cache(self.hypothesis_generator.last_kv,
-                                    step_name="construct_input", source="propose_kv")
 
             with _mon.track_step("factor_construct") if _mon else _nullcontext():
                 factor = self.factor_constructor.convert(prev_out["factor_propose"], self.trace)
@@ -356,9 +341,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         with logger.tag("d"):  # develop
 
             construct_kv = getattr(self.factor_constructor, 'last_kv', None)
-
-            if _mon:
-                _mon.track_kv_cache(construct_kv, step_name="calculate_input", source="construct_kv")
 
             with _mon.track_step("factor_calculate") if _mon else _nullcontext():
                 factor = self.coder.develop(prev_out["factor_construct"], past_kv=construct_kv)
@@ -406,8 +388,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         if feedback_input_kv is not None:
             source = "coder" if coder_kv is not None else "construct"
             logger.info(f"[LatentPipeline] Feedback receives KV from {source} step")
-            if _mon:
-                _mon.track_kv_cache(feedback_input_kv, step_name="feedback_input", source=source)
 
         with _mon.track_step("feedback") if _mon else _nullcontext():
             feedback = self.summarizer.generate_feedback(prev_out["factor_backtest"], prev_out["factor_propose"], self.trace)
@@ -424,29 +404,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         # ── KV-cache: chain feedback → next iteration's propose ──
         feedback_kv = self.summarizer.last_kv
         if feedback_kv is not None and kv_truncate is not None:
-            # Monitor: record KV state before pruning
-            if _mon:
-                from llm._shared import _past_length
-                before_len = _past_length(feedback_kv)
-
             self._pipeline_kv = kv_truncate(feedback_kv, self._kv_max_tokens)
             logger.info(
                 f"[LatentPipeline] Chained feedback KV → next propose "
                 f"(truncated to {self._kv_max_tokens} tokens)"
             )
-
-            # Monitor: record prune event
-            if _mon:
-                from llm._shared import _past_length as _pl
-                after_len = _pl(self._pipeline_kv)
-                if before_len > after_len:
-                    _mon.track_kv_prune(
-                        method="truncate",
-                        before_len=before_len,
-                        after_len=after_len,
-                        reason=f"kv_max_tokens={self._kv_max_tokens}",
-                    )
-                _mon.track_kv_cache(self._pipeline_kv, step_name="feedback_output", source="truncated")
 
         #* Auto-save factors to unified factor library
         try:

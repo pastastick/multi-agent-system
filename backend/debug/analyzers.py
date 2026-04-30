@@ -2,19 +2,24 @@
 analyzers.py - Post-hoc Analysis dari Monitor Events
 =====================================================
 
-Analyzers membaca event history dan menghasilkan insight:
-- SessionAnalyzer  : ringkasan satu session (timing, bottleneck, health)
-- DriftAnalyzer    : tren hidden state drift across iterations
-- QualityScorer    : skor kualitas output LLM per step
+SessionAnalyzer membaca event history dan menghasilkan insight ringkas:
+- Total duration dan per-step breakdown
+- Bottleneck detection (step mana paling lambat)
+- Anomaly summary (berapa banyak, severity apa)
+- LLM call statistics
 
-Analyzers dijalankan di akhir session atau on-demand.
-Output berupa dict summary yang bisa di-print atau di-save.
+Hanya dijalankan di akhir session via PipelineMonitor.finalize().
+Output dict bisa di-print atau di-save ke summary.json.
+
+Catatan: TensorAnalyzer & DriftAnalyzer di-buang pada simplifikasi
+2026-04-28 — sumber datanya (TensorCollector, KVCacheCollector) sudah
+dihapus karena tidak actionable selama fase debugging.
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 from debug.events import EventType, MonitorEvent
 
@@ -28,7 +33,6 @@ class SessionAnalyzer:
     - Bottleneck detection (step mana paling lambat)
     - Anomaly summary (berapa banyak, severity apa)
     - LLM call statistics
-    - KV-cache growth pattern
     """
 
     @staticmethod
@@ -43,8 +47,6 @@ class SessionAnalyzer:
             "pipeline": {},
             "llm": {},
             "anomalies": {},
-            "kv_cache": {},
-            "tensor_health": {},
         }
 
         # Count event types
@@ -61,12 +63,6 @@ class SessionAnalyzer:
 
         # Anomalies
         summary["anomalies"] = SessionAnalyzer._analyze_anomalies(events)
-
-        # KV-cache
-        summary["kv_cache"] = SessionAnalyzer._analyze_kv_cache(events)
-
-        # Tensor health
-        summary["tensor_health"] = SessionAnalyzer._analyze_tensors(events)
 
         return summary
 
@@ -177,140 +173,4 @@ class SessionAnalyzer:
             "by_severity": dict(by_severity),
             "by_type": dict(by_type),
             "details": details[-20:],  # Last 20
-        }
-
-    @staticmethod
-    def _analyze_kv_cache(events: List[MonitorEvent]) -> Dict[str, Any]:
-        """KV-cache growth dan pruning pattern."""
-        statuses: List[Dict[str, Any]] = []
-        prune_events: List[Dict[str, Any]] = []
-
-        for evt in events:
-            if evt.event_type == EventType.KV_CACHE_STATUS:
-                statuses.append(evt.data)
-            elif evt.event_type == EventType.KV_CACHE_PRUNE:
-                prune_events.append(evt.data)
-
-        result: Dict[str, Any] = {
-            "measurements": len(statuses),
-            "prune_count": len(prune_events),
-        }
-
-        if statuses:
-            seq_lens = [s.get("seq_len", 0) for s in statuses]
-            result["max_seq_len"] = max(seq_lens)
-            result["final_seq_len"] = seq_lens[-1]
-            sizes = [s.get("size_mb", 0) for s in statuses]
-            result["max_size_mb"] = round(max(sizes), 2)
-
-        if prune_events:
-            total_removed = sum(p.get("tokens_removed", 0) for p in prune_events)
-            result["total_tokens_pruned"] = total_removed
-
-        return result
-
-    @staticmethod
-    def _analyze_tensors(events: List[MonitorEvent]) -> Dict[str, Any]:
-        """Tensor health summary."""
-        health_records: Dict[str, List[Dict]] = defaultdict(list)
-        drift_records: List[Dict] = []
-
-        for evt in events:
-            if evt.event_type == EventType.TENSOR_HEALTH:
-                name = evt.data.get("name", "unknown")
-                health_records[name].append(evt.data)
-            elif evt.event_type == EventType.HIDDEN_STATE_DRIFT:
-                drift_records.append(evt.data)
-
-        tensor_summary = {}
-        for name, records in health_records.items():
-            norms = [r["norm"] for r in records]
-            tensor_summary[name] = {
-                "check_count": len(records),
-                "avg_norm": round(sum(norms) / len(norms), 4),
-                "any_nan": any(r.get("has_nan") for r in records),
-                "any_inf": any(r.get("has_inf") for r in records),
-            }
-
-        drift_summary = {}
-        if drift_records:
-            cos_sims = [d["cosine_similarity"] for d in drift_records]
-            drift_summary = {
-                "measurements": len(drift_records),
-                "avg_cosine_similarity": round(sum(cos_sims) / len(cos_sims), 4),
-                "min_cosine_similarity": round(min(cos_sims), 4),
-                "max_cosine_similarity": round(max(cos_sims), 4),
-            }
-
-        return {
-            "tensors": tensor_summary,
-            "drift": drift_summary,
-        }
-
-
-class DriftAnalyzer:
-    """
-    Analisis tren drift antar iterasi.
-
-    Mendeteksi:
-    - Convergence: cosine similarity meningkat → model converge
-    - Divergence: cosine similarity menurun → model diverge
-    - Stagnation: cosine similarity ≈ 1.0 terus → model stuck
-    """
-
-    @staticmethod
-    def analyze_trend(events: List[MonitorEvent]) -> Dict[str, Any]:
-        """Analisis tren drift dari event history."""
-        drift_events = [
-            e for e in events
-            if e.event_type == EventType.HIDDEN_STATE_DRIFT
-        ]
-
-        if len(drift_events) < 2:
-            return {"status": "insufficient_data", "points": len(drift_events)}
-
-        cos_sims = [e.data["cosine_similarity"] for e in drift_events]
-        iterations = [e.data["iteration"] for e in drift_events]
-
-        # Trend: comparing first half vs second half
-        mid = len(cos_sims) // 2
-        first_half_avg = sum(cos_sims[:mid]) / mid
-        second_half_avg = sum(cos_sims[mid:]) / (len(cos_sims) - mid)
-
-        delta = second_half_avg - first_half_avg
-
-        if all(s > 0.98 for s in cos_sims):
-            trend = "stagnation"
-            description = (
-                "Model menghasilkan representasi yang hampir identik antar iterasi. "
-                "Kemungkinan model stuck dan tidak mengeksplorasi strategi baru."
-            )
-        elif delta > 0.05:
-            trend = "converging"
-            description = (
-                "Cosine similarity meningkat → model converging ke representasi stabil. "
-                "Ini normal jika metrik backtest juga membaik."
-            )
-        elif delta < -0.05:
-            trend = "diverging"
-            description = (
-                "Cosine similarity menurun → model diverging. "
-                "Representasi semakin berbeda tiap iterasi. Periksa apakah ini disengaja (explorasi) "
-                "atau tidak (instabilitas)."
-            )
-        else:
-            trend = "stable"
-            description = "Tidak ada tren signifikan pada drift hidden state."
-
-        return {
-            "trend": trend,
-            "description": description,
-            "first_half_avg_similarity": round(first_half_avg, 4),
-            "second_half_avg_similarity": round(second_half_avg, 4),
-            "delta": round(delta, 4),
-            "data_points": len(cos_sims),
-            "timeline": [
-                {"iteration": it, "cosine_similarity": round(cs, 4)}
-                for it, cs in zip(iterations, cos_sims)
-            ],
         }

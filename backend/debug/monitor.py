@@ -4,13 +4,13 @@ monitor.py - PipelineMonitor: Orchestrator untuk Debug & Monitoring System
 
 PipelineMonitor adalah entry point utama untuk monitoring pipeline.
 Dia mengoordinasikan:
-  - Collectors: mengumpulkan sinyal dari LLM, tensor, KV-cache
+  - LLMCollector: analisis kualitas teks output LLM
   - Storage: menyimpan events ke JSONL
-  - Analyzers: menganalisis events di akhir session
+  - SessionAnalyzer: ringkasan timing & anomaly di akhir session
 
 Desain prinsip:
   - NON-DUPLIKAT dengan TrajectoryPool (trajectory = hasil, monitor = proses)
-  - NON-DUPLIKAT dengan TensorConvManager (conv = raw tensors, monitor = statistik)
+  - NON-DUPLIKAT dengan _save_output_snapshot (snapshot = raw text per call)
   - Lightweight: tidak menambah overhead signifikan ke pipeline
   - Safe: semua operasi wrapped dalam try/except agar tidak mengganggu pipeline
 
@@ -26,12 +26,6 @@ Usage:
 
     # LLM output analysis
     monitor.analyze_llm_output(text, caller="propose")
-
-    # Tensor health check
-    monitor.check_tensor(hidden_state, name="hidden_last")
-
-    # KV-cache tracking
-    monitor.track_kv_cache(kv, step_name="propose")
 
     # Session summary
     monitor.finalize()
@@ -56,14 +50,12 @@ from debug.events import (
     llm_call_start,
     llm_call_end,
     evolution_round,
-    anomaly_detected,
-    AnomalySeverity,
 )
-from debug.collectors import LLMCollector, TensorCollector, KVCacheCollector
-from debug.analyzers import SessionAnalyzer, DriftAnalyzer
+from debug.collectors import LLMCollector
+from debug.analyzers import SessionAnalyzer
 from debug.storage import EventWriter
 
-# Optional torch
+# Optional torch (untuk GPU memory probe saja)
 try:
     import torch
     _HAS_TORCH = True
@@ -77,7 +69,7 @@ class PipelineMonitor:
 
     Lifecycle:
         1. __init__() → buat session, buka writer
-        2. track_step() / analyze_llm_output() / check_tensor() → collect events
+        2. track_step() / analyze_llm_output() / track_llm_call_* → collect events
         3. finalize() → analyze + write summary + close
 
     All methods are safe — exceptions are caught and logged,
@@ -350,107 +342,6 @@ class PipelineMonitor:
             pass
 
     # ─────────────────────────────────────────────────────────────────────
-    # TENSOR HEALTH
-    # ─────────────────────────────────────────────────────────────────────
-
-    def check_tensor(
-        self,
-        tensor: "torch.Tensor",
-        name: str = "tensor",
-    ):
-        """Health check tensor dan record events."""
-        if not self.enabled or not _HAS_TORCH:
-            return
-        try:
-            health_evt, anomalies = TensorCollector.check_tensor(tensor, name)
-            if health_evt:
-                self._record(health_evt)
-            for a in anomalies:
-                self._record(a)
-                if self.console_echo:
-                    print(f"[MONITOR TENSOR ANOMALY] {a.data.get('description', '')}")
-        except Exception:
-            pass
-
-    def check_drift(
-        self,
-        tensor: "torch.Tensor",
-        name: str,
-        step_name: str = "",
-        iteration: int = 0,
-    ):
-        """Cek hidden state drift antar iterasi."""
-        if not self.enabled or not _HAS_TORCH:
-            return
-        try:
-            drift_evt = TensorCollector.check_drift(
-                tensor, name, step_name, iteration,
-            )
-            if drift_evt:
-                self._record(drift_evt)
-
-                # Anomaly: stagnation atau extreme divergence
-                cos_sim = drift_evt.data.get("cosine_similarity", 0.5)
-                if cos_sim > 0.999 and iteration > 2:
-                    self._record(anomaly_detected(
-                        anomaly_type="hidden_state_stagnation",
-                        severity=AnomalySeverity.WARNING,
-                        description=(
-                            f"Hidden state '{name}' hampir identik dengan iterasi sebelumnya "
-                            f"(cosine={cos_sim:.4f}). Model mungkin stuck."
-                        ),
-                        context={"cosine_similarity": cos_sim, "iteration": iteration},
-                    ))
-                elif cos_sim < 0.1:
-                    self._record(anomaly_detected(
-                        anomaly_type="hidden_state_divergence",
-                        severity=AnomalySeverity.WARNING,
-                        description=(
-                            f"Hidden state '{name}' sangat berbeda dari iterasi sebelumnya "
-                            f"(cosine={cos_sim:.4f}). Kemungkinan instabilitas model."
-                        ),
-                        context={"cosine_similarity": cos_sim, "iteration": iteration},
-                    ))
-        except Exception:
-            pass
-
-    # ─────────────────────────────────────────────────────────────────────
-    # KV-CACHE TRACKING
-    # ─────────────────────────────────────────────────────────────────────
-
-    def track_kv_cache(
-        self,
-        kv: Any,
-        step_name: str = "",
-        source: str = "",
-    ):
-        """Record KV-cache status."""
-        if not self.enabled:
-            return
-        try:
-            evt = KVCacheCollector.measure_kv_cache(kv, step_name, source)
-            if evt:
-                self._record(evt)
-        except Exception:
-            pass
-
-    def track_kv_prune(
-        self,
-        method: str,
-        before_len: int,
-        after_len: int,
-        reason: str = "",
-    ):
-        """Record KV-cache pruning event."""
-        if not self.enabled:
-            return
-        try:
-            evt = KVCacheCollector.record_prune(method, before_len, after_len, reason)
-            self._record(evt)
-        except Exception:
-            pass
-
-    # ─────────────────────────────────────────────────────────────────────
     # EVOLUTION TRACKING
     # ─────────────────────────────────────────────────────────────────────
 
@@ -497,8 +388,6 @@ class PipelineMonitor:
         try:
             # Run analysis
             summary = SessionAnalyzer.analyze(self._events)
-            drift_analysis = DriftAnalyzer.analyze_trend(self._events)
-            summary["drift_analysis"] = drift_analysis
             summary["session_duration_s"] = round(time.time() - self._session_start, 2)
 
             # Write summary
@@ -578,11 +467,6 @@ class PipelineMonitor:
             print(f"\n  Anomalies: {anomalies['total']}")
             for sev, count in anomalies.get("by_severity", {}).items():
                 print(f"    {sev:10s} : {count}")
-
-        # Drift
-        drift = summary.get("drift_analysis", {})
-        if drift.get("trend"):
-            print(f"\n  Drift trend: {drift['trend']}")
 
         print("=" * 70 + "\n")
 

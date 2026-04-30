@@ -40,14 +40,6 @@ class EventType(str, Enum):
     LLM_CALL_END = "llm.call.end"
     LLM_OUTPUT_QUALITY = "llm.output.quality"
 
-    # Tensor health
-    TENSOR_HEALTH = "tensor.health"
-    HIDDEN_STATE_DRIFT = "tensor.hidden.drift"
-
-    # KV-cache
-    KV_CACHE_STATUS = "kv.cache.status"
-    KV_CACHE_PRUNE = "kv.cache.prune"
-
     # Anomaly
     ANOMALY_DETECTED = "anomaly.detected"
 
@@ -302,117 +294,6 @@ def llm_output_quality(
             "has_code": has_code,
         },
         tags={"caller": caller},
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# TENSOR HEALTH EVENTS
-# ─────────────────────────────────────────────────────────────────────────────
-
-def tensor_health(
-    name: str,
-    shape: List[int],
-    dtype: str,
-    norm: float,
-    mean: float,
-    std: float,
-    min_val: float,
-    max_val: float,
-    has_nan: bool = False,
-    has_inf: bool = False,
-    zero_ratio: float = 0.0,
-) -> MonitorEvent:
-    """Event: health check sebuah tensor (hidden state, latent vec, dll)."""
-    return MonitorEvent(
-        event_type=EventType.TENSOR_HEALTH,
-        data={
-            "name": name,
-            "shape": shape,
-            "dtype": dtype,
-            "norm": round(norm, 6),
-            "mean": round(mean, 6),
-            "std": round(std, 6),
-            "min": round(min_val, 6),
-            "max": round(max_val, 6),
-            "has_nan": has_nan,
-            "has_inf": has_inf,
-            "zero_ratio": round(zero_ratio, 4),
-        },
-        tags={"tensor": name},
-    )
-
-
-def hidden_state_drift(
-    step_name: str,
-    iteration: int,
-    cosine_similarity: float,
-    norm_current: float,
-    norm_previous: float,
-    norm_ratio: float,
-) -> MonitorEvent:
-    """
-    Event: drift antar hidden state dari iterasi berurutan.
-
-    Cosine similarity rendah = model menghasilkan representasi yang sangat berbeda.
-    Norm ratio jauh dari 1.0 = magnitude berubah drastis.
-    """
-    return MonitorEvent(
-        event_type=EventType.HIDDEN_STATE_DRIFT,
-        data={
-            "step_name": step_name,
-            "iteration": iteration,
-            "cosine_similarity": round(cosine_similarity, 6),
-            "norm_current": round(norm_current, 4),
-            "norm_previous": round(norm_previous, 4),
-            "norm_ratio": round(norm_ratio, 4),
-        },
-        tags={"step": step_name},
-    )
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# KV-CACHE EVENTS
-# ─────────────────────────────────────────────────────────────────────────────
-
-def kv_cache_status(
-    step_name: str,
-    seq_len: int,
-    n_layers: int,
-    size_mb: float,
-    source: str = "",
-) -> MonitorEvent:
-    """Event: status KV-cache pada titik tertentu."""
-    return MonitorEvent(
-        event_type=EventType.KV_CACHE_STATUS,
-        data={
-            "step_name": step_name,
-            "seq_len": seq_len,
-            "n_layers": n_layers,
-            "size_mb": round(size_mb, 2),
-            "source": source,
-        },
-        tags={"step": step_name},
-    )
-
-
-def kv_cache_prune(
-    method: str,
-    before_len: int,
-    after_len: int,
-    tokens_removed: int,
-    reason: str = "",
-) -> MonitorEvent:
-    """Event: KV-cache di-prune (truncate atau KNN filter)."""
-    return MonitorEvent(
-        event_type=EventType.KV_CACHE_PRUNE,
-        data={
-            "method": method,
-            "before_len": before_len,
-            "after_len": after_len,
-            "tokens_removed": tokens_removed,
-            "reason": reason,
-        },
-        tags={"method": method},
     )
 
 

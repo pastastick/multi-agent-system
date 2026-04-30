@@ -1014,7 +1014,7 @@ class LocalLLMBackend:
         latent_steps   : int   = 0,
         use_realign    : bool  = False,
         enable_thinking: bool  = False,
-        log_tensors    : bool  = True,
+        log_tensors    : bool  = False,
         store_kv       : bool  = False,
         conv_dir       : str   = "./debug/conv_logs",
         kv_dir         : str   = "./debug/kv_store",
@@ -1061,20 +1061,32 @@ class LocalLLMBackend:
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
         self._kv_store = KVCacheStore(kv_dir)        if store_kv    else None
 
-        # ── Per-call LLM output log (append-mode JSONL) ──────────────────
+        # ── Per-call LLM output log (1 file .json per call) ──────────────
         # Ditulis SEGERA setelah text di-generate (bukan di akhir loop),
         # sehingga crash tengah jalan pun tetap meninggalkan jejak output
         # LLM yang sudah tereksekusi. Berguna untuk debugging proposal/
         # coder yang gagal validasi berulang.
+        #
+        # Layout:
+        #   debug/llm_outputs/session_<ts>/
+        #       0001_propose_kv_and_text.json
+        #       0002_construct_kv_and_text.json
+        #       ...
+        #       index.jsonl     <- 1 baris per call, untuk scan cepat
         try:
-            _log_dir = Path(output_log_dir)
-            _log_dir.mkdir(parents=True, exist_ok=True)
             _date_stamp = time.strftime("%Y%m%d_%H%M%S")
-            self._output_log_path: Optional[Path] = (
-                _log_dir / f"llm_outputs_{_date_stamp}.jsonl"
+            self._output_log_dir: Optional[Path] = (
+                Path(output_log_dir) / f"session_{_date_stamp}"
             )
+            self._output_log_dir.mkdir(parents=True, exist_ok=True)
+            self._output_index_path: Optional[Path] = (
+                self._output_log_dir / "index.jsonl"
+            )
+            self._call_counter: int = 0
         except Exception:
-            self._output_log_path = None
+            self._output_log_dir = None
+            self._output_index_path = None
+            self._call_counter = 0
 
     # ── Kompatibilitas APIBackend ──────────────────────────────────────────
 
@@ -1256,14 +1268,14 @@ class LocalLLMBackend:
             _mon = None
 
         _run_t0 = time.time()
+        _input_tok_count = 0
+        try:
+            prompt_text = self._engine.format_messages(messages)
+            _ids_tmp, _ = self._engine.tokenize(prompt_text)
+            _input_tok_count = _ids_tmp.shape[-1] if _ids_tmp is not None else 0
+        except Exception:
+            pass
         if _mon:
-            _input_tok_count = 0
-            try:
-                prompt_text = self._engine.format_messages(messages)
-                _ids_tmp, _ = self._engine.tokenize(prompt_text)
-                _input_tok_count = _ids_tmp.shape[-1] if _ids_tmp is not None else 0
-            except Exception:
-                pass
             _mon.track_llm_call_start(
                 caller=role, mode=mode,
                 input_tokens=_input_tok_count,
@@ -1382,13 +1394,21 @@ class LocalLLMBackend:
                 result.latent_vecs = latent_vecs
 
             # ── Simpan output LLM ke disk SEGERA (flush per-call) ─────
-            # Tulis append-mode sebelum proses lain — kalau pipeline crash
-            # di tensor logging / KV store, snapshot text tetap persisten.
+            # Tulis sebelum proses lain — kalau pipeline crash di tensor
+            # logging / KV store, snapshot text tetap persisten.
             if result.text is not None and mode != "kv_only":
+                _snap_dur = time.time() - _run_t0
+                _snap_out_tok = (
+                    result.output_ids.shape[-1]
+                    if result.output_ids is not None else 0
+                )
                 self._save_output_snapshot(
                     conv_id=_conv_id, step=step, role=role, mode=mode,
                     messages=messages, text=result.text,
                     temperature=_temp, has_past_kv=past_key_values is not None,
+                    input_tokens=_input_tok_count,
+                    output_tokens=_snap_out_tok,
+                    duration_s=round(_snap_dur, 4),
                 )
 
             # ── Logging tensor ─────────────────────────────────────────
@@ -1437,16 +1457,12 @@ class LocalLLMBackend:
                 _mon.track_llm_call_end(
                     caller=role, duration_s=_run_dur,
                     output_tokens=_out_tok, tokens_per_sec=_tok_sec,
-                    total_tokens=(_input_tok_count + _out_tok) if '_input_tok_count' in dir() else _out_tok,
+                    total_tokens=_input_tok_count + _out_tok,
                     mode=mode,
                 )
                 if result.text:
                     _out_ids_list = result.output_ids[0].tolist() if result.output_ids is not None else None
                     _mon.analyze_llm_output(result.text, caller=role, token_ids=_out_ids_list)
-                if result.hidden_last is not None:
-                    _mon.check_tensor(result.hidden_last, name=f"{role}_hidden_last")
-                if result.latent_vecs is not None:
-                    _mon.check_tensor(result.latent_vecs, name=f"{role}_latent_vecs")
             except Exception:
                 pass
 
@@ -1581,29 +1597,33 @@ class LocalLLMBackend:
 
     def _save_output_snapshot(
         self,
-        conv_id     : str,
-        step        : int,
-        role        : str,
-        mode        : str,
-        messages    : List[Dict[str, str]],
-        text        : str,
-        temperature : float,
-        has_past_kv : bool,
+        conv_id        : str,
+        step           : int,
+        role           : str,
+        mode           : str,
+        messages       : List[Dict[str, str]],
+        text           : str,
+        temperature    : float,
+        has_past_kv    : bool,
+        input_tokens   : Optional[int] = None,
+        output_tokens  : Optional[int] = None,
+        duration_s     : Optional[float] = None,
     ) -> None:
-        """Append satu baris JSONL berisi output LLM ke file log.
+        """Tulis 1 file .json per call_llm + append 1 baris ke index.jsonl.
 
-        Ditulis dengan flush eksplisit supaya isi segera ada di disk
-        (bukan ditahan di buffer) — kalau pipeline crash tengah iterasi,
-        riwayat output yang sudah tereksekusi tetap bisa di-review.
+        Nama file human-readable: NNNN_<role>_<mode>.json (urut chronological).
+        Isi: JSON terformat (indent=2) berisi prompt + response lengkap.
+
+        Ditulis dengan flush + fsync supaya isi segera ada di disk —
+        kalau pipeline crash tengah iterasi, riwayat call yang sudah
+        tereksekusi tetap bisa di-review.
 
         Tidak pernah raise: exception di-swallow agar logging tidak
         mematikan pipeline utama.
         """
-        if self._output_log_path is None:
+        if self._output_log_dir is None:
             return
         try:
-            # Ambil user/system prompt dari messages list. Tidak truncate —
-            # prompt bisa panjang, tapi JSONL satu baris per record aman.
             sys_prompt = ""
             usr_prompt = ""
             for m in messages:
@@ -1611,23 +1631,54 @@ class LocalLLMBackend:
                     sys_prompt = m.get("content", "") or ""
                 elif m.get("role") == "user":
                     usr_prompt = m.get("content", "") or ""
+
+            self._call_counter += 1
+            n = self._call_counter
+            ts = time.strftime("%Y-%m-%d %H:%M:%S")
+
+            filename = f"{n:04d}_{role}_{mode}.json"
+            filepath = self._output_log_dir / filename
+
             record = {
-                "ts"          : time.strftime("%Y-%m-%d %H:%M:%S"),
-                "conv_id"     : conv_id,
-                "step"        : step,
-                "role"        : role,
-                "mode"        : mode,
-                "temperature" : temperature,
-                "has_past_kv" : has_past_kv,
-                "text_len"    : len(text),
-                "text"        : text,
+                "call_n"       : n,
+                "ts"           : ts,
+                "conv_id"      : conv_id,
+                "step"         : step,
+                "role"         : role,
+                "mode"         : mode,
+                "temperature"  : temperature,
+                "has_past_kv"  : has_past_kv,
+                "input_tokens" : input_tokens,
+                "output_tokens": output_tokens,
+                "duration_s"   : duration_s,
+                "text_len"     : len(text),
                 "system_prompt": sys_prompt,
-                "user_prompt" : usr_prompt,
+                "user_prompt"  : usr_prompt,
+                "text"         : text,
             }
-            with open(self._output_log_path, "a", encoding="utf-8") as f:
-                f.write(json.dumps(record, ensure_ascii=False) + "\n")
+
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(record, f, ensure_ascii=False, indent=2)
                 f.flush()
-                os.fsync(f.fileno())  # paksa write ke disk, tahan crash
+                os.fsync(f.fileno())
+
+            # Index ringan: 1 baris per call, untuk scan tanpa baca semua file
+            if self._output_index_path is not None:
+                index_entry = {
+                    "n"            : n,
+                    "ts"           : ts,
+                    "role"         : role,
+                    "mode"         : mode,
+                    "step"         : step,
+                    "conv_id"      : conv_id,
+                    "text_len"     : len(text),
+                    "duration_s"   : duration_s,
+                    "file"         : filename,
+                }
+                with open(self._output_index_path, "a", encoding="utf-8") as f:
+                    f.write(json.dumps(index_entry, ensure_ascii=False) + "\n")
+                    f.flush()
+                    os.fsync(f.fileno())
         except Exception:
             # Logging TIDAK boleh mematikan pipeline
             pass

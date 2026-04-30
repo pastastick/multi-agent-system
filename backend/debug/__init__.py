@@ -2,21 +2,20 @@
 debug/ - Pipeline Monitoring & Debug System
 ============================================
 
-Sistem monitoring untuk memantau proses internal pipeline:
-- Pipeline step timing & bottleneck detection
-- LLM output quality analysis (repetition, diversity, anomalies)
-- Tensor health monitoring (NaN, Inf, norm collapse/explosion)
-- Hidden state drift tracking antar iterasi
-- KV-cache size & pruning metrics
-- Anomaly detection & alerting
+Sistem monitoring ringan untuk memantau proses internal pipeline:
+- Pipeline step timing & error tracking
+- Loop iteration tracking (start/end/skipped/traceback)
+- LLM output quality analysis (repetition, diversity, anomaly)
+- Evolution round tracking
+- GPU memory snapshot per step
 
 TIDAK menduplikasi:
 - TrajectoryPool (menyimpan HASIL: hipotesis, metrik, feedback)
 - TensorConvManager (menyimpan RAW tensor: input_ids, output_ids, hidden_last)
+- LLM output snapshot di llm/client.py (debug/llm_outputs/session_*/...)
 
-Monitor menyimpan PROSES & STATISTIK: timing, quality scores, tensor stats,
-drift analysis, anomalies — data yang berguna untuk debugging dan future
-training/finetuning.
+Monitor menyimpan PROSES & STATISTIK ringan: timing, quality scores,
+anomali — events di JSONL untuk inspect real-time atau post-hoc.
 
 Quick start:
     from debug import get_monitor
@@ -26,15 +25,14 @@ Quick start:
         result = do_work()
 
     monitor.analyze_llm_output(text, caller="propose")
-    monitor.check_tensor(hidden_state, name="hidden_last")
 
 File structure:
     debug/
     ├── __init__.py       ← Public API (this file)
     ├── monitor.py        ← PipelineMonitor orchestrator
     ├── events.py         ← Typed event dataclasses
-    ├── collectors.py     ← LLM, Tensor, KV-cache data collectors
-    ├── analyzers.py      ← Session analysis, drift analysis
+    ├── collectors.py     ← LLMCollector
+    ├── analyzers.py      ← SessionAnalyzer (post-hoc summary)
     ├── storage.py        ← JSONL event writer & reader
     └── logs/             ← Output directory (auto-created)
 """
