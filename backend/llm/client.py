@@ -939,11 +939,19 @@ class _CoreEngine:
         mask = torch.ones(
             (1, past_len + prefix_len), dtype=torch.long, device=self.device,
         )
+        # cache_position wajib diisi saat past_key_values diberikan manual;
+        # tanpanya transformers 5.7+ meneruskan input_ids yang salah ke
+        # prefix_allowed_tokens_fn sehingga TokenEnforcer masuk escape-hatch
+        # (semua token diizinkan) dan guided decoding menjadi tidak aktif.
+        cache_position = torch.arange(
+            past_len, past_len + prefix_len, dtype=torch.long, device=self.device,
+        )
 
         out = self.model.generate(
             input_ids=prefix_ids,
             attention_mask=mask,
             past_key_values=past_kv,
+            cache_position=cache_position,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
