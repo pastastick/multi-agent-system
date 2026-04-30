@@ -1,0 +1,5 @@
+{"n": 1, "ts": "2026-04-30 05:31:09", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "837fc933", "text_len": 1089, "duration_s": 42.9988, "file": "0001_propose_kv_and_text.json"}
+{"n": 2, "ts": "2026-04-30 05:32:26", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "5f4304d6", "text_len": 144, "duration_s": 68.3526, "file": "0002_construct_kv_and_text.json"}
+{"n": 3, "ts": "2026-04-30 05:33:27", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "6dc8a7b6", "text_len": 86, "duration_s": 54.4322, "file": "0003_construct_kv_and_text.json"}
+{"n": 4, "ts": "2026-04-30 05:34:38", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "6e9c903e", "text_len": 114, "duration_s": 62.3289, "file": "0004_construct_kv_and_text.json"}
+{"n": 5, "ts": "2026-04-30 05:35:44", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "3fbb4e50", "text_len": 106, "duration_s": 54.2068, "file": "0005_construct_kv_and_text.json"}

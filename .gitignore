@@ -45,9 +45,20 @@ huggingface/
 .idea/
 *.swp
 .DS_Store
-hf_data/*.zip
+
+# downloaded datasets & runtime data (post-setup, regenerated from HF)
+hf_data/
+backend/hf_data/
+backend/data/
+data/results/
+data/qlib/
 
 git_ignore_folder/
+
+# LLM output snapshots — KEEP tracked for debugging/reproducibility
+!backend/debug/llm_outputs/
+!backend/debug/llm_outputs/**
+!backend/debug/llm_outputs/**/*.jsonl
 
 ## output agent
 ~

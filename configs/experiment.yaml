@@ -199,20 +199,20 @@ latent:
 
   # HuggingFace model name (loaded once, shared by all steps).
   # Required: same model across steps — KV-cache is model-specific.
-  model_name: "Qwen/Qwen3-14B"
+  model_name: "Qwen/Qwen3-4B"
   device: "cuda"
 
   # ── Latent reasoning ──────────────────────────────────────
   # Number of "silent thinking" passes per LLM call. Model injects
   # virtual tokens into KV-cache without generating text, then
   # generates output. Higher = deeper reasoning, slower.
-  steps: 2
+  steps: 10
 
   # Per-step override (null = use global `steps` above).
   # Construct may benefit from more steps since formula
   # expression requires careful reasoning.
   steps_propose: null
-  steps_construct: null
+  steps_construct: 20
   steps_coder: null
   steps_feedback: null
 
@@ -227,7 +227,7 @@ latent:
   # ── Latent communication (KV-cache chain) ─────────────────
   # Hard cap on KV tokens carried across loop iterations.
   # Applied after feedback step before chaining to next propose.
-  kv_max_tokens: 2048
+  kv_max_tokens: 20480
 
   # Persist KV-cache to disk (for resume / debugging).
   store_kv: true
@@ -242,8 +242,8 @@ latent:
   knn_strategy: "top"       # "top" | "bottom" | "random"
 
   # ── Generation parameters ─────────────────────────────────
-  max_new_tokens: 2048
-  temperature: 0.6
+  max_new_tokens: 36000
+  temperature: 0.8
   top_p: 0.95
 
   # Per-step temperature override (null = use global temperature).
@@ -251,8 +251,8 @@ latent:
   # by QlibFactorParser, so output must be deterministic).
   # Propose/feedback: null → use global (exploration-friendly).
   temperature_propose: null
-  temperature_construct: 0.3
-  temperature_coder: 0.3
+  temperature_construct: 0.8
+  temperature_coder: 0.6
   temperature_feedback: null
 
   # Debug: save input_ids / output_ids / hidden_last tensors to disk.
