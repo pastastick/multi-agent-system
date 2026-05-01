@@ -5,6 +5,7 @@ di loop.py, class disini di-load via import_class() dari string path di setting.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import List, Tuple
 
@@ -780,6 +781,55 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                     )
                     break       #* break 'for loop' -> mulai lagi 'while loop'
                 else:
+                    #* Intra-response duplicate check: tolak bila expression
+                    # ini identik dengan factor lain di response yang SAMA.
+                    # `factor_regulator.is_expression_acceptable` hanya cek
+                    # duplikasi terhadap alpha-zoo (factor history lintas
+                    # iterasi), bukan duplikat antar factor di satu response.
+                    # Construct kadang menghasilkan 2-3 factor dengan
+                    # expression identik (cuma beda nama+deskripsi) → coder
+                    # retry mencari variasi dan sering collapse karena task
+                    # nya redundant.
+                    expr_norm = re.sub(r"\s+", "", expr).lower()
+                    existing_norms = [re.sub(r"\s+", "", e).lower() for e in proposed_exprs]
+                    if expr_norm in existing_norms:
+                        dup_idx = existing_norms.index(expr_norm)
+                        dup_name = proposed_names[dup_idx]
+                        dup_expr = proposed_exprs[dup_idx]
+                        logger.warning(
+                            f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: "
+                            f"intra-response duplicate: {factor_name!r} == {dup_name!r}, "
+                            f"expr={expr!r}"
+                        )
+                        intra_dup_feedback = (
+                            f"- Intra-Response Duplicate: factor `{factor_name}` and "
+                            f"`{dup_name}` share the IDENTICAL expression `{dup_expr}`. "
+                            f"Each factor in your output MUST have a structurally DIFFERENT "
+                            f"expression — different name and description alone do not "
+                            f"qualify. Change at least one of: operator family (e.g., "
+                            f"TS_STD → TS_MAD), window size, or base variable."
+                        )
+                        if expression_duplication_prompt is not None:
+                            expression_duplication_prompt = "\n\n".join(
+                                [expression_duplication_prompt, intra_dup_feedback]
+                            )
+                        else:
+                            expression_duplication_prompt = intra_dup_feedback
+                        user_prompt = (
+                            Environment(undefined=StrictUndefined)
+                            .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
+                            .render(
+                                targets=self.targets,
+                                target_hypothesis=context["target_hypothesis"],
+                                hypothesis_and_feedback=context["hypothesis_and_feedback"],
+                                function_lib_description=context["function_lib_description"],
+                                target_list=context["target_list"],
+                                RAG=context["RAG"],
+                                expression_duplication=expression_duplication_prompt,
+                            )
+                        )
+                        break       #* break for-loop, while-loop akan retry construct
+
                     proposed_names.append(factor_name)
                     proposed_exprs.append(expr)
                     if i == len(response_dict) - 1:

@@ -19,6 +19,7 @@ from core.prompts import Prompts
 from core.template import CodeTemplate
 from llm.config import LLM_SETTINGS
 from llm.client import LocalLLMBackend
+from llm._shared import _past_length
 from core.utils import multiprocessing_wrapper
 from core.conf import RD_AGENT_SETTINGS
 from log import logger
@@ -483,17 +484,24 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 elif len(queried_similar_error_knowledge_to_render) > 0:
                     queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
 
-            # Capture former_expr untuk validasi anti-mirroring
-            former_expr_norm = self.extract_expr(
+            # Capture former_expr untuk validasi anti-mirroring.
+            # Simpan dua versi: yang asli (untuk fallback render) dan yang
+            # ter-normalisasi (untuk pembanding mirror).
+            former_expr_raw = self.extract_expr(
                 queried_former_failed_knowledge_to_render[-1].implementation.code
-            ).replace(" ", "").lower()
+            )
+            former_expr_norm = former_expr_raw.replace(" ", "").lower()
 
-            # Snapshot KV-cache SEBELUM retry loop. Setiap attempt harus fresh
-            # dari baseline yang sama — kalau kita biarkan _past_kv terupdate
-            # oleh attempt gagal, KV menumpuk prompt+jawaban buruk dan attempt
-            # berikutnya bisa collapse (text_len=0) karena self-contradiction
-            # antara mirror_hint dan KV yang sudah menyimpan jawaban mirror.
+            # Snapshot KV-cache length SEBELUM retry loop. DynamicCache di-mutasi
+            # in-place oleh latent_pass (append prompt + latent steps) — sekedar
+            # menyimpan referensi `kv_baseline = self._past_kv` lalu reassign
+            # `self._past_kv = kv_baseline` TIDAK mengembalikan panjang asli.
+            # Setelah attempt 1 KV sudah memuat prompt_1 + latent_1; attempt 2
+            # akan menambah prompt_2 + latent_2 di atasnya, sehingga konteks
+            # menumpuk dan model collapse ke output `<think>` saja (output_tokens=3
+            # lalu EOS) karena polusi konteks.
             kv_baseline = self._past_kv
+            kv_baseline_len = _past_length(kv_baseline) if kv_baseline is not None else 0
 
             # Paksa model output HANYA JSON — tanpa penjelasan sebelumnya.
             # Qwen3-4B di large KV context (>13k tok) cenderung generate verbose
@@ -506,14 +514,25 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             )
 
             # Temperature escalation: 0.3 → 0.7 → 1.0 setelah mirror / JSON fail
-            temp_schedule = [None, 0.7, 0.9, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+            _MAX_ATTEMPTS = 5
+            temp_schedule = [None, 0.7, 0.9, 1.0, 1.0]
             mirror_hint = ""
             last_expr = None
 
-            for attempt in range(10):
+            for attempt in range(_MAX_ATTEMPTS):
                 try:
-                    # Reset KV ke baseline pre-retry supaya attempt ini tidak
-                    # melihat prompt/jawaban dari attempt sebelumnya.
+                    # Reset KV ke baseline pre-retry. Penting: crop kembali ke
+                    # panjang baseline supaya attempt ini melihat KV yang sama
+                    # dengan attempt 1 — bukan KV yang sudah ter-append oleh
+                    # attempt sebelumnya.
+                    if kv_baseline is not None and hasattr(kv_baseline, "crop"):
+                        try:
+                            kv_baseline.crop(kv_baseline_len)
+                        except Exception as crop_err:
+                            logger.warning(
+                                f"[LatentCoder] attempt {attempt+1}: kv_baseline.crop "
+                                f"failed ({crop_err}); proceeding with current KV"
+                            )
                     self._past_kv = kv_baseline
 
                     # Inject mirror-warning ke user prompt bila attempt sebelumnya mirror
@@ -539,7 +558,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                             f"expression now.**"
                         )
                         logger.warning(
-                            f"[LatentCoder] attempt {attempt+1}: LLM mirrored former_expr, retrying with temp={temp_schedule[min(attempt+1, 9)]}"
+                            f"[LatentCoder] attempt {attempt+1}: LLM mirrored former_expr, retrying with temp={temp_schedule[min(attempt+1, _MAX_ATTEMPTS-1)]}"
                         )
                         continue
 
@@ -556,21 +575,23 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     logger.warning(f"[LatentCoder] attempt {attempt+1}: JSON parse failed, retrying")
                     continue
 
-            # Fallback: semua 10 attempt mirror/fail → pakai expr terakhir dengan
+            # Fallback: semua attempt mirror/fail → pakai expr terakhir dengan
             # warning agar pipeline tetap jalan (evaluator akan reject kalau beneran bad)
             if last_expr is not None:
                 logger.error(
-                    f"[LatentCoder] all 10 attempts mirrored former_expr, "
+                    f"[LatentCoder] all {_MAX_ATTEMPTS} attempts mirrored former_expr, "
                     f"falling back to last output: {last_expr}"
                 )
                 return code_template.render(
                     expression=last_expr,
                     factor_name=target_task.factor_name
                 )
-            # Kalau semua JSON fail, return template dengan former (biarkan evaluator tolak)
-            logger.error("[LatentCoder] all 10 attempts failed JSON parse, using former_expr")
+            # Kalau semua JSON fail, return template dengan former_expr ASLI
+            # (bukan yang ter-normalisasi lower+nospace, karena parser DSL
+            # case-sensitive — TS_STD bukan ts_std).
+            logger.error(f"[LatentCoder] all {_MAX_ATTEMPTS} attempts failed JSON parse, using former_expr")
             return code_template.render(
-                expression=former_expr_norm,
+                expression=former_expr_raw,
                 factor_name=target_task.factor_name
             )
 
