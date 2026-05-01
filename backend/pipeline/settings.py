@@ -161,7 +161,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     knn_strategy: str = "top"         # "top" (paling mirip), "bottom", "random"
 
     # ── Generation parameters ────────────────────────────────────────────
-    max_new_tokens: int = 36000
+    max_new_tokens: int = 4096
     temperature: float = 0.8
     top_p: float = 0.95
 

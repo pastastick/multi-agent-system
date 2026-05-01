@@ -1,4 +1,0 @@
-{"n": 1, "ts": "2026-04-30 13:42:17", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "07f61161", "text_len": 1198, "duration_s": 9.8282, "file": "0001_propose_kv_and_text.json"}
-{"n": 2, "ts": "2026-04-30 13:42:24", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "30bbd37c", "text_len": 2, "duration_s": 1.523, "file": "0002_construct_kv_and_text.json"}
-{"n": 3, "ts": "2026-04-30 13:42:50", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "ade47fa0", "text_len": 937, "duration_s": 20.4146, "file": "0003_construct_kv_and_text.json"}
-{"n": 4, "ts": "2026-04-30 13:43:34", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "648bdb20", "text_len": 1231, "duration_s": 10.0034, "file": "0004_propose_kv_and_text.json"}

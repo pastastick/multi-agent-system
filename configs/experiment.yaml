@@ -242,7 +242,7 @@ latent:
   knn_strategy: "top"       # "top" | "bottom" | "random"
 
   # ── Generation parameters ─────────────────────────────────
-  max_new_tokens: 36000
+  max_new_tokens: 4096
   temperature: 0.8
   top_p: 0.95
 

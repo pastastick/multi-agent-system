@@ -44,6 +44,59 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
     - results in `mlflow`
     """
 
+    def _local_execute(self, workspace_path: Path, config_name: str) -> tuple:
+        """
+        Jalankan qlib backtest secara lokal tanpa conda/docker.
+        Dipanggil oleh develop() saat use_local=True.
+        """
+        import subprocess as _sp
+        env = os.environ.copy()
+        project_root = Path(__file__).resolve().parent.parent
+        env["PYTHONPATH"] = str(project_root) + os.pathsep + env.get("PYTHONPATH", "")
+
+        # Step 1: qrun
+        try:
+            r = _sp.run(
+                ["qrun", config_name],
+                cwd=str(workspace_path),
+                env=env,
+                capture_output=True,
+                text=True,
+                timeout=3600,
+            )
+            if r.returncode != 0:
+                logger.error(f"[LocalExec] qrun failed:\n{r.stderr[-2000:]}")
+                return None, r.stderr
+            logger.info(f"[LocalExec] qrun OK: {r.stdout[-500:]}")
+        except Exception as e:
+            logger.error(f"[LocalExec] qrun exception: {e}")
+            return None, str(e)
+
+        # Step 2: read_exp_res.py
+        read_script = workspace_path / "read_exp_res.py"
+        if read_script.exists():
+            try:
+                r2 = _sp.run(
+                    [sys.executable, "read_exp_res.py"],
+                    cwd=str(workspace_path),
+                    env=env,
+                    capture_output=True,
+                    text=True,
+                    timeout=120,
+                )
+                if r2.returncode != 0:
+                    logger.warning(f"[LocalExec] read_exp_res.py failed:\n{r2.stderr[-1000:]}")
+            except Exception as e:
+                logger.warning(f"[LocalExec] read_exp_res.py exception: {e}")
+
+        # Step 3: baca hasil
+        qlib_res = workspace_path / "qlib_res.csv"
+        if qlib_res.exists():
+            df = pd.read_csv(qlib_res, index_col=0).iloc[:, 0]
+            return df, "local_execute_ok"
+        logger.warning("[LocalExec] qlib_res.csv tidak ditemukan setelah qrun.")
+        return None, "qlib_res.csv not found"
+
     #* Hitung IC antara setiap kolom SOTA factor dan new factor
     def calculate_information_coefficient(
         self, concat_feature: pd.DataFrame, SOTA_feature_column_size: int, new_feature_columns_size: int
@@ -194,12 +247,20 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         
         # Ensure workspace and config are ready (execute() does not call before_execute()).
         exp.experiment_workspace.before_execute()
-        
-        # execute() returns (result_df, execute_qlib_log) or (None, execute_qlib_log)
-        result_tuple = exp.experiment_workspace.execute(
-            qlib_config_name=config_name,
-            run_env={}
-        )
+
+        # Gunakan local execution (subprocess langsung) agar tidak butuh conda.
+        # Rdagent workspace.execute() default pakai conda yang tidak tersedia.
+        if use_local:
+            result_tuple = self._local_execute(
+                workspace_path=exp.experiment_workspace.workspace_path,
+                config_name=config_name,
+            )
+        else:
+            # execute() returns (result_df, execute_qlib_log) or (None, execute_qlib_log)
+            result_tuple = exp.experiment_workspace.execute(
+                qlib_config_name=config_name,
+                run_env={}
+            )
         
         # Unpack tuple; take first element (DataFrame)
         result = result_tuple[0] if isinstance(result_tuple, tuple) else result_tuple

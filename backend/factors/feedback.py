@@ -149,6 +149,7 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
                 observations="Backtest result not available (execution failed).",
                 hypothesis_evaluation="Unable to evaluate — no result data.",
                 new_hypothesis="Retry with the same hypothesis after fixing the execution environment.",
+                reason="Backtest failed or returned empty result.",
                 decision=False,
             )
 
@@ -307,6 +308,7 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
                 observations="Backtest result not available (execution failed).",
                 hypothesis_evaluation="Unable to evaluate — no result data.",
                 new_hypothesis="Retry with the same hypothesis after fixing the execution environment.",
+                reason="Backtest failed or returned empty result.",
                 decision=False,
             )
 

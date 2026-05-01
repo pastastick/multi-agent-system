@@ -966,8 +966,15 @@ class _CoreEngine:
 
     @staticmethod
     def _strip_thinking(text: str) -> str:
-        """Hapus blok <think>...</think> dari output Qwen3."""
-        return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()
+        """Hapus blok <think>...</think> dari output Qwen3.
+
+        Menangani dua kasus:
+        - Closed: <think>...</think> → dihapus seluruhnya
+        - Unclosed: <think>... tanpa </think> (model stuck) → dihapus sampai akhir
+        """
+        text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
+        text = re.sub(r"<think>.*", "", text, flags=re.DOTALL)
+        return text.strip()
 
 
 # =============================================================================
@@ -1009,7 +1016,7 @@ class LocalLLMBackend:
 
     def __init__(
         self,
-        model_name     : str   = "Qwen/Qwen3-14B",
+        model_name     : str   = "Qwen/Qwen3-4B",
         device         : str   = "cuda",
         latent_steps   : int   = 0,
         use_realign    : bool  = False,
@@ -1809,7 +1816,7 @@ class LocalChatSession:
 # =============================================================================
 
 def get_local_backend(
-    model_name  : str  = "Qwen/Qwen3-14B",
+    model_name  : str  = "Qwen/Qwen3-4B",
     latent_steps: int  = 0,
     use_realign : bool = False,
     device      : str  = "cuda",

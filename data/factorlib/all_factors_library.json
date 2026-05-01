@@ -1,0 +1,169 @@
+{
+  "metadata": {
+    "created_at": "2026-05-01T13:55:51.963384",
+    "last_updated": "2026-05-01T13:58:09.590514",
+    "total_factors": 3,
+    "version": "1.0"
+  },
+  "factors": {
+    "b435f600cc3464b8": {
+      "factor_id": "b435f600cc3464b8",
+      "factor_name": "VolatilityAdjustedMomentum_30D",
+      "factor_expression": "TS_SUM($return, 30) / TS_STD($return, 30)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # derive $return karena prompt + contoh mengiklankan $return,\n    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_SUM($return, 30) / TS_STD($return, 30)\" # Your output factor expression will be filled in here\n    name = \"VolatilityAdjustedMomentum_30D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Momentum adjusted for volatility over 30 days",
+      "factor_formulation": "Cumulative momentum divided by volatility",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "3470050844c74929908b775c3d88f301",
+        "result_h5_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace/3470050844c74929908b775c3d88f301/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-01_13-54-08-720875",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "feddb63be77c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: The cumulative momentum of the last 30 days, adjusted for the volatility of the underlying asset, can predict future returns more accurately than traditional momentum factors.\n                Concise Observation: In the given scenario, factors that incorporate longer time horizons and volatility adjustments may provide more robust signals for predicting returns, especially in volatile market conditions.\n                Concise Justification: The hypothesis is grounded in the idea that long-term momentum, when adjusted for volatility, can better capture the true trend of an asset, which may be more predictive of future returns than traditional short-term momentum factors.\n                Concise Knowledge: If the cumulative momentum of an asset over a longer period reflects its underlying trend, then when adjusted for volatility, it may provide a more stable and predictive signal for future returns; when the market is highly volatile, the adjusted momentum factor may be more effective in capturing true trend information.\n                concise Specification: The factor is calculated as the cumulative momentum over the last 30 days, divided by the standard deviation of returns over the same period. It is expected to show a stronger predictive power in volatile market conditions and to outperform traditional momentum factors in terms of predictive accuracy.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-01T13:55:51.963558"
+      },
+      "backtest_results": {
+        "1day.excess_return_without_cost.max_drawdown": -0.10474279,
+        "1day.excess_return_without_cost.std": 0.00923292,
+        "1day.pos": 0.0,
+        "1day.excess_return_with_cost.annualized_return": 0.07108311,
+        "1day.excess_return_without_cost.information_ratio": 0.66217084,
+        "Rank IC": 0.02421956,
+        "1day.pa": 0.0,
+        "IC": 0.00655858,
+        "l2.valid": 0.99696259,
+        "1day.excess_return_with_cost.std": 0.00923866,
+        "1day.excess_return_with_cost.mean": 0.00029867,
+        "l2.train": 0.99475812,
+        "1day.excess_return_with_cost.max_drawdown": -0.10804918,
+        "1day.excess_return_without_cost.mean": 0.0003963,
+        "ICIR": 0.0443197,
+        "1day.excess_return_with_cost.information_ratio": 0.49873411,
+        "1day.ffr": 1.0,
+        "Rank ICIR": 0.17168547,
+        "1day.excess_return_without_cost.annualized_return": 0.09431865
+      },
+      "feedback": {
+        "observations": "The current best result shows a low annualized return and a low information ratio, indicating that the existing factor may not be effective in predicting returns. The hypothesis proposes a volatility-adjusted momentum factor over 30 days, which could potentially improve the information ratio and annualized return by capturing the impact of volatility on momentum.",
+        "hypothesis_evaluation": "The hypothesis is innovative and addresses the limitations of traditional momentum factors by incorporating volatility adjustment. However, it is important to ensure that the volatility adjustment is done in a way that does not overfit the data and that the factor is simple enough to be robust.",
+        "decision": true,
+        "reason": "The hypothesis proposes a volatility-adjusted momentum factor over 30 days, which could potentially improve the information ratio and annualized return by capturing the impact of volatility on momentum. This approach addresses the limitations of traditional momentum factors by incorporating volatility adjustment.",
+        "new_hypothesis": "VolatilityAdjustedMomentum_30D: The cumulative momentum of the last 30 days, adjusted for the volatility of the underlying asset, to predict future returns more accurately than traditional momentum factors."
+      }
+    },
+    "1461d148c28b37a2": {
+      "factor_id": "1461d148c28b37a2",
+      "factor_name": "MomentumVolatilityInterplay",
+      "factor_expression": "TS_ZSCORE(TS_MEAN($return, 10), 10) * TS_STD($high, 5)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # derive $return karena prompt + contoh mengiklankan $return,\n    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE(TS_MEAN($return, 10), 10) * TS_STD($high, 5)\" # Your output factor expression will be filled in here\n    name = \"MomentumVolatilityInterplay\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Combines recent momentum with volatility clustering for non-linear return prediction",
+      "factor_formulation": "Non-linear interaction between momentum and volatility",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "6ca5ef04d4ad4088b29f19c3a9aade8f",
+        "result_h5_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace/6ca5ef04d4ad4088b29f19c3a9aade8f/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-01_13-54-08-720875",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "371c23f6801c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: The combination of recent momentum and volatility clustering can predict future returns in a non-linear fashion.\n                Concise Observation: In the given scenario, the factor values are derived from instruments over time, and the returns are influenced by both momentum and volatility patterns.\n                Concise Justification: The hypothesis is based on the idea that momentum and volatility are key drivers of return behavior in financial markets, and their interaction can lead to non-linear return patterns.\n                Concise Knowledge: If the recent momentum of an instrument is positive and volatility is clustering, then the next day's return is likely to be higher; when the momentum is negative and volatility is low, the next day's return is likely to be lower.\n                concise Specification: The hypothesis should be tested using the last 10 days of momentum and the last 5 days of volatility clustering, with a window size of 10 for momentum and 5 for volatility. The model should predict the next day's return based on these factors.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-01T13:58:09.078229"
+      },
+      "backtest_results": {
+        "1day.excess_return_without_cost.max_drawdown": -0.05901375,
+        "1day.excess_return_without_cost.std": 0.00683577,
+        "1day.pos": 0.0,
+        "1day.excess_return_with_cost.annualized_return": 0.13320592,
+        "1day.excess_return_without_cost.information_ratio": 1.48350799,
+        "Rank IC": 0.02287912,
+        "1day.pa": 0.0,
+        "IC": 0.00680203,
+        "l2.valid": 0.99716359,
+        "1day.excess_return_with_cost.std": 0.0068439,
+        "1day.excess_return_with_cost.mean": 0.00055969,
+        "l2.train": 0.99415435,
+        "1day.excess_return_with_cost.max_drawdown": -0.06490533,
+        "1day.excess_return_without_cost.mean": 0.00065734,
+        "ICIR": 0.04795757,
+        "1day.excess_return_with_cost.information_ratio": 1.26162908,
+        "1day.ffr": 1.0,
+        "Rank ICIR": 0.16261621,
+        "1day.excess_return_without_cost.annualized_return": 0.15644652
+      },
+      "feedback": {
+        "observations": "The current factor shows a low information ratio (0.0068) and a low annualized return, suggesting it may not be effective in predicting returns. The max drawdown is also low, indicating limited risk, but the overall performance is not impressive.",
+        "hypothesis_evaluation": "The hypothesis that combines recent momentum with volatility clustering for non-linear return prediction is not supported by the current results. The factor's performance is below expectations, and there is a need for a simpler and more effective approach.",
+        "decision": false,
+        "reason": "The hypothesis is based on the idea that recent momentum and volatility clustering can provide insights into future returns. Momentum reflects the trend of past returns, while volatility clustering indicates periods of high volatility that may signal potential for larger returns or losses.",
+        "new_hypothesis": "The 10-day simple return momentum combined with the 5-day volatility clustering can predict future returns in a non-linear fashion."
+      }
+    },
+    "f20dd3283fb61576": {
+      "factor_id": "f20dd3283fb61576",
+      "factor_name": "MomentumVolatilityRatio",
+      "factor_expression": "TS_ZSCORE(TS_MEAN($return, 10), 10) / TS_STD($high, 5)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # derive $return karena prompt + contoh mengiklankan $return,\n    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE(TS_MEAN($return, 10), 10) / TS_STD($high, 5)\" # Your output factor expression will be filled in here\n    name = \"MomentumVolatilityRatio\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Ratio of momentum to volatility for predictive insight",
+      "factor_formulation": "Momentum-to-volatility ratio for non-linear returns",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "7c98ce5aceee4794b2602e9df9c58f10",
+        "result_h5_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace/7c98ce5aceee4794b2602e9df9c58f10/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-01_13-54-08-720875",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "371c23f6801c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: The combination of recent momentum and volatility clustering can predict future returns in a non-linear fashion.\n                Concise Observation: In the given scenario, the factor values are derived from instruments over time, and the returns are influenced by both momentum and volatility patterns.\n                Concise Justification: The hypothesis is based on the idea that momentum and volatility are key drivers of return behavior in financial markets, and their interaction can lead to non-linear return patterns.\n                Concise Knowledge: If the recent momentum of an instrument is positive and volatility is clustering, then the next day's return is likely to be higher; when the momentum is negative and volatility is low, the next day's return is likely to be lower.\n                concise Specification: The hypothesis should be tested using the last 10 days of momentum and the last 5 days of volatility clustering, with a window size of 10 for momentum and 5 for volatility. The model should predict the next day's return based on these factors.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-01T13:58:09.335114"
+      },
+      "backtest_results": {
+        "1day.excess_return_without_cost.max_drawdown": -0.05901375,
+        "1day.excess_return_without_cost.std": 0.00683577,
+        "1day.pos": 0.0,
+        "1day.excess_return_with_cost.annualized_return": 0.13320592,
+        "1day.excess_return_without_cost.information_ratio": 1.48350799,
+        "Rank IC": 0.02287912,
+        "1day.pa": 0.0,
+        "IC": 0.00680203,
+        "l2.valid": 0.99716359,
+        "1day.excess_return_with_cost.std": 0.0068439,
+        "1day.excess_return_with_cost.mean": 0.00055969,
+        "l2.train": 0.99415435,
+        "1day.excess_return_with_cost.max_drawdown": -0.06490533,
+        "1day.excess_return_without_cost.mean": 0.00065734,
+        "ICIR": 0.04795757,
+        "1day.excess_return_with_cost.information_ratio": 1.26162908,
+        "1day.ffr": 1.0,
+        "Rank ICIR": 0.16261621,
+        "1day.excess_return_without_cost.annualized_return": 0.15644652
+      },
+      "feedback": {
+        "observations": "The current factor shows a low information ratio (0.0068) and a low annualized return, suggesting it may not be effective in predicting returns. The max drawdown is also low, indicating limited risk, but the overall performance is not impressive.",
+        "hypothesis_evaluation": "The hypothesis that combines recent momentum with volatility clustering for non-linear return prediction is not supported by the current results. The factor's performance is below expectations, and there is a need for a simpler and more effective approach.",
+        "decision": false,
+        "reason": "The hypothesis is based on the idea that recent momentum and volatility clustering can provide insights into future returns. Momentum reflects the trend of past returns, while volatility clustering indicates periods of high volatility that may signal potential for larger returns or losses.",
+        "new_hypothesis": "The 10-day simple return momentum combined with the 5-day volatility clustering can predict future returns in a non-linear fashion."
+      }
+    }
+  }
+}

@@ -297,6 +297,9 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 role="coder",
                 latent_steps=self._latent_steps,
                 temperature=temperature if temperature is not None else self._temperature,
+                # Coder hanya output JSON {"expr": "..."} — 512 token lebih dari cukup.
+                # Ini hard cap per-call agar stuck <think> loop tidak makan 20+ menit.
+                max_new_tokens=512,
             )
             # Update KV state: chain ke LLM call berikutnya
             self._last_kv = result.kv_cache
