@@ -636,15 +636,32 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
 
         if self._is_latent:
             # ── Latent: sequential mode ──────────────────────────────
-            # KV-cache accumulates across tasks: setiap task menerima
-            # KV dari task sebelumnya, sehingga model punya konteks
-            # dari semua expression fixes dalam satu evolve round.
+            # Tiap task masuk dengan KV "pre-batch" yang sama (snapshot
+            # sebelum task pertama). KV residual dari task sebelumnya
+            # (termasuk retry attempts yang sukses/gagal) di-crop kembali
+            # supaya tidak meracuni baseline task berikutnya — pernah bikin
+            # task-2 retry collapse ke `<think>` saja walau per-attempt
+            # crop di implement_one_task() sudah jalan.
+            batch_baseline = self._past_kv
+            batch_baseline_len = (
+                _past_length(batch_baseline) if batch_baseline is not None else 0
+            )
             result = []
             for target_index in to_be_finished_task_index:
+                if batch_baseline is not None and hasattr(batch_baseline, "crop"):
+                    try:
+                        batch_baseline.crop(batch_baseline_len)
+                    except Exception as crop_err:
+                        logger.warning(
+                            f"[LatentCoder] evolve: batch_baseline.crop "
+                            f"failed ({crop_err}); proceeding with current KV"
+                        )
+                self._past_kv = batch_baseline
                 code = self.implement_one_task(evo.sub_tasks[target_index], queried_knowledge)
                 result.append(code)
             logger.info(
                 f"[LatentCoder] Sequential evolve: {len(to_be_finished_task_index)} tasks, "
+                f"baseline_len={batch_baseline_len}, "
                 f"has_kv={self._last_kv is not None}"
             )
         else:

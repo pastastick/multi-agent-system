@@ -8,7 +8,17 @@ from factors.coder.function_lib import *
 def calculate_factor(expr: str, name: str):
     # stock dataframe
     df = pd.read_hdf('./daily_pv.h5', key='data')
-    
+
+    # derive $return karena prompt + contoh mengiklankan $return,
+    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya
+    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).
+    if '$return' not in df.columns:
+        idx_names = df.index.names
+        if idx_names and 'instrument' in idx_names:
+            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)
+        else:
+            df['$return'] = df['$close'].pct_change(fill_method=None)
+
     expr = parse_symbol(expr, df.columns)
     expr = parse_expression(expr)
 
