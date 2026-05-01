@@ -381,13 +381,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     def feedback(self, prev_out: dict[str, Any]):
         _mon = _get_monitor() if _HAS_MONITOR else None
 
-        coder_kv = getattr(self.coder, 'last_kv', None)
-        construct_kv = getattr(self.factor_constructor, 'last_kv', None)
-        feedback_input_kv = coder_kv if coder_kv is not None else construct_kv
+        propose_kv = getattr(self.hypothesis_generator, 'last_kv', None)
+        feedback_input_kv = propose_kv
         self.summarizer.set_past_kv(feedback_input_kv)
         if feedback_input_kv is not None:
-            source = "coder" if coder_kv is not None else "construct"
-            logger.info(f"[LatentPipeline] Feedback receives KV from {source} step")
+            logger.info("[LatentPipeline] Feedback receives KV from propose step")
 
         with _mon.track_step("feedback") if _mon else _nullcontext():
             feedback = self.summarizer.generate_feedback(prev_out["factor_backtest"], prev_out["factor_propose"], self.trace)

@@ -142,6 +142,16 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
         logger.info("Generating feedback...")
         hypothesis_text = hypothesis.hypothesis
         current_result = exp.result
+
+        if current_result is None or (hasattr(current_result, 'empty') and current_result.empty):
+            logger.warning("[QuantaAlpha] Backtest result unavailable — skipping LLM feedback")
+            return HypothesisFeedback(
+                observations="Backtest result not available (execution failed).",
+                hypothesis_evaluation="Unable to evaluate — no result data.",
+                new_hypothesis="Retry with the same hypothesis after fixing the execution environment.",
+                decision=False,
+            )
+
         tasks_factors = [task.get_task_information_and_implementation_result() for task in exp.sub_tasks]
         # Safely get SOTA result, handle case where based_experiments might be empty or result is None
         sota_result = None
@@ -290,6 +300,16 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
         logger.info("Generating feedback...")
         hypothesis_text = hypothesis.hypothesis
         current_result = exp.result
+
+        if current_result is None or (hasattr(current_result, 'empty') and current_result.empty):
+            logger.warning("[QuantaAlpha] Backtest result unavailable — skipping LLM feedback")
+            return HypothesisFeedback(
+                observations="Backtest result not available (execution failed).",
+                hypothesis_evaluation="Unable to evaluate — no result data.",
+                new_hypothesis="Retry with the same hypothesis after fixing the execution environment.",
+                decision=False,
+            )
+
         tasks_factors = [task.get_task_information_and_implementation_result() for task in exp.sub_tasks]
         # Safely get SOTA result, handle case where based_experiments might be empty or result is None
         sota_result = None
