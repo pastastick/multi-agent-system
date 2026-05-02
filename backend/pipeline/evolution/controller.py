@@ -251,13 +251,15 @@ class EvolutionController:
                     continue
                 
                 suffix = self.mutation_op.generate_mutation_prompt_suffix(parent)
+                mutation_kv = self.mutation_op.last_kv
+                seed_kv = mutation_kv if mutation_kv is not None else parent.kv_cache
                 tasks.append({
                     "phase": RoundPhase.MUTATION,
                     "direction_id": idx,
                     "parent_trajectories": [parent],
                     "strategy_suffix": suffix,
                     "round_idx": self._current_round,
-                    "parent_kv": parent.kv_cache,
+                    "parent_kv": seed_kv,
                 })
             
             # If no tasks, transition phase for next call
@@ -470,15 +472,21 @@ class EvolutionController:
             #* generate prompt suffix berisi info parent trajectory
             #* yang akan disisipkan ke prompt LLM supaya tahu harus "memutasi" apa
 
+            # Gunakan KV output dari mutation LLM (bukan parent feedback KV).
+            # Parent feedback KV mem-prime propose untuk generate output format
+            # feedback ("Observations", "New Hypothesis") bukan format hypothesis
+            # standar ("hypothesis", "concise_observation") → semua field kosong.
+            # Mutation KV lebih netral sebagai titik awal propose.
+            mutation_kv = self.mutation_op.last_kv
+            seed_kv = mutation_kv if mutation_kv is not None else parent.kv_cache
+
             task = {
                 "phase": RoundPhase.MUTATION,
                 "direction_id": direction_id,
                 "parent_trajectories": [parent],
                 "strategy_suffix": suffix,      #* instruksi mutation untuk LLM
                 "round_idx": self._current_round,
-                # Teruskan KV-cache dari parent trajectory agar mutation
-                # melanjutkan konteks latent, bukan mulai dari nol.
-                "parent_kv": parent.kv_cache,
+                "parent_kv": seed_kv,
             }
 
             self._mutation_idx += 1

@@ -414,8 +414,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             from pathlib import Path
             from factors.library import FactorLibraryManager
             
-            # Project root: loop.py -> pipeline/ -> quantaalpha/ -> project_root/
-            project_root = Path(__file__).resolve().parent.parent.parent
+            # Backend root: loop.py -> pipeline/ -> backend/
+            # Semua output (factorlib, debug) di bawah backend/ agar konsisten
+            # dengan output_log_dir di settings.py (yang juga absolute ke backend/).
+            project_root = Path(__file__).resolve().parent.parent
 
             experiment_id = "unknown"
             if hasattr(self, 'session_folder') and self.session_folder:

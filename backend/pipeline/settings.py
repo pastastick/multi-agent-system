@@ -28,9 +28,15 @@ Latent pipeline (Latent-MAS adaptation):
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Optional
 
 from core.conf import ExtendedBaseSettings, ExtendedSettingsConfigDict
+
+# Absolute path ke backend/ sehingga output_log_dir tidak bergantung CWD.
+# settings.py ada di backend/pipeline/ → parent.parent = backend/
+_BACKEND_DIR = Path(__file__).resolve().parent.parent
+_DEFAULT_OUTPUT_LOG_DIR = str(_BACKEND_DIR / "debug" / "llm_outputs")
 
 
 # =============================================================================
@@ -198,7 +204,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Debug: simpan output text LLM per-call ke JSONL.
     # Ditulis SEGERA setelah generation (flush + fsync) — sehingga
     # crash tengah iterasi pun tetap meninggalkan jejak lengkap.
-    output_log_dir: str = "./debug/llm_outputs"
+    output_log_dir: str = _DEFAULT_OUTPUT_LOG_DIR
 
     # ── Factory methods ──────────────────────────────────────────────────
 

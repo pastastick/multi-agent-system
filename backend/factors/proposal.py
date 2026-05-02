@@ -292,19 +292,53 @@ class AlphaAgentHypothesisGen(FactorHypothesisGen):
 
     def convert_response(self, response: str) -> AlphaAgentHypothesis:
         """
-        Convert LLM JSON to AlphaAgentHypothesis; use default empty string for missing fields to avoid KeyError.
+        Convert LLM JSON to AlphaAgentHypothesis; handles both standard keys and
+        mutation/feedback-style keys that emerge when past_kv primes the model in
+        feedback mode (e.g. "New Hypothesis", "Observations", "Key Knowledge").
         """
         response_dict = robust_json_parse(response)
-        
-        # Use get to avoid KeyError on missing fields
-        hypothesis = AlphaAgentHypothesis(
-            hypothesis=response_dict.get("hypothesis", ""),
-            concise_observation=response_dict.get("concise_observation", ""),
-            concise_knowledge=response_dict.get("concise_knowledge", ""),
-            concise_justification=response_dict.get("concise_justification", ""),
-            concise_specification=response_dict.get("concise_specification", ""),
+
+        def _first(*keys, default=""):
+            for k in keys:
+                v = response_dict.get(k)
+                if v:
+                    return v if isinstance(v, str) else str(v)
+            return default
+
+        hypothesis_text = _first("hypothesis", "New Hypothesis", "new_hypothesis")
+        concise_observation = _first("concise_observation", "Observations", "observations")
+        concise_justification = _first(
+            "concise_justification", "Feedback for Hypothesis", "Reasoning", "reasoning"
         )
-        return hypothesis
+        # Key Knowledge may be a dict; serialize it
+        ck = (
+            response_dict.get("concise_knowledge")
+            or response_dict.get("Key Knowledge")
+            or response_dict.get("key_knowledge")
+            or response_dict.get("Reasoning")
+            or ""
+        )
+        if isinstance(ck, dict):
+            ck = "; ".join(f"{k}: {v}" for k, v in ck.items())
+        concise_knowledge = ck if isinstance(ck, str) else str(ck)
+
+        cs = (
+            response_dict.get("concise_specification")
+            or response_dict.get("Evaluation Metrics")
+            or response_dict.get("evaluation_metrics")
+            or ""
+        )
+        if isinstance(cs, dict):
+            cs = str(cs)
+        concise_specification = cs
+
+        return AlphaAgentHypothesis(
+            hypothesis=hypothesis_text,
+            concise_observation=concise_observation,
+            concise_knowledge=concise_knowledge,
+            concise_justification=concise_justification,
+            concise_specification=concise_specification,
+        )
     
     def _call_llm(self, user_prompt: str, system_prompt: str, json_mode: bool = False) -> str:
         """
