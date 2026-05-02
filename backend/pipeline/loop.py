@@ -399,13 +399,17 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         self.trace.hist.append((prev_out["factor_propose"], prev_out["factor_backtest"], feedback))
         self._last_feedback = feedback
 
-        # ── KV-cache: chain feedback → next iteration's propose ──
-        feedback_kv = self.summarizer.last_kv
-        if feedback_kv is not None and kv_truncate is not None:
-            self._pipeline_kv = kv_truncate(feedback_kv, self._kv_max_tokens)
+        # ── KV-cache: chain propose_kv → next iteration's propose ──
+        # Pakai propose_kv bukan feedback_kv. feedback_kv = propose_kv + feedback_prompt
+        # → spiral akumulasi KV setiap iterasi. Iter3 construct menerima ~6000 tok total
+        # context → collapse. propose_kv jauh lebih kecil dan sudah encode hypothesis
+        # direction yang cukup. Teks feedback tersimpan di trace.hist (text history).
+        _chain_limit = max(self._kv_max_tokens // 4, 512)
+        if propose_kv is not None and kv_truncate is not None:
+            self._pipeline_kv = kv_truncate(propose_kv, _chain_limit)
             logger.info(
-                f"[LatentPipeline] Chained feedback KV → next propose "
-                f"(truncated to {self._kv_max_tokens} tokens)"
+                f"[LatentPipeline] Chained propose KV → next propose "
+                f"(truncated to {_chain_limit} tokens)"
             )
 
         #* Auto-save factors to unified factor library
