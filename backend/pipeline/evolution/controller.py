@@ -251,15 +251,15 @@ class EvolutionController:
                     continue
                 
                 suffix = self.mutation_op.generate_mutation_prompt_suffix(parent)
-                mutation_kv = self.mutation_op.last_kv
-                seed_kv = mutation_kv if mutation_kv is not None else parent.kv_cache
+                # Jangan pass mutation/feedback KV ke propose — akan prime model ke
+                # feedback-format. factor_mining fallback ke _planning_kv (netral).
                 tasks.append({
                     "phase": RoundPhase.MUTATION,
                     "direction_id": idx,
                     "parent_trajectories": [parent],
                     "strategy_suffix": suffix,
                     "round_idx": self._current_round,
-                    "parent_kv": seed_kv,
+                    "parent_kv": None,
                 })
             
             # If no tasks, transition phase for next call

@@ -371,9 +371,77 @@ def md5_hash(s: str) -> str:
     return hashlib.md5(s.encode(), usedforsecurity=False).hexdigest()
 
 
+def _regex_extract_fields(text: str) -> dict:
+    """
+    Last-resort extraction for structurally broken JSON.
+    Finds "key": "value" pairs using lookahead at the next "key": pattern.
+    Handles missing closing quotes caused by LLM generating multi-line values.
+    """
+    result = {}
+    for m in re.finditer(
+        r'"([^"\n]+?)"\s*:\s*"(.*?)(?="[^"\n]*?"\s*:|\s*\}|\Z)',
+        text, re.DOTALL
+    ):
+        key = m.group(1).strip()
+        val = m.group(2).strip().rstrip(',').rstrip('"').strip()
+        if key:
+            result[key] = val
+    # extract non-string values (true/false/null/numbers)
+    for m in re.finditer(r'"([^"\n]+?)"\s*:\s*(true|false|null|-?\d+(?:\.\d+)?)', text):
+        key = m.group(1).strip()
+        if key in result:
+            continue
+        val_str = m.group(2)
+        if val_str == 'true':
+            result[key] = True
+        elif val_str == 'false':
+            result[key] = False
+        elif val_str == 'null':
+            result[key] = None
+        else:
+            try:
+                result[key] = float(val_str) if '.' in val_str else int(val_str)
+            except ValueError:
+                pass
+    return result
+
+
+def _sanitize_json_string_values(text: str) -> str:
+    """Escape literal newlines/carriage-returns/tabs inside JSON string values."""
+    result = []
+    in_string = False
+    escape_next = False
+    for ch in text:
+        if escape_next:
+            escape_next = False
+            result.append(ch)
+            continue
+        if ch == '\\':
+            escape_next = True
+            result.append(ch)
+            continue
+        if ch == '"':
+            in_string = not in_string
+            result.append(ch)
+            continue
+        if in_string:
+            if ch == '\n':
+                result.append('\\n')
+                continue
+            if ch == '\r':
+                result.append('\\r')
+                continue
+            if ch == '\t':
+                result.append('\\t')
+                continue
+        result.append(ch)
+    return ''.join(result)
+
+
 def robust_json_parse(text: str, max_retries: int = 3) -> dict:
     """
-    Robust JSON parser: handles extra data, LaTeX escapes, markdown-wrapped JSON.
+    Robust JSON parser: handles extra data, LaTeX escapes, markdown-wrapped JSON,
+    and literal newlines inside string values.
     Raises json.JSONDecodeError if all strategies fail.
     """
     original_text = text
@@ -384,13 +452,18 @@ def robust_json_parse(text: str, max_retries: int = 3) -> dict:
     except json.JSONDecodeError:
         pass
 
-    # Strategy 2: extract JSON code block
+    # Strategy 2: extract JSON code block (raw + sanitized)
     json_block_pattern = r'```(?:json)?\s*\n?([\s\S]*?)\n?```'
     matches = re.findall(json_block_pattern, text)
     if matches:
         for match in matches:
+            candidate = match.strip()
             try:
-                return json.loads(match.strip())
+                return json.loads(candidate)
+            except json.JSONDecodeError:
+                pass
+            try:
+                return json.loads(_sanitize_json_string_values(candidate))
             except json.JSONDecodeError:
                 continue
 
@@ -429,20 +502,27 @@ def robust_json_parse(text: str, max_retries: int = 3) -> dict:
         try:
             return json.loads(json_str)
         except json.JSONDecodeError:
-            # Strategy 4: fix LaTeX escapes
-            fixed_str = json_str
-            latex_commands = ['text', 'frac', 'left', 'right', 'times', 'cdot', 'sqrt',
-                              'sum', 'prod', 'int', 'alpha', 'beta', 'gamma', 'delta']
-            for cmd in latex_commands:
-                fixed_str = re.sub(r'(?<!\\)\\(' + cmd + r')', r'\\\\\1', fixed_str)
-            fixed_str = re.sub(r'(?<!\\)\\([_\{\}\[\]])', r'\\\\\1', fixed_str)
+            pass
 
-            try:
-                return json.loads(fixed_str)
-            except json.JSONDecodeError:
-                pass
+        # Strategy 4: sanitize literal newlines in string values
+        try:
+            return json.loads(_sanitize_json_string_values(json_str))
+        except json.JSONDecodeError:
+            pass
 
-    # Strategy 5: looser JSON extraction
+        # Strategy 5: fix LaTeX escapes
+        fixed_str = json_str
+        latex_commands = ['text', 'frac', 'left', 'right', 'times', 'cdot', 'sqrt',
+                          'sum', 'prod', 'int', 'alpha', 'beta', 'gamma', 'delta']
+        for cmd in latex_commands:
+            fixed_str = re.sub(r'(?<!\\)\\(' + cmd + r')', r'\\\\\1', fixed_str)
+        fixed_str = re.sub(r'(?<!\\)\\([_\{\}\[\]])', r'\\\\\1', fixed_str)
+        try:
+            return json.loads(fixed_str)
+        except json.JSONDecodeError:
+            pass
+
+    # Strategy 6: looser JSON extraction
     potential_jsons = re.findall(r'\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}', text)
     for pj in potential_jsons:
         try:
@@ -451,6 +531,12 @@ def robust_json_parse(text: str, max_retries: int = 3) -> dict:
                 return result
         except json.JSONDecodeError:
             continue
+
+    # Strategy 7: regex field extraction for structurally broken JSON
+    # (e.g. missing closing quote on multi-line LLM string values)
+    extracted = _regex_extract_fields(text)
+    if extracted:
+        return extracted
 
     raise json.JSONDecodeError(
         f"Could not parse JSON; original text length: {len(original_text)}",

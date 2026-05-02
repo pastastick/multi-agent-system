@@ -305,8 +305,16 @@ class AlphaAgentHypothesisGen(FactorHypothesisGen):
                     return v if isinstance(v, str) else str(v)
             return default
 
+        def _strip_data_colrefs(text: str) -> str:
+            # Remove parenthetical mentions of data column names like
+            # "(1day.excess_return_without_cost)" — identified by dot + underscore
+            # pattern (typical of data columns). Leaves "(0.05)" etc. intact.
+            return re.sub(r'\s*\([^)]*\b\w+\.\w*_\w+[^)]*\)', '', text).strip()
+
         hypothesis_text = _first("hypothesis", "New Hypothesis", "new_hypothesis")
-        concise_observation = _first("concise_observation", "Observations", "observations")
+        concise_observation = _strip_data_colrefs(
+            _first("concise_observation", "Observations", "observations")
+        )
         concise_justification = _first(
             "concise_justification", "Feedback for Hypothesis", "Reasoning", "reasoning"
         )
@@ -629,11 +637,10 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
         """Convert with given history limit.
 
         KV-cache note (retry loop):
-            Setiap retry di while loop bawah menggunakan _past_kv yang SAMA
-            (dari propose step, di-set oleh loop.py sebelum convert() dipanggil).
-            Retry TIDAK chain KV antar attempt — feedback duplikasi dikirim
-            via teks di user_prompt. last_result di-update setiap _call_llm(),
-            sehingga last_kv selalu KV dari attempt terakhir (untuk feedback step).
+            Attempt 1 menggunakan full prompts + propose KV.
+            Attempt 2+: minimal retry prompt (error+hypothesis+functions) tanpa
+            repeating full scenario/guidance — mencegah prompt overload Qwen3-4B.
+            Attempt 3+: juga reset past_kv ke None (KV clean slate).
         """
         context, json_flag = self.prepare_context(hypothesis, trace, history_limit)
         scenario_desc = self._get_scenario_desc(trace)
@@ -655,14 +662,21 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                 hypothesis_and_feedback=context["hypothesis_and_feedback"],
                 function_lib_description=context["function_lib_description"],
                 target_list=context["target_list"],
-                RAG=context["RAG"], 
-                expression_duplication=None     # awalnya tidak ada feedback duplikasi
+                RAG=context["RAG"],
+                expression_duplication=None,
             )
         )
-        
+
+        # Strategy B: templates untuk retry minimal prompt
+        _retry_sys_tpl  = qa_prompt_dict.get("hypothesis2experiment_retry_system_prompt", "")
+        _retry_user_tpl = qa_prompt_dict.get("hypothesis2experiment_retry_user_prompt", "")
+        _compact_schema  = qa_prompt_dict.get("factor_experiment_compact_schema", "")
+        _hypothesis_title = getattr(hypothesis, 'hypothesis', str(hypothesis))
+
         #* Detect duplicated sub-expressions
         flag = False    # semua faktor valid?
-        expression_duplication_prompt = None    # feedback duplikasi(kumulatif)
+        expression_duplication_prompt = None    # feedback duplikasi untuk attempt 1
+        error_log: list[str] = []               # error log ringkas untuk retry prompt
         _MAX_CONSTRUCT_RETRIES = 6
         _construct_retries = 0
         while True:
@@ -680,13 +694,46 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
             _construct_retries += 1
 
             #* panggil LLM => generate faktor
-            resp = self._call_llm(user_prompt, system_prompt, json_flag)
+            # Attempt 1: full prompt + propose KV (normal path)
+            # Attempt 2+: minimal retry prompt — mencegah prompt overload pada small model
+            # Attempt 3+: juga drop past_kv (KV clean slate)
+            if _construct_retries >= 2 and _retry_sys_tpl and _retry_user_tpl:
+                error_summary = " | ".join(error_log[-3:]) or "format invalid"
+                _cur_sys = _retry_sys_tpl
+                _cur_user = (
+                    Environment(undefined=StrictUndefined)
+                    .from_string(_retry_user_tpl)
+                    .render(
+                        attempt_n=_construct_retries,
+                        error_log=error_summary,
+                        hypothesis_title=_hypothesis_title,
+                        function_lib_description=context["function_lib_description"],
+                        compact_schema=_compact_schema,
+                    )
+                )
+                logger.info(
+                    f"[Construct] attempt {_construct_retries}: minimal retry prompt"
+                    f" (error: {error_summary[:80]})"
+                )
+                if _construct_retries >= 3 and self._past_kv is not None:
+                    # KV reset: hapus kontaminasi dari propose step
+                    _saved_kv = self._past_kv
+                    self._past_kv = None
+                    try:
+                        resp = self._call_llm(_cur_user, _cur_sys, json_flag)
+                    finally:
+                        self._past_kv = _saved_kv
+                else:
+                    resp = self._call_llm(_cur_user, _cur_sys, json_flag)
+            else:
+                resp = self._call_llm(user_prompt, system_prompt, json_flag)
 
             try:
                 # parse JSON => dict
                 response_dict = robust_json_parse(resp)
             except json.JSONDecodeError as e:
                 logger.warning(f"JSON parse failed: {e}, retrying...")
+                error_log.append(f"JSON parse failed: output must be raw JSON object starting with {{\"FactorName\"")
                 continue
 
             proposed_names = [] # nama faktor yang valid
@@ -705,8 +752,33 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                 #* Check if expression is parsable
                 if not self.factor_regulator.is_parsable(expr):
                     logger.warning(f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: not parsable: {expr!r}")
+                    error_log.append(f"not parsable: {expr[:60]!r} — use only $open/$close/$high/$low/$volume/$return")
+                    parse_fb = (
+                        f"- Expression Not Parsable: `{expr}` could not be parsed. "
+                        f"ONLY use variables starting with `$` ($open, $close, $high, "
+                        f"$low, $volume, $return). "
+                        f"Do NOT use dot-notation names like `1day.excess_return_without_cost` "
+                        f"or any undeclared variable. Use `$return` for daily returns."
+                    )
+                    expression_duplication_prompt = (
+                        '\n\n'.join([expression_duplication_prompt, parse_fb])
+                        if expression_duplication_prompt else parse_fb
+                    )
+                    user_prompt = (
+                        Environment(undefined=StrictUndefined)
+                        .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
+                        .render(
+                            targets=self.targets,
+                            target_hypothesis=context["target_hypothesis"],
+                            hypothesis_and_feedback=context["hypothesis_and_feedback"],
+                            function_lib_description=context["function_lib_description"],
+                            target_list=context["target_list"],
+                            RAG=context["RAG"],
+                            expression_duplication=expression_duplication_prompt,
+                        )
+                    )
                     break
-                
+
                 #   evaluate() melakukan:
                 #      1. parse AST dari ekspresi
                 #      2. match_alphazoo: cek subtree mana yang sudah ada di alpha zoo
@@ -715,6 +787,32 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                 #   return: (success, dict metrik)
                 success, eval_dict = self.factor_regulator.evaluate(expr)
                 if not success:
+                    logger.warning(f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: evaluate failed: {expr!r}")
+                    error_log.append(f"eval failed: {expr[:60]!r} — check variable names and syntax")
+                    eval_fb = (
+                        f"- Expression Evaluation Failed: `{expr}` failed evaluation. "
+                        f"ONLY use variables starting with `$` ($open, $close, $high, "
+                        f"$low, $volume, $return) and allowed operators. "
+                        f"Do NOT use dot-notation names (e.g., `1day.excess_return_without_cost`). "
+                        f"Use `$return` for daily returns."
+                    )
+                    expression_duplication_prompt = (
+                        '\n\n'.join([expression_duplication_prompt, eval_fb])
+                        if expression_duplication_prompt else eval_fb
+                    )
+                    user_prompt = (
+                        Environment(undefined=StrictUndefined)
+                        .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
+                        .render(
+                            targets=self.targets,
+                            target_hypothesis=context["target_hypothesis"],
+                            hypothesis_and_feedback=context["hypothesis_and_feedback"],
+                            function_lib_description=context["function_lib_description"],
+                            target_list=context["target_list"],
+                            RAG=context["RAG"],
+                            expression_duplication=expression_duplication_prompt,
+                        )
+                    )
                     break
                 
                 #* Consistency check (if enabled)
@@ -759,6 +857,11 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         f"dup_size={eval_dict.get('duplicated_subtree_size')}, "
                         f"sl={eval_dict.get('symbol_length')}, "
                         f"base_feat={eval_dict.get('num_base_features')}"
+                    )
+                    sl = eval_dict.get('symbol_length', 0)
+                    dup = eval_dict.get('duplicated_subtree_size', 0)
+                    error_log.append(
+                        f"not acceptable: sl={sl}, dup={dup} — use different structure"
                     )
                     
                     # Calculate ratios for feedback
@@ -834,6 +937,9 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                             f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: "
                             f"intra-response duplicate: {factor_name!r} == {dup_name!r}, "
                             f"expr={expr!r}"
+                        )
+                        error_log.append(
+                            f"intra-duplicate: {factor_name!r}=={dup_name!r} — each factor must have different expression"
                         )
                         intra_dup_feedback = (
                             f"- Intra-Response Duplicate: factor `{factor_name}` and "
