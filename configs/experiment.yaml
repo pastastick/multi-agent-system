@@ -237,7 +237,7 @@ latent:
   # Complementary to kv_max_tokens: truncate caps size,
   # knn filter preserves quality.
   knn_enabled: true
-  knn_percentage: 0.8       # fraction of tokens kept (0.0-1.0)
+  knn_percentage: 0.3       # fraction of tokens kept (0.0-1.0)
   knn_min_keep: 5           # minimum recent tokens always kept
   knn_strategy: "top"       # "top" | "bottom" | "random"
 

@@ -1,0 +1,13 @@
+{"n": 1, "ts": "2026-05-03 01:53:55", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "8f4b3bca", "text_len": 1357, "duration_s": 88.1122, "file": "0001_propose_kv_and_text.json"}
+{"n": 2, "ts": "2026-05-03 01:55:15", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "da078d80", "text_len": 562, "duration_s": 75.154, "file": "0002_construct_kv_and_text.json"}
+{"n": 3, "ts": "2026-05-03 01:55:34", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "ce849c7f", "text_len": 157, "duration_s": 13.9443, "file": "0003_coder_eval_text_only.json"}
+{"n": 4, "ts": "2026-05-03 01:55:56", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "36de7432", "text_len": 308, "duration_s": 22.4647, "file": "0004_coder_eval_text_only.json"}
+{"n": 5, "ts": "2026-05-03 01:56:08", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "e0402241", "text_len": 238, "duration_s": 8.2648, "file": "0005_coder_eval_text_only.json"}
+{"n": 6, "ts": "2026-05-03 01:56:14", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "51d58c3c", "text_len": 238, "duration_s": 5.5009, "file": "0006_coder_eval_text_only.json"}
+{"n": 7, "ts": "2026-05-03 01:56:30", "role": "coder", "mode": "kv_and_text", "step": 0, "conv_id": "1d04ce67", "text_len": 0, "duration_s": 16.3106, "file": "0007_coder_kv_and_text.json"}
+{"n": 8, "ts": "2026-05-03 01:56:36", "role": "coder", "mode": "kv_and_text", "step": 0, "conv_id": "08bfc481", "text_len": 0, "duration_s": 1.3721, "file": "0008_coder_kv_and_text.json"}
+{"n": 9, "ts": "2026-05-03 01:56:41", "role": "coder", "mode": "kv_and_text", "step": 0, "conv_id": "293924be", "text_len": 53, "duration_s": 1.4571, "file": "0009_coder_kv_and_text.json"}
+{"n": 10, "ts": "2026-05-03 01:56:55", "role": "coder", "mode": "kv_and_text", "step": 0, "conv_id": "e2a85a4b", "text_len": 70, "duration_s": 10.1509, "file": "0010_coder_kv_and_text.json"}
+{"n": 11, "ts": "2026-05-03 01:57:05", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "52ec2d79", "text_len": 17, "duration_s": 3.2611, "file": "0011_coder_eval_text_only.json"}
+{"n": 12, "ts": "2026-05-03 01:57:07", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "05868e8c", "text_len": 211, "duration_s": 1.8783, "file": "0012_coder_eval_text_only.json"}
+{"n": 13, "ts": "2026-05-03 01:57:23", "role": "coder", "mode": "kv_and_text", "step": 0, "conv_id": "408f4d62", "text_len": 0, "duration_s": 15.3967, "file": "0013_coder_kv_and_text.json"}
