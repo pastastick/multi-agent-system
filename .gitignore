@@ -29,7 +29,6 @@ books/
 # logs & runtime artifacts
 *.log
 *.jsonl
-backend/logs/
 backend/debug/conv_logs/
 backend/workspace/
 backend/__session__/

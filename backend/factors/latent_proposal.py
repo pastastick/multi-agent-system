@@ -53,6 +53,22 @@ from typing import Any, Optional
 from log import logger
 
 from llm.client import LocalLLMBackend, LLMResult, KVCache, OutputMode
+
+
+def _is_collapse(text: str) -> bool:
+    """Deteksi output degenerate: kosong atau repetition spiral.
+
+    Return True jika text dianggap collapse:
+    - Kosong / hanya whitespace
+    - Hanya tag <think> tanpa konten (output_tokens=1 tapi text stripped jadi "")
+    - Repetisi tinggi: unique_words / total_words < 0.15 (min 8 kata)
+    """
+    if not text or not text.strip():
+        return True
+    words = text.split()
+    if len(words) < 8:
+        return False
+    return len(set(words)) / len(words) < 0.15
 from factors.proposal import (
     AlphaAgentHypothesisGen,
     AlphaAgentHypothesis2FactorExpression,
@@ -187,11 +203,28 @@ class LatentHypothesisGen(_LatentMixin, AlphaAgentHypothesisGen):
             temperature=self._temperature,
         )
         self.last_result = result
+        text = result.text or ""
+
+        if _is_collapse(text) and self._past_kv is not None:
+            logger.warning("[LatentHypothesisGen] collapse detected with KV, retry text_only tanpa KV")
+            self._past_kv = None
+            result = self.llm_backend.build_messages_and_run(
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+                json_mode=json_mode,
+                past_key_values=None,
+                mode="text_only",
+                role="propose",
+                temperature=self._temperature,
+            )
+            self.last_result = result
+            text = result.text or ""
+
         logger.info(
             f"[LatentHypothesisGen] mode={self._mode}, "
-            f"has_kv={result.has_kv}, text_len={len(result.text or '')}"
+            f"has_kv={result.has_kv}, text_len={len(text)}"
         )
-        return result.text or ""
+        return text
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -220,31 +253,34 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         selalu KV dari attempt terakhir (untuk feedback step chain).
     """
 
-    # Compact output-format spec yang menggantikan
-    # `factor_experiment_output_format` di prompts.yaml untuk construct.
-    # Alasan: spec default berisi contoh konkret (Normalized_Intraday_Range_Factor_10D)
-    # dengan inner `variables` dict yang di-pattern-match model → output hanya
-    # flat dict `{"$close": "...", "TS_STD(A, n)": "..."}` tanpa wrapper faktor.
-    # Versi compact ini: tanpa contoh konkret, placeholder abstrak, dan instruksi
-    # eksplisit soal struktur outer-wrapper. Taruh di ujung system_prompt supaya
-    # dominan via recency bias tanpa pattern yang bisa ditiru.
-    _COMPACT_OUTPUT_FORMAT = """Output must be ONE raw JSON object — no markdown fences, no commentary.
-Produce 2 to 3 factors. The JSON has this shape:
+    # Compact output-format spec menggantikan `factor_experiment_output_format`.
+    # PENTING: gunakan contoh KONKRET (bukan placeholder abstrak seperti
+    # <factor_name_A> atau "...") karena model kecil (Qwen3-4B) akan
+    # meng-echo placeholder secara literal. Tampilkan struktur nyata lalu
+    # instruksikan "ganti dengan konten kamu sendiri".
+    _COMPACT_OUTPUT_FORMAT = """Output: ONE raw JSON object. No markdown fences, no commentary, no extra text.
+Generate 2-3 factors. Follow this EXACT structure — replace names/values with your own:
 
 {
-    "<factor_name_A>": {"description": "...", "variables": {...}, "formulation": "...", "expression": "..."},
-    "<factor_name_B>": {"description": "...", "variables": {...}, "formulation": "...", "expression": "..."}
+    "VolumeMomentum_5D": {
+        "description": "5-day cumulative volume trend normalized by 20-day average",
+        "variables": {"$volume": "daily trading volume"},
+        "formulation": "\\\\text{RANK}(\\\\frac{\\\\text{TS\\_SUM}(v,5)}{\\\\text{TS\\_MEAN}(v,20)})",
+        "expression": "RANK(TS_SUM($volume, 5) / (TS_MEAN($volume, 20) + 1e-8))"
+    },
+    "PriceReversal_10D": {
+        "description": "Short-term price deviation from 10-day mean, cross-sectionally ranked",
+        "variables": {"$close": "closing price of the stock"},
+        "formulation": "\\\\text{RANK}\\\\left(\\\\frac{c - \\\\text{TS\\_MEAN}(c,10)}{\\\\text{TS\\_STD}(c,10)}\\\\right)",
+        "expression": "RANK(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8))"
+    }
 }
 
-Rules for every factor entry:
-  - OUTER key = factor name you invent (camelCase or Snake_Case, e.g. VolMomentumInterplay_20D).
-  - OUTER key is NEVER `$close`, `$open`, `variables`, `description`, or an operator name.
-  - Inner dict contains EXACTLY these 4 keys in this order: description, variables, formulation, expression.
-  - `variables` is a nested dict mapping each symbol used in `expression` to a one-sentence meaning.
-  - `expression` uses only the allowed $features and operators; length should stay ≤ 250 characters.
-
-The FIRST two characters of your response MUST be `{"` followed immediately by your chosen factor name.
-Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whitespace."""
+CRITICAL RULES — do NOT echo this template:
+- Replace "VolumeMomentum_5D" / "PriceReversal_10D" with your own factor names.
+- Replace ALL values (description, variables, formulation, expression) with your actual content.
+- `expression` must use only $open/$close/$high/$low/$volume/$return and allowed operators.
+- Do NOT output literal "...", "<placeholder>", or any field descriptions as values."""
 
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
@@ -394,8 +430,32 @@ class LatentFeedback(_LatentMixin, AlphaAgentQlibFactorHypothesisExperiment2Feed
             temperature=self._temperature,
         )
         self.last_result = result
+        text = result.text or ""
+
+        if _is_collapse(text) and self._past_kv is not None:
+            # construct_kv dengan banyak latent steps sering menyebabkan feedback
+            # collapse (model generate EOS langsung). Fallback: hapus KV, retry
+            # text_only. _past_kv=None juga memastikan retries di generate_feedback()
+            # tidak mengulang collapse dengan KV yang sama.
+            logger.warning(
+                f"[LatentFeedback] collapse detected (text_len={len(text)}), "
+                "retry text_only tanpa KV"
+            )
+            self._past_kv = None
+            result = self.llm_backend.build_messages_and_run(
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+                json_mode=json_mode,
+                past_key_values=None,
+                mode="text_only",
+                role="feedback",
+                temperature=self._temperature,
+            )
+            self.last_result = result
+            text = result.text or ""
+
         logger.info(
             f"[LatentFeedback] mode={self._mode}, "
-            f"text_len={len(result.text or '')}"
+            f"text_len={len(text)}"
         )
-        return result.text or ""
+        return text

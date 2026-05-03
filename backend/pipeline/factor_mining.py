@@ -114,6 +114,48 @@ def _apply_latent_overrides(run_cfg: dict, setting) -> None:
         logger.info(f"[Config] Latent overrides from YAML → {', '.join(applied)}")
 
 
+def _apply_factor_overrides(run_cfg: dict) -> None:
+    """Override FactorCoSTEERSettings dari run_cfg['factor'] di YAML.
+
+    Menerapkan factor.complexity.* dan factor.duplication.* ke
+    FACTOR_COSTEER_SETTINGS sebelum AlphaAgentLoop diinisialisasi,
+    sehingga FactorRegulator membaca nilai dari YAML bukan hardcode default.
+    """
+    if not isinstance(run_cfg, dict):
+        return
+    factor_cfg = run_cfg.get("factor") or {}
+    if not factor_cfg:
+        return
+
+    try:
+        from factors.coder.config import FACTOR_COSTEER_SETTINGS
+    except ImportError:
+        return
+
+    applied: list[str] = []
+
+    complexity = factor_cfg.get("complexity") or {}
+    _COMPLEXITY_MAP = {
+        "symbol_length_threshold": "symbol_length_threshold",
+        "base_features_threshold": "base_features_threshold",
+    }
+    for yaml_key, attr in _COMPLEXITY_MAP.items():
+        if yaml_key in complexity and complexity[yaml_key] is not None:
+            setattr(FACTOR_COSTEER_SETTINGS, attr, complexity[yaml_key])
+            applied.append(f"{attr}={complexity[yaml_key]}")
+
+    duplication = factor_cfg.get("duplication") or {}
+    if "threshold" in duplication and duplication["threshold"] is not None:
+        setattr(FACTOR_COSTEER_SETTINGS, "duplication_threshold", duplication["threshold"])
+        applied.append(f"duplication_threshold={duplication['threshold']}")
+    if "factor_zoo_path" in duplication and duplication["factor_zoo_path"] is not None:
+        setattr(FACTOR_COSTEER_SETTINGS, "factor_zoo_path", duplication["factor_zoo_path"])
+        applied.append(f"factor_zoo_path={duplication['factor_zoo_path']}")
+
+    if applied:
+        logger.info(f"[Config] Factor overrides from YAML → {', '.join(applied)}")
+
+
 def force_timeout(): #* membatasi lamanya mining
     def decorator(func):
         @wraps(func)
@@ -915,6 +957,10 @@ def main(
         # Must happen BEFORE create_llm_backend() so the backend factory
         # picks up the overridden values (latent_steps, use_realign, knn_*, ...).
         _apply_latent_overrides(run_cfg, ALPHA_AGENT_FACTOR_PROP_SETTING)
+
+        # YAML overrides untuk factor complexity & duplication thresholds.
+        # Harus sebelum AlphaAgentLoop init agar FactorRegulator membaca nilai YAML.
+        _apply_factor_overrides(run_cfg)
 
         # YAML override for insight_mode (external agent orchestration).
         # Caller-provided arg is overridden by YAML so the config file

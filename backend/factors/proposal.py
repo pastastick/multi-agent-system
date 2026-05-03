@@ -505,7 +505,9 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
         #   - apakah terlalu kompleks?
         self.factor_regulator = FactorRegulator(
             factor_zoo_path=FACTOR_COSTEER_SETTINGS.factor_zoo_path,
-            duplication_threshold=FACTOR_COSTEER_SETTINGS.duplication_threshold
+            duplication_threshold=FACTOR_COSTEER_SETTINGS.duplication_threshold,
+            symbol_length_threshold=FACTOR_COSTEER_SETTINGS.symbol_length_threshold,
+            base_features_threshold=FACTOR_COSTEER_SETTINGS.base_features_threshold,
         )
         
         # Initialize consistency checker if enabled

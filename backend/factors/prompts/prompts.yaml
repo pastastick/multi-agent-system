@@ -385,22 +385,11 @@ hypothesis2experiment:
           - Consider TS_MEDIAN() over TS_MEAN() to reduce outlier impact
           - Apply moving averages to smooth high-frequency variations
   
-      - **Flexibility Considerations:**  
-          - Allow for a range of values or flexibility when defining factors, rather than imposing strict equality constraints.
-          - For example, in expression `(TS_MIN($low, 10) == DELAY(TS_MIN($low, 10), 1))`, `==` is too restrictive. 
-          - Instead, use a range-based approach like: `(TS_MIN($low, 10) < DELAY(TS_MIN($low, 10), 1) + 1/10 * TS_STD($low, 20)) && (TS_MIN($low, 10) > DELAY(TS_MIN($low, 10), 1) - 1/10 * TS_STD($low, 20))`.
+      - **Flexibility Considerations:**
+          - Avoid strict equality (==) in expressions — use range-based comparisons instead.
+          - Add 1e-8 to all denominators to prevent division by zero.
 
-      - **Handling Duplicated Sub-expressions:**
-            - When given specific duplicated sub-expressions to avoid, ensure new factor expressions use alternative calculations
-            - Replace duplicated patterns with semantically similar but structurally different expressions
-            - For example, if `ABS($close - $open)` is flagged as duplicated:
-                - Consider using `($high - $low)` for price range
-                - Use `SIGN($close - $open) * ($close - $open)` for directional magnitude
-                - Explore other price difference combinations like `($high - $low) / ($open + $close)`
-            - Maintain factor interpretability while avoiding structural repetition
-            - Focus on unique combinations of operators and variables to ensure originality
-
-    Please generate the output following the format below:
+    OUTPUT REQUIREMENT: Respond with ONLY the JSON object below. No markdown, no commentary.
     {{ experiment_output_format }}
 
     Strictly adhere to the syntax requirements of factor expressions; do not use undeclared variables (e.g., n) or functions.

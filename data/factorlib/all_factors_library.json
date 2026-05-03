@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-03T02:47:24.765361",
-    "total_factors": 5,
+    "last_updated": "2026-05-03T11:45:24.535152",
+    "total_factors": 6,
     "version": "1.0"
   },
   "factors": {
@@ -268,6 +268,59 @@
         "decision": false,
         "reason": "The current result indicates that the combination of momentum and volatility may not be effective in capturing the relationship needed for predicting future returns. The low information ratio suggests that the factor may not be capturing the underlying relationships well. Additionally, the factor may be too complex and may overfit the data.",
         "new_hypothesis": "The interaction between momentum and volatility in a non-linear manner, specifically the product of momentum and volatility, may not be the best approach for predicting future returns. Instead, a more focused approach on either momentum or volatility alone may be more effective."
+      }
+    },
+    "43237759e969b8c4": {
+      "factor_id": "43237759e969b8c4",
+      "factor_name": "NewsVolumeSignal",
+      "factor_expression": "TS_ZSCORE(TS_SUM($return, 5), 5) * 0.7 + TS_ZSCORE(TS_SUM($volume, 5), 5) * 0.3",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # derive $return karena prompt + contoh mengiklankan $return,\n    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE(TS_SUM($return, 5), 5) * 0.7 + TS_ZSCORE(TS_SUM($volume, 5), 5) * 0.3\" # Your output factor expression will be filled in here\n    name = \"NewsVolumeSignal\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Combines news sentiment and trading volume over 5 days to predict price movement",
+      "factor_formulation": "Weighted sum of news sentiment and volume over 5 days, normalized to [-1, 1].",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "23cb4c63330d498886e0c192031659fb",
+        "result_h5_path": "/home/ubuntu/project/multi-agent-system/backend/data/results/workspace/23cb4c63330d498886e0c192031659fb/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-03_11-39-37-666255",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: The cumulative effect of news sentiment and trading volume over a 5-day period predicts future price movements.\n                Concise Observation: News sentiment and trading volume are often correlated with price movements, but their combined effect over a short time horizon has not been extensively explored in existing factors.\n                Concise Justification: News sentiment reflects market expectations, while trading volume indicates market participation. Together, they may capture both information and liquidity effects, which are important drivers of price changes.\n                Concise Knowledge: If news sentiment is positive and trading volume is high, then the next day's price is more likely to rise; when news sentiment is negative and trading volume is low, the next day's price is more likely to fall.\n                concise Specification: The factor is calculated as the weighted sum of news sentiment and trading volume over the past 5 days, with weights determined by the day's market volatility. The output is a normalized score between -1 and 1, where positive values indicate expected price increases.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-03T11:45:24.351240"
+      },
+      "backtest_results": {
+        "1day.excess_return_without_cost.max_drawdown": -0.07706191,
+        "1day.excess_return_without_cost.std": 0.00752275,
+        "1day.pos": 0.0,
+        "1day.excess_return_with_cost.annualized_return": 0.10494909,
+        "1day.excess_return_without_cost.information_ratio": 1.10357231,
+        "Rank IC": 0.02587977,
+        "1day.pa": 0.0,
+        "IC": 0.00902448,
+        "l2.valid": 0.99677577,
+        "1day.excess_return_with_cost.std": 0.00752775,
+        "1day.excess_return_with_cost.mean": 0.00044096,
+        "l2.train": 0.99419673,
+        "1day.excess_return_with_cost.max_drawdown": -0.08289431,
+        "1day.excess_return_without_cost.mean": 0.00053813,
+        "ICIR": 0.06455391,
+        "1day.excess_return_with_cost.information_ratio": 0.90370157,
+        "1day.ffr": 1.0,
+        "Rank ICIR": 0.19093962,
+        "1day.excess_return_without_cost.annualized_return": 0.1280754
+      },
+      "feedback": {
+        "observations": "JSON parse failed; could not extract feedback",
+        "hypothesis_evaluation": "Unable to evaluate",
+        "decision": false,
+        "reason": "JSON parse error: Could not parse JSON; original text length: 0: line 1 column 1 (char 0)",
+        "new_hypothesis": ""
       }
     }
   }

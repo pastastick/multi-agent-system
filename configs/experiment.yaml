@@ -212,7 +212,7 @@ latent:
   # Construct may benefit from more steps since formula
   # expression requires careful reasoning.
   steps_propose: null
-  steps_construct: 40
+  steps_construct: 30
   steps_coder: null
   steps_feedback: null
 
@@ -227,7 +227,7 @@ latent:
   # ── Latent communication (KV-cache chain) ─────────────────
   # Hard cap on KV tokens carried across loop iterations.
   # Applied after feedback step before chaining to next propose.
-  kv_max_tokens: 20480
+  kv_max_tokens: 2048
 
   # Persist KV-cache to disk (for resume / debugging).
   store_kv: true
