@@ -154,27 +154,24 @@ factor_experiment_output_format: |-
 
   Here is an example:
   {
-      "Normalized_Intraday_Range_Factor_10D": {
-          "description": "This factor integrates candlestick movement patterns with market volatility to enhance predictive accuracy for short-term price movements. The factor computes the normalized difference between the candlestick body size and the standard deviation of closing prices over a 10-day period.",
+      "Price_Reversal_5D": {
+          "description": "This factor captures short-term price mean-reversion by measuring how far the current closing price has deviated from its 5-day moving average, normalized by the moving average itself.",
           "variables": {
               "$close": "Close price of the stock on that day.",
-              "$open": "Open price of the stock on that day.",
-              "ABS(A)": "Absolute value of A.",
-              "TS_STD(A, n)": "Standard deviation of sequence A over the past n days."
+              "TS_MEAN(A, n)": "Mean value of sequence A over the past n days."
           },
-          "formulation": "NIR_\\text{10D} = \\frac{\\text{ABS}(\\text{close} - \\text{open})}{\\text{STD}(\\text{close}, 10)}",
-          "expression": "ABS($close - $open) / (TS_STD($close, 10) + 1e-8)"
+          "formulation": "PR_\\text{5D} = \\frac{\\text{close} - \\text{TS\\_MEAN}(\\text{close}, 5)}{\\text{TS\\_MEAN}(\\text{close}, 5)}",
+          "expression": "($close - TS_MEAN($close, 5)) / (TS_MEAN($close, 5) + 1e-8)"
       },
-      "Volume_Range_Correlation_Factor_20D": {
-          "description": "This factor measures the correlation between the candlestick range (high - low) and the trading volume over a 20-day period, aiming to capture the relationship between price range and market participation.",
+      "Turnover_Trend_20D": {
+          "description": "This factor measures the linear trend of trading volume over 20 days relative to its mean, capturing whether market participation is increasing or decreasing.",
           "variables": {
-              "$high": "High price of the stock on that day.",
-              "$low": "Low price of the stock on that day.",
               "$volume": "Volume of the stock on that day.",
-              "TS_CORR(A, B, n)": "Correlation coefficient between sequences A and B over the past n days."
+              "TS_MEAN(A, n)": "Mean value of sequence A over the past n days.",
+              "REGBETA(A, B, n)": "Regression coefficient of A on B using the past n samples."
           },
-          "formulation": "VRC_\\text{20D} = \\text{TS_CORR}(\\text{high} - \\text{low}, \\text{volume}, 20)",
-          "expression": "TS_CORR($high - $low, $volume, 20)"
+          "formulation": "TT_\\text{20D} = \\text{REGBETA}(\\text{volume} / \\text{TS\\_MEAN}(\\text{volume}, 20), \\text{SEQUENCE}(20), 20)",
+          "expression": "REGBETA($volume / (TS_MEAN($volume, 20) + 1e-8), SEQUENCE(20), 20)"
       }
   }
 

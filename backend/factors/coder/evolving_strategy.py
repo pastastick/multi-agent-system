@@ -297,18 +297,33 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 role="coder",
                 latent_steps=self._latent_steps,
                 temperature=temperature if temperature is not None else self._temperature,
-                # Coder hanya output JSON {"expr": "..."} — 512 token lebih dari cukup.
-                # Ini hard cap per-call agar stuck <think> loop tidak makan 20+ menit.
                 max_new_tokens=512,
             )
-            # Update KV state: chain ke LLM call berikutnya
-            self._last_kv = result.kv_cache
-            self._past_kv = result.kv_cache
+            text_out = result.text or ""
             logger.info(
                 f"[LatentCoder] mode=kv_and_text, "
-                f"has_kv={result.has_kv}, text_len={len(result.text or '')}"
+                f"has_kv={result.has_kv}, text_len={len(text_out)}"
             )
-            return result.text or ""
+            # KV besar dari construct menyebabkan model collapse (<think> only,
+            # text_len=0). Fallback ke text-only agar pipeline tidak mandeg.
+            if not text_out.strip():
+                logger.warning(
+                    "[LatentCoder] kv_and_text collapse detected (text_len=0), "
+                    "fallback to text_only"
+                )
+                text_out = LocalLLMBackend(
+                    use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
+                ).build_messages_and_create_chat_completion(
+                    user_prompt=user_prompt,
+                    system_prompt=system_prompt,
+                    json_mode=json_mode,
+                    reasoning_flag=reasoning_flag,
+                )
+                return text_out
+            # Update KV state hanya kalau tidak fallback
+            self._last_kv = result.kv_cache
+            self._past_kv = result.kv_cache
+            return text_out
         else:
             return LocalLLMBackend(
                 use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
