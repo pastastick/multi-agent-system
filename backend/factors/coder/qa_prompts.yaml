@@ -116,17 +116,32 @@ evaluator_code_feedback_v1_user: |-
   {% if gt_code is not none %}
   {% endif %}
 
+evolving_strategy_coder_system_kv: |-
+  Fix the factor expression below. You already have the full factor context (scenario, variable list, function library) in your memory from the previous construction step — do NOT restate them.
+
+  **Your task:** Produce a corrected expression that is structurally different from the previous attempt and correctly implements the factor described.
+
+  **CRITICAL RULES (auto-reject on violation):**
+  1. Your new expression MUST be structurally DIFFERENT from `former_expression` — identical or trivially-renamed expressions are rejected.
+  2. Read the EXECUTION LOG first — identify the exact root cause (undefined variable, wrong function name, syntax error, wrong data column, etc.), then fix THAT specifically.
+  3. Prefer meaningful structural changes: swap operators (TS_STD → TS_MAD), adjust windows, change base variable, add normalization (RANK/ZSCORE).
+  4. Do NOT add `+ 1e-8`, wrap with `ABS()`, or rename variables as your only fix — cosmetic changes are rejected.
+
+  Allowed variables: $open, $close, $high, $low, $volume, $return.
+  Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+
 evolving_strategy_factor_implementation_v1_system: |-
   User is trying to implement some factors by writing factor expressions in the following scenario:
   {{ scenario }}
 
-  An executable factor expression is expected to align the factor descrption if it is possible to implement using available data and operations. 
+  An executable factor expression is expected to align the factor descrption if it is possible to implement using available data and operations.
 
   To help you write the correct expressions, the user might provide multiple information that helps you write the correct expression:
   1. The user might provide you the correct expression to similar factors. Your should learn from these expression to write the correct expression.
   2. The user might provide you the failed former expression and the corresponding feedback to the expression. The feedback contains to the execution, the expression and the factor value. You should analyze the feedback and try to correct the latest expression.
   3. The user might provide you the suggestion to the latest fail expression and some similar fail to correct pairs. Each pair contains the fail expression with similar error and the corresponding corrected version expression. You should learn from these suggestion to write the correct expression.
-  4. Other parts of the code snippet is a fixed jinja2 template. The expression in your response will replace the former one and be executed. 
+  4. Other parts of the code snippet is a fixed jinja2 template. The expression in your response will replace the former one and be executed.
 
 
   **Your task is to correct or rewrite your expression based on your former latest attempt below which consists of your former expression and code feedback.**
@@ -232,21 +247,27 @@ evolving_strategy_factor_implementation_v2_user: |-
   --------------Target factor information:---------------
   {{ factor_information_str }}
 
-
   {% if former_expression is not none %}
   --------------Your former latest attempt:---------------
   =====Expression to the former implementation=====
   {{ former_expression }}
 
-  =====Feedback to the former implementation=====
-  {{ former_feedback }}
+  {% if execution_log %}
+  =====EXECUTION LOG (fix this error):=====
+  {{ execution_log }}
+  {% endif %}
+
+  {% if code_comment %}
+  =====Reviewer comment:=====
+  {{ code_comment }}
+  {% endif %}
   {% endif %}
 
   {% if queried_similar_error_knowledge|length != 0 %}
   {% if error_summary_critics is none %}
   Recall your last failure, your implementation met some errors.
   When doing other tasks, you met some similar errors but you finally solve them. Here are some examples:
-  {% for error_content, similar_error_knowledge in queried_similar_error_knowledge %} 
+  {% for error_content, similar_error_knowledge in queried_similar_error_knowledge %}
   --------------Factor information to similar error ({{error_content}}):---------------
   {{ similar_error_knowledge[0].target_task.get_task_information() }}
   =====Code with similar error ({{error_content}}):=====
@@ -260,8 +281,8 @@ evolving_strategy_factor_implementation_v2_user: |-
   {{error_summary_critics}}
   {% endif %}
   {% endif %}
-  
-  {% if similar_successful_factor_description is not none %}
+
+  {% if similar_successful_factor_description %}
   Here are some success implements of similar component tasks, take them as references:
   --------------Correct code to similar factors:---------------
   =====Factor Description:=====
@@ -276,6 +297,8 @@ evolving_strategy_factor_implementation_v2_user: |-
   =====Feedback to your latest attempt=====
   {{ latest_attempt_to_latest_successful_execution.feedback }}
   {% endif %}
+
+  OUTPUT INSTRUCTION: Respond with ONLY the raw JSON object on a single line. No explanation, no preamble, no analysis. Example: {"expr": "TS_STD($close, 20)"}
 
 evolving_strategy_error_summary_v2_system: |-
   User is trying to implement some factors in the following scenario:

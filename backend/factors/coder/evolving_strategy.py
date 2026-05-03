@@ -430,20 +430,27 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         #* RETRY(setelah gagal): panggil LLM untuk perbaiki
         else:
             logger.info(f"[LatentCoder] retry path, former_expr={self.extract_expr(queried_former_failed_knowledge[-1].implementation.code)}")
-            
+
             latest_attempt_to_latest_successful_execution = queried_knowledge.task_to_former_failed_traces[
                 target_factor_task_information
             ][1]
 
-            system_prompt = (
-                Environment(undefined=StrictUndefined)
-                .from_string(
-                    qa_implement_prompts["evolving_strategy_factor_implementation_v1_system"],
+            # KV dari construct step sudah encode scenario + function lib →
+            # pakai system prompt ringkas. Text-only fallback tetap butuh full prompt.
+            if self._past_kv is not None:
+                system_prompt = qa_implement_prompts["evolving_strategy_coder_system_kv"]
+                logger.info("[LatentCoder] using compact KV-aware system prompt")
+            else:
+                system_prompt = (
+                    Environment(undefined=StrictUndefined)
+                    .from_string(
+                        qa_implement_prompts["evolving_strategy_factor_implementation_v1_system"],
+                    )
+                    .render(
+                        scenario=self.scen.get_scenario_all_desc(target_task, filtered_tag="feature"),
+                    )
                 )
-                .render(
-                    scenario=self.scen.get_scenario_all_desc(target_task, filtered_tag="feature"),
-                )
-            )
+
             queried_similar_successful_knowledge_to_render = queried_similar_successful_knowledge
             queried_similar_error_knowledge_to_render = queried_similar_error_knowledge
 
@@ -468,6 +475,12 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     similar_successful_factor_description = queried_similar_successful_knowledge_to_render[-1].target_task.get_task_description()
                     similar_successful_expression = self.extract_expr(queried_similar_successful_knowledge_to_render[-1].implementation.code)
 
+                # Pisahkan execution log (raw traceback) dan code_comment (LLM review)
+                # agar coder langsung melihat error aktual di bagian atas user prompt.
+                last_fb = queried_former_failed_knowledge_to_render[-1].feedback
+                execution_log = getattr(last_fb, "execution_feedback", None) or ""
+                code_comment = getattr(last_fb, "code_feedback", None) or ""
+
                 user_prompt = (
                     Environment(undefined=StrictUndefined)
                     .from_string(
@@ -477,7 +490,8 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                         factor_information_str=target_task.get_task_description(),
                         queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
                         former_expression=self.extract_expr(queried_former_failed_knowledge_to_render[-1].implementation.code),
-                        former_feedback=queried_former_failed_knowledge_to_render[-1].feedback,
+                        execution_log=execution_log,
+                        code_comment=code_comment,
                         error_summary_critics=error_summary_critics,
                         similar_successful_factor_description=similar_successful_factor_description,
                         similar_successful_expression=similar_successful_expression,
