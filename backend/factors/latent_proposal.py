@@ -60,23 +60,6 @@ from factors.proposal import (
 from factors.feedback import AlphaAgentQlibFactorHypothesisExperiment2Feedback
 
 
-def _is_collapse(text: str) -> bool:
-    """Return True jika output LLM kosong atau stuck repetition loop.
-
-    Repetition collapse terjadi saat context window model kepenuhan:
-    model mengulang token yang sama terus (misal "assistant\\nassistant\\n...").
-    Deteksi: jika < 15% kata unik dari total kata dalam output.
-    """
-    t = (text or "").strip()
-    if not t:
-        return True
-    words = t.split()
-    if len(words) < 8:
-        return False
-    unique_ratio = len(set(w.lower() for w in words)) / len(words)
-    return unique_ratio < 0.15
-
-
 # ═══════════════════════════════════════════════════════════════════════════
 # Mixin: KV-cache state management (shared by all three Latent classes)
 # ═══════════════════════════════════════════════════════════════════════════
@@ -205,29 +188,12 @@ class LatentHypothesisGen(_LatentMixin, AlphaAgentHypothesisGen):
             latent_steps=self._latent_steps,
             temperature=self._temperature,
         )
-        text = result.text or ""
-        if _is_collapse(text) and self._past_kv is not None:
-            logger.warning(
-                f"[LatentHypothesisGen] collapse detected (text_len={len(text)}), "
-                f"retrying kv_and_text tanpa pipeline_kv"
-            )
-            result = self.llm_backend.build_messages_and_run(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
-                json_mode=json_mode,
-                past_key_values=None,
-                mode="kv_and_text",
-                role="propose",
-                latent_steps=self._latent_steps,
-                temperature=self._temperature,
-            )
-            text = result.text or ""
         self.last_result = result
         logger.info(
             f"[LatentHypothesisGen] mode={self._mode}, "
-            f"has_kv={result.has_kv}, text_len={len(text)}"
+            f"has_kv={result.has_kv}, text_len={len(result.text or '')}"
         )
-        return text
+        return result.text or ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -282,26 +248,6 @@ Rules for every factor entry:
 The FIRST two characters of your response MUST be `{"` followed immediately by your chosen factor name.
 Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whitespace."""
 
-    # Versi ringkas dari function_lib_description (~1500 tok → ~120 tok).
-    # Dipakai saat past_kv sudah ada (propose KV membawa scenario context),
-    # sehingga total context construct = pipeline_kv + propose_kv + prompt
-    # tidak melebihi batas efektif Qwen3-4B.
-    _COMPACT_FUNCLIB = (
-        "Allowed functions: "
-        "Cross-sectional: RANK, ZSCORE, MEAN, STD, SKEW, KURT, MAX, MIN, MEDIAN. "
-        "Time-series: DELTA(A,n), DELAY(A,n), TS_MEAN, TS_SUM, TS_RANK, TS_ZSCORE, "
-        "TS_MEDIAN, TS_PCTCHANGE, TS_MIN, TS_MAX, TS_ARGMAX, TS_ARGMIN, "
-        "TS_QUANTILE(A,p,q), TS_STD, TS_VAR, TS_CORR(A,B,n), TS_COVARIANCE, "
-        "TS_MAD, PERCENTILE(A,q,p), HIGHDAY, LOWDAY, SUMAC. "
-        "Smoothing: SMA(A,n,m), WMA(A,n), EMA(A,n), DECAYLINEAR(A,d). "
-        "Math: PROD(A,n), LOG, SQRT, POW(A,n), SIGN, EXP, ABS, MAX(A,B), MIN(A,B), INV, FLOOR. "
-        "Conditional: COUNT(C,n), SUMIF(A,n,C), FILTER(A,C), (C1)&&(C2), (C1)||(C2), (C1)?(A):(B). "
-        "Regression: SEQUENCE(n) [hanya di REGBETA/REGRESI], REGBETA(A,B,n), REGRESI(A,B,n). "
-        "Technical: RSI(A,n), MACD(A,short,long), BB_MIDDLE(A,n), BB_UPPER(A,n), BB_LOWER(A,n). "
-        "Variables: $open, $close, $high, $low, $volume, $return. "
-        "Operators: +, -, *, /. No undeclared variables or dot-notation names."
-    )
-
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
                  temperature: Optional[float] = None,
@@ -324,20 +270,13 @@ Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whites
         self._attempt_idx = 0
 
     def prepare_context(self, hypothesis, trace, history_limit=None):
-        """Replace output-format dengan _COMPACT_OUTPUT_FORMAT.
-
-        Fix C: jika past_kv ada (propose KV sudah encode scenario context),
-        ganti function_lib_description dengan versi compact (~120 tok vs ~1500 tok).
-        Total context construct = pipeline_kv(512) + propose_kv + prompt.
-        Tanpa ini, function_lib saja sudah ~1500 tok → total ~6000 tok → collapse.
-        """
+        """Replace default output-format (berisi contoh konkret yang
+        di-pattern-match model) dengan _COMPACT_OUTPUT_FORMAT."""
         from factors.proposal import DEFAULT_HISTORY_LIMIT
         if history_limit is None:
             history_limit = DEFAULT_HISTORY_LIMIT
         ctx, json_flag = super().prepare_context(hypothesis, trace, history_limit)
         ctx["experiment_output_format"] = self._COMPACT_OUTPUT_FORMAT
-        if self._past_kv is not None:
-            ctx["function_lib_description"] = self._COMPACT_FUNCLIB
         return ctx, json_flag
 
     def _get_scenario_desc(self, trace) -> str:
@@ -386,32 +325,14 @@ Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whites
             temperature=temp_override,
             json_schema=json_schema,
         )
-        text = result.text or ""
-        if _is_collapse(text) and past_kv is not None:
-            logger.warning(
-                f"[LatentHypothesis2Experiment] attempt={self._attempt_idx}: "
-                f"collapse detected (text_len={len(text)}), retrying tanpa KV"
-            )
-            result = self.llm_backend.build_messages_and_run(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
-                json_mode=json_mode,
-                past_key_values=None,
-                mode="kv_and_text",
-                role="construct",
-                latent_steps=self._latent_steps,
-                temperature=temp_override,
-                json_schema=json_schema,
-            )
-            text = result.text or ""
         self.last_result = result
         logger.info(
             f"[LatentHypothesis2Experiment] attempt={self._attempt_idx}, "
             f"mode={self._mode}, has_kv_in={past_kv is not None}, "
             f"temp={temp_override:.2f}, guided={self._guided_decoding}, "
-            f"text_len={len(text)}"
+            f"text_len={len(result.text or '')}"
         )
-        return text
+        return result.text or ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -474,26 +395,9 @@ class LatentFeedback(_LatentMixin, AlphaAgentQlibFactorHypothesisExperiment2Feed
             latent_steps=self._latent_steps,
             temperature=self._temperature,
         )
-        text = result.text or ""
-        if _is_collapse(text) and self._past_kv is not None:
-            logger.warning(
-                f"[LatentFeedback] collapse detected (text_len={len(text)}), "
-                f"retrying text-only tanpa KV"
-            )
-            result = self.llm_backend.build_messages_and_run(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
-                json_mode=json_mode,
-                past_key_values=None,
-                mode="text_only",
-                role="feedback",
-                latent_steps=None,
-                temperature=self._temperature,
-            )
-            text = result.text or ""
         self.last_result = result
         logger.info(
             f"[LatentFeedback] mode={self._mode}, "
-            f"text_len={len(text)}"
+            f"text_len={len(result.text or '')}"
         )
-        return text
+        return result.text or ""

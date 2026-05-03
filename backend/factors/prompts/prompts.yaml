@@ -128,23 +128,55 @@ function_lib_description: |-
 
 
 factor_experiment_output_format: |-
-  Output must be ONE raw JSON object — no markdown fences, no commentary.
-  Produce 2 to 3 factors. The JSON has this shape:
-
+  Do NOT use any undeclared variables. The factor expression should be strictly based on the function library (e.g. `RANK(.)`) and the variables provided in data (e.g., `$open`). 
+  The output should follow JSON format without other content. The schema is as follows:
   {
-      "<FactorName_A>": {"description": "...", "variables": {"$sym": "meaning", ...}, "formulation": "...", "expression": "..."},
-      "<FactorName_B>": {"description": "...", "variables": {...}, "formulation": "...", "expression": "..."}
+      "factor name 1": {
+          "description": "description of factor 1",
+          "variables": {
+              "variable or function name 1": "description of variable or function 1",
+              "variable or function name 2": "description of variable or function 2"
+          },
+          "formulation": "A LaTeX formula of factor 1",
+          "expression": "An expression of factor 1, based on functions and variable mentioned"
+      },
+      "factor name 2": {
+          "description": "description of factor 2",
+          "variables": {
+              "variable or function name 1": "description of variable or function 1",
+              "variable or function name 2": "description of variable or function 2"
+          },
+          "formulation": "A LaTeX formula of factor 2",
+          "expression": "An expression of factor 2, based on functions and variable mentioned"
+      }
+      # Don't add ellipsis (...) or any filler text that might cause JSON parsing errors here!
   }
 
-  Rules for every factor entry:
-    - OUTER key = factor name you invent (CamelCase or Snake_Case, e.g. VolMomentumInterplay_20D).
-    - OUTER key is NEVER `$close`, `$open`, `variables`, `description`, or an operator name.
-    - Inner dict contains EXACTLY these 4 keys in this order: description, variables, formulation, expression.
-    - `variables` is a nested dict mapping each symbol used in `expression` to a one-sentence meaning.
-    - `expression` uses only the allowed $features and operators; length should stay ≤ 250 characters.
-
-  The FIRST two characters of your response MUST be `{"` followed immediately by your chosen factor name.
-  Do NOT begin your response with `{"$`, `{"variables`, `{"description`, or whitespace.
+  Here is an example:
+  {
+      "Normalized_Intraday_Range_Factor_10D": {
+          "description": "This factor integrates candlestick movement patterns with market volatility to enhance predictive accuracy for short-term price movements. The factor computes the normalized difference between the candlestick body size and the standard deviation of closing prices over a 10-day period.",
+          "variables": {
+              "$close": "Close price of the stock on that day.",
+              "$open": "Open price of the stock on that day.",
+              "ABS(A)": "Absolute value of A.",
+              "TS_STD(A, n)": "Standard deviation of sequence A over the past n days."
+          },
+          "formulation": "NIR_\\text{10D} = \\frac{\\text{ABS}(\\text{close} - \\text{open})}{\\text{STD}(\\text{close}, 10)}",
+          "expression": "ABS($close - $open) / (TS_STD($close, 10) + 1e-8)"
+      },
+      "Volume_Range_Correlation_Factor_20D": {
+          "description": "This factor measures the correlation between the candlestick range (high - low) and the trading volume over a 20-day period, aiming to capture the relationship between price range and market participation.",
+          "variables": {
+              "$high": "High price of the stock on that day.",
+              "$low": "Low price of the stock on that day.",
+              "$volume": "Volume of the stock on that day.",
+              "TS_CORR(A, B, n)": "Correlation coefficient between sequences A and B over the past n days."
+          },
+          "formulation": "VRC_\\text{20D} = \\text{TS_CORR}(\\text{high} - \\text{low}, \\text{volume}, 20)",
+          "expression": "TS_CORR($high - $low, $volume, 20)"
+      }
+  }
 
 factor_feedback_generation:
   system: |-
@@ -308,19 +340,69 @@ hypothesis2experiment:
       - Balance simplicity and innovation to build a robust factor library.
       - Note that each factor is independent. Please do NOT reference other factors within the factor expression.
 
-    2. **Complexity Constraints (HARD LIMITS):**
-      - expression length ≤ 250 characters (STRICT — longer expressions overfit)
-      - ≤ 6 distinct $features per expression; prefer 2-4 core features
-      - Avoid deep nesting and long chains — target 50-150 chars for best generalization
-      - If previous factors were flagged for complexity, generate fundamentally simpler alternatives
+    2. **CRITICAL: Factor Complexity Constraints (MUST FOLLOW - OVERFITTING PREVENTION):**
+      - **Symbol Length (SL) Limit: ≤ 250 characters (STRICT LIMIT)**
+        - Factor expressions MUST NOT exceed 250 characters. This is a HARD LIMIT.
+        - **WARNING: Overly complex/long expressions (> 250 chars) are highly prone to OVERFITTING.** They may perform well on training data but fail catastrophically on test data.
+        - **Simple factors generalize better.** A concise factor with moderate performance is FAR more valuable than a complex one with high training performance but poor test performance.
+        - Example of GOOD (short, ~50 chars): `RANK(TS_MEAN($return, 20))`
+        - Example of GOOD (moderate, ~100 chars): `RANK(TS_CORR($close, $volume, 10)) * SIGN(TS_MEAN($return, 5))`
+        - Example of BAD (too long, > 250 chars): `RANK(POW(TS_CORR($close, SEQUENCE(15), 15), 2)) * RANK(TS_MEAN(($high - $low) / ($volume + 1e-8), 15)) * ...`
+      - **Base Features (ER) Limit: ≤ 6 distinct raw features**
+        - Use at most 6 distinct base features (e.g., $close, $open, $high, $low, $volume, $return).
+        - Reusing the same feature multiple times is acceptable, but using too many different features indicates over-engineering.
+        - Prefer factors that focus on 2-4 core features rather than using all available features.
+      - **Simplicity Priority (ANTI-OVERFITTING):**
+        - **ALWAYS prioritize simplicity over complexity.** A simple factor that works is FAR better than a complex one.
+        - **Complex factors with many nested functions, conditional branches, and parameters are OVERFITTING indicators.**
+        - Avoid deep nesting (e.g., RANK(POW(TS_CORR(...))) is too nested)
+        - Avoid complex conditional expressions (e.g., (A > B) ? (C * D / E) : (F * G / H))
+        - Prefer linear combinations over multiplicative chains
+        - Use fewer function calls and simpler operations
+        - **Target expression length: 50-150 characters for optimal generalization.**
+      - **If previous factors were flagged for complexity, you MUST generate MUCH simpler alternatives in the next iteration.**
 
-    3. **Factor Construction Tips:**
-      - Use RANK() or ZSCORE() for cross-sectional normalization
-      - Add 1e-8 to denominators to prevent division by zero
-      - Prefer returns (e.g., DELTA($close,1)/$close) over raw prices
-      - Use TS_ZSCORE() for time-series standardization
-      - Explore diverse function families: correlation (TS_CORR), regression (REGBETA), technical (RSI, MACD), conditional (SUMIF, COUNT)
-      - If a sub-expression is flagged as duplicated, replace with a structurally different approach
+    3.**Key Considerations in Factor Construction:**
+      - **Data Preprocessing and Standardization:**
+          - Avoid using raw prices and volumes directly due to scale differences
+          - Use relative changes or standardized data (e.g., RANK(), ZSCORE())
+          - Convert prices to returns, e.g. `(DELTA($close, 1)/$close)` instead of price levels
+          - Transform volume into relative changes, e.g. `(DELTA($volume, 1)/$volume)`
+
+      - **Time Series Processing:**
+          - Consider appropriate sample periods for indicators requiring historical data
+          - Choose suitable window sizes for moving averages SMA(), EMA(), WMA()
+
+      - **Normalization and Stability:**
+          - Add small constants (e.g., 1e-8) to denominators to prevent division by zero
+          - Use TS_ZSCORE() for factor value standardization
+          - Consider SIGN() to reduce impact of extreme values
+          - Apply MAX(MIN(x, upper), lower) for value truncation
+
+      - **Cross-sectional Treatment:**
+          - Apply RANK() or ZSCORE() for cross-sectional comparability
+          - Use FILTER() for outlier handling
+          - Ensure sufficient window length for correlation calculations
+
+      - **Robustness Considerations:**
+          - Validate factor stability across multiple time windows
+          - Consider TS_MEDIAN() over TS_MEAN() to reduce outlier impact
+          - Apply moving averages to smooth high-frequency variations
+  
+      - **Flexibility Considerations:**  
+          - Allow for a range of values or flexibility when defining factors, rather than imposing strict equality constraints.
+          - For example, in expression `(TS_MIN($low, 10) == DELAY(TS_MIN($low, 10), 1))`, `==` is too restrictive. 
+          - Instead, use a range-based approach like: `(TS_MIN($low, 10) < DELAY(TS_MIN($low, 10), 1) + 1/10 * TS_STD($low, 20)) && (TS_MIN($low, 10) > DELAY(TS_MIN($low, 10), 1) - 1/10 * TS_STD($low, 20))`.
+
+      - **Handling Duplicated Sub-expressions:**
+            - When given specific duplicated sub-expressions to avoid, ensure new factor expressions use alternative calculations
+            - Replace duplicated patterns with semantically similar but structurally different expressions
+            - For example, if `ABS($close - $open)` is flagged as duplicated:
+                - Consider using `($high - $low)` for price range
+                - Use `SIGN($close - $open) * ($close - $open)` for directional magnitude
+                - Explore other price difference combinations like `($high - $low) / ($open + $close)`
+            - Maintain factor interpretability while avoiding structural repetition
+            - Focus on unique combinations of operators and variables to ensure originality
 
     Please generate the output following the format below:
     {{ experiment_output_format }}
@@ -396,34 +478,4 @@ expression_duplication: |-
     - **Action Required**: Reduce the number of distinct base features used. Focus on 2-4 core features instead of using all available features.
     - Target: Use at most {{ base_features_threshold }} distinct base features. Reusing the same feature multiple times is acceptable.
   {% endif %}
-
-# ───────────��───────────────────────────────���─────────────────────────────────
-# Strategy B: minimal retry prompts (used from construct attempt 2 onward)
-# ────────────────────────────────────��────────────────────────────────��───────
-hypothesis2experiment_retry_system_prompt: |-
-  Generate alpha factor expressions as a JSON object. No markdown fences, no commentary.
-  Each entry: {"FactorName": {"description":"...","variables":{...},"formulation":"...","expression":"..."}}
-  Outer key = factor name (e.g. VolMomentum_20D). NOT "$open", "variables", "description".
-  expression uses ONLY: $open, $close, $high, $low, $volume, $return.
-  Start response with {" followed by factor name — NOT {"$ or {"variables.
-
-hypothesis2experiment_retry_user_prompt: |-
-  Attempt {{ attempt_n }} — previous output was rejected.
-  Error: {{ error_log }}
-
-  Target hypothesis: {{ hypothesis_title }}
-
-  Variables — ONLY these (no dot-notation like "1day.*"):
-  $open, $close, $high, $low, $volume, $return
-
-  Allowed functions:
-  {{ function_lib_description }}
-
-  Output schema (2-3 factors, ONE raw JSON, no markdown):
-  {{ compact_schema }}
-
-factor_experiment_compact_schema: |-
-  {"<FactorName_A>": {"description": "...", "variables": {"$sym": "meaning"}, "formulation": "...", "expression": "..."}, "<FactorName_B>": {...}}
-  Rules: outer key = invented factor name. NOT "$open"/"variables"/"description". expression ≤ 250 chars.
-  First 2 chars: {" then factor name — NOT {"$ or {"variables or whitespace.
 
