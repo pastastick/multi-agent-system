@@ -256,13 +256,13 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
             return "\n".join(sections)
 
         if step == "construct":
-            # Construct: generate formula expression — butuh syntax rules.
-            # Output di-parse oleh QlibFactorParser → Python code,
-            # jadi interface dan output_format sangat kritikal.
-            return (
-                f"<scenario_interface>\n{self.interface}\n</scenario_interface>\n"
-                f"<scenario_output_format>\n{self.output_format}\n</scenario_output_format>"
-            )
+            # Construct hanya menulis formula JSON — bukan kode Python.
+            # - Background domain sudah di KV dari propose.
+            # - Variabel data, function lib, dan output format JSON sudah
+            #   di user_prompt hypothesis2experiment + _COMPACT_OUTPUT_FORMAT.
+            # - interface (Python code structure) dan output_format (pandas DataFrame)
+            #   adalah untuk coder, bukan untuk construct — jangan kirim ke sini.
+            return "<scenario>You are generating quantitative factor expressions as JSON. Background and allowed operations are already in context.</scenario>"
 
         if step == "feedback":
             # Feedback: evaluasi hasil backtest — butuh konteks + setting.
