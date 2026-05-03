@@ -162,16 +162,14 @@ class LatentHypothesisGen(_LatentMixin, AlphaAgentHypothesisGen):
         """Compact scenario untuk latent mode.
 
         Dua cabang:
-          - past_kv is None (first iter, fresh pipeline): compact desc penuh
-            (background + strategy dengan section markers).
-          - past_kv is not None (iter >1): past_kv berasal dari feedback step
-            iter sebelumnya yang sudah encode background via
-            get_compact_desc("feedback") = background + experiment_setting.
-            Jadi background DUPLIKAT di KV — cukup kirim strategy saja.
-            Prompt lebih pendek = lebih banyak kapasitas KV + hemat VRAM.
+          - past_kv is None (round 0, fresh pipeline): compact desc
+            (domain background saja, tanpa strategy — strategy hanya relevan untuk Coder).
+          - past_kv is not None (round >0): KV dari feedback round sebelumnya
+            sudah membawa full context (background + experiment_setting).
+            Tidak perlu kirim teks apapun — return "" agar token tidak membengkak.
         """
-        if self._past_kv is not None and getattr(self.scen, "_strategy", None):
-            return f"<scenario_strategy>\n{self.scen.strategy}\n</scenario_strategy>"
+        if self._past_kv is not None:
+            return ""
         if hasattr(self.scen, "get_compact_desc"):
             return self.scen.get_compact_desc("propose")
         # Fallback jika scenario bukan QlibAlphaAgentScenario

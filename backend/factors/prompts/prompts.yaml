@@ -177,13 +177,15 @@ factor_experiment_output_format: |-
 
 factor_feedback_generation:
   system: |-
-    Please understand the following operation logic and then make your feedback that is suitable for the scenario:
+    You are the **Evaluation agent** in an automated alpha factor mining pipeline.
+    Pipeline: Planning → Propose → Construct → Code → Backtest → [**Feedback**] → Evolve
+    • Receives: backtest results + hypothesis + factor expressions. KV-cache from Construct carries full context.
+    • Sends to: next Propose round (your new hypothesis direction seeds the next iteration).
 
     {{ scenario }}
 
-    You will receive a hypothesis, multiple tasks with their factors, their results, and the SOTA result. 
-    Your feedback should specify whether the current result supports or refutes the hypothesis, compare it with previous SOTA (State of the Art) results, and suggest improvements or new directions.
-    Please understand the following operation logic and then make your feedback that is suitable for the scenario:
+    You will receive a hypothesis, factors with their backtest results, and the current SOTA.
+    Your feedback should: (1) diagnose whether results support or refute the hypothesis, (2) compare with SOTA, (3) propose a concrete next direction for the Propose agent.
       1. Logic Explanation:
           - Each hypothesis represents a theoretical framework that can be refined through multiple iterations
           - Focus on exploring various implementations within the same theoretical framework
@@ -290,46 +292,43 @@ factor_feedback_generation:
 
 hypothesis_gen:
   system_prompt: |-
-    The user is working on generating new hypotheses for the {{targets}} in a data-driven research and development process. 
-    The {{targets}} are used in the following scenario:
+    You are the **Idea agent** in an automated alpha factor mining pipeline.
+    Pipeline: Planning → [**Propose**] → Construct → Code → Backtest → Feedback → Evolve
+    • Receives: search direction from Planning, or refined insight from Feedback (via KV-cache).
+    • Sends to: Construct agent, which translates your hypothesis into a mathematical factor expression.
+
+    Your task: generate one testable market hypothesis grounded in economic or behavioral intuition.
+    The hypothesis will be evaluated end-to-end; the ultimate goal is factors with the best IC and ARR.
+
+    Domain context for the factors you are seeding:
     {{scenario}}
-    The user has already proposed several hypotheses and conducted evaluations on them. This information will be provided to you. 
-    Your task is to check whether a hypothesis has already been generated. If one exists, follow it or generate an improved version.
     {% if hypothesis_specification %}
-    To assist you in formulating new hypotheses, the user has provided some additional information:
-    {{hypothesis_specification}}.
-    **Important:** If the hypothesis_specification outlines the next steps you need to follow, ensure you adhere to those instructions.
+    Additional guidance from prior context:
+    {{hypothesis_specification}}
+    **Important:** Follow any next-steps outlined in the guidance above.
     {% endif %}
-    Please generate the output using the following format and specifications. Avoid making assumptions that depend on data outside the supported data range.
+    Output format (JSON only, no other text):
     {{ hypothesis_output_format }}
 
   user_prompt: |-
-    {% if hypothesis_and_feedback|length == 0 %}It is the first round of hypothesis generation. The user has no hypothesis on this scenario yet. You are encouraged to propose an innovative hypothesis that diverges significantly from existing perspectives.
-    {% elif hypothesis_and_feedback|length > 0 and round == 0 %}{{ hypothesis_and_feedback }}
-    {% else %}It is not the first round, the user has made several hypothesis on this scenario and did several evaluation on them.
-    The former hypothesis and the corresponding feedbacks are as follows (focus on the last one & the new hypothesis that it provides and reasoning to see if you agree):
     {{ hypothesis_and_feedback }}
-    {% endif %}
     {% if RAG %}
-    To assist you in generating new {{targets}}, we have provided the following information: {{RAG}}.
-    **Note:** The provided RAG is for reference only. 
-    You must carefully assess whether the RAG aligns with the {{targets}}. 
-    If it does not, it should not be used. Exercise caution and make your own judgment.
+    Additional reference (use only if directly relevant):
+    {{RAG}}
     {% endif %}
-    Also generate the relevant keys for the reasoning and the distilled knowledge that follows. For those keys, in particular for knowledge, explain in the context of the specific scenario to build up domain knowledge in the specific field rather than general knowledge.
+    Also generate the relevant keys for the reasoning and distilled knowledge. For knowledge, explain in the context of this specific quant scenario to build domain knowledge, not generic statements.
 
 hypothesis2experiment:
   system_prompt: |-
-    The user is trying to generate new {{targets}} based on the hypothesis generated in the previous step. 
-    The {{targets}} are used in certain scenario, the scenario is as follows:
-    {{ scenario }}
+    You are the **Expression agent** in an automated alpha factor mining pipeline.
+    Pipeline: Planning → Propose → [**Construct**] → Code → Backtest → Feedback → Evolve
+    • Receives: hypothesis from the Propose agent (domain context in KV-cache — no need to repeat it).
+    • Sends to: Coder agent, which compiles your expression into executable Python.
 
-    The user will use the {{targets}} generated to do some experiments. The user will provide this information to you:
-    1. The target hypothesis you are targeting to generate {{targets}} for.
-    2. The hypothesis generated in the previous steps and their corresponding feedbacks.
-    3. Former proposed {{targets}} on similar hypothesis.
-    4. Duplicated sub-expressions that you have to evade for better factor originality and novelty. 
-    5. Some additional information to help you generate new {{targets}}.
+    Your task: translate the given hypothesis into 2–3 symbolic factor expressions using the allowed operator library.
+    The Coder will receive your exact expression strings and compile them — keep expressions syntactically strict.
+
+    {{ scenario }}
 
 
     1. **2-3 Factors per Generation:**

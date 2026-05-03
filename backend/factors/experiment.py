@@ -108,6 +108,14 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
                 runtime_environment=self.get_runtime_environment(),
             )
         )
+        # Versi background tanpa runtime_environment, untuk propose step.
+        # Propose hanya butuh domain knowledge (apa itu faktor, market context),
+        # bukan Python environment info yang relevan hanya untuk coder step.
+        self._domain_background = deepcopy(
+            T(f"{tpl_prefix}:qlib_factor_background").r(
+                runtime_environment=None,
+            )
+        )
         self._source_data = deepcopy(local_get_data_folder_intro(use_local=use_local))
         self._output_format = deepcopy(T(f"{tpl_prefix}:qlib_factor_output_format").r())
         self._interface = deepcopy(T(f"{tpl_prefix}:qlib_factor_interface").r())
@@ -185,13 +193,11 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
             return f"Background of the scenario:\n{self.background}"
 
         if filtered_tag == "hypothesis_and_experiment":
-            # Propose step: butuh konteks market + strategi untuk ideasi.
-            # TIDAK butuh interface/output_format/simulator (detail teknis).
-            parts = [f"Background of the scenario:\n{self.background}"]
-            if self._strategy:
-                parts.append(f"Strategy context:\n{self.strategy}")
-            if self._experiment_setting:
-                parts.append(f"Experiment setting:\n{self.experiment_setting}")
+            # Propose step: hanya butuh domain/market context untuk ideasi hipotesis.
+            # - Pakai _domain_background (tanpa runtime_environment/pip list).
+            # - Hapus strategy (Python coding guide — hanya relevan untuk coder).
+            # - Hapus experiment_setting (detail eksekusi — tidak dibutuhkan di ideasi).
+            parts = [f"Background of the scenario:\n{self._domain_background}"]
             return "\n\n".join(parts)
 
         if filtered_tag == "feature":
@@ -246,13 +252,12 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
         """
         if step == "propose":
             # Propose: ideasi hipotesis — butuh pemahaman market + strategi.
+            # Propose hanya butuh domain context (apa itu faktor, market background).
+            # - Runtime environment (pip list) hanya relevan untuk coder → pakai _domain_background.
+            # - qlib_factor_strategy (Python coding guide) hanya relevan untuk coder → dihapus.
             sections = [
-                f"<scenario_background>\n{self.background}\n</scenario_background>"
+                f"<scenario_background>\n{self._domain_background}\n</scenario_background>"
             ]
-            if self._strategy:
-                sections.append(
-                    f"<scenario_strategy>\n{self.strategy}\n</scenario_strategy>"
-                )
             return "\n".join(sections)
 
         if step == "construct":
