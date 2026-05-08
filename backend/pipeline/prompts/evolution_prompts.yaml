@@ -1,103 +1,80 @@
-# Evolution Operator Prompts Configuration
-# All prompts for mutation and crossover operators
-# Language: English
 # ============================================================
-# MUTATION OPERATOR PROMPTS
-# Generate orthogonal strategies for exploration diversity
+# Evolution Operator Prompts (Mutation + Crossover)
+# ============================================================
+# These prompts use Python str.format() ({var}), not Jinja2 ({{var}}).
+# Evolution agents are a restart of the pipeline — they receive parent
+# trajectories as TEXT (no latent KV chain). Their output is a direction
+# string consumed by a new Propose round.
+# ============================================================
+
+# ============================================================
+# MUTATION OPERATOR
+# Generate ONE orthogonal direction from one parent trajectory
 # ============================================================
 
 mutation:
   system: |
     You are the **Mutation agent** in the Evolution layer of an alpha factor mining pipeline.
-    Pipeline: ... → Backtest → Feedback → [**Evolve: Mutation**] → new Propose round
-    • Receives: one parent trajectory — hypothesis, factor expressions, backtest metrics, and feedback diagnosis.
-    • Sends: one direction string to a new Propose agent, which will generate a fresh hypothesis from your direction.
+    • Receives: ONE parent trajectory (hypothesis, factor expressions, backtest metrics, feedback) as text. Evolution is a fresh start — no latent KV chain from the parent pipeline.
+    • Sends: a direction string to a new Propose agent. Propose will turn it into a fresh hypothesis.
 
-    Your task: diagnose the weakest step in the parent trajectory, then output a direction that avoids that failure mode and explores a region of factor space the parent did not reach.
+    Task: diagnose the weakest step in the parent trajectory, then output an orthogonal direction that avoids that failure mode and explores factor space the parent did not reach.
 
-    "Orthogonal" means the new direction should:
-    1. Explore a different market hypothesis from the parent
-    2. Use different data dimensions or feature types
-    3. Be grounded in different investment logic or market perspective
-    4. Produce factors with low expected correlation to the parent
+    "Orthogonal" means the new direction:
+    1. Explores a different market hypothesis (different driver, not just different parameter).
+    2. Uses different data dimensions or feature types.
+    3. Is grounded in different investment logic or market perspective.
+    4. Should produce factors with low expected correlation to the parent's.
 
-    Ensure the direction is specific enough that Propose can generate a concrete, testable hypothesis from it.
+    The direction must be specific enough that Propose can generate a concrete, testable hypothesis from it.
 
   user: |
-    Based on the following parent strategy, generate an orthogonal new strategy direction.
+    <parent_trajectory>
+      <hypothesis>{parent_hypothesis}</hypothesis>
+      <factors>{parent_factors}</factors>
+      <metrics>{parent_metrics}</metrics>
+      <feedback>{parent_feedback}</feedback>
+    </parent_trajectory>
 
-    ## Parent Strategy Information
+    Generate an orthogonal new strategy direction that diagnoses why the parent failed (or partially succeeded) and points at unexplored space.
 
-    ### Hypothesis
-    {parent_hypothesis}
-
-    ### Factor Expressions
-    {parent_factors}
-
-    ### Backtest Metrics
-    {parent_metrics}
-
-    ### Evaluation Feedback
-    {parent_feedback}
-
-    ---
-
-    ## Requirements
-
-    Please generate a new strategy direction that is **orthogonal** to the parent strategy, including:
-
-    1. **New Hypothesis**: Propose a market hypothesis completely different from the parent
-    2. **Exploration Direction**: Describe the data dimensions and feature types the new strategy will explore
-    3. **Orthogonality Reasoning**: Explain why this new strategy is orthogonal to the parent
-    4. **Expected Characteristics**: Expected characteristics of factors from the new strategy
-
-    Please ensure:
-    - The new strategy has minimal correlation with the parent
-    - Explore market patterns not covered by the parent
-    - Maintain feasibility and reasonableness
-
-    Output in JSON format:
+    Output ONLY this JSON (no markdown fences, no commentary):
     ```json
     {{
-        "new_hypothesis": "Description of the new market hypothesis",
-        "exploration_direction": "Exploration direction description",
-        "orthogonality_reason": "Reasoning for orthogonality with parent",
-        "expected_characteristics": "Expected factor characteristics"
+        "new_hypothesis": "ONE LINE. The new market hypothesis.",
+        "exploration_direction": "ONE LINE. Data dimensions and feature types to explore.",
+        "orthogonality_reason": "ONE LINE. Why this is orthogonal to the parent.",
+        "expected_characteristics": "ONE LINE. Expected factor properties (signal type, time horizon, normalization)."
     }}
     ```
 
   simple_user: |
-    Based on the following information, generate an orthogonal factor mining hypothesis:
+    <parent>
+      <hypothesis>{parent_hypothesis}</hypothesis>
+      <factors>{parent_factors}</factors>
+    </parent>
 
-    Parent Hypothesis: {parent_hypothesis}
-
-    Parent Factors: {parent_factors}
-
-    Please propose a new hypothesis that is completely different from the above direction to explore new factor space. Output the new hypothesis text directly.
+    Propose a new hypothesis that explores a completely different region of factor space. Output the hypothesis text directly (single paragraph, no JSON).
 
   suffix_template: |
     ---
+    <mutation_guidance>
+    Parent summary: {parent_summary}
 
-    ## Mutation Round Guidance
+    Suggested mutation direction:
+    - New hypothesis: {new_hypothesis}
+    - Exploration dimension: {exploration_direction}
+    - Orthogonality reasoning: {orthogonality_reason}
 
-    This is a mutation exploration round that requires generating an orthogonal new strategy based on the parent strategy.
+    Rules:
+    1. New hypothesis must be orthogonal to the parent — avoid repeating the same exploration.
+    2. Prioritize data dimensions and patterns the parent did not cover.
+    3. Generated factors should have low correlation with parent factors.
+    </mutation_guidance>
 
-    ### Parent Strategy Summary
-    {parent_summary}
+    Now propose your new hypothesis based on the above guidance.
 
-    ### Mutation Direction Suggestions
-    - **New Hypothesis Direction**: {new_hypothesis}
-    - **Exploration Dimension**: {exploration_direction}
-    - **Orthogonality Reasoning**: {orthogonality_reason}
-
-    ### Important Notes
-    1. Your new hypothesis must be orthogonal to the parent strategy to avoid repeated exploration
-    2. Prioritize exploring data dimensions and market patterns not covered by the parent
-    3. Generated factors should have low correlation with parent factors
-
-    Please propose your new hypothesis based on the above mutation guidance.
-
-  # Fallback hypotheses when LLM fails
+  # Fallbacks when LLM output cannot be parsed
   fallback_templates:
     - "Explore mean reversion characteristics opposite to price momentum"
     - "Study nonlinear relationships between volume and price"
@@ -108,105 +85,79 @@ mutation:
 
 
 # ============================================================
-# CROSSOVER OPERATOR PROMPTS
-# Combine multiple parent strategies to leverage their strengths
+# CROSSOVER OPERATOR
+# Combine multiple high-performing parents into ONE hybrid direction
 # ============================================================
 
 crossover:
   system: |
     You are the **Crossover agent** in the Evolution layer of an alpha factor mining pipeline.
-    Pipeline: ... → Backtest → Feedback → [**Evolve: Crossover**] → new Propose round
-    • Receives: multiple high-performing parent trajectories — each with hypothesis, factor expressions, backtest metrics, and feedback.
-    • Sends: one hybrid direction string to a new Propose agent, which will generate a fresh hypothesis from your direction.
+    • Receives: multiple high-performing parent trajectories as text. No latent KV chain — evolution is a fresh start.
+    • Sends: ONE hybrid direction string to a new Propose agent.
 
-    Your task: identify the strongest element from each parent (e.g., one parent's signal timing, another's feature domain), then synthesize a direction that combines their complementary advantages while avoiding their shared weaknesses.
+    Task: identify the strongest element from each parent (e.g. parent A's signal timing, parent B's feature domain), then synthesize a direction that combines their complementary advantages while avoiding their shared weaknesses.
 
-    When fusing strategies, consider:
-    1. The core hypotheses and market views of each parent
-    2. Factor types and features that performed well in each
-    3. Complementarity and potential synergies between parents
-    4. Avoid inheriting weaknesses common to all parents
+    Consider when fusing:
+    1. Core hypotheses and market views of each parent.
+    2. Factor types and features that performed well in each.
+    3. Complementarity and potential synergies.
+    4. Weaknesses common to all parents — these must NOT carry over to the hybrid.
 
-    The output direction must be specific enough that Propose can generate a concrete, testable hypothesis from it.
+    The output direction must be specific enough that Propose can produce a concrete, testable hypothesis from it.
 
   user: |
-    Based on the following multiple parent strategies, generate a fused hybrid strategy.
-
-    ## Parent Strategy Information
-
+    <parents>
     {parent_summaries}
+    </parents>
 
-    ---
+    Generate a hybrid direction that fuses the strongest elements of these parents.
 
-    ## Requirements
-
-    Please analyze the above parent strategies and generate a hybrid strategy that combines their strengths:
-
-    1. **Hybrid Hypothesis**: A new market hypothesis that fuses the advantages of all parents
-    2. **Fusion Logic**: Explain how to combine the strengths of each parent
-    3. **Innovation Points**: New characteristics brought by the hybrid strategy
-    4. **Expected Benefits**: Why the hybrid strategy may outperform individual parents
-
-    Please ensure:
-    - The hybrid strategy inherits the advantages of all parents
-    - Avoid common weaknesses of all parents
-    - Potential for synergistic effects
-
-    Output in JSON format:
+    Output ONLY this JSON (no markdown fences, no commentary):
     ```json
     {{
-        "hybrid_hypothesis": "Description of the fused market hypothesis",
-        "fusion_logic": "Fusion logic explanation",
-        "innovation_points": "Innovation points description",
-        "expected_benefits": "Expected benefits explanation"
+        "hybrid_hypothesis": "ONE LINE. The fused market hypothesis.",
+        "fusion_logic": "ONE LINE. How elements from each parent combine.",
+        "innovation_points": "ONE LINE. What is genuinely new in the hybrid.",
+        "expected_benefits": "ONE LINE. Why the hybrid may outperform individual parents."
     }}
     ```
 
   simple_user: |
-    Please combine the advantages of the following strategies to generate a hybrid hypothesis:
-
+    <parents>
     {parent_summaries}
+    </parents>
 
-    Output the fused new hypothesis text directly.
+    Propose a single hybrid hypothesis combining the strengths of these parents. Output the hypothesis text directly (single paragraph, no JSON).
 
-  # Template for formatting parent trajectory summary
+  # Per-parent block format (rendered for each parent then joined into {parent_summaries})
   parent_template: |
-    ### Parent {idx}: {phase_name}
-    **Direction ID**: {direction_id}
-    **Hypothesis**: {hypothesis}
-    **Factors**:
-    {factors}
-    **Metrics**:
-    {metrics}
-    **Feedback**:
-    {feedback}
-    ---
+    <parent index="{idx}" phase="{phase_name}" direction_id="{direction_id}">
+      <hypothesis>{hypothesis}</hypothesis>
+      <factors>{factors}</factors>
+      <metrics>{metrics}</metrics>
+      <feedback>{feedback}</feedback>
+    </parent>
 
-  # Prompt suffix template for hypothesis generator
   suffix_template: |
     ---
-
-    ## Crossover Round Guidance
-
-    This is a crossover fusion exploration round that requires generating a hybrid strategy by combining multiple parent strategies.
-
-    ### Parent Strategy Summaries
+    <crossover_guidance>
+    Parent summaries:
     {parent_summaries}
 
-    ### Fusion Direction Suggestions
-    - **Hybrid Hypothesis Direction**: {hybrid_hypothesis}
-    - **Fusion Logic**: {fusion_logic}
-    - **Innovation Points**: {innovation_points}
+    Suggested fusion direction:
+    - Hybrid hypothesis: {hybrid_hypothesis}
+    - Fusion logic: {fusion_logic}
+    - Innovation points: {innovation_points}
 
-    ### Important Notes
-    1. Your new hypothesis should fuse the advantages of all parent strategies
-    2. Avoid inheriting common weaknesses of the parents
-    3. Look for synergistic effects between parent strategies
-    4. Generated factors should capture the comprehensive characteristics of the combined strategies
+    Rules:
+    1. Hybrid hypothesis should fuse advantages of all parent strategies.
+    2. Avoid weaknesses common to the parents.
+    3. Look for synergistic effects between parents.
+    4. Generated factors should capture the combined characteristics.
+    </crossover_guidance>
 
-    Please propose your fusion hypothesis based on the above crossover guidance.
+    Now propose your fusion hypothesis based on the above guidance.
 
-  # Phase name translations
   phase_names:
     original: "Original Round"
     mutation: "Mutation Round"
@@ -214,30 +165,25 @@ crossover:
 
 
 # ============================================================
-# ORTHOGONALITY CHECK PROMPTS
-# Verify if generated strategies are sufficiently orthogonal
+# ORTHOGONALITY CHECK
+# Score how independent two strategies are
 # ============================================================
 
 orthogonality_check:
   system: |
-    You are a quantitative strategy analyst responsible for evaluating the orthogonality (independence) between two strategies.
+    You are a quant strategy analyst evaluating orthogonality between two strategies. Score on a 1-10 scale (10 = completely independent).
 
   user: |
-    Please evaluate the orthogonality of the following two strategies:
+    <strategy_a>{strategy_a}</strategy_a>
+    <strategy_b>{strategy_b}</strategy_b>
 
-    ## Strategy A
-    {strategy_a}
+    Score on these dimensions (1-10):
+    1. Data dimension — different features?
+    2. Logic — different investment logic?
+    3. Time scale — different horizons?
+    4. Market state — different market conditions?
 
-    ## Strategy B
-    {strategy_b}
-
-    Please evaluate their orthogonality from the following dimensions (1-10 score, 10 being completely orthogonal):
-    1. Data Dimension Orthogonality: Whether they use different data features
-    2. Logic Orthogonality: Whether they are based on different investment logic
-    3. Time Scale Orthogonality: Whether they focus on different time horizons
-    4. Market State Orthogonality: Whether they target different market conditions
-
-    Output in JSON format:
+    Output ONLY this JSON:
     ```json
     {{
         "data_orthogonality": 8,
@@ -245,30 +191,20 @@ orthogonality_check:
         "time_orthogonality": 6,
         "market_orthogonality": 9,
         "overall_score": 7.5,
-        "analysis": "Analysis explanation"
+        "analysis": "Brief explanation. 1-2 sentences."
     }}
     ```
 
 
 # ============================================================
-# TRAJECTORY SUMMARY PROMPTS
-# Format trajectory information for prompts
+# TRAJECTORY SUMMARY (text formatter for parent context)
 # ============================================================
 
 trajectory_summary:
   template: |
-    **Trajectory ID**: {trajectory_id}
-    **Phase**: {phase}
-    **Direction**: {direction_id}
-
-    **Hypothesis**:
-    {hypothesis}
-
-    **Factors** (top {max_factors}):
-    {factors}
-
-    **Backtest Metrics**:
-    {metrics}
-
-    **Feedback Summary**:
-    {feedback}
+    <trajectory id="{trajectory_id}" phase="{phase}" direction="{direction_id}">
+      <hypothesis>{hypothesis}</hypothesis>
+      <factors top="{max_factors}">{factors}</factors>
+      <metrics>{metrics}</metrics>
+      <feedback>{feedback}</feedback>
+    </trajectory>
