@@ -144,7 +144,7 @@ function_lib_description: |-
   - Pay attention to the distinction between TS-prefix operations (e.g., `TS_STD()`) and non-TS ones (e.g., `STD()`).
 
 
-factor_experiment_output_format: |-
+experiment_output_format: |-
   Output ONLY this JSON. No markdown, no commentary.
   {"<factor_name>": {"description": "...", "variables": {"$sym": "meaning"}, "formulation": "LaTeX", "expression": "..."}}
 
