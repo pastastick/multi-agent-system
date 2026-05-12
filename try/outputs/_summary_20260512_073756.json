@@ -1,0 +1,144 @@
+[
+  {
+    "group": "multi_agent_kv",
+    "case": "latent_steps_sweep",
+    "ok_format": true,
+    "elapsed_s": 85.7,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/multi_agent_kv/latent_steps_sweep_20260512_073605.txt",
+    "table": [
+      {
+        "direction": "momentum",
+        "latent_steps": 10,
+        "propose_kv_len": 1446,
+        "construct_kv_len": 4643,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 2.42,
+        "construct_elapsed_s": 6.45,
+        "total_elapsed_s": 8.870000000000001
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 20,
+        "propose_kv_len": 1456,
+        "construct_kv_len": 4663,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.46,
+        "construct_elapsed_s": 3.1,
+        "total_elapsed_s": 3.56
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 40,
+        "propose_kv_len": 1476,
+        "construct_kv_len": 4703,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.88,
+        "construct_elapsed_s": 7.32,
+        "total_elapsed_s": 8.200000000000001
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 80,
+        "propose_kv_len": 1516,
+        "construct_kv_len": 4783,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.62,
+        "construct_elapsed_s": 7.4,
+        "total_elapsed_s": 9.02
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 10,
+        "propose_kv_len": 1443,
+        "construct_kv_len": 4640,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.25,
+        "construct_elapsed_s": 10.21,
+        "total_elapsed_s": 10.46
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 20,
+        "propose_kv_len": 1453,
+        "construct_kv_len": 4660,
+        "valid_json": true,
+        "correct_schema": false,
+        "propose_elapsed_s": 0.45,
+        "construct_elapsed_s": 2.01,
+        "total_elapsed_s": 2.46
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 40,
+        "propose_kv_len": 1473,
+        "construct_kv_len": 4700,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.85,
+        "construct_elapsed_s": 8.8,
+        "total_elapsed_s": 9.65
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 80,
+        "propose_kv_len": 1513,
+        "construct_kv_len": 4780,
+        "valid_json": true,
+        "correct_schema": false,
+        "propose_elapsed_s": 1.6,
+        "construct_elapsed_s": 3.78,
+        "total_elapsed_s": 5.38
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 10,
+        "propose_kv_len": 1441,
+        "construct_kv_len": 4638,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.27,
+        "construct_elapsed_s": 7.08,
+        "total_elapsed_s": 7.35
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 20,
+        "propose_kv_len": 1451,
+        "construct_kv_len": 4658,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.46,
+        "construct_elapsed_s": 4.18,
+        "total_elapsed_s": 4.64
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 40,
+        "propose_kv_len": 1471,
+        "construct_kv_len": 4698,
+        "valid_json": false,
+        "correct_schema": false,
+        "propose_elapsed_s": 0.84,
+        "construct_elapsed_s": 6.98,
+        "total_elapsed_s": 7.82
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 80,
+        "propose_kv_len": 1511,
+        "construct_kv_len": 4778,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.63,
+        "construct_elapsed_s": 6.66,
+        "total_elapsed_s": 8.29
+      }
+    ],
+    "parsed": null
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "group": "multi_agent_kv",
+    "case": "construct_coder_format_m10_n3",
+    "latent_steps": 10,
+    "n_runs": 3,
+    "ok_format": true,
+    "elapsed_s": 54.05,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/multi_agent_kv/construct_coder_format_m10_n3_20260512_074744.txt",
+    "latent_success_rate": "2/3",
+    "text_success_rate": "2/3",
+    "parsed": null
+  }
+]

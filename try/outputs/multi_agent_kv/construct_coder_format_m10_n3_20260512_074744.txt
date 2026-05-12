@@ -1,0 +1,146 @@
+# Log: construct_coder_format_m10_n3_20260512_074744.txt
+# Timestamp: 2026-05-12 07:49:04
+
+==============================================================================
+CONFIG  n_runs=3  latent_steps=10  temp=0.7
+==============================================================================
+
+
+==============================================================================
+Run 1 — LatentMAS  construct=True  coder=True  both=True
+==============================================================================
+CONSTRUCT:
+{
+  "price_momentum_volume": {
+    "description": "Normalized price momentum multiplied by z-scored volume growth.",
+    "variables": {
+      "$sym": "price_momentum_volume"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 10), 20) * ZSCORE(TS_MEAN($volume, 10), 20)",
+    "expression": "ZSCORE(TS_MEAN($return, 10), 20) * ZSCORE(TS_MEAN($volume, 10), 20)"
+  },
+  "volume_momentum": {
+    "description": "Z-scored volume growth multiplied by price momentum.",
+    "variables": {
+      "$sym": "volume_momentum"
+    },
+    "formulation": "ZSCORE(TS_MEAN($volume, 10), 20) * TS_MEAN($return, 10)",
+    "expression": "ZSCORE(TS_MEAN($volume, 10), 20) * TS_MEAN($return, 10)"
+  },
+  "volume_momentum_rank": {
+    "description": "Ranked z-scored volume growth multiplied by price momentum.",
+    "variables": {
+      "$sym": "volume_momentum_rank"
+    },
+    "formulation": "RANK(ZSCORE(TS_MEAN($volume, 10), 20) * TS_MEAN($return, 10))",
+    "expression": "RANK(ZSCORE(TS_MEAN($volume, 10), 20) * TS_MEAN($return, 10))"
+  }
+}
+
+CODER:
+{"expr": "TS_ZSCORE(TS_MEAN($return, 20), 20)"}
+
+==============================================================================
+Run 1 — TextMAS    construct=True  coder=True  both=True
+==============================================================================
+CONSTRUCT:
+{"VolumeWeightedPriceMomentum3": {"description": "Volume-weighted price momentum predicts forward return.", "variables": {"$sym": "volume_weighted_price_momentum3"}, "formulation": "TS_MEAN($close, 30) * ZSCORE($volume, 30)", "expression": "TS_MEAN($close, 30) * ZSCORE($volume, 30)"}}
+
+CODER:
+{"expr": "TS_MEAN($close, 30) * TS_ZSCORE($volume, 30)"}
+
+==============================================================================
+Run 2 — LatentMAS  construct=True  coder=True  both=True
+==============================================================================
+CONSTRUCT:
+{
+  "PriceMomentumVolume": {
+    "description": "Momentum adjusted by volume to capture conviction-driven price moves.",
+    "variables": {
+      "$close": "Closing price"
+    },
+    "formulation": "\\frac{TS_MEAN($close, 20) - $close}{TS_MEAN($close, 20) + 1e-8} \\times ZSCORE($volume, 20)",
+    "expression": "($close - TS_MEAN($close, 20)) / (TS_MEAN($close, 20) + 1e-8) * ZSCORE($volume, 20)"
+  },
+  "VolumeMomentum": {
+    "description": "Volume-driven momentum to identify strong volume trends.",
+    "variables": {
+      "$volume": "Trading volume"
+    },
+    "formulation": "TS_ZSCORE($volume, 20) \\times DELTA($volume, 20)",
+    "expression": "TS_ZSCORE($volume, 20) * DELTA($volume, 20)"
+  },
+  "VolumeReversal": {
+    "description": "Volume reversal pattern to capture liquidity changes.",
+    "variables": {
+      "$volume": "Trading volume"
+    },
+    "formulation": "TS_ARGMAX($volume, 20) - TS_ARGMAX($volume, 20) \\times 0.5",
+    "expression": "TS_ARGMAX($volume, 20) - TS_ARGMAX($volume, 20) * 0.5"
+  }
+}
+
+CODER:
+{"expr": "TS_ZSCORE(TS_MEAN($return, 20), 20)"}
+
+==============================================================================
+Run 2 — TextMAS    construct=False  coder=True  both=False
+==============================================================================
+CONSTRUCT:
+{"description": "Volume-weighted momentum indicator for predicting returns.", "variables": {"$sym": "volume_weighted_momentum"}, "formulation": "TS_MEAN($close, 10) / (TS_MEAN($volume, 10) + 1e-8)", "expression": "TS_MEAN($close, 10) / (TS_MEAN($volume, 10) + 1e-8)"}
+
+CODER:
+{"expr": "TS_MEAN($close, 20)"}
+
+==============================================================================
+Run 3 — LatentMAS  construct=True  coder=False  both=False
+==============================================================================
+CONSTRUCT:
+{
+  "price_momentum_volume": {
+    "description": "Combination of price momentum and volume confirmation for forward return prediction.",
+    "variables": {
+      "$sym": "price_momentum_volume"
+    },
+    "formulation": "\\frac{TS_MEAN($return, 10) - TS_MEAN($return, 20)}{TS_STD($return, 20) + 1e-8} \\times \\frac{TS_MEAN($volume, 10) - TS_MEAN($volume, 20)}{TS_STD($volume, 20) + 1e-8}",
+    "expression": "($return_10_mean - $return_20_mean) / ($return_20_std + 1e-8) * ($volume_10_mean - $volume_20_mean) / ($volume_20_std + 1e-8)"
+  },
+  "volume_zscore_momentum": {
+    "description": "Z-score normalized volume multiplied by price momentum for forward return prediction.",
+    "variables": {
+      "$sym": "volume_zscore_momentum"
+    },
+    "formulation": "ZSCORE(TS_MEAN($volume, 20), 20) * (TS_MEAN($return, 10) - TS_MEAN($return, 20)) / (TS_STD($return, 20) + 1e-8)",
+    "expression": "TS_ZSCORE($volume_20_mean, 20) * ($return_10_mean - $return_20_mean) / ($return_20_std + 1e-8)"
+  },
+  "volume_momentum_ratio": {
+    "description": "Ratio of volume momentum to price momentum for forward return prediction.",
+    "variables": {
+      "$sym": "volume_momentum_ratio"
+    },
+    "formulation": "\\frac{TS_MEAN($volume, 10) - TS_MEAN($volume, 20)}{TS_STD($volume, 20) + 1e-8} \\div \\frac{TS_MEAN($return, 10) - TS_MEAN($return, 20)}{TS_STD($return, 20) + 1e-8}",
+    "expression": "($volume_10_mean - $volume_20_mean) / ($volume_20_std + 1e-8) / ($return_10_mean - $return_20_mean) / ($return_20_std + 1e-8)"
+  }
+}
+
+CODER:
+
+
+==============================================================================
+Run 3 — TextMAS    construct=True  coder=True  both=True
+==============================================================================
+CONSTRUCT:
+{"PriceMomentumVolumeZScore": {"description": "Product of price momentum and volume Z-score to predict 5-day forward return.", "variables": {"$sym": "PriceMomentumVolumeZScore"}, "formulation": "($close - TS_MEAN($close, 5)) / (TS_MEAN($close, 5) + 1e-8) * ZSCORE($volume, 10)", "expression": "($close - TS_MEAN($close, 5)) / (TS_MEAN($close, 5) + 1e-8) * ZSCORE($volume, 10)"}}
+
+CODER:
+{"expr": "($close - TS_MEAN($close, 5)) / (TS_MEAN($close, 5) + 1e-8) * TS_ZSCORE($volume, 10)"}
+
+==============================================================================
+SUMMARY — FORMAT SUCCESS RATE
+==============================================================================
+n_runs=3  latent_steps=10
+
+                     construct_schema    coder_valid_expr    both_ok
+LatentMAS                      3/3 (100%)           2/3 (66%)  2/3 (66%)
+TextMAS                         2/3 (66%)          3/3 (100%)  2/3 (66%)
+

@@ -277,7 +277,7 @@ def test_chain_ablation(latent_steps: int | None = None) -> dict:
     format output yang ketat (Construct: nested 4-key JSON; Coder: {"expr": "..."}).
     """
     if latent_steps is None:
-        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "40"))
 
     group, case = "multi_agent_kv", f"chain_ablation_m{latent_steps}"
     ts = time.strftime("%Y%m%d_%H%M%S")

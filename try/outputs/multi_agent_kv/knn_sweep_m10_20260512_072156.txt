@@ -1,0 +1,159 @@
+# Log: knn_sweep_m10_20260512_072156.txt
+# Timestamp: 2026-05-12 07:23:33
+
+==============================================================================
+CONFIG  latent_steps=10  kv_len_base=1485
+==============================================================================
+
+
+==============================================================================
+Propose KV build  elapsed=2.29s
+==============================================================================
+kv_len=1485 tokens
+
+==============================================================================
+knn=0.2  tokens≈297  construct_schema=False  coder_expr=False  construct=28.53s  coder=0.45s
+==============================================================================
+CONSTRUCT OUTPUT:
+
+
+CODER OUTPUT:
+
+
+==============================================================================
+knn=0.4  tokens≈594  construct_schema=False  coder_expr=False  construct=7.53s  coder=0.52s
+==============================================================================
+CONSTRUCT OUTPUT:
+{
+  "$volume_pctchange": "percentage change in 20-day volume"
+}
+
+CODER OUTPUT:
+
+
+==============================================================================
+knn=0.6  tokens≈891  construct_schema=False  coder_expr=False  construct=19.12s  coder=0.57s
+==============================================================================
+CONSTRUCT OUTPUT:
+<allowed_functions>
+All daily-level: $open, $close, $high, $low, $volume, $return
+</allowed_functions>
+
+<allowed_functions>
+Only the following operations are allowed in expressions:
+### **Cross-sectional Functions**
+- **RANK(A)**: Ranking of each element in the cross-sectional dimension of A.
+- **ZSCORE(A)**: Z-score of each element in the cross-sectional dimension of A.
+- **MEAN(A)**: Mean value of each element in the cross-sectional dimension of A.
+- **STD(A)**: Standard deviation in the cross-sectional dimension of A.
+- **SKEW(A)**: Skewness in the cross-sectional dimension of A.
+- **KURT(A)**: Kurtosis in the cross-sectional dimension of A.
+- **MAX(A)**: Maximum value in the cross-sectional dimension of A.
+- **MIN(A)**: Minimum value in the cross-sectional dimension of A.
+- **MEDIAN(A)**: Median value in the cross-sectional dimension of A
+
+### **Time-Series Functions**
+- **DELTA(A, n)**: Change in value of A over n periods.
+- **DELAY(A, n)**: Value of A delayed by n periods.
+- **TS_MEAN(A, n)**: Mean value of sequence A over the past n days.
+- **TS_SUM(A, n)**: Sum of sequence A over the past n days.
+- **TS_VAR(A, n)**: Variance of sequence A over the past n days.
+- **TS_STD(A, n)**: Standard deviation of sequence A over the past n days.
+- **TS_PCTCHANGE(A, p)**: Percentage change in the value of sequence A over p periods.
+- **TS_MIN(A, n)**: Minimum value of A in the past n days.
+- **TS_MAX(A, n)**: Maximum value of A in the past n days.
+- **TS_ARGMAX(A, n)**: The index (relative to the current time) of the maximum value of A over the past n days.
+- **TS_ARGMIN(A, n)**: The index (relative to the current time) of the minimum value of A over the past n days.
+- **TS_QUANTILE(A, p, q)**: Rolling quantile of sequence A over the past p periods, where q is the quantile value between 0 and 1.
+- **TS_VAR(A, p)**: Rolling variance of sequence A over the past p periods.
+- **TS_CORR(A, B, p)**: Correlation coefficient between sequences A and B over the past p periods.
+- **TS_COVARIANCE(A, B, p)**: Covariance between sequences A and B over the past p periods.
+
+### **Mathematical Operations**
+- **PROD(A, n)**: Product of values in A over the past n days. Use `*` for general multiplication.
+- **LOG(A)**: Natural logarithm of each element in A.
+- **SQRT(A)**: Square root of each element in A.
+- **POW(A, n)**: Raise each element in A to the power of n.
+- **SIGN(A)**: Sign of each element in A, one of 1, 0, or -1.
+- **EXP(A)**: Exponential of each element in A.
+- **ABS(A)**: Absolute value of A.
+- **MAX(A, B)**: Maximum value between A and B.
+- **MIN(A, B)**: Minimum value between A and B.
+- **INV(A)**: Reciprocal (1/x) of each element in sequence A.
+- **FЛООР(A)**: Floor of each element in sequence A.
+- **ЦЕЛ(A)**: Ceiling of each element in sequence A.
+
+### **Conditional and Logical Functions**
+- **COUNT(C, n)**: Count of samples satisfying condition C in the past n periods. Here, C is a logical expression, such as A > B.
+- **SUMIF(A, n, C)**: Sum of A over the past n periods if condition C is met. Here, C is a logical expression, such as A > B.
+- **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is presented in a logical expression form, with the same size as A.
+- **(C1)&&(C2)**: Logical operation "and". Both C1 and C2 are logical expressions, such as A > B.
+- **(C1)||(C2)**: Logical operation "or". Both C1 and C2 are logical expressions, such as A > B.
+- **(C1)?(A):(B)**: Logical operation "If condition C1 holds, then A, otherwise B". C1 is a logical expression, such as A > B.
+</allowed_functions>
+
+CODER OUTPUT:
+
+
+==============================================================================
+knn=0.8  tokens≈1188  construct_schema=True  coder_expr=True  construct=2.96s  coder=1.02s
+==============================================================================
+CONSTRUCT OUTPUT:
+{
+  "PriceMomentumVolumeScore": {
+    "description": "A composite factor combining price momentum and volume normalization to predict forward returns.",
+    "variables": {
+      "$sym": "PriceMomentumVolumeScore"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 20), 20) * ZSCORE(TS_MEAN($volume, 20), 20)",
+    "expression": "ZSCORE(TS_MEAN($return, 20), 20) * ZSCORE(TS_MEAN($volume, 20), 20)"
+  }
+}
+
+CODER OUTPUT:
+{"expr": "TS_ZSCORE(TS_MEAN($return, 20), 20)"}
+
+==============================================================================
+knn=1.0  tokens≈1485  construct_schema=True  coder_expr=True  construct=7.52s  coder=1.11s
+==============================================================================
+CONSTRUCT OUTPUT:
+{
+  "price_momentum_volume": {
+    "description": "Momentum multiplied by volume confirmation, normalized by Z-score.",
+    "variables": {
+      "$sym": "price_momentum_volume"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 10), 20) * ZSCORE(TS_MEAN($volume, 10), 20)",
+    "expression": "ZSCORE(TS_MEAN($return, 10), 20) * ZSCORE(TS_MEAN($volume, 10), 20)"
+  },
+  "volume_momentum": {
+    "description": "Volume momentum combined with price momentum, normalized by Z-score.",
+    "variables": {
+      "$sym": "volume_momentum"
+    },
+    "formulation": "ZSCORE(TS_MEAN($volume, 10), 20) * ZSCORE(TS_MEAN($return, 10), 20)",
+    "expression": "ZSCORE(TS_MEAN($volume, 10), 20) * ZSCORE(TS_MEAN($return, 10), 20)"
+  },
+  "momentum_volume_ratio": {
+    "description": "Ratio of price momentum to volume momentum, normalized by Z-score.",
+    "variables": {
+      "$sym": "momentum_volume_ratio"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 10), 20) / ZSCORE(TS_MEAN($volume, 10), 20)",
+    "expression": "ZSCORE(TS_MEAN($return, 10), 20) / ZSCORE(TS_MEAN($volume, 10), 20)"
+  }
+}
+
+CODER OUTPUT:
+{"expr": "TS_ZSCORE(TS_MEAN($return, 20), 20)"}
+
+==============================================================================
+SUMMARY TABLE
+==============================================================================
+  knn% |  tokens | ctor_schema | coder_expr | both_ok |  total_s
+   0.2 |     297 |       False |      False |   False |   28.98s
+   0.4 |     594 |       False |      False |   False |    8.05s
+   0.6 |     891 |       False |      False |   False |   19.69s
+   0.8 |    1188 |        True |       True |    True |    3.98s
+   1.0 |    1485 |        True |       True |    True |    8.63s
+

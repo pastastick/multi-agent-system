@@ -1,0 +1,70 @@
+[
+  {
+    "group": "multi_agent_kv",
+    "case": "chain_ablation_m10",
+    "latent_steps": 10,
+    "ok_format": true,
+    "elapsed_s": 34.11,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/multi_agent_kv/chain_ablation_m10_20260512_070812.txt",
+    "mode_a": {
+      "propose_valid": true,
+      "construct_schema": true,
+      "coder_valid_expr": true,
+      "feedback_valid": true,
+      "total_s": 11.83
+    },
+    "mode_b": {
+      "propose_kv_len": 1485,
+      "construct_schema": true,
+      "construct_kv_len": 4682,
+      "coder_valid_expr": true,
+      "coder_kv_len": 7940,
+      "feedback_valid": true,
+      "total_s": 22.28
+    },
+    "parsed": {
+      "A_construct": {
+        "PriceMomentumVolumeZScore": {
+          "description": "Product of price momentum and volume Z-score to predict 5-day forward return.",
+          "variables": {
+            "$sym": "PriceMomentumVolumeZScore"
+          },
+          "formulation": "TS_MEAN($close, 10) - $close",
+          "expression": "($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8) * ZSCORE($volume, 10)"
+        }
+      },
+      "A_coder": {
+        "expr": "TS_PCTCHANGE($close, 10) * TS_ZSCORE($volume, 10)"
+      },
+      "B_construct": {
+        "price_momentum_volume_zscore": {
+          "description": "Z-score normalized price momentum multiplied by Z-score normalized volume growth.",
+          "variables": {
+            "$sym": "price_momentum_volume_zscore"
+          },
+          "formulation": "\\frac{\\text{TS\\_MEAN}($close, 20) - $close}{\\text{TS\\_STD}($close, 20)} \\times \\frac{\\text{TS\\_MEAN}($volume, 20) - $volume}{\\text{TS\\_STD}($volume, 20)}",
+          "expression": "(TS_MEAN($close, 20) - $close)/(TS_STD($close, 20) + 1e-8) * (TS_MEAN($volume, 20) - $volume)/(TS_STD($volume, 20) + 1e-8)"
+        },
+        "volume_momentum_zscore": {
+          "description": "Z-score normalized volume growth multiplied by Z-score normalized price momentum.",
+          "variables": {
+            "$sym": "volume_momentum_zscore"
+          },
+          "formulation": "\\frac{\\text{TS\\_MEAN}($volume, 20) - $volume}{\\text{TS\\_STD}($volume, 20)} \\times \\frac{\\text{TS\\_MEAN}($close, 20) - $close}{\\text{TS\\_STD}($close, 20)}",
+          "expression": "(TS_MEAN($volume, 20) - $volume)/(TS_STD($volume, 20) + 1e-8) * (TS_MEAN($close, 20) - $close)/(TS_STD($close, 20) + 1e-8)"
+        },
+        "volume_momentum_rank": {
+          "description": "Rank of Z-score normalized volume growth multiplied by Z-score normalized price momentum.",
+          "variables": {
+            "$sym": "volume_momentum_rank"
+          },
+          "formulation": "RANK(\\frac{\\text{TS\\_MEAN}($volume, 20) - $volume}{\\text{TS\\_STD}($volume, 20)} \\times \\frac{\\text{TS\\_MEAN}($close, 20) - $close}{\\text{TS\\_STD}($close, 20)})",
+          "expression": "RANK((TS_MEAN($volume, 20) - $volume)/(TS_STD($volume, 20) + 1e-8) * (TS_MEAN($close, 20) - $close)/(TS_STD($close, 20) + 1e-8))"
+        }
+      },
+      "B_coder": {
+        "expr": "TS_ZSCORE(TS_MEAN($return, 20), 20)"
+      }
+    }
+  }
+]
