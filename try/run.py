@@ -28,7 +28,10 @@ import time
 from typing import Callable
 
 from .config import CONFIG, TEST_REGISTRY
-from . import test_planning_evolution, test_proposal_feedback, test_coder_evaluator
+from . import (
+    test_planning_evolution, test_proposal_feedback, test_coder_evaluator,
+    test_multi_agent_kv, test_pair_propose_construct, test_pair_construct_coder,
+)
 
 
 # Map group → modul test (sumber CASES dict)
@@ -36,6 +39,9 @@ _GROUP_MODULES = {
     "planning_evolution": test_planning_evolution,
     "proposal_feedback": test_proposal_feedback,
     "coder_evaluator": test_coder_evaluator,
+    "multi_agent_kv": test_multi_agent_kv,
+    "pair_propose_construct": test_pair_propose_construct,
+    "pair_construct_coder": test_pair_construct_coder,
 }
 
 

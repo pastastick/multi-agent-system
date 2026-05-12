@@ -1,62 +1,124 @@
-# QuantaAlpha — Panduan Setup JarvisLabs
+# QuantaLatent — Panduan Setup RunPod
 
 Proyek ini adalah adaptasi QuantaAlpha dengan **Latent-MAS pipeline**: model lokal (Qwen3) menjalankan latent reasoning via KV-cache, lalu factor mining berjalan sepenuhnya di GPU tanpa API eksternal untuk step utama.
 
 ---
 
-## 1. Spesifikasi Instance JarvisLabs
+## 0. Catatan Penting RunPod — `/workspace` vs `/root`
+
+Di RunPod, **hanya direktori `/workspace` yang persisten** (network storage). Semua yang ada di `/root` (HOME default) akan hilang ketika pod di-stop atau di-restart. Ini berarti:
+
+- ❌ JANGAN install `uv`, `.venv`, atau dependency apa pun di `~/` (`/root/`).
+- ✅ Semua artifact (binary `uv`, virtualenv `.venv`, torch wheels, HuggingFace model cache, pip cache, uv cache) **harus** berada di bawah `/workspace/`.
+- ✅ Project root proyek ini: **`/workspace/quantalatent`**.
+
+Sebelum apa pun, set environment variable berikut **di awal setiap session SSH baru** (atau tambahkan ke `~/.bashrc` — tapi `~/.bashrc` sendiri tidak persisten, jadi simpan juga salinannya di `/workspace/runpod_env.sh`):
+
+```bash
+# /workspace/runpod_env.sh — sumber file ini di awal setiap session
+export HOME_REAL=$HOME                                          # cadangan, jika perlu
+
+# uv & cargo binary location (uv installer default ke ~/.local/bin → ephemeral)
+export XDG_DATA_HOME=/workspace/.local/share
+export XDG_CONFIG_HOME=/workspace/.config
+export XDG_CACHE_HOME=/workspace/.cache
+export PATH=/workspace/.local/bin:$PATH
+
+# uv cache & virtualenv
+export UV_CACHE_DIR=/workspace/.cache/uv
+export UV_PYTHON_INSTALL_DIR=/workspace/.local/share/uv/python
+export UV_TOOL_DIR=/workspace/.local/share/uv/tools
+
+# pip cache (untuk fallback jika tidak pakai uv)
+export PIP_CACHE_DIR=/workspace/.cache/pip
+
+# HuggingFace model & dataset cache (default ~/.cache/huggingface → ephemeral)
+export HF_HOME=/workspace/.cache/huggingface
+export HUGGINGFACE_HUB_CACHE=/workspace/.cache/huggingface/hub
+export TRANSFORMERS_CACHE=/workspace/.cache/huggingface/hub
+
+# Torch hub & inductor cache
+export TORCH_HOME=/workspace/.cache/torch
+export TORCHINDUCTOR_CACHE_DIR=/workspace/.cache/torchinductor
+
+# Project-specific
+export PYTHONPATH=/workspace/quantalatent/backend
+```
+
+Buat sekali, lalu di setiap session baru cukup:
+
+```bash
+source /workspace/runpod_env.sh
+```
+
+> Tip: tambahkan `source /workspace/runpod_env.sh` ke `~/.bashrc` agar otomatis tiap login. Karena `~/.bashrc` ephemeral, simpan juga template-nya di `/workspace/bashrc.template` dan re-copy setelah pod restart.
+
+---
+
+## 1. Spesifikasi Pod RunPod
 
 | Komponen | Minimum | Rekomendasi |
 |---|---|---|
 | GPU | RTX 4090 (24 GB VRAM) | A100 40 GB |
 | RAM | 32 GB | 64 GB |
-| Disk | 100 GB | 200 GB |
+| Container Disk | 30 GB | 50 GB |
+| **Volume Disk (`/workspace`)** | **100 GB** | **200 GB** |
 | Python | 3.10 | 3.10 |
 | CUDA | 11.8+ | 12.1+ |
 
 > **Catatan model**: `Qwen3-14B` butuh ~28 GB VRAM (float16). Untuk 4090 24 GB, gunakan `Qwen3-4B` (~8 GB VRAM). Lihat bagian [Ganti Model](#5-ganti-model-untuk-vram-terbatas).
 
+> **Volume disk = network storage RunPod**, mount otomatis di `/workspace`. Pastikan ukurannya cukup untuk: model HF (~8 GB Qwen3-4B atau ~28 GB Qwen3-14B) + dataset Qlib (~3 GB) + venv (~10 GB) + cache.
+
 ---
 
-## 2. Transfer Proyek ke JarvisLabs
+## 2. Transfer Proyek ke `/workspace`
 
-Dari mesin lokal (WSL), kirim folder proyek via `rsync`:
+Dari mesin lokal (WSL), kirim folder proyek via `rsync` ke `/workspace`:
 
 ```bash
-# Ganti <user>@<host> dengan kredensial SSH JarvisLabs kamu
-rsync -avz --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
-  --exclude='data/' --exclude='hf_data/' \
-  /root/projects/first-experiment/ai-agent/ \
-  <user>@<host>:/workspace/ai-agent/
+# Ganti <user>@<host>:<port> dengan kredensial SSH RunPod kamu
+rsync -avz -e "ssh -p <port>" \
+  --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
+  --exclude='data/' --exclude='hf_data/' --exclude='log/' \
+  /root/projects/first-experiment/quantalatent/ \
+  <user>@<host>:/workspace/quantalatent/
 ```
 
-> Data Qlib dan HDF5 tidak perlu di-transfer karena akan didownload langsung di JarvisLabs.
+> Data Qlib dan HDF5 tidak perlu di-transfer karena akan didownload langsung di RunPod.
 
 ---
 
-## 3. Install Dependencies di JarvisLabs
+## 3. Install Dependencies di RunPod (semuanya ke `/workspace`)
 
 ```bash
-cd /workspace/ai-agent
+# WAJIB: load env var dulu agar uv/.venv/cache semua ke /workspace
+source /workspace/runpod_env.sh
 
-# Install uv (package manager)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-source ~/.bashrc   # atau source ~/.zshrc
+cd /workspace/quantalatent
 
-# Buat venv dan install semua dependensi dari lockfile
+# Install uv ke /workspace/.local/bin (BUKAN ~/.local/bin)
+curl -LsSf https://astral.sh/uv/install.sh | \
+  env UV_INSTALL_DIR=/workspace/.local/bin sh
+
+# Verifikasi uv terinstall di /workspace
+which uv   # harus: /workspace/.local/bin/uv
+
+# Buat venv di /workspace/quantalatent/.venv dan install semua deps
 uv sync
 
-# Atau jika tidak pakai uv:
-python3.10 -m venv .venv
+# Aktivasi venv
 source .venv/bin/activate
-pip install -r requirements.txt
+
+# Verifikasi venv aktif dari /workspace
+which python   # harus: /workspace/quantalatent/.venv/bin/python
 ```
 
-> Setelah `uv sync`, aktivasi venv dengan: `source .venv/bin/activate`
+> Karena `XDG_*` dan `UV_CACHE_DIR` sudah diarahkan ke `/workspace/.cache`, semua wheel cache, python interpreter, dan tool uv tidak akan menyentuh `/root`.
 
 ### 3a. Pastikan torch cocok dengan driver CUDA
 
-`uv sync` akan menarik torch versi default (saat ini `2.11.0+cu130`) yang **butuh driver NVIDIA ≥ 580**. Driver lama (mis. JarvisLabs A100 dengan driver 570 → CUDA 12.8) menyebabkan `torch.cuda.is_available() == False` dan model di-load ke CPU sehingga pipeline macet di `Workflow Progress: 0/5`.
+`uv sync` akan menarik torch versi default (saat ini `2.11.0+cu130`) yang **butuh driver NVIDIA ≥ 580**. Driver lama (mis. RunPod RTX 4090 dengan driver 570 → CUDA 12.8) menyebabkan `torch.cuda.is_available() == False` dan model di-load ke CPU sehingga pipeline macet di `Workflow Progress: 0/5`.
 
 Cek dulu:
 
@@ -65,7 +127,7 @@ nvidia-smi | grep "CUDA Version"
 .venv/bin/python -c "import torch; print('cuda:', torch.cuda.is_available(), '| torch:', torch.__version__)"
 ```
 
-Jika `cuda: False`, install ulang torch sesuai versi driver:
+Jika `cuda: False`, install ulang torch sesuai versi driver (cache wheel tersimpan di `/workspace/.cache/uv`):
 
 ```bash
 # Driver support CUDA 12.8 (driver ≥ 525)
@@ -86,32 +148,32 @@ Verifikasi: `.venv/bin/python -c "import torch; print(torch.cuda.is_available())
 ## 4. Konfigurasi `.env`
 
 ```bash
-cd /workspace/ai-agent
+cd /workspace/quantalatent
 cp configs/.env.example .env
 ```
 
-Edit `.env` sesuai environment JarvisLabs:
+Edit `.env` sesuai environment RunPod:
 
 ```bash
 nano .env   # atau vim, code, dsb.
 ```
 
-Isi minimal yang **wajib** diset (ganti `/workspace/ai-agent` dengan path proyek kamu):
+Isi minimal yang **wajib** diset (semua path di bawah `/workspace`):
 
 ```env
 # === Paths ===
-QLIB_DATA_DIR=/workspace/ai-agent/backend/data/qlib/cn_data
-QLIB_PROVIDER_URI=/workspace/ai-agent/backend/data/qlib/cn_data
+QLIB_DATA_DIR=/workspace/quantalatent/backend/data/qlib/cn_data
+QLIB_PROVIDER_URI=/workspace/quantalatent/backend/data/qlib/cn_data
 
 # === Workspace & cache (auto-derive dari lokasi file jika tidak di-set) ===
-WORKSPACE_PATH=/workspace/ai-agent/backend/data/results/workspace
-PICKLE_CACHE_FOLDER_PATH_STR=/workspace/ai-agent/backend/data/results/pickle_cache
+WORKSPACE_PATH=/workspace/quantalatent/backend/data/results/workspace
+PICKLE_CACHE_FOLDER_PATH_STR=/workspace/quantalatent/backend/data/results/pickle_cache
 
 # === Data HDF5 untuk factor mining (auto-derive jika tidak di-set) ===
-FACTOR_CoSTEER_DATA_FOLDER=/workspace/ai-agent/backend/git_ignore_folder/factor_implementation_source_data
-FACTOR_CoSTEER_DATA_FOLDER_DEBUG=/workspace/ai-agent/backend/git_ignore_folder/factor_implementation_source_data_debug
+FACTOR_CoSTEER_DATA_FOLDER=/workspace/quantalatent/backend/git_ignore_folder/factor_implementation_source_data
+FACTOR_CoSTEER_DATA_FOLDER_DEBUG=/workspace/quantalatent/backend/git_ignore_folder/factor_implementation_source_data_debug
 
-# === HuggingFace ===
+# === HuggingFace (cache otomatis ke /workspace/.cache/huggingface via HF_HOME) ===
 HF_TOKEN=hf_...
 
 # === LLM API (opsional jika latent_enabled=true) ===
@@ -130,16 +192,19 @@ REASONING_MODEL=your-model-name
 
 ## 5. Download Data Qlib + HDF5
 
-> Semua perintah di bagian ini dijalankan dari `/workspace/ai-agent/backend/`. Folder `backend/data/`, `backend/hf_data/`, dan `backend/git_ignore_folder/` di-ignore oleh git (lihat `.gitignore`).
+> Semua perintah di bagian ini dijalankan dari `/workspace/quantalatent/backend/`. Folder `backend/data/`, `backend/hf_data/`, dan `backend/git_ignore_folder/` di-ignore oleh git (lihat `.gitignore`).
 
 ### 5a. Download dataset dari HuggingFace
 
 ```bash
+source /workspace/runpod_env.sh
+source /workspace/quantalatent/.venv/bin/activate
+
 uv pip install huggingface_hub   # jika belum ada
 
-cd /workspace/ai-agent/backend
+cd /workspace/quantalatent/backend
 
-# Download semua file sekaligus
+# Download semua file sekaligus (cache otomatis ke /workspace/.cache/huggingface)
 hf download QuantaAlpha/qlib_csi300 \
   --repo-type dataset \
   --local-dir ./hf_data
@@ -148,7 +213,7 @@ hf download QuantaAlpha/qlib_csi300 \
 ### 5b. Extract dan tempatkan Qlib data
 
 ```bash
-# cwd: /workspace/ai-agent/backend
+# cwd: /workspace/quantalatent/backend
 mkdir -p data/qlib
 unzip hf_data/cn_data.zip -d data/qlib/
 # Hasil: backend/data/qlib/cn_data/ berisi calendars/, features/, instruments/
@@ -157,7 +222,7 @@ unzip hf_data/cn_data.zip -d data/qlib/
 ### 5c. Tempatkan HDF5 untuk factor mining
 
 ```bash
-# cwd: /workspace/ai-agent/backend
+# cwd: /workspace/quantalatent/backend
 mkdir -p git_ignore_folder/factor_implementation_source_data
 mkdir -p git_ignore_folder/factor_implementation_source_data_debug
 
@@ -173,7 +238,7 @@ cp hf_data/daily_pv_debug.h5 \
 ### 5d. Buat folder output
 
 ```bash
-# cwd: /workspace/ai-agent/backend
+# cwd: /workspace/quantalatent/backend
 mkdir -p data/results
 mkdir -p log
 mkdir -p debug/llm_outputs
@@ -184,8 +249,16 @@ mkdir -p debug/llm_outputs
 ## 6. Verifikasi Setup
 
 ```bash
-# Aktivasi venv
-source .venv/bin/activate
+source /workspace/runpod_env.sh
+source /workspace/quantalatent/.venv/bin/activate
+
+cd /workspace/quantalatent
+
+# Cek semua artifact ada di /workspace, BUKAN /root
+which uv          # /workspace/.local/bin/uv
+which python      # /workspace/quantalatent/.venv/bin/python
+echo $HF_HOME     # /workspace/.cache/huggingface
+echo $UV_CACHE_DIR # /workspace/.cache/uv
 
 # Cek struktur data
 ls backend/data/qlib/cn_data/          # harus ada: calendars/ features/ instruments/
@@ -204,8 +277,9 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), '| GPU:', tor
 ## 7. Jalankan Factor Mining
 
 ```bash
-cd /workspace/ai-agent
-source .venv/bin/activate
+source /workspace/runpod_env.sh
+source /workspace/quantalatent/.venv/bin/activate
+cd /workspace/quantalatent
 
 # Mode standar (latent pipeline dengan Qwen3)
 PYTHONPATH=backend python launcher.py mine \
@@ -237,8 +311,9 @@ tail -f log/mining_run.log
 ## 8. Jalankan Backtest
 
 ```bash
-cd /workspace/ai-agent
-source .venv/bin/activate
+source /workspace/runpod_env.sh
+source /workspace/quantalatent/.venv/bin/activate
+cd /workspace/quantalatent
 
 # Backtest dengan factor library hasil mining
 PYTHONPATH=backend python launcher.py backtest \
@@ -311,9 +386,21 @@ latent:
 
 ## 11. Troubleshooting
 
+### Setelah pod restart, `uv` / `.venv` / model HF "hilang"
+
+**Penyebab**: artifact tersimpan di `/root` (ephemeral), bukan `/workspace`. Cek:
+
+```bash
+ls /workspace/.local/bin/uv             # harus ada
+ls /workspace/quantalatent/.venv/bin    # harus ada
+ls /workspace/.cache/huggingface/hub    # harus ada model snapshot
+```
+
+Jika kosong, ulangi bagian [0](#0-catatan-penting-runpod--workspace-vs-root) dan [3](#3-install-dependencies-di-runpod-semuanya-ke-workspace) — pastikan `source /workspace/runpod_env.sh` dijalankan **sebelum** install apa pun.
+
 ### Pipeline stuck di `Workflow Progress: 0/5`, `nvidia-smi` 0 MiB
 
-**Gejala**: log berhenti tepat setelah `__init__ took ...s` lalu progress bar muncul tapi tidak pernah maju. `nvidia-smi` menunjukkan 0 MiB usage dan "No running processes found" padahal `python cli.py mine ...` masih berjalan.
+**Gejala**: log berhenti tepat setelah `__init__ took ...s` lalu progress bar muncul tapi tidak pernah maju. `nvidia-smi` menunjukkan 0 MiB usage dan "No running processes found" padahal `python launcher.py mine ...` masih berjalan.
 
 **Penyebab**: torch yang terinstall tidak kompatibel dengan driver NVIDIA — `torch.cuda.is_available()` mengembalikan `False`, model fallback ke CPU sehingga generate praktis terbekukan.
 
@@ -347,7 +434,7 @@ nvidia-smi -l 1
 
 ```bash
 # Pastikan PYTHONPATH sudah di-set (sesuaikan dengan path proyek kamu)
-export PYTHONPATH=/workspace/ai-agent/backend
+export PYTHONPATH=/workspace/quantalatent/backend
 # Atau jalankan selalu dari root proyek dengan prefix PYTHONPATH=backend
 PYTHONPATH=backend python launcher.py mine ...
 ```
@@ -380,40 +467,65 @@ tmux new -s mining
 # tmux attach -t mining untuk kembali
 ```
 
+### Disk `/workspace` penuh
+
+```bash
+# Cek disk usage breakdown
+du -sh /workspace/.cache/* /workspace/quantalatent/* | sort -h
+
+# Bersihkan cache uv & pip yang tidak terpakai
+uv cache prune
+rm -rf /workspace/.cache/pip/*
+
+# Bersihkan model HF lama (hati-hati, akan re-download saat dipakai lagi)
+rm -rf /workspace/.cache/huggingface/hub/models--<old-model>
+```
+
 ---
 
 ## Struktur Folder (setelah setup)
 
 ```
-/workspace/ai-agent/
-├── .env                          # konfigurasi environment (dari configs/.env.example)
-├── launcher.py                   # entry point utama
-├── configs/
-│   ├── experiment.yaml           # parameter experiment & latent pipeline
-│   ├── backtest.yaml             # parameter backtest
-│   └── .env.example              # template konfigurasi environment
-├── backend/
-│   ├── pipeline/
-│   │   ├── factor_mining.py      # orchestrator utama
-│   │   └── settings.py           # konfigurasi class pipeline
-│   ├── llm/
-│   │   └── client.py             # LocalLLMBackend (Qwen3 inference)
-│   ├── core/
-│   │   └── conf.py               # RDAgentSettings (workspace/cache paths)
-│   ├── data/                     # [git-ignored]
-│   │   ├── qlib/cn_data/         # Qlib market data (hasil unzip cn_data.zip)
-│   │   │   ├── calendars/
-│   │   │   ├── features/
-│   │   │   └── instruments/
-│   │   └── results/              # output experiment (auto-created)
-│   │       ├── workspace/        # temp workspace per coding task
-│   │       └── pickle_cache/     # cache komputasi
-│   ├── hf_data/                  # [git-ignored] cache HuggingFace dataset
-│   ├── log/                      # [git-ignored] trace logs per iterasi
-│   ├── debug/llm_outputs/        # [TRACKED] snapshot per LLM call (JSON)
-│   └── git_ignore_folder/        # [git-ignored]
-│       ├── factor_implementation_source_data/
-│       │   └── daily_pv.h5       # HDF5 price-volume data (398 MB)
-│       └── factor_implementation_source_data_debug/
-│           └── daily_pv.h5       # HDF5 debug subset (1.4 MB)
+/workspace/                              # PERSISTENT network storage
+├── runpod_env.sh                        # env vars (HF_HOME, UV_CACHE_DIR, dll)
+├── .local/bin/uv                        # binary uv (BUKAN ~/.local/bin)
+├── .cache/
+│   ├── uv/                              # uv wheel cache
+│   ├── pip/                             # pip cache (fallback)
+│   ├── huggingface/hub/                 # model & dataset cache HF
+│   └── torch/                           # torch hub cache
+└── quantalatent/                        # PROJECT ROOT
+    ├── .venv/                           # virtualenv (BUKAN ~/.venv)
+    ├── .env                             # konfigurasi environment (dari configs/.env.example)
+    ├── launcher.py                      # entry point utama
+    ├── configs/
+    │   ├── experiment.yaml              # parameter experiment & latent pipeline
+    │   ├── backtest.yaml                # parameter backtest
+    │   └── .env.example                 # template konfigurasi environment
+    ├── backend/
+    │   ├── pipeline/
+    │   │   ├── factor_mining.py         # orchestrator utama
+    │   │   └── settings.py              # konfigurasi class pipeline
+    │   ├── llm/
+    │   │   └── client.py                # LocalLLMBackend (Qwen3 inference)
+    │   ├── core/
+    │   │   └── conf.py                  # RDAgentSettings (workspace/cache paths)
+    │   ├── data/                        # [git-ignored]
+    │   │   ├── qlib/cn_data/            # Qlib market data (hasil unzip cn_data.zip)
+    │   │   │   ├── calendars/
+    │   │   │   ├── features/
+    │   │   │   └── instruments/
+    │   │   └── results/                 # output experiment (auto-created)
+    │   │       ├── workspace/           # temp workspace per coding task
+    │   │       └── pickle_cache/        # cache komputasi
+    │   ├── hf_data/                     # [git-ignored] cache HuggingFace dataset
+    │   ├── log/                         # [git-ignored] trace logs per iterasi
+    │   ├── debug/llm_outputs/           # [TRACKED] snapshot per LLM call (JSON)
+    │   └── git_ignore_folder/           # [git-ignored]
+    │       ├── factor_implementation_source_data/
+    │       │   └── daily_pv.h5          # HDF5 price-volume data (398 MB)
+    │       └── factor_implementation_source_data_debug/
+    │           └── daily_pv.h5          # HDF5 debug subset (1.4 MB)
+
+/root/                                   # EPHEMERAL — JANGAN simpan apa pun penting di sini
 ```
