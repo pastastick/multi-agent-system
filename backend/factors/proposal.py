@@ -150,7 +150,7 @@ class QlibFactorHypothesis2Experiment(FactorHypothesis2Experiment):
         scenario = trace.scen.get_scenario_all_desc()   #* deskripsi lengkap skenario
         
         #format JSON yang LLM harus ikuti untuk generate faktor
-        experiment_output_format = base_prompt_dict["factor_experiment_output_format"]
+        experiment_output_format = base_prompt_dict["experiment_output_format"]
 
         hypothesis_and_feedback = (
             (
@@ -547,7 +547,7 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
     def prepare_context(self, hypothesis: Hypothesis, trace: Trace, history_limit: int = DEFAULT_HISTORY_LIMIT) -> Tuple[dict | bool]:
         scenario = trace.scen.get_scenario_all_desc()   # all skenario dari QLIB
         
-        experiment_output_format = qa_prompt_dict["factor_experiment_output_format"]
+        experiment_output_format = qa_prompt_dict["experiment_output_format"]
         function_lib_description = qa_prompt_dict['function_lib_description']
         hypothesis_and_feedback = render_hypothesis_and_feedback(
             qa_prompt_dict, trace, history_limit
