@@ -115,13 +115,12 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # ke KV-cache tanpa generate text) per LLM call.
     # Lebih tinggi = reasoning lebih dalam, tapi lebih lambat.
     # Referensi: LatentMASMethod.latent_steps di core/latent/latent_method.py
-    latent_steps: int = 20                      # default global untuk _CoreEngine
+    latent_steps: int = 10                      # default global untuk _CoreEngine
 
     # Per-step override (None = pakai latent_steps global).
-    # Construct (formula generation) mungkin butuh lebih banyak latent steps
-    # karena harus "berpikir" lebih dalam sebelum generate ekspresi matematika.
+    # Semua agent disamakan ke 10 mengikuti hasil /try sweep.
     latent_steps_propose: Optional[int] = None
-    latent_steps_construct: Optional[int] = 30
+    latent_steps_construct: Optional[int] = None
     latent_steps_coder: Optional[int] = None
     latent_steps_feedback: Optional[int] = None
 
@@ -162,7 +161,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Diterapkan transparan di _CoreEngine sebelum setiap forward pass
     # yang menerima past_kv dari step sebelumnya.
     knn_enabled: bool = True
-    knn_percentage: float = 0.4       # fraksi token yang dipertahankan (0.0-1.0)
+    knn_percentage: float = 0.8       # fraksi token yang dipertahankan (0.0-1.0)
     knn_min_keep: int = 5             # minimum token terbaru selalu dipertahankan
     knn_strategy: str = "top"         # "top" (paling mirip), "bottom", "random"
 
