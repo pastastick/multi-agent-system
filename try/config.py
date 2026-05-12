@@ -84,4 +84,20 @@ TEST_REGISTRY: dict[str, list[str]] = {
         "output_format",        # factors/coder/eva_utils.py:273
         "final_decision",       # factors/coder/eva_utils.py:615
     ],
+    "multi_agent_kv": [
+        "chain_ablation",         # TextMAS vs LatentMAS 4-agent chain (incl. Coder)
+        "kv_probe",               # estimasi isi KV via diagnostic injection
+        "knn_sweep",              # sweep knn_percentage [0.2–1.0] untuk Construct+Coder
+        "latent_steps_sweep",     # sweep latent_steps [5, 10, 20, 30] — gunakan GPU
+        "construct_coder_format", # stress-test format N kali, ukur success rate
+    ],
+    "pair_propose_construct": [
+        "fresh_start",            # baseline: Propose tanpa seed KV → Construct
+        "mutation_seeded",        # BUG 1: Mutation live → KV → Propose → Construct
+        "feedback_chained",       # chain antar-iterasi normal: Feedback → KV → Propose → Construct
+    ],
+    "pair_construct_coder": [
+        "first_run",              # success path: Construct → parse_expression (no LLM call)
+        "retry_loop",             # BUG 2: Construct → 5x retry dengan production crop behavior
+    ],
 }
