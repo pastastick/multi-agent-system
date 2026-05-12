@@ -1,0 +1,71 @@
+# Log: retry_loop_m10_n5_20260512_141705.txt
+# Timestamp: 2026-05-12 14:17:48
+
+==============================================================================
+CONFIG  latent_steps=10  n_attempts=5  kv_baseline=3197  has_crop=True
+==============================================================================
+
+
+==============================================================================
+CONSTRUCT OUTPUT (basis untuk retry)
+==============================================================================
+{"momentum_volume_ratio": {"description": "Ratio of price momentum to volume growth for cross-sectional", "variables": {"$sym": "momentum_volume_ratio"}, "formulation": "RANK(TS_ZSCORE($close, 10) / (TS_ZSCORE($volume, 10) + 1e-8))", "expression": "RANK(TS_ZSCORE($close, 10) / (TS_ZSCORE($volume, 10) + 1e-8))"}}
+
+==============================================================================
+INITIAL EXPRESSION  valid=True
+==============================================================================
+RANK(TS_ZSCORE($close, 10) / (TS_ZSCORE($volume, 10) + 1e-8))
+
+==============================================================================
+FORMER FEEDBACK injected ke retry attempt 1
+==============================================================================
+(synthetic, initial valid)
+ValueError: NaN encountered in output at >12% of rows.
+Traceback (most recent call last):
+  File "factor.py", line 23, in calculate_factor
+    df[name] = eval(expr)
+RuntimeWarning: divide by zero encountered in true_divide.
+Output stability check failed: factor values exhibit extreme outliers.
+
+==============================================================================
+RETRY ATTEMPTS TABLE
+==============================================================================
+ # |  kv_pre | kv_post | text_len | collapse | mirror | valid | elapsed
+ 1 |    3197 |    6652 |        0 |     True |  False | False |   3.32s
+ 2 |    3197 |    6652 |        0 |     True |  False | False |   3.37s
+ 3 |    3197 |    6652 |        0 |     True |  False | False |   2.28s
+ 4 |    3197 |    6652 |        0 |     True |  False | False |   2.54s
+ 5 |    3197 |    6652 |        0 |     True |  False | False |   2.49s
+
+
+==============================================================================
+SUMMARY
+==============================================================================
+collapse: 5/5  mirror: 0/5  valid_and_different: 0/5
+
+INFINITE LOOP CONFIRMED
+
+==============================================================================
+ATTEMPT 1  text_len=0  collapse=True  mirror=False  valid=False
+==============================================================================
+
+
+==============================================================================
+ATTEMPT 2  text_len=0  collapse=True  mirror=False  valid=False
+==============================================================================
+
+
+==============================================================================
+ATTEMPT 3  text_len=0  collapse=True  mirror=False  valid=False
+==============================================================================
+
+
+==============================================================================
+ATTEMPT 4  text_len=0  collapse=True  mirror=False  valid=False
+==============================================================================
+
+
+==============================================================================
+ATTEMPT 5  text_len=0  collapse=True  mirror=False  valid=False
+==============================================================================
+

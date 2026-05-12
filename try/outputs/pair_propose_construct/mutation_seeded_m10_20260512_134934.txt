@@ -1,0 +1,105 @@
+# Log: mutation_seeded_m10_20260512_134934.txt
+# Timestamp: 2026-05-12 13:50:17
+
+==============================================================================
+SCENARIO: MUTATION-SEEDED PROPOSE+CONSTRUCT
+==============================================================================
+Propose : kv_len=2011  text_len=569  schema_ok=True  collapse=False  elapsed=0.59s
+Construct: kv_len=6690  text_len=912  schema_ok=True  collapse=False  elapsed=11.65s
+
+==============================================================================
+MUTATION SEED  kv_len=526  elapsed=1.61s
+==============================================================================
+{
+    "new_hypothesis": "Stocks with high institutional liquidity and low volatility in a rising market regime outperform over the next 5 days.",
+    "exploration_direction": "Institutional_liquidity_score and volatility regime indicators (e.g., VIX, Bollinger Bands)",
+    "orthogonality_reason": "Focuses on institutional liquidity and volatility regimes rather than short-term momentum and volume.",
+    "expected_characteristics": "Signal type: liquidity score combined with volatility indicator; time horizon: 5 days; normalization: z-scored liquidity and volatility metrics."
+}
+
+==============================================================================
+POLLUTION INDICATORS in propose output
+==============================================================================
+(none)
+
+==============================================================================
+PROPOSE PROBE OUTPUT (text_only/kv_and_text)
+==============================================================================
+{
+  "hypothesis": "Price momentum multiplied by volume growth predicts 5-day forward return.",
+  "concise_knowledge": "When volume growth is positive and momentum is strong, 5-day returns are more likely to be positive.",
+  "concise_observation": "IC = 0.035, with IR of 0.63, shows positive signal but needs more stability.",
+  "concise_justification": "Positive volume growth indicates stronger buying pressure, which reinforces price momentum.",
+  "concise_specification": "Daily momentum over 5 days, volume growth over 5 days, normalized, predicts 5-day return."
+}
+
+==============================================================================
+CONSTRUCT OUTPUT
+==============================================================================
+{
+  "Momentum_Volume_Confirm_5D": {
+    "description": "5-day momentum rank multiplied by sign of 5-day volume growth.",
+    "variables": {
+      "$sym": "Momentum_Volume_Confirm_5D"
+    },
+    "formulation": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))",
+    "expression": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"
+  },
+  "Volume_ZScore_20D": {
+    "description": "Z-score of 20-day volume growth to normalize volume effects.",
+    "variables": {
+      "$sym": "Volume_ZScore_20D"
+    },
+    "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20))",
+    "expression": "ZSCORE(TS_PCTCHANGE($volume, 20))"
+  },
+  "Momentum_ZScore_10D": {
+    "description": "Z-score of 10-day momentum to normalize momentum effects.",
+    "variables": {
+      "$sym": "Momentum_ZScore_10D"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 10))",
+    "expression": "ZSCORE(TS_MEAN($return, 10))"
+  }
+}
+
+==============================================================================
+PARSED PROPOSE JSON
+==============================================================================
+{
+  "hypothesis": "Price momentum multiplied by volume growth predicts 5-day forward return.",
+  "concise_knowledge": "When volume growth is positive and momentum is strong, 5-day returns are more likely to be positive.",
+  "concise_observation": "IC = 0.035, with IR of 0.63, shows positive signal but needs more stability.",
+  "concise_justification": "Positive volume growth indicates stronger buying pressure, which reinforces price momentum.",
+  "concise_specification": "Daily momentum over 5 days, volume growth over 5 days, normalized, predicts 5-day return."
+}
+
+==============================================================================
+PARSED CONSTRUCT JSON
+==============================================================================
+{
+  "Momentum_Volume_Confirm_5D": {
+    "description": "5-day momentum rank multiplied by sign of 5-day volume growth.",
+    "variables": {
+      "$sym": "Momentum_Volume_Confirm_5D"
+    },
+    "formulation": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))",
+    "expression": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"
+  },
+  "Volume_ZScore_20D": {
+    "description": "Z-score of 20-day volume growth to normalize volume effects.",
+    "variables": {
+      "$sym": "Volume_ZScore_20D"
+    },
+    "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20))",
+    "expression": "ZSCORE(TS_PCTCHANGE($volume, 20))"
+  },
+  "Momentum_ZScore_10D": {
+    "description": "Z-score of 10-day momentum to normalize momentum effects.",
+    "variables": {
+      "$sym": "Momentum_ZScore_10D"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 10))",
+    "expression": "ZSCORE(TS_MEAN($return, 10))"
+  }
+}

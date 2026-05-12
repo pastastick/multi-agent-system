@@ -1,0 +1,422 @@
+# Log: latent_steps_sweep_20260512_133612.txt
+# Timestamp: 2026-05-12 13:41:06
+
+==============================================================================
+CONFIG  steps=[10, 15, 20, 30, 40, 80]  directions=['momentum', 'mean_reversion', 'volatility']  temp=0.7
+==============================================================================
+
+
+==============================================================================
+dir=momentum  m=10  propose_kv=1446  construct_kv=4643  valid=True  schema=True  propose=3.93s  construct=13.04s
+==============================================================================
+{"momentum_volume_ratio": {"description": "Ratio of price momentum to volume z-score to capture conviction.", "variables": {"$sym": "momentum_volume_ratio"}, "formulation": "RANK($price_momentum_20) / RANK($volume_zscore_20)", "expression": "RANK($price_momentum_20) / RANK($volume_zscore_20)"}}
+
+==============================================================================
+dir=momentum  m=15  propose_kv=1451  construct_kv=4653  valid=True  schema=True  propose=0.8s  construct=13.68s
+==============================================================================
+{
+  "price_momentum_20": {
+    "description": "20-day price momentum to capture longer-term trends.",
+    "variables": {
+      "$sym": "price_momentum_20"
+    },
+    "formulation": "\\frac{\\text{TS_MEAN}($close, 20) - $close}{\\text{TS_MEAN}($close, 20) + 1e-8}",
+    "expression": "($close - TS_MEAN($close, 20)) / (TS_MEAN($close, 20) + 1e-8)"
+  },
+  "volume_zscore_30": {
+    "description": "Z-score of 30-day volume to normalize volume fluctuations.",
+    "variables": {
+      "$sym": "volume_zscore_30"
+    },
+    "formulation": "ZSCORE(TS_VOLUME, 30)",
+    "expression": "ZSCORE(TS_VOLUME volume, 30)"
+  },
+  "momentum_volume_product": {
+    "description": "Product of price momentum and volume z-score to capture trend conviction.",
+    "variables": {
+      "$sym": "momentum_volume_product"
+    },
+    "formulation": "($close - TS_MEAN($close, 20)) / (TS_MEAN($close, 20) + 1e-8) * ZSCORE(TS_VOLUME, 30)",
+    "expression": "($close - TS_MEAN($close, 20)) / (TS_MEAN($close, 20) + 1e-8) * ZSCORE(TS_VOLUME, 30)"
+  }
+}
+
+==============================================================================
+dir=momentum  m=20  propose_kv=1456  construct_kv=4663  valid=True  schema=True  propose=0.86s  construct=11.02s
+==============================================================================
+{
+  "PriceMomentumVolume": {
+    "description": "Combines price momentum with volume confirmation to predict forward returns.",
+    "variables": {
+      "$sym": "price_momentum_volume"
+    },
+    "formulation": "\\frac{TS_MEAN($close, 20) - $close}{TS_MEAN($volume, 20) - $volume}",
+    "expression": "($close - TS_MEAN($close, 20)) / (TS_MEAN($volume, 20) - $volume + 1e-8)"
+  },
+  "VolumeZScore": {
+    "description": "Z-score of volume to normalize and highlight volume changes.",
+    "variables": {
+      "$sym": "volume_zscore"
+    },
+    "formulation": "ZSCORE($volume, 20)",
+    "expression": "ZSCORE($volume, 20)"
+  },
+  "MomentumZScore": {
+    "description": "Z-score of price momentum to normalize and highlight momentum changes.",
+    "variables": {
+      "$sym": "momentum_zscore"
+    },
+    "formulation": "ZSCORE((TS_MEAN($close, 20) - $close), 20)",
+    "expression": "ZSCORE(($close - TS_MEAN($close, 20)), 20)"
+  }
+}
+
+==============================================================================
+dir=momentum  m=30  propose_kv=1466  construct_kv=4683  valid=True  schema=True  propose=1.17s  construct=9.55s
+==============================================================================
+{"volume_zscore_30": {"description": "Z-score of 30-day volume to normalize and highlight volume changes.", "variables": {"$sym": "volume"}, "formulation": "TS_ZSCORE($volume, 30)", "expression": "TS_ZSCORE($volume, 30)"}}
+
+==============================================================================
+dir=momentum  m=40  propose_kv=1476  construct_kv=4703  valid=True  schema=True  propose=1.73s  construct=12.41s
+==============================================================================
+{
+  "PriceMomentumVolume": {
+    "description": "Momentum derived from price multiplied by volume confirmation after Z-score normalization.",
+    "variables": {
+      "$sym": "PriceMomentumVolume"
+    },
+    "formulation": "RANK(TS_ZSCORE($close, 20) * TS_ZSCORE($volume, 20))",
+    "expression": "RANK(TS_ZSCORE($close, 20) * TS_ZSCORE($volume, 20))"
+  },
+  "VolumeMomentum": {
+    "description": "Momentum derived from volume after Z-score normalization.",
+    "variables": {
+      "$sym": "VolumeMomentum"
+    },
+    "formulation": "RANK(TS_ZSCORE($volume, 20))",
+    "expression": "RANK(TS_ZSCORE($volume, 20))"
+  },
+  "MomentumRatio": {
+    "description": "Ratio of price momentum to volume momentum after Z-score normalization.",
+    "variables": {
+      "$sym": "MomentumRatio"
+    },
+    "formulation": "TS_ZSCORE($close, 20) / TS_ZSCORE($volume, 20)",
+    "expression": "TS_ZSCORE($close, 20) / TS_ZSCORE($volume, 20)"
+  }
+}
+
+==============================================================================
+dir=momentum  m=80  propose_kv=1516  construct_kv=4783  valid=True  schema=True  propose=3.22s  construct=13.47s
+==============================================================================
+{
+  "PriceMomentumVolume": {
+    "description": "Momentum derived from price changes multiplied by volume confirmation.",
+    "variables": {
+      "$sym": "price_momentum"
+    },
+    "formulation": "$return - TS_MEAN($return, 10)",
+    "expression": "($return - TS_MEAN($return, 10)) * ZSCORE($volume, 20)"
+  },
+  "VolumeReversal": {
+    "description": "Volume reversal signal based on normalized volume changes.",
+    "variables": {
+      "$sym": "volume_reversal"
+    },
+    "formulation": "TS_PCTCHANGE($volume, 5)",
+    "expression": "ZSCORE(TS_PCTCHANGE($volume, 5), 10)"
+  },
+  "MomentumVolumeRatio": {
+    "description": "Ratio of price momentum to volume confirmation.",
+    "variables": {
+      "$sym": "momentum_volume_ratio"
+    },
+    "formulation": "($return - TS_MEAN($return, 10)) / $volume",
+    "expression": "($return - TS_MEAN($return, 10)) / (TS_MEAN($volume, 20) + 1e-8)"
+  }
+}
+
+==============================================================================
+dir=mean_reversion  m=10  propose_kv=1443  construct_kv=4640  valid=True  schema=True  propose=0.54s  construct=14.05s
+==============================================================================
+{"factor_name_1": {"description": "Z-score normalized volume growth over 20 days multiplied by 10-day price momentum.", "variables": {"$sym": "volume_growth_20d", "$sym": "price_momentum_10d"}, "formulation": "TS_ZSCORE($volume, 20) * TS_MEAN($close, 10) / $close", "expression": "TS_ZSCORE($volume, 20) * TS_MEAN($close, 10) / $close"}, "factor_name_2": {"description": "Z-score normalized 5-day return volatility multiplied by 10-day price momentum.", "variables": {"$sym": "return_volatility_5d", "$sym": "price_momentum_10d"}, "formulation": "TS_ZSCORE(TS_STD($return, 5), 20) * TS_MEAN($close, 10) / $close", "expression": "TS_ZSCORE(TS_STD($return, 5), 20) * TS_MEAN($close, 10) / $close"}, "factor_name_3": {"description": "Z-score normalized 20-day volume multiplied by 10-day price momentum.", "variables": {"$sym": "volume_20d", "$sym": "price_momentum_10d"}, "formulation": "TS_ZSCORE($volume, 20) * TS_MEAN($close, 10) / $close", "expression": "TS_ZSCORE($volume, 20) * TS_MEAN($close, 10) / $close"}}
+
+==============================================================================
+dir=mean_reversion  m=15  propose_kv=1448  construct_kv=4650  valid=True  schema=True  propose=0.7s  construct=14.27s
+==============================================================================
+{
+  "price_momentum_20": {
+    "description": "20-day price momentum to capture longer-term trends.",
+    "variables": {
+      "$sym": "price_momentum_20"
+    },
+    "formulation": "\\frac{\\text{TS\\_MEAN}($close, 20) - $close}{\\text{TS\\_MEAN}($close, 20) + 1e-8}",
+    "expression": "TS_ZSCORE($close, 20) / (TS_MEAN($close, 20) + 1e-8)"
+  },
+  "volume_zscore_30": {
+    "description": "30-day Z-score of volume to normalize volume fluctuations.",
+    "variables": {
+      "$sym": "volume_zscore_30"
+    },
+    "formulation": "ZSCORE(TS_VOL($volume, 30))",
+    "expression": "ZSCORE(TS_VOL($volume, 30))"
+  },
+  "momentum_volume_ratio": {
+    "description": "Ratio of price momentum to volume Z-score to capture conviction.",
+    "variables": {
+      "$sym": "momentum_volume_ratio"
+    },
+    "formulation": "\\frac{\\text{TS\\_MEAN}($close, 20) - $close}{\\text{TS\\_MEAN}($close, 20) + 1e-8} / \\frac{\\text{TS\\_MEAN}($volume, 30) - $volume}{\\text{TS\\_MEAN}($volume, 30) + 1e-8}",
+    "expression": "TS_ZSCORE($close, 20) / TS_ZSCORE($volume, 30)"
+  }
+}
+
+==============================================================================
+dir=mean_reversion  m=20  propose_kv=1453  construct_kv=4660  valid=True  schema=True  propose=0.89s  construct=12.93s
+==============================================================================
+{
+  "PriceMomentumVolumeZScore": {
+    "description": "Z-score normalized price momentum multiplied by Z-score normalized volume growth.",
+    "variables": {
+      "$sym": "PriceMomentumVolumeZScore"
+    },
+    "formulation": "\\frac{TS_ZSCORE($return, 10) \\times TS_ZSCORE($volume, 20)}{1e-8}",
+    "expression": "TS_ZSCORE($return, 10) * TS_ZSCORE($volume, 20)"
+  },
+  "VolumeMomentumZScore": {
+    "description": "Z-score normalized volume growth multiplied by Z-score normalized price momentum.",
+    "variables": {
+      "$sym": "VolumeMomentumZScore"
+    },
+    "formulation": "\\frac{TS_ZSCORE($volume, 20) \\times TS_ZSCORE($return, 10)}{1e-8}",
+    "expression": "TS_ZSCORE($volume, 20) * TS_ZSCORE($return, 10)"
+  },
+  "VolumeMomentumRank": {
+    "description": "Rank of Z-score normalized volume growth multiplied by Z-score normalized price momentum.",
+    "variables": {
+      "$sym": "VolumeMomentumRank"
+    },
+    "formulation": "\\frac{RANK(TS_ZSCORE($volume, 20) \\times TS_ZSCORE($return, 10))}{1e-8}",
+    "expression": "RANK(TS_ZSCORE($volume, 20) * TS_ZSCORE($return, 10))"
+  }
+}
+
+==============================================================================
+dir=mean_reversion  m=30  propose_kv=1463  construct_kv=4680  valid=True  schema=True  propose=1.22s  construct=13.28s
+==============================================================================
+{
+  "PriceMomentumVolumeZScore": {
+    "description": "Z-score normalized price momentum multiplied by Z-score normalized volume growth.",
+    "variables": {
+      "$sym": "PriceMomentumVolumeZScore"
+    },
+    "formulation": "\\text{TS\\_ZSCORE}($\\text{TS\\_MEAN}($\\text{close}, 20) - $\\text{close}$, 20) \\times \\text{TS\\_ZSCORE}($\\text{TS\\_MEAN}($\\text{volume}, 20) - $\\text{volume}$, 20)",
+    "expression": "TS_ZSCORE(TS_MEAN($close, 20) - $close, 20) * TS_ZSCORE(TS_MEAN($volume, 20) - $volume, 20)"
+  },
+  "VolumeMomentumZScore": {
+    "description": "Z-score normalized volume momentum multiplied by Z-score normalized price return.",
+    "variables": {
+      "$sym": "VolumeMomentumZScore"
+    },
+    "formulation": "\\text{TS\\_ZSCORE}($\\text{TS\\_MEAN}($\\text{volume}, 20) - $\\text{volume}$, 20) \\times \\text{TS\\_ZSCORE}($\\text{return}, 20)",
+    "expression": "TS_ZSCORE(TS_MEAN($volume, 20) - $volume, 20) * TS_ZSCORE($return, 20)"
+  }
+}
+
+==============================================================================
+dir=mean_reversion  m=40  propose_kv=1473  construct_kv=4700  valid=False  schema=False  propose=1.55s  construct=11.44s
+==============================================================================
+
+
+==============================================================================
+dir=mean_reversion  m=80  propose_kv=1513  construct_kv=4780  valid=True  schema=True  propose=2.91s  construct=10.77s
+==============================================================================
+{
+  "ZSCORE_Volume_20d": {
+    "description": "Z-score normalization of 20-day volume growth to capture relative volume strength.",
+    "variables": {
+      "$volume": "Volume growth over 20 days"
+    },
+    "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20), 20)",
+    "expression": "ZSCORE(TS_PCTCHANGE($volume, 20), 20)"
+  },
+  "TS_ZScore_Momentum_10_d": {
+    "description": "Time-series Z-score of 10-day price momentum to highlight persistent trends.",
+    "variables": {
+      "$close": "Closing price"
+    },
+    "formulation": "TS_ZSCORE((($close - DELAY($close, 10)) / $close), 10)",
+    "expression": "TS_ZSCORE((($close - DELAY($close, 10)) / $close), 10)"
+  }
+}
+
+==============================================================================
+dir=volatility  m=10  propose_kv=1441  construct_kv=4638  valid=True  schema=True  propose=0.54s  construct=12.14s
+==============================================================================
+{"MomentumZScore": {"description": "Z-score normalization of price momentum.", "variables": {"$mom": "PriceMomentum"}, "formulation": "ZSCORE($mom, 20)", "expression": "ZSCORE(($close - TS_MEAN($close, 20)) / (TS_MEAN($close, 20) + 1e-8), 20)"}}
+
+==============================================================================
+dir=volatility  m=15  propose_kv=1446  construct_kv=4648  valid=True  schema=True  propose=0.71s  construct=11.41s
+==============================================================================
+{
+  "PriceMomentumVolume": {
+    "description": "Momentum of price multiplied by z-score normalized volume.",
+    "variables": {
+      "$sym": "price_momentum * zscore_volume"
+    },
+    "formulation": "\\text{TS\\_MEAN}($close, 10) - $close",
+    "expression": "TS_MEAN($close, 10) - $close"
+  },
+  "VolumeZScore": {
+    "description": "Z-score normalization of volume over 20-day window.",
+    "variables": {
+      "$sym": "zscore_volume"
+    },
+    "formulation": "ZSCORE($volume, 20)",
+    "expression": "ZSCORE($volume, 20)"
+  },
+  "MomentumVolumeProduct": {
+    "description": "Product of price momentum and z-score normalized volume.",
+    "variables": {
+      "$sym": "momentum_volume_product"
+    },
+    "formulation": "($\\text{TS\\_MEAN}($close, 10) - $close) * ZSCORE($volume, 20)",
+    "expression": "($TS_MEAN($close, 10) - $close) * ZSCORE($volume, 20)"
+  }
+}
+
+==============================================================================
+dir=volatility  m=20  propose_kv=1451  construct_kv=4658  valid=True  schema=True  propose=0.88s  construct=20.89s
+==============================================================================
+{
+  "PriceMomentumVolume": {
+    "description": "Normalized price momentum multiplied by z-scored volume to capture conviction and trend strength.",
+    "variables": {
+      "$sym": "PriceMomentumVolume"
+    },
+    "formulation": "\\text{RANK}(\\frac{\\text{TS\\_MEAN}(\\$close, 20) - \\text{TS\\_MEAN}(\\$close, 5)}{\\text{TS\\_STD}(\\$close, 20)} ) \\times \\text{ZSCORE}(\\text{TS\\_MEAN}(\\$volume, 20))",
+    "expression": "RANK((TS_MEAN($close, 20) - TS_MEAN($close, 5)) / (TS_STD($close, 20) + 1e-8)) * ZSCORE(TS_MEAN($volume, 20))"
+  },
+  "VolatilityMomentum": {
+    "description": "Normalized volatility momentum to capture trend strength in volatility.",
+    "variables": {
+      "$sym": "VolatilityMomentum"
+    },
+    "formulation": "\\text{RANK}(\\frac{\\text{TS\\_MEAN}(\\text{TS\\_STD}(\\$close, 10), 20) - \\text{TS\\_MEAN}(\\text{TS\\_STD}(\\$close, 5), 5)}{\\text{TS\\_STD}(\\text{TS\\_STD}(\\$close, 10), 20)} )",
+    "expression": "RANK((TS_MEAN(TS_STD($close, 10), 20) - TS_MEAN(TS_STD($close, 5), 5)) / (TS_STD(TS_STD($close, 10), 20) + 1e-8))"
+  },
+  "VolumeMomentum": {
+    "description": "Normalized volume momentum to capture conviction in volume trends.",
+    "variables": {
+      "$sym": "VolumeMomentum"
+    },
+    "formulation": "\\text{RANK}(\\frac{\\text{TS\\_MEAN}(\\$volume, 20) - \\text{TS\\_MEAN}(\\$volume, 5)}{\\text{TS\\_STD}(\\$volume, 20)} )",
+    "expression": "RANK((TS_MEAN($volume, 20) - TS_MEAN($volume, 5)) / (TS_STD($volume, 20) + 1e-8))"
+  }
+}
+
+==============================================================================
+dir=volatility  m=30  propose_kv=1461  construct_kv=4678  valid=True  schema=True  propose=1.24s  construct=17.26s
+==============================================================================
+{
+  "PriceMomentumVolume": {
+    "description": "Momentum derived from price changes multiplied by volume confirmation.",
+    "variables": {
+      "$sym": "price_return"
+    },
+    "formulation": "\\frac{TS_MEAN($return, 20) - $return}{TS_MEAN($return, 20) + 1e-8} \\times \\frac{TS_MEAN($volume, 20) - $volume}{TS_MEAN($volume, 20) + 1e-8}",
+    "expression": "($return - TS_MEAN($return, 20)) / (TS_MEAN($return, 20) + 1e-8) * ($volume - TS_MEAN($volume, 20)) / (TS_MEAN($volume, 20) + 1e-8)"
+  },
+  "VolatilityMomentum": {
+    "description": "Momentum derived from price changes multiplied by volatility confirmation.",
+    "variables": {
+      "$sym": "price_return"
+    },
+    "formulation": "\\frac{TS_MEAN($return, 20) - $return}{TS_MEAN($return, 20) + 1e-8} \\times \\frac{TS_STD($return, 20) - $return}{TS_STD($return, 20) + 1e-8}",
+    "expression": "($return - TS_MEAN($return, 20)) / (TS_MEAN($return, 20) + 1e-8) * (TS_STD($return, 20) - $return) / (TS_STD($return, 20) + 1e-8)"
+  },
+  "VolumeZScore": {
+    "description": "Z-score of volume to normalize and highlight abnormal trading activity.",
+    "variables": {
+      "$sym": "volume"
+    },
+    "formulation": "ZSCORE($volume, 20)",
+    "expression": "ZSCORE($volume, 20)"
+  }
+}
+
+==============================================================================
+dir=volatility  m=40  propose_kv=1471  construct_kv=4698  valid=True  schema=True  propose=1.56s  construct=11.02s
+==============================================================================
+{
+  "volatility_momentum": {
+    "description": "Momentum of volatility measures the persistence of volatility changes.",
+    "variables": {
+      "$volatility": "Volatility of close prices"
+    },
+    "formulation": "TS_MEAN($volatility, 10) - TS_MEAN($volatility, 20)",
+    "expression": "TS_MEAN($volatility, 10) - TS_MEAN($volatility, 20)"
+  },
+  "volatility_rank": {
+    "description": "Rank of volatility indicates relative volatility intensity.",
+    "variables": {
+      "$volatility": "Volatility of close prices"
+    },
+    "formulation": "RANK(TS_ZSCORE($volatility, 20))",
+    "expression": "RANK(TS_ZSCORE($volatility, 20))"
+  },
+  "volatility_mad": {
+    "description": "Median absolute deviation of volatility measures volatility dispersion.",
+    "variables": {
+      "$volatility": "Volatility of close prices"
+    },
+    "formulation": "TS_MAD($volatility, 15)",
+    "expression": "TS_MAD($volatility, 15)"
+  }
+}
+
+==============================================================================
+dir=volatility  m=80  propose_kv=1511  construct_kv=4778  valid=True  schema=True  propose=2.9s  construct=11.56s
+==============================================================================
+{
+  "vol_vol_rank": {
+    "description": "Rank of volume standard deviation relative to volume mean for volatility signaling.",
+    "variables": {
+      "$vol": "Volume standard deviation"
+    },
+    "formulation": "RANK(TS_STD($volume, 20) / (TS_MEAN($volume, 20) + 1e-8))",
+    "expression": "RANK(TS_STD($volume, 20) / (TS_MEAN($volume, 20) + 1e-8))"
+  },
+  "vol_vol_zscore": {
+    "description": "Z-score of volume standard deviation relative to volume mean for volatility signaling.",
+    "variables": {
+      "$vol": "Volume standard deviation"
+    },
+    "formulation": "ZSCORE(TS_STD($volume, 20) / (TS_MEAN($volume, 20) + 1e-8))",
+    "expression": "ZSCORE(TS_STD($volume, 20) / (TS_MEAN($volume, 20) + 1e-8))"
+  }
+}
+
+==============================================================================
+SUMMARY TABLE
+==============================================================================
+      direction |    m | prop_kv | ctor_kv |  json | schema |  prop_s |  ctor_s |  total_s
+       momentum |   10 |    1446 |    4643 |  True |   True |   3.93s |  13.04s |   16.97s
+       momentum |   15 |    1451 |    4653 |  True |   True |   0.80s |  13.68s |   14.48s
+       momentum |   20 |    1456 |    4663 |  True |   True |   0.86s |  11.02s |   11.88s
+       momentum |   30 |    1466 |    4683 |  True |   True |   1.17s |   9.55s |   10.72s
+       momentum |   40 |    1476 |    4703 |  True |   True |   1.73s |  12.41s |   14.14s
+       momentum |   80 |    1516 |    4783 |  True |   True |   3.22s |  13.47s |   16.69s
+ mean_reversion |   10 |    1443 |    4640 |  True |   True |   0.54s |  14.05s |   14.59s
+ mean_reversion |   15 |    1448 |    4650 |  True |   True |   0.70s |  14.27s |   14.97s
+ mean_reversion |   20 |    1453 |    4660 |  True |   True |   0.89s |  12.93s |   13.82s
+ mean_reversion |   30 |    1463 |    4680 |  True |   True |   1.22s |  13.28s |   14.50s
+ mean_reversion |   40 |    1473 |    4700 | False |  False |   1.55s |  11.44s |   12.99s
+ mean_reversion |   80 |    1513 |    4780 |  True |   True |   2.91s |  10.77s |   13.68s
+     volatility |   10 |    1441 |    4638 |  True |   True |   0.54s |  12.14s |   12.68s
+     volatility |   15 |    1446 |    4648 |  True |   True |   0.71s |  11.41s |   12.12s
+     volatility |   20 |    1451 |    4658 |  True |   True |   0.88s |  20.89s |   21.77s
+     volatility |   30 |    1461 |    4678 |  True |   True |   1.24s |  17.26s |   18.50s
+     volatility |   40 |    1471 |    4698 |  True |   True |   1.56s |  11.02s |   12.58s
+     volatility |   80 |    1511 |    4778 |  True |   True |   2.90s |  11.56s |   14.46s
+

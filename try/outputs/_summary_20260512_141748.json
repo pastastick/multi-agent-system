@@ -1,0 +1,86 @@
+[
+  {
+    "group": "pair_construct_coder",
+    "case": "retry_loop_m10_n5",
+    "latent_steps": 10,
+    "n_attempts": 5,
+    "ok_format": false,
+    "elapsed_s": 22.53,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_construct_coder/retry_loop_m10_n5_20260512_141705.txt",
+    "construct_kv_baseline": 3197,
+    "initial_expr": "RANK(TS_ZSCORE($close, 10) / (TS_ZSCORE($volume, 10) + 1e-8))",
+    "initial_valid": true,
+    "n_attempts_run": 5,
+    "n_collapse": 5,
+    "n_mirror": 0,
+    "n_valid_different": 0,
+    "attempts_summary": [
+      {
+        "attempt": 1,
+        "kv_pre": 3197,
+        "kv_post": 6652,
+        "kv_growth": 3455,
+        "text_len": 0,
+        "elapsed_s": 3.32,
+        "collapse_detected": true,
+        "mirror_detected": false,
+        "new_expr": "",
+        "new_expr_valid": false,
+        "new_expr_parse_error": "no expression extracted"
+      },
+      {
+        "attempt": 2,
+        "kv_pre": 3197,
+        "kv_post": 6652,
+        "kv_growth": 3455,
+        "text_len": 0,
+        "elapsed_s": 3.37,
+        "collapse_detected": true,
+        "mirror_detected": false,
+        "new_expr": "",
+        "new_expr_valid": false,
+        "new_expr_parse_error": "no expression extracted"
+      },
+      {
+        "attempt": 3,
+        "kv_pre": 3197,
+        "kv_post": 6652,
+        "kv_growth": 3455,
+        "text_len": 0,
+        "elapsed_s": 2.28,
+        "collapse_detected": true,
+        "mirror_detected": false,
+        "new_expr": "",
+        "new_expr_valid": false,
+        "new_expr_parse_error": "no expression extracted"
+      },
+      {
+        "attempt": 4,
+        "kv_pre": 3197,
+        "kv_post": 6652,
+        "kv_growth": 3455,
+        "text_len": 0,
+        "elapsed_s": 2.54,
+        "collapse_detected": true,
+        "mirror_detected": false,
+        "new_expr": "",
+        "new_expr_valid": false,
+        "new_expr_parse_error": "no expression extracted"
+      },
+      {
+        "attempt": 5,
+        "kv_pre": 3197,
+        "kv_post": 6652,
+        "kv_growth": 3455,
+        "text_len": 0,
+        "elapsed_s": 2.49,
+        "collapse_detected": true,
+        "mirror_detected": false,
+        "new_expr": "",
+        "new_expr_valid": false,
+        "new_expr_parse_error": "no expression extracted"
+      }
+    ],
+    "parsed": null
+  }
+]

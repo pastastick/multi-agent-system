@@ -805,7 +805,7 @@ def test_latent_steps_sweep() -> dict:
       PROPOSE_DIRS    — subset key dari PROPOSE_DIRECTION_HINTS yang ingin diuji;
                         set ke None untuk memakai default (tanpa direction hint)
     """
-    STEPS_VALUES: list[int] = [10, 20, 40, 80]
+    STEPS_VALUES: list[int] = [10, 15, 20, 30, 40, 80]
     # ── Konfigurasi direction — ubah sesuai kebutuhan ─────────────────────────
     # Pilihan: "momentum", "mean_reversion", "volatility",
     #          "microstructure", "distributional", "regression", None (default)

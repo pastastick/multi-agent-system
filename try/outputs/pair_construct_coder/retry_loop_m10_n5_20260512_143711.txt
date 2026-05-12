@@ -1,0 +1,51 @@
+# Log: retry_loop_m10_n5_20260512_143711.txt
+# Timestamp: 2026-05-12 14:37:55
+
+==============================================================================
+CONFIG  latent_steps=10  n_attempts=5  kv_baseline=3197  has_crop=True
+==============================================================================
+
+
+==============================================================================
+CONSTRUCT OUTPUT (basis untuk retry)
+==============================================================================
+{"MomentumZScore": {"description": "Z-score normalization of price momentum for stability.", "variables": {"$sym": "momentum_zscore"}, "formulation": "ZSCORE(($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8))", "expression": "ZSCORE(($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8))"}}
+
+==============================================================================
+INITIAL EXPRESSION  valid=True
+==============================================================================
+ZSCORE(($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8))
+
+==============================================================================
+FORMER FEEDBACK injected ke retry attempt 1
+==============================================================================
+(synthetic, initial valid)
+ValueError: NaN encountered in output at >12% of rows.
+Traceback (most recent call last):
+  File "factor.py", line 23, in calculate_factor
+    df[name] = eval(expr)
+RuntimeWarning: divide by zero encountered in true_divide.
+Output stability check failed: factor values exhibit extreme outliers.
+
+==============================================================================
+RETRY ATTEMPTS TABLE
+==============================================================================
+ # |  kv_pre | kv_post | prim_len |  fb | text_len | collapse | mirror | valid | elapsed
+ 1 |    3197 |    6656 |        0 |   Y |       81 |    False |  False |  True |   5.21s
+
+
+==============================================================================
+SUMMARY
+==============================================================================
+collapse: 0/1  mirror: 0/1  valid_and_different: 1/1
+primary_collapse(kv_and_text): 1/1  fallback_used(text_only): 1  fallback_recovered: 1
+
+Retry succeeded
+
+==============================================================================
+ATTEMPT 1  primary_len=0  fb=Y  text_len=81  collapse=False  mirror=False  valid=True
+==============================================================================
+[primary kv_and_text text_len=0] ''
+
+[fallback text_only text_len=81 elapsed=2.42s]
+{"expr": "ZSCORE((TS_MEAN($close, 20) - $close) / (TS_MEAN($close, 20) + 1e-8))"}

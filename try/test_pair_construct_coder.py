@@ -162,7 +162,7 @@ def _build_construct_msgs(target_hypothesis: str = "") -> tuple[str, str]:
     sys_c = _jinja(
         y["hypothesis2experiment"]["system_prompt"],
         targets="factor", scenario=scen_desc,
-        experiment_output_format=y["factor_experiment_output_format"],
+        experiment_output_format=y["experiment_output_format"],
     )
     usr_c = _jinja(
         y["hypothesis2experiment"]["user_prompt"],
@@ -193,7 +193,8 @@ def _build_coder_retry_msgs(
         y["evolving_strategy_factor_implementation_v2_user"],
         factor_information_str=factor_info_str,
         former_expression=former_expression,
-        former_feedback=former_feedback,
+        execution_log=former_feedback,
+        code_comment=None,
         queried_similar_error_knowledge=[],
         error_summary_critics=None,
         similar_successful_factor_description=None,
@@ -449,10 +450,36 @@ def test_retry_loop(
             temperature=temp_schedule[min(i, 4)], top_p=0.95,
             role=f"coder_retry_a{i+1}",
         )
-        coder_text = r_coder.text or ""
-        coder_json = _extract_json(coder_text)
+        primary_text = r_coder.text or ""
+        primary_text_len = len(primary_text)
         kv_post = _kv_len(r_coder.kv_cache)
-        elapsed_a = round(time.time() - t1, 2)
+        elapsed_primary = round(time.time() - t1, 2)
+
+        # Mirror produksi: kalau kv_and_text collapse (text kosong), fallback
+        # ke text_only. Bypass latent_pass → model tidak ter-bias EOS oleh
+        # 10 latent virtual tokens di atas construct_kv besar.
+        # Lihat evolving_strategy.py:307-322.
+        fallback_used = False
+        fallback_text = ""
+        fallback_elapsed_s = None
+        if not primary_text.strip():
+            fallback_used = True
+            t_fb = time.time()
+            r_fb = backend.build_messages_and_run(
+                user_prompt=coder_usr, system_prompt=coder_sys,
+                json_mode=True, mode="text_only",
+                past_key_values=construct_kv,
+                temperature=temp_schedule[min(i, 4)], top_p=0.95,
+                role=f"coder_retry_a{i+1}_textonly",
+            )
+            fallback_text = r_fb.text or ""
+            fallback_elapsed_s = round(time.time() - t_fb, 2)
+            print(f"    [fallback text_only] text_len={len(fallback_text)}  "
+                  f"elapsed={fallback_elapsed_s}s")
+
+        coder_text = fallback_text if fallback_used else primary_text
+        coder_json = _extract_json(coder_text)
+        elapsed_a = round(elapsed_primary + (fallback_elapsed_s or 0), 2)
 
         new_expr = _extract_expr_from_coder(coder_json)
         collapse = _is_collapse(coder_text)
@@ -465,6 +492,10 @@ def test_retry_loop(
             "kv_post": kv_post,
             "kv_growth": kv_post - kv_pre,
             "text_len": len(coder_text),
+            "primary_text_len": primary_text_len,
+            "fallback_used": fallback_used,
+            "fallback_text_len": len(fallback_text) if fallback_used else None,
+            "fallback_elapsed_s": fallback_elapsed_s,
             "elapsed_s": elapsed_a,
             "collapse_detected": collapse,
             "mirror_detected": mirror,
@@ -472,10 +503,12 @@ def test_retry_loop(
             "new_expr_valid": new_valid,
             "new_expr_parse_error": new_err if not new_valid else None,
             "coder_text": coder_text,
+            "primary_text": primary_text,
         })
 
         print(f"    kv_pre={kv_pre} → kv_post={kv_post} (Δ{kv_post-kv_pre})")
-        print(f"    text_len={len(coder_text)}  collapse={collapse}  mirror={mirror}  "
+        print(f"    primary_text_len={primary_text_len}  fb={'Y' if fallback_used else 'N'}  "
+              f"text_len={len(coder_text)}  collapse={collapse}  mirror={mirror}  "
               f"new_valid={new_valid}  elapsed={elapsed_a}s")
         if new_expr:
             print(f"    new_expr: {new_expr!r}")
@@ -494,11 +527,13 @@ def test_retry_loop(
 
     # ── Tabel ringkasan ──────────────────────────────────────────────────────
     print("\n── TABEL HASIL RETRY LOOP ──")
-    header = f"{'#':>2} | {'kv_pre':>7} | {'kv_post':>7} | {'text_len':>8} | {'collapse':>8} | {'mirror':>6} | {'valid':>5} | {'elapsed':>7}"
+    header = (f"{'#':>2} | {'kv_pre':>7} | {'kv_post':>7} | {'prim_len':>8} | {'fb':>3} | "
+              f"{'text_len':>8} | {'collapse':>8} | {'mirror':>6} | {'valid':>5} | {'elapsed':>7}")
     print(header)
     print("─" * len(header))
     for a in attempts:
         print(f"{a['attempt']:>2} | {a['kv_pre']:>7} | {a['kv_post']:>7} | "
+              f"{a['primary_text_len']:>8} | {('Y' if a['fallback_used'] else 'N'):>3} | "
               f"{a['text_len']:>8} | {str(a['collapse_detected']):>8} | "
               f"{str(a['mirror_detected']):>6} | {str(a['new_expr_valid']):>5} | {a['elapsed_s']:>6.2f}s")
 
@@ -506,16 +541,27 @@ def test_retry_loop(
     n_collapse = sum(a["collapse_detected"] for a in attempts)
     n_mirror = sum(a["mirror_detected"] for a in attempts)
     n_valid_diff = sum(a["new_expr_valid"] and not a["mirror_detected"] for a in attempts)
+    n_primary_collapse = sum(a["primary_text_len"] == 0 for a in attempts)
+    n_fb_used = sum(a["fallback_used"] for a in attempts)
+    n_fb_recovered = sum(
+        a["fallback_used"] and (a["fallback_text_len"] or 0) > 0 for a in attempts
+    )
     print(f"\n  collapse: {n_collapse}/{len(attempts)}  mirror: {n_mirror}/{len(attempts)}  "
           f"valid_and_different: {n_valid_diff}/{len(attempts)}")
+    print(f"  primary_collapse(kv_and_text): {n_primary_collapse}/{len(attempts)}  "
+          f"fallback_used(text_only): {n_fb_used}  fallback_recovered: {n_fb_recovered}")
 
     if n_valid_diff == 0:
         print("  ⚠ INFINITE LOOP CONFIRMED — tidak ada attempt yang menghasilkan expr valid+berbeda")
+    if n_primary_collapse > 0 and n_fb_recovered > 0:
+        print(f"  ℹ text_only fallback recovered {n_fb_recovered}/{n_primary_collapse} "
+              f"primary collapses — konsisten dengan production workaround")
 
     # ── Save log ─────────────────────────────────────────────────────────────
     table_str = header + "\n"
     for a in attempts:
         table_str += (f"{a['attempt']:>2} | {a['kv_pre']:>7} | {a['kv_post']:>7} | "
+                      f"{a['primary_text_len']:>8} | {('Y' if a['fallback_used'] else 'N'):>3} | "
                       f"{a['text_len']:>8} | {str(a['collapse_detected']):>8} | "
                       f"{str(a['mirror_detected']):>6} | {str(a['new_expr_valid']):>5} | "
                       f"{a['elapsed_s']:>6.2f}s\n")
@@ -531,16 +577,26 @@ def test_retry_loop(
         (f"SUMMARY", (
             f"collapse: {n_collapse}/{len(attempts)}  "
             f"mirror: {n_mirror}/{len(attempts)}  "
-            f"valid_and_different: {n_valid_diff}/{len(attempts)}\n\n"
+            f"valid_and_different: {n_valid_diff}/{len(attempts)}\n"
+            f"primary_collapse(kv_and_text): {n_primary_collapse}/{len(attempts)}  "
+            f"fallback_used(text_only): {n_fb_used}  fallback_recovered: {n_fb_recovered}\n\n"
             + ("INFINITE LOOP CONFIRMED" if n_valid_diff == 0 else "Retry succeeded")
         )),
     ]
     for a in attempts:
+        body = a["coder_text"]
+        if a["fallback_used"]:
+            body = (
+                f"[primary kv_and_text text_len={a['primary_text_len']}] {a['primary_text']!r}\n\n"
+                f"[fallback text_only text_len={a['fallback_text_len']} "
+                f"elapsed={a['fallback_elapsed_s']}s]\n{a['coder_text']}"
+            )
         sections.append((
-            f"ATTEMPT {a['attempt']}  text_len={a['text_len']}  "
+            f"ATTEMPT {a['attempt']}  primary_len={a['primary_text_len']}  "
+            f"fb={'Y' if a['fallback_used'] else 'N'}  text_len={a['text_len']}  "
             f"collapse={a['collapse_detected']}  mirror={a['mirror_detected']}  "
             f"valid={a['new_expr_valid']}",
-            a["coder_text"],
+            body,
         ))
 
     _log_save(log_path, sections)

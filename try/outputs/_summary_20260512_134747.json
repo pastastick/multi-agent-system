@@ -1,0 +1,85 @@
+[
+  {
+    "group": "pair_propose_construct",
+    "case": "fresh_start_m10",
+    "latent_steps": 10,
+    "ok_format": true,
+    "elapsed_s": 22.27,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_propose_construct/fresh_start_m10_20260512_134705.txt",
+    "metrics": {
+      "scenario": "fresh",
+      "propose_kv_len": 1485,
+      "propose_elapsed_s": 2.54,
+      "propose_text": "{\n  \"hypothesis\": \"Volume-scaled momentum predicts forward return with improved signal stability.\",\n  \"concise_knowledge\": \"When momentum is scaled by volume, the predictive power is enhanced during high-liquidity periods.\",\n  \"concise_observation\": \"The previous hypothesis showed improved IC with volume confirmation, but further refinement is needed for stability.\",\n  \"concise_justification\": \"Volume reflects market participation, so scaling momentum by volume provides a more reliable indicator of future returns during active trading periods.\",\n  \"concise_specification\": \"Volume-scaled 10-day momentum, normalized by volume, predicts 5-day forward return with enhanced stability.\"\n}",
+      "propose_json": {
+        "hypothesis": "Volume-scaled momentum predicts forward return with improved signal stability.",
+        "concise_knowledge": "When momentum is scaled by volume, the predictive power is enhanced during high-liquidity periods.",
+        "concise_observation": "The previous hypothesis showed improved IC with volume confirmation, but further refinement is needed for stability.",
+        "concise_justification": "Volume reflects market participation, so scaling momentum by volume provides a more reliable indicator of future returns during active trading periods.",
+        "concise_specification": "Volume-scaled 10-day momentum, normalized by volume, predicts 5-day forward return with enhanced stability."
+      },
+      "propose_text_len": 690,
+      "propose_text_elapsed_s": 6.19,
+      "propose_schema_ok": true,
+      "propose_collapse": false,
+      "construct_text": "{\n  \"PriceMomentumVolume\": {\n    \"description\": \"Normalized 10-day price momentum multiplied by z-scored volume growth.\",\n    \"variables\": {\n      \"$sym\": \"PriceMomentumVolume\"\n    },\n    \"formulation\": \"\\\\frac{TS_MEAN($close, 10) - $close}{TS_MEAN($close, 10) + 1e-8} \\\\times ZSCORE($volume, 10)\",\n    \"expression\": \"($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8) * ZSCORE($volume, 10)\"\n  },\n  \"VolumeMomentum\": {\n    \"description\": \"Z-scored 5-day volume growth multiplied by price momentum.\",\n    \"variables\": {\n      \"$sym\": \"VolumeMomentum\"\n    },\n    \"formulation\": \"ZSCORE(TS_PCTCHANGE($volume, 5), 10) \\\\times TS_MEAN($close, 10)\",\n    \"expression\": \"TS_ZSCORE(TS_PCTCHANGE($volume, 5), 10) * TS_MEAN($close, 10)\"\n  },\n  \"VolumeReversal\": {\n    \"description\": \"Z-scored 20-day volume change as a reversal signal.\",\n    \"variables\": {\n      \"$sym\": \"VolumeReversal\"\n    },\n    \"formulation\": \"ZSCORE(TS_PCTCHANGE($volume, 20), 10)\",\n    \"expression\": \"TS_ZSCORE(TS_PCTCHANGE($volume, 20), 10)\"\n  }\n}",
+      "construct_json": {
+        "PriceMomentumVolume": {
+          "description": "Normalized 10-day price momentum multiplied by z-scored volume growth.",
+          "variables": {
+            "$sym": "PriceMomentumVolume"
+          },
+          "formulation": "\\frac{TS_MEAN($close, 10) - $close}{TS_MEAN($close, 10) + 1e-8} \\times ZSCORE($volume, 10)",
+          "expression": "($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8) * ZSCORE($volume, 10)"
+        },
+        "VolumeMomentum": {
+          "description": "Z-scored 5-day volume growth multiplied by price momentum.",
+          "variables": {
+            "$sym": "VolumeMomentum"
+          },
+          "formulation": "ZSCORE(TS_PCTCHANGE($volume, 5), 10) \\times TS_MEAN($close, 10)",
+          "expression": "TS_ZSCORE(TS_PCTCHANGE($volume, 5), 10) * TS_MEAN($close, 10)"
+        },
+        "VolumeReversal": {
+          "description": "Z-scored 20-day volume change as a reversal signal.",
+          "variables": {
+            "$sym": "VolumeReversal"
+          },
+          "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20), 10)",
+          "expression": "TS_ZSCORE(TS_PCTCHANGE($volume, 20), 10)"
+        }
+      },
+      "construct_text_len": 1021,
+      "construct_elapsed_s": 13.54,
+      "construct_schema_ok": true,
+      "construct_collapse": false,
+      "construct_kv_len": 4682
+    },
+    "parsed": {
+      "PriceMomentumVolume": {
+        "description": "Normalized 10-day price momentum multiplied by z-scored volume growth.",
+        "variables": {
+          "$sym": "PriceMomentumVolume"
+        },
+        "formulation": "\\frac{TS_MEAN($close, 10) - $close}{TS_MEAN($close, 10) + 1e-8} \\times ZSCORE($volume, 10)",
+        "expression": "($close - TS_MEAN($close, 10)) / (TS_MEAN($close, 10) + 1e-8) * ZSCORE($volume, 10)"
+      },
+      "VolumeMomentum": {
+        "description": "Z-scored 5-day volume growth multiplied by price momentum.",
+        "variables": {
+          "$sym": "VolumeMomentum"
+        },
+        "formulation": "ZSCORE(TS_PCTCHANGE($volume, 5), 10) \\times TS_MEAN($close, 10)",
+        "expression": "TS_ZSCORE(TS_PCTCHANGE($volume, 5), 10) * TS_MEAN($close, 10)"
+      },
+      "VolumeReversal": {
+        "description": "Z-scored 20-day volume change as a reversal signal.",
+        "variables": {
+          "$sym": "VolumeReversal"
+        },
+        "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20), 10)",
+        "expression": "TS_ZSCORE(TS_PCTCHANGE($volume, 20), 10)"
+      }
+    }
+  }
+]

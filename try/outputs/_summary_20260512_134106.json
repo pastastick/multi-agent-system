@@ -1,0 +1,210 @@
+[
+  {
+    "group": "multi_agent_kv",
+    "case": "latent_steps_sweep",
+    "ok_format": true,
+    "elapsed_s": 261.54,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/multi_agent_kv/latent_steps_sweep_20260512_133612.txt",
+    "table": [
+      {
+        "direction": "momentum",
+        "latent_steps": 10,
+        "propose_kv_len": 1446,
+        "construct_kv_len": 4643,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 3.93,
+        "construct_elapsed_s": 13.04,
+        "total_elapsed_s": 16.97
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 15,
+        "propose_kv_len": 1451,
+        "construct_kv_len": 4653,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.8,
+        "construct_elapsed_s": 13.68,
+        "total_elapsed_s": 14.48
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 20,
+        "propose_kv_len": 1456,
+        "construct_kv_len": 4663,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.86,
+        "construct_elapsed_s": 11.02,
+        "total_elapsed_s": 11.879999999999999
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 30,
+        "propose_kv_len": 1466,
+        "construct_kv_len": 4683,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.17,
+        "construct_elapsed_s": 9.55,
+        "total_elapsed_s": 10.72
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 40,
+        "propose_kv_len": 1476,
+        "construct_kv_len": 4703,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.73,
+        "construct_elapsed_s": 12.41,
+        "total_elapsed_s": 14.14
+      },
+      {
+        "direction": "momentum",
+        "latent_steps": 80,
+        "propose_kv_len": 1516,
+        "construct_kv_len": 4783,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 3.22,
+        "construct_elapsed_s": 13.47,
+        "total_elapsed_s": 16.69
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 10,
+        "propose_kv_len": 1443,
+        "construct_kv_len": 4640,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.54,
+        "construct_elapsed_s": 14.05,
+        "total_elapsed_s": 14.59
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 15,
+        "propose_kv_len": 1448,
+        "construct_kv_len": 4650,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.7,
+        "construct_elapsed_s": 14.27,
+        "total_elapsed_s": 14.969999999999999
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 20,
+        "propose_kv_len": 1453,
+        "construct_kv_len": 4660,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.89,
+        "construct_elapsed_s": 12.93,
+        "total_elapsed_s": 13.82
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 30,
+        "propose_kv_len": 1463,
+        "construct_kv_len": 4680,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.22,
+        "construct_elapsed_s": 13.28,
+        "total_elapsed_s": 14.5
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 40,
+        "propose_kv_len": 1473,
+        "construct_kv_len": 4700,
+        "valid_json": false,
+        "correct_schema": false,
+        "propose_elapsed_s": 1.55,
+        "construct_elapsed_s": 11.44,
+        "total_elapsed_s": 12.99
+      },
+      {
+        "direction": "mean_reversion",
+        "latent_steps": 80,
+        "propose_kv_len": 1513,
+        "construct_kv_len": 4780,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 2.91,
+        "construct_elapsed_s": 10.77,
+        "total_elapsed_s": 13.68
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 10,
+        "propose_kv_len": 1441,
+        "construct_kv_len": 4638,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.54,
+        "construct_elapsed_s": 12.14,
+        "total_elapsed_s": 12.68
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 15,
+        "propose_kv_len": 1446,
+        "construct_kv_len": 4648,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.71,
+        "construct_elapsed_s": 11.41,
+        "total_elapsed_s": 12.120000000000001
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 20,
+        "propose_kv_len": 1451,
+        "construct_kv_len": 4658,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 0.88,
+        "construct_elapsed_s": 20.89,
+        "total_elapsed_s": 21.77
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 30,
+        "propose_kv_len": 1461,
+        "construct_kv_len": 4678,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.24,
+        "construct_elapsed_s": 17.26,
+        "total_elapsed_s": 18.5
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 40,
+        "propose_kv_len": 1471,
+        "construct_kv_len": 4698,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 1.56,
+        "construct_elapsed_s": 11.02,
+        "total_elapsed_s": 12.58
+      },
+      {
+        "direction": "volatility",
+        "latent_steps": 80,
+        "propose_kv_len": 1511,
+        "construct_kv_len": 4778,
+        "valid_json": true,
+        "correct_schema": true,
+        "propose_elapsed_s": 2.9,
+        "construct_elapsed_s": 11.56,
+        "total_elapsed_s": 14.46
+      }
+    ],
+    "parsed": null
+  }
+]

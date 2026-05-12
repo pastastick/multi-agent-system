@@ -1,0 +1,33 @@
+[
+  {
+    "group": "pair_construct_coder",
+    "case": "first_run_m10",
+    "latent_steps": 10,
+    "ok_format": true,
+    "elapsed_s": 11.48,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_construct_coder/first_run_m10_20260512_135651.txt",
+    "construct_json": {
+      "VolumeMomentumZScore": {
+        "description": "Z-score normalized volume growth combined with 5-day price momentum for forward return prediction.",
+        "variables": {
+          "$sym": "VolumeMomentumZScore"
+        },
+        "formulation": "TS_MEAN($volume, 10) - $volume",
+        "expression": "ZSCORE(($volume - TS_MEAN($volume, 10)) / (TS_MEAN($volume, 10) + 1e-8), 10) * TS_MEAN($close, 5)"
+      }
+    },
+    "expression": "ZSCORE(($volume - TS_MEAN($volume, 10)) / (TS_MEAN($volume, 10) + 1e-8), 10) * TS_MEAN($close, 5)",
+    "expr_valid": true,
+    "parse_error": null,
+    "parsed": {
+      "VolumeMomentumZScore": {
+        "description": "Z-score normalized volume growth combined with 5-day price momentum for forward return prediction.",
+        "variables": {
+          "$sym": "VolumeMomentumZScore"
+        },
+        "formulation": "TS_MEAN($volume, 10) - $volume",
+        "expression": "ZSCORE(($volume - TS_MEAN($volume, 10)) / (TS_MEAN($volume, 10) + 1e-8), 10) * TS_MEAN($close, 5)"
+      }
+    }
+  }
+]

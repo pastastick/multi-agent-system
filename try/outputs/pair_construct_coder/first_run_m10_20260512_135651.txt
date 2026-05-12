@@ -1,0 +1,22 @@
+# Log: first_run_m10_20260512_135651.txt
+# Timestamp: 2026-05-12 13:57:20
+
+==============================================================================
+FIRST-RUN PATH  construct_elapsed=11.48s  expr_valid=True
+==============================================================================
+
+
+==============================================================================
+CONSTRUCT OUTPUT
+==============================================================================
+{"VolumeMomentumZScore": {"description": "Z-score normalized volume growth combined with 5-day price momentum for forward return prediction.", "variables": {"$sym": "VolumeMomentumZScore"}, "formulation": "TS_MEAN($volume, 10) - $volume", "expression": "ZSCORE(($volume - TS_MEAN($volume, 10)) / (TS_MEAN($volume, 10) + 1e-8), 10) * TS_MEAN($close, 5)"}}
+
+==============================================================================
+EXTRACTED EXPRESSION
+==============================================================================
+ZSCORE(($volume - TS_MEAN($volume, 10)) / (TS_MEAN($volume, 10) + 1e-8), 10) * TS_MEAN($close, 5)
+
+==============================================================================
+PARSE RESULT
+==============================================================================
+VALID — production would render template directly (no coder LLM call)
