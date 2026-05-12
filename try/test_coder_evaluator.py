@@ -83,6 +83,8 @@ def test_coder_retry():
         factor_information_str=fx.FACTOR_TASK.get_task_description(),
         former_expression=fx.FORMER_EXPRESSION,
         former_feedback=fx.FORMER_FEEDBACK,
+        execution_log=fx.EXECUTION_FEEDBACK_FAIL,
+        code_comment=None,
         queried_similar_error_knowledge=[],
         error_summary_critics=None,
         similar_successful_factor_description=None,

@@ -52,6 +52,36 @@ def _jinja(template: str, **kw) -> str:
     return Environment(undefined=StrictUndefined).from_string(template).render(**kw)
 
 
+# Direction hints untuk Propose — berdasarkan fungsi yang tersedia di function_lib.
+# Setiap value menggantikan `factor_hypothesis_specification` di system prompt.
+PROPOSE_DIRECTION_HINTS: dict[str, str] = {
+    "momentum": (
+        "Focus: price/return momentum — exploit trend continuation after sustained directional moves.\n"
+        "Prefer: DELTA, EMA, WMA, MACD, DECAYLINEAR, TS_MEAN on $close or $vwap."
+    ),
+    "mean_reversion": (
+        "Focus: mean-reversion — short-term overreaction that snaps back to fair value.\n"
+        "Prefer: TS_ZSCORE, ZSCORE, BB_UPPER/BB_LOWER, PERCENTILE, TS_RANK on price deviation."
+    ),
+    "volatility": (
+        "Focus: volatility regime — vol clustering, vol-of-vol, or risk-on/off signals.\n"
+        "Prefer: TS_STD, TS_VAR, TS_MAD, BB bands on $close or return series."
+    ),
+    "microstructure": (
+        "Focus: microstructure — intraday price efficiency signals using OHLCV proxies.\n"
+        "Prefer: HIGHDAY, LOWDAY, TS_ARGMAX, TS_ARGMIN, PERCENTILE on $high/$low/$open/$close."
+    ),
+    "distributional": (
+        "Focus: distributional shape — skewness/kurtosis as sentiment or crash-risk proxy.\n"
+        "Prefer: TS_SKEW, TS_KURT, TS_QUANTILE, TS_MAD on return or volume series."
+    ),
+    "regression": (
+        "Focus: regression-based alpha — residual returns unexplained by a market factor.\n"
+        "Prefer: REGBETA, REGRESI, TS_CORR, TS_COVARIANCE with $close or $volume as reference."
+    ),
+}
+
+
 def _factors() -> dict:
     return load_yaml(PROMPT_PATHS["factors_prompts"])
 
@@ -65,16 +95,17 @@ def _render_hf(trace, limit: int = 6) -> str:
     return _jinja(y["hypothesis_and_feedback"], trace=lt)
 
 
-def _build_propose_msgs() -> tuple[str, str]:
+def _build_propose_msgs(direction_hint: str | None = None) -> tuple[str, str]:
     y = _factors()
     trace = fx.TRACE
     scen_desc = trace.scen.get_scenario_all_desc(filtered_tag="hypothesis_and_experiment")
     hf = _render_hf(trace)
+    spec = direction_hint if direction_hint is not None else y["factor_hypothesis_specification"]
     sys = _jinja(
         y["hypothesis_gen"]["system_prompt"],
         targets="factor", scenario=scen_desc,
         hypothesis_output_format=y["hypothesis_output_format"],
-        hypothesis_specification=y["factor_hypothesis_specification"],
+        hypothesis_specification=spec,
     )
     usr = _jinja(
         y["hypothesis_gen"]["user_prompt"],
@@ -92,7 +123,7 @@ def _build_construct_msgs(target_hypothesis: str) -> tuple[str, str]:
     sys = _jinja(
         y["hypothesis2experiment"]["system_prompt"],
         targets="factor", scenario=scen_desc,
-        experiment_output_format=y["factor_experiment_output_format"],
+        experiment_output_format=y["experiment_output_format"],
     )
     usr = _jinja(
         y["hypothesis2experiment"]["user_prompt"],
@@ -159,6 +190,8 @@ def _build_coder_msgs(
         factor_information_str=factor_info_str,
         former_expression=former_expression,
         former_feedback=former_feedback,
+        execution_log=None,
+        code_comment=None,
         queried_similar_error_knowledge=[],
         error_summary_critics=None,
         similar_successful_factor_description=None,
@@ -760,19 +793,25 @@ def test_knn_sweep(latent_steps: int | None = None) -> dict:
 
 def test_latent_steps_sweep() -> dict:
     """
-    Sweep latent_steps: ukur trade-off antara kedalaman reasoning dan latency.
+    Sweep latent_steps × propose_direction: ukur trade-off kedalaman reasoning,
+    latency, dan pengaruh direction hint terhadap kualitas output construct.
 
-    Untuk setiap nilai latent_steps:
-      - Propose(kv_only, m=n) → Construct(kv_and_text, m=n)
+    Untuk setiap (direction, latent_steps):
+      - Propose(kv_only, direction_hint, m=n) → Construct(kv_and_text, m=n)
       - Catat: JSON validity, schema correctness, elapsed_s, kv_len
 
-    Hipotesis: lebih banyak latent steps = reasoning lebih dalam (construct
-    lebih akurat) tapi lebih lambat dan KV lebih besar (risiko OOM/truncation).
-
-    Di CPU tanpa GPU, ini akan SANGAT lambat untuk m≥20. Gunakan dry_run=True
-    untuk inspeksi prompt, atau jalankan di JarvisLabs (GPU).
+    Konfigurasi user:
+      STEPS_VALUES    — nilai latent_steps yang di-sweep
+      PROPOSE_DIRS    — subset key dari PROPOSE_DIRECTION_HINTS yang ingin diuji;
+                        set ke None untuk memakai default (tanpa direction hint)
     """
-    STEPS_VALUES = [5, 10, 20, 30]
+    STEPS_VALUES: list[int] = [10, 20, 40, 80]
+    # ── Konfigurasi direction — ubah sesuai kebutuhan ─────────────────────────
+    # Pilihan: "momentum", "mean_reversion", "volatility",
+    #          "microstructure", "distributional", "regression", None (default)
+    PROPOSE_DIRS: list[str | None] = ["momentum", "mean_reversion", "volatility"]
+    # ─────────────────────────────────────────────────────────────────────────
+
     group, case = "multi_agent_kv", "latent_steps_sweep"
     ts = time.strftime("%Y%m%d_%H%M%S")
     out_dir = CONFIG.output_dir / group
@@ -780,85 +819,95 @@ def test_latent_steps_sweep() -> dict:
     log_path = out_dir / f"{case}_{ts}.txt"
 
     print("\n" + "═" * 78)
-    print(f"▶ [{group}] {case}  steps_values={STEPS_VALUES}")
+    print(f"▶ [{group}] {case}  steps={STEPS_VALUES}  directions={PROPOSE_DIRS}")
     print("  ⚠ PERINGATAN: m≥20 sangat lambat di CPU. Gunakan GPU atau dry_run.")
     print("═" * 78)
 
     if CONFIG.dry_run:
         print("  dry_run=True: hanya menampilkan konfigurasi sweep")
-        print(f"  steps_values={STEPS_VALUES}")
+        print(f"  steps_values={STEPS_VALUES}  directions={PROPOSE_DIRS}")
+        for d in PROPOSE_DIRS:
+            hint = PROPOSE_DIRECTION_HINTS.get(d) if d else None
+            label = d or "default"
+            print(f"\n  [{label}] hint:\n    {hint or '(none — pakai factor_hypothesis_specification)'}")
         return {"group": group, "case": case, "ok_format": True,
                 "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0, "log_path": str(log_path)}
 
     backend = get_latent_backend()
     temp, top_p = 0.7, 0.95
-    prop_sys, prop_usr = _build_propose_msgs()
     ctor_sys, ctor_usr = _build_construct_msgs(target_hypothesis="")
 
     results_table: list[dict] = []
     log_sections: list[tuple[str, str]] = [
-        (f"CONFIG  steps_values={STEPS_VALUES}  temp={temp}", ""),
+        (f"CONFIG  steps={STEPS_VALUES}  directions={PROPOSE_DIRS}  temp={temp}", ""),
     ]
 
-    for m in STEPS_VALUES:
-        print(f"\n── latent_steps={m} ──")
-        t0 = time.time()
-        r_prop = backend.build_messages_and_run(
-            user_prompt=prop_usr, system_prompt=prop_sys,
-            mode="kv_only", latent_steps=m,
-            temperature=temp, top_p=top_p, role=f"propose_m{m}",
-        )
-        kv = r_prop.kv_cache
-        kv_len = _kv_len(kv)
-        elapsed_prop = round(time.time() - t0, 2)
-        print(f"  [propose] elapsed={elapsed_prop}s  kv_len={kv_len}")
+    for direction in PROPOSE_DIRS:
+        hint = PROPOSE_DIRECTION_HINTS.get(direction) if direction else None
+        dir_label = direction or "default"
+        prop_sys, prop_usr = _build_propose_msgs(direction_hint=hint)
 
-        t1 = time.time()
-        r_ctor = backend.build_messages_and_run(
-            user_prompt=ctor_usr, system_prompt=ctor_sys,
-            json_mode=True, mode="kv_and_text",
-            past_key_values=kv, latent_steps=m,
-            temperature=temp, top_p=top_p, role=f"construct_m{m}",
-        )
-        text_out = r_ctor.text or ""
-        elapsed_ctor = round(time.time() - t1, 2)
-        json_out = _extract_json(text_out)
-        schema_ok = _has_correct_schema(json_out)
-        kv_len_out = _kv_len(r_ctor.kv_cache)
-        print(f"  [construct] elapsed={elapsed_ctor}s  valid_json={json_out is not None}  schema={schema_ok}")
+        for m in STEPS_VALUES:
+            print(f"\n── direction={dir_label}  latent_steps={m} ──")
+            t0 = time.time()
+            r_prop = backend.build_messages_and_run(
+                user_prompt=prop_usr, system_prompt=prop_sys,
+                mode="kv_only", latent_steps=m,
+                temperature=temp, top_p=top_p, role=f"propose_{dir_label}_m{m}",
+            )
+            kv = r_prop.kv_cache
+            kv_len = _kv_len(kv)
+            elapsed_prop = round(time.time() - t0, 2)
+            print(f"  [propose] elapsed={elapsed_prop}s  kv_len={kv_len}")
 
-        row = {
-            "latent_steps": m,
-            "propose_kv_len": kv_len,
-            "construct_kv_len": kv_len_out,
-            "valid_json": json_out is not None,
-            "correct_schema": schema_ok,
-            "propose_elapsed_s": elapsed_prop,
-            "construct_elapsed_s": elapsed_ctor,
-            "total_elapsed_s": elapsed_prop + elapsed_ctor,
-        }
-        results_table.append(row)
-        log_sections.append((
-            f"m={m}  propose_kv={kv_len}  construct_kv={kv_len_out}  "
-            f"valid={json_out is not None}  schema={schema_ok}  "
-            f"propose={elapsed_prop}s  construct={elapsed_ctor}s",
-            text_out,
-        ))
+            t1 = time.time()
+            r_ctor = backend.build_messages_and_run(
+                user_prompt=ctor_usr, system_prompt=ctor_sys,
+                json_mode=True, mode="kv_and_text",
+                past_key_values=kv, latent_steps=m,
+                temperature=temp, top_p=top_p, role=f"construct_{dir_label}_m{m}",
+            )
+            text_out = r_ctor.text or ""
+            elapsed_ctor = round(time.time() - t1, 2)
+            json_out = _extract_json(text_out)
+            schema_ok = _has_correct_schema(json_out)
+            kv_len_out = _kv_len(r_ctor.kv_cache)
+            print(f"  [construct] elapsed={elapsed_ctor}s  valid_json={json_out is not None}  schema={schema_ok}")
+
+            row = {
+                "direction": dir_label,
+                "latent_steps": m,
+                "propose_kv_len": kv_len,
+                "construct_kv_len": kv_len_out,
+                "valid_json": json_out is not None,
+                "correct_schema": schema_ok,
+                "propose_elapsed_s": elapsed_prop,
+                "construct_elapsed_s": elapsed_ctor,
+                "total_elapsed_s": elapsed_prop + elapsed_ctor,
+            }
+            results_table.append(row)
+            log_sections.append((
+                f"dir={dir_label}  m={m}  propose_kv={kv_len}  construct_kv={kv_len_out}  "
+                f"valid={json_out is not None}  schema={schema_ok}  "
+                f"propose={elapsed_prop}s  construct={elapsed_ctor}s",
+                text_out,
+            ))
 
     # ── Tabel ringkasan ───────────────────────────────────────────────────────
-    print("\n── TABEL HASIL LATENT STEPS SWEEP ──")
-    header = f"{'m':>4} | {'prop_kv':>7} | {'ctor_kv':>7} | {'json':>5} | {'schema':>6} | {'prop_s':>7} | {'ctor_s':>7} | {'total_s':>8}"
+    print("\n── TABEL HASIL SWEEP ──")
+    header = (f"{'direction':>15} | {'m':>4} | {'prop_kv':>7} | {'ctor_kv':>7} | "
+              f"{'json':>5} | {'schema':>6} | {'prop_s':>7} | {'ctor_s':>7} | {'total_s':>8}")
     print(header)
     print("─" * len(header))
     for r in results_table:
-        print(f"{r['latent_steps']:>4} | {r['propose_kv_len']:>7} | {r['construct_kv_len']:>7} | "
-              f"{str(r['valid_json']):>5} | {str(r['correct_schema']):>6} | "
+        print(f"{r['direction']:>15} | {r['latent_steps']:>4} | {r['propose_kv_len']:>7} | "
+              f"{r['construct_kv_len']:>7} | {str(r['valid_json']):>5} | {str(r['correct_schema']):>6} | "
               f"{r['propose_elapsed_s']:>6.2f}s | {r['construct_elapsed_s']:>6.2f}s | {r['total_elapsed_s']:>7.2f}s")
 
     table_str = header + "\n"
     for r in results_table:
-        table_str += (f"{r['latent_steps']:>4} | {r['propose_kv_len']:>7} | {r['construct_kv_len']:>7} | "
-                      f"{str(r['valid_json']):>5} | {str(r['correct_schema']):>6} | "
+        table_str += (f"{r['direction']:>15} | {r['latent_steps']:>4} | {r['propose_kv_len']:>7} | "
+                      f"{r['construct_kv_len']:>7} | {str(r['valid_json']):>5} | {str(r['correct_schema']):>6} | "
                       f"{r['propose_elapsed_s']:>6.2f}s | {r['construct_elapsed_s']:>6.2f}s | {r['total_elapsed_s']:>7.2f}s\n")
 
     log_sections.append(("SUMMARY TABLE", table_str))
@@ -868,8 +917,8 @@ def test_latent_steps_sweep() -> dict:
     best = min((r for r in results_table if r["correct_schema"]),
                key=lambda r: r["total_elapsed_s"], default=None)
     if best:
-        print(f"\n  Efisiensi terbaik (benar + paling cepat): m={best['latent_steps']}  "
-              f"total={best['total_elapsed_s']:.2f}s")
+        print(f"\n  Efisiensi terbaik (benar + paling cepat): "
+              f"direction={best['direction']}  m={best['latent_steps']}  total={best['total_elapsed_s']:.2f}s")
 
     return {
         "group": group, "case": case,
