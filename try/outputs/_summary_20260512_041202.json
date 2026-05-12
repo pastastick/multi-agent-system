@@ -1,0 +1,21 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "construct",
+    "json_mode": true,
+    "ok_format": true,
+    "response": "{\"momentum_volume_signal\": {\"description\": \"A factor combining short-term price momentum with volume confirmation to predict future returns.\", \"variables\": {\"$sym\": \"momentum_volume_signal\"}, \"formulation\": \"RANK(TS_PCTCHANGE($return, 5) * TS_PCTCHANGE($volume, 20))\", \"expression\": \"RANK(TS_PCTCHANGE($return, 5) * TS_PCTCHANGE($volume, 20))\"}}",
+    "parsed": {
+      "momentum_volume_signal": {
+        "description": "A factor combining short-term price momentum with volume confirmation to predict future returns.",
+        "variables": {
+          "$sym": "momentum_volume_signal"
+        },
+        "formulation": "RANK(TS_PCTCHANGE($return, 5) * TS_PCTCHANGE($volume, 20))",
+        "expression": "RANK(TS_PCTCHANGE($return, 5) * TS_PCTCHANGE($volume, 20))"
+      }
+    },
+    "elapsed_s": 6.22,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/proposal_feedback/construct_20260512_041137.txt"
+  }
+]

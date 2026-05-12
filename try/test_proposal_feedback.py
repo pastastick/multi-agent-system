@@ -109,7 +109,7 @@ def test_construct():
         y["hypothesis2experiment"]["system_prompt"],
         targets="factor",
         scenario=scenario_desc,
-        experiment_output_format=y["factor_experiment_output_format"],
+        experiment_output_format=y["experiment_output_format"],
     )
     user_prompt = _jinja(
         y["hypothesis2experiment"]["user_prompt"],
@@ -519,7 +519,7 @@ def _build_construct_messages(target_hypothesis: str):
         y["hypothesis2experiment"]["system_prompt"],
         targets="factor",
         scenario=scenario_desc,
-        experiment_output_format=y["factor_experiment_output_format"],
+        experiment_output_format=y["experiment_output_format"],
     )
     user_prompt = _jinja(
         y["hypothesis2experiment"]["user_prompt"],

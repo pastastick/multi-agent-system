@@ -1,0 +1,18 @@
+[
+  {
+    "group": "proposal_feedback",
+    "case": "propose",
+    "json_mode": true,
+    "ok_format": true,
+    "response": "{\n  \"hypothesis\": \"Price momentum multiplied by volume Z-score predicts 5-day forward return.\",\n  \"concise_knowledge\": \"When price momentum is positive and volume Z-score is above 1, 5-day forward return is more likely to be positive.\",\n  \"concise_observation\": \"IC = 0.035 with improved baseline, but IR could be enhanced with better factor structure.\",\n  \"concise_justification\": \"Volume Z-score provides a measure of trading activity, which can indicate the strength of price momentum signals.\",\n  \"concise_specification\": \"Scope: CSI300, variables: price momentum (10-day), volume Z-score (20-day window), time horizon: 5-day forward, expected effect: positive return when both factors are above threshold.\"\n}",
+    "parsed": {
+      "hypothesis": "Price momentum multiplied by volume Z-score predicts 5-day forward return.",
+      "concise_knowledge": "When price momentum is positive and volume Z-score is above 1, 5-day forward return is more likely to be positive.",
+      "concise_observation": "IC = 0.035 with improved baseline, but IR could be enhanced with better factor structure.",
+      "concise_justification": "Volume Z-score provides a measure of trading activity, which can indicate the strength of price momentum signals.",
+      "concise_specification": "Scope: CSI300, variables: price momentum (10-day), volume Z-score (20-day window), time horizon: 5-day forward, expected effect: positive return when both factors are above threshold."
+    },
+    "elapsed_s": 10.41,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/proposal_feedback/propose_20260512_040249.txt"
+  }
+]
