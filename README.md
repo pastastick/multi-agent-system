@@ -66,7 +66,7 @@ source /workspace/runpod_env.sh
 | Python | 3.10 | 3.10 |
 | CUDA | 11.8+ | 12.1+ |
 
-> **Catatan model**: `Qwen3-14B` butuh ~28 GB VRAM (float16). Untuk 4090 24 GB, gunakan `Qwen3-4B` (~8 GB VRAM). Lihat bagian [Ganti Model](#5-ganti-model-untuk-vram-terbatas).
+> **Catatan model**: `Qwen3-14B` butuh ~28 GB VRAM (float16). Untuk 4090 24 GB, gunakan `Qwen3-4B` (~8 GB VRAM). Lihat bagian [Ganti Model](#9-ganti-model-untuk-vram-terbatas).
 
 > **Volume disk = network storage RunPod**, mount otomatis di `/workspace`. Pastikan ukurannya cukup untuk: model HF (~8 GB Qwen3-4B atau ~28 GB Qwen3-14B) + dataset Qlib (~3 GB) + venv (~10 GB) + cache.
 
@@ -104,6 +104,11 @@ curl -LsSf https://astral.sh/uv/install.sh | \
 # Verifikasi uv terinstall di /workspace
 which uv   # harus: /workspace/.local/bin/uv
 
+# Install pip ke venv SEBELUM uv sync
+# (beberapa library seperti vllm collect_env & numba memanggil `python -m pip`
+# saat runtime — tanpa ini muncul "No module named pip" dan proses gagal)
+uv pip install pip
+
 # Buat venv di /workspace/quantalatent/.venv dan install semua deps
 uv sync
 
@@ -115,6 +120,8 @@ which python   # harus: /workspace/quantalatent/.venv/bin/python
 ```
 
 > Karena `XDG_*` dan `UV_CACHE_DIR` sudah diarahkan ke `/workspace/.cache`, semua wheel cache, python interpreter, dan tool uv tidak akan menyentuh `/root`.
+
+> `pip` sudah disertakan di `pyproject.toml` sebagai dependency, jadi `uv sync` otomatis menginstallnya. Perintah `uv pip install pip` di atas adalah safeguard untuk menghindari error di langkah berikutnya sebelum `uv sync` selesai pertama kali.
 
 ### 3a. Pastikan torch cocok dengan driver CUDA
 
@@ -260,6 +267,9 @@ which python      # /workspace/quantalatent/.venv/bin/python
 echo $HF_HOME     # /workspace/.cache/huggingface
 echo $UV_CACHE_DIR # /workspace/.cache/uv
 
+# Cek pip tersedia di venv (penting untuk runtime diagnostics)
+python -m pip --version
+
 # Cek struktur data
 ls backend/data/qlib/cn_data/          # harus ada: calendars/ features/ instruments/
 ls backend/git_ignore_folder/factor_implementation_source_data/  # harus ada: daily_pv.h5
@@ -290,6 +300,12 @@ PYTHONPATH=backend python launcher.py mine \
 PYTHONPATH=backend python launcher.py mine \
   --direction "microstructure alpha from bid-ask spread" \
   --config_path configs/experiment.yaml
+
+# Mode teks-only (tanpa latent, gunakan API eksternal)
+PYTHONPATH=backend python launcher.py mine \
+  --direction "price-volume momentum factor" \
+  --config_path configs/experiment.yaml \
+  --text_only
 ```
 
 Progress disimpan di `log/` dan `data/results/`. Factor library tersimpan di `all_factors_library*.json`.
@@ -345,7 +361,7 @@ latent:
   enabled: true
   model_name: "Qwen/Qwen3-4B"   # ganti dari Qwen3-14B ke 4B
   device: "cuda"
-  steps: 2
+  steps: 10
   max_new_tokens: 1024           # kurangi untuk hemat VRAM
   kv_max_tokens: 1024            # kurangi untuk hemat VRAM
 ```
@@ -379,8 +395,19 @@ planning:
 latent:
   enabled: true         # true = gunakan local Qwen3, false = gunakan API eksternal
   model_name: "Qwen/Qwen3-4B"
+  steps: 10             # latent reasoning steps (hasil sweep: 10 optimal)
+  steps_construct: null # null = pakai global steps (sweep menunjukkan uniform lebih baik)
   kv_max_tokens: 2048   # kurangi jika OOM
+  knn_percentage: 0.8   # fraksi KV token yang dipertahankan (hasil sweep: 0.8 optimal)
 ```
+
+### Hasil tuning dari lapangan (`/try` sweep)
+
+| Parameter | Nilai Lama | Nilai Sekarang | Alasan |
+|---|---|---|---|
+| `latent.steps` | 20 | **10** | Lebih cepat, kualitas setara |
+| `latent.steps_construct` | 30 | **null** (= 10) | Uniform steps lebih stabil |
+| `latent.knn_percentage` | 0.4 | **0.8** | Lebih banyak KV token = konteks lebih lengkap |
 
 ---
 
@@ -415,7 +442,9 @@ Kalau `cuda: False` dan versi torch (misal `cu130`) lebih tinggi dari yang diduk
 
 ### Pesan `No module named pip` di stderr
 
-Bising tidak fatal. Berasal dari library pihak ketiga (vllm `collect_env`, numba `sysinfo`) yang shell-out memanggil `python -m pip list` untuk diagnostik. Venv yang dibuat lewat `uv` memang tidak menyertakan modul `pip`. Untuk diam-kan:
+**Penyebab**: venv yang dibuat lewat `uv` secara default tidak menyertakan modul `pip`. Library pihak ketiga (vllm `collect_env`, numba `sysinfo`) memanggil `python -m pip list` untuk diagnostik saat startup sehingga error ini muncul — dan beberapa path eksekusi benar-benar gagal jika `pip` tidak ada.
+
+**Solusi**: `pip` sudah ditambahkan ke `pyproject.toml` sebagai dependency biasa, jadi `uv sync` sudah cukup. Jika error masih muncul (misalnya setelah setup manual), jalankan:
 
 ```bash
 uv pip install pip

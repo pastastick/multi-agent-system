@@ -12,6 +12,7 @@ dependencies = [
     "tiktoken>=0.12.0",
     "accelerate",
     "sentencepiece",
+    "pip",
     # Data & Analysis
     "numpy>=2.2.6",
     "pandas",
