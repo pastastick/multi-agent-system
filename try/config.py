@@ -100,4 +100,20 @@ TEST_REGISTRY: dict[str, list[str]] = {
         "first_run",              # success path: Construct → parse_expression (no LLM call)
         "retry_loop",             # BUG 2: Construct → 5x retry dengan production crop behavior
     ],
+    "evolution_rekayasa": [
+        "mutation_rekayasa_weak_momentum",        # parent: IC=0.005, no normalization
+        "mutation_rekayasa_overfit_meanrev",       # parent: IC=0.041 but MDD=31.2%
+        "mutation_rekayasa_high_ic_bad_risk",      # parent: IC=0.058 but MDD=24.1%
+        "crossover_rekayasa_momentum_x_meanrev",   # complementary: trend vs range regimes
+        "crossover_rekayasa_voladj_x_volconfirm",  # complementary: IC vs MDD profiles
+        "crossover_rekayasa_anti_complement",       # anti-complementary: near-identical parents
+    ],
+    "kv_probe_v2": (
+        [f"kv_probe_v2_{sl}_{us}_s{sh}_{et}"
+         for sl in ["full", "compact", "minimal"]
+         for us in ["detailed", "brief"]
+         for sh in [0, 2]
+         for et in ["clean", "wrong_fn"]]
+        + ["kv_probe_v2_all"]
+    ),
 }

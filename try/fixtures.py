@@ -403,3 +403,171 @@ Works but narrow; needs diversification across other dimensions.
 Unstable in high-volatility regimes; needs an additional filter.
 ---
 """
+
+
+# ═════════════════════════════════════════════════════════════════════════
+#  ── EDIT ──  EVOLUTION REKAYASA  (multiple varied parent sets)
+#  3 parents for mutation validation — each with a distinct failure mode.
+#  3 crossover groups (2 parents each): 2 complementary + 1 anti-complementary.
+# ═════════════════════════════════════════════════════════════════════════
+
+MUTATION_PARENTS: list[dict] = [
+    # Parent A: too noisy — no normalization, no volume filter
+    {
+        "label": "weak_momentum",
+        "parent_hypothesis": (
+            "Short-term price momentum (3-day) predicts next-day cross-sectional returns."
+        ),
+        "parent_factors_str": (
+            "- Momentum_Raw_3D: TS_MEAN($return, 3)\n"
+            "  Description: 3-day rolling mean of daily return, no cross-sectional normalization.\n"
+        ),
+        "parent_metrics_str": (
+            "- IC: 0.005\n"
+            "- annualized_return: 0.045\n"
+            "- information_ratio: 0.18\n"
+            "- max_drawdown: 0.185\n"
+        ),
+        "parent_feedback_str": (
+            "IC is extremely low (0.005). No cross-sectional normalization applied. "
+            "Pure 3-day price momentum is too noisy without ranking or volume confirmation. "
+            "Annualized return (4.5%) is insufficient relative to max drawdown (18.5%)."
+        ),
+    },
+    # Parent B: strong in-sample metrics but catastrophic MDD in trending regimes
+    {
+        "label": "overfit_meanrev",
+        "parent_hypothesis": (
+            "Short-term mean-reversion: stocks with strongly negative 5-day cumulative return "
+            "will recover within 2 days — fade the short-term losers cross-sectionally."
+        ),
+        "parent_factors_str": (
+            "- MeanReversion_5D: RANK(TS_MEAN($return, 5)) * (-1)\n"
+            "  Description: Cross-sectional rank of 5-day return, inverted to bet on reversal.\n"
+        ),
+        "parent_metrics_str": (
+            "- IC: 0.041\n"
+            "- annualized_return: 0.182\n"
+            "- information_ratio: 0.71\n"
+            "- max_drawdown: 0.312\n"
+        ),
+        "parent_feedback_str": (
+            "Strong in-sample IC (0.041) and IR (0.71) but catastrophic max drawdown (31.2%). "
+            "Strategy collapses during trending regimes — pure contrarian fails when momentum is persistent. "
+            "No regime filter present. Likely overfit to mean-reverting sub-periods in the test window."
+        ),
+    },
+    # Parent C: high IC but poor risk — vol-scaling amplifies liquidity risk in small-caps
+    {
+        "label": "high_ic_bad_risk",
+        "parent_hypothesis": (
+            "Volatility-adjusted momentum: normalize price momentum by realized volatility "
+            "to improve cross-sectional Sharpe — dampen signals in high-vol, risky stocks."
+        ),
+        "parent_factors_str": (
+            "- VolAdjMomentum_20D: RANK(TS_MEAN($return, 20)) / (TS_STD($return, 20) + 0.0001)\n"
+            "  Description: 20-day momentum rank scaled inversely by realized volatility.\n"
+        ),
+        "parent_metrics_str": (
+            "- IC: 0.058\n"
+            "- annualized_return: 0.093\n"
+            "- information_ratio: 0.52\n"
+            "- max_drawdown: 0.241\n"
+        ),
+        "parent_feedback_str": (
+            "IC is strong (0.058) but IR is only 0.52 — high dispersion in returns across stocks. "
+            "Max drawdown (24.1%) is too high. Vol-scaling amplifies signals in illiquid, low-vol micro-caps. "
+            "Missing liquidity filter (e.g., volume-based) and a cap on leverage from vol inversion. "
+            "No volume dimension incorporated — should add volume confirmation or turnover-based filter."
+        ),
+    },
+]
+
+
+def _fmt_crossover_parent(
+    idx: int, label: str,
+    hypothesis: str, factors_str: str,
+    metrics_str: str, feedback_str: str,
+) -> str:
+    return (
+        f"### Parent {idx}: {label}\n"
+        f"**Hypothesis**: {hypothesis}\n"
+        f"**Factors**:\n{factors_str}"
+        f"**Metrics**:\n{metrics_str}"
+        f"**Feedback**:\n{feedback_str}\n"
+        "---"
+    )
+
+
+CROSSOVER_GROUPS: list[dict] = [
+    # Group 1: Complementary — momentum (trending) × mean-reversion (ranging)
+    {
+        "label": "momentum_x_meanrev",
+        "description": "Complementary: momentum (trend) × mean-reversion (range) — regime-adaptive fusion expected",
+        "parent_summaries_str": "\n".join([
+            _fmt_crossover_parent(
+                1, "Momentum × Volume Confirmation",
+                "Stocks with positive short-term momentum AND increasing trading volume "
+                "tend to outperform over the next 5 days.",
+                "- Momentum_Volume_Confirm_5D: RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))\n"
+                "  Description: 5-day momentum rank multiplied by sign of 5-day volume growth.\n",
+                "- IC: 0.035\n- annualized_return: 0.115\n- information_ratio: 0.63\n- max_drawdown: 0.084\n",
+                "Good risk control (MDD=8.4%) but narrow — only works in trending, high-volume regimes.",
+            ),
+            _fmt_crossover_parent(
+                2, "Mean-Reversion Contrarian",
+                "Short-term mean-reversion: stocks with strongly negative 5-day return will recover.",
+                "- MeanReversion_5D: RANK(TS_MEAN($return, 5)) * (-1)\n"
+                "  Description: Contrarian fade of 5-day losers.\n",
+                "- IC: 0.041\n- annualized_return: 0.182\n- information_ratio: 0.71\n- max_drawdown: 0.312\n",
+                "Strong in ranging regime but catastrophic MDD (31.2%). Needs regime detection to suppress in trends.",
+            ),
+        ]),
+    },
+    # Group 2: Complementary — vol-adjusted (high IC) × volume-confirmed (low MDD)
+    {
+        "label": "voladj_x_volconfirm",
+        "description": "Complementary: vol-adjusted (high IC) × volume-confirmed (low MDD) — fuse for both",
+        "parent_summaries_str": "\n".join([
+            _fmt_crossover_parent(
+                1, "Volatility-Adjusted Momentum",
+                "Normalize price momentum by realized volatility to improve cross-sectional Sharpe.",
+                "- VolAdjMomentum_20D: RANK(TS_MEAN($return, 20)) / (TS_STD($return, 20) + 0.0001)\n"
+                "  Description: 20-day momentum dampened by realized volatility.\n",
+                "- IC: 0.058\n- annualized_return: 0.093\n- information_ratio: 0.52\n- max_drawdown: 0.241\n",
+                "High IC (0.058) but MDD too high (24.1%). Vol-scaling amplifies illiquid small-cap signals.",
+            ),
+            _fmt_crossover_parent(
+                2, "Momentum × Volume Confirmation",
+                "Stocks with positive short-term momentum AND increasing volume tend to outperform.",
+                "- Momentum_Volume_Confirm_5D: RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))\n"
+                "  Description: 5-day momentum rank multiplied by sign of 5-day volume growth.\n",
+                "- IC: 0.035\n- annualized_return: 0.115\n- information_ratio: 0.63\n- max_drawdown: 0.084\n",
+                "Moderate IC but excellent risk control. Volume filter naturally screens illiquid names.",
+            ),
+        ]),
+    },
+    # Group 3: Anti-complementary — nearly identical 3D and 5D raw momentum (low orthogonality)
+    {
+        "label": "anti_complement_momentum",
+        "description": "Anti-complementary: near-identical 3D vs 5D momentum — expect LLM to flag overlap",
+        "parent_summaries_str": "\n".join([
+            _fmt_crossover_parent(
+                1, "Raw Short Momentum (3-day)",
+                "3-day price momentum predicts next-day cross-sectional returns.",
+                "- Momentum_Raw_3D: TS_MEAN($return, 3)\n"
+                "  Description: 3-day rolling mean return, no normalization.\n",
+                "- IC: 0.005\n- annualized_return: 0.045\n- information_ratio: 0.18\n- max_drawdown: 0.185\n",
+                "Too noisy, no normalization. High correlation with 5D version — no new information.",
+            ),
+            _fmt_crossover_parent(
+                2, "Raw Short Momentum (5-day)",
+                "5-day price momentum predicts 2-day forward cross-sectional returns.",
+                "- Momentum_Raw_5D: TS_MEAN($return, 5)\n"
+                "  Description: 5-day rolling mean return, no normalization.\n",
+                "- IC: 0.008\n- annualized_return: 0.060\n- information_ratio: 0.22\n- max_drawdown: 0.162\n",
+                "Marginally better than 3D but same fundamental flaws. High correlation with 3D factor.",
+            ),
+        ]),
+    },
+]

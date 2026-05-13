@@ -119,6 +119,8 @@ evaluator_code_feedback_v1_user: |-
 evolving_strategy_coder_system_kv: |-
   Fix the factor expression below. You already have the full factor context (scenario, variable list, function library) in your memory from the previous construction step — do NOT restate them.
 
+  **WARNING: The expression inherited from the construction step MAY BE STRUCTURALLY INCORRECT. Do not assume it is a valid starting point. Verify the expression independently against the factor description, and rewrite it from scratch if the logic or formulation is broken — do NOT preserve a faulty structure just because it was inherited.**
+
   **Your task:** Produce a corrected expression that is structurally different from the previous attempt and correctly implements the factor described.
 
   **CRITICAL RULES (auto-reject on violation):**

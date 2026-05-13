@@ -135,6 +135,55 @@ def get_latent_backend(config: TestConfig = CONFIG, latent_steps_init: int = 10)
 # Run + logging
 # ═════════════════════════════════════════════════════════════════════════
 
+def kv_shape_report(kv, label: str = "") -> dict:
+    """
+    Return a lightweight dict describing KV-cache state at any agent boundary.
+
+    KV INSPECTION FEASIBILITY NOTE
+    ─────────────────────────────
+    What this CAN tell you:
+      - n_tokens  : total sequence length accumulated (= tokens seen so far)
+      - n_layers  : transformer depth (confirms model loaded correctly)
+      - size_mb   : GPU/CPU memory consumed by this KV
+    What this CANNOT tell you:
+      - Which tokens encode which piece of information (construct hypothesis, scenario, etc.)
+        KV stores rotated+projected key/value tensors — NOT the original token embeddings.
+        Recovering "which token" requires knowing the exact tokenization at recording time.
+
+    Practical corruption tracing across ALL agents:
+      Call kv_shape_report(r.kv_cache, label="propose") after each agent step.
+      Plot n_tokens: a sudden spike means an agent added much more context than expected
+      (e.g., construct's latent steps + prompt grew the KV by >2000 tokens unexpectedly).
+      Then run chain_ablation: remove KV from that step and measure output degradation.
+      The step whose removal causes the biggest quality drop owns the critical context.
+
+    Usage:
+        r = backend.build_messages_and_run(...)
+        info = kv_shape_report(r.kv_cache, label="construct")
+        print(info)  # {"label": "construct", "n_tokens": 2048, "n_layers": 36, "size_mb": 295.2}
+    """
+    if kv is None:
+        return {"label": label, "n_tokens": 0, "n_layers": 0, "size_mb": 0.0}
+    try:
+        from backend.llm.models import _past_length
+        n_tokens = _past_length(kv)
+    except Exception:
+        n_tokens = -1
+    try:
+        from backend.llm._shared import kv_size_bytes
+        size_mb = round(kv_size_bytes(kv) / 1024 / 1024, 1)
+    except Exception:
+        size_mb = -1.0
+    try:
+        n_layers = len(kv) if hasattr(kv, "__len__") else -1
+    except Exception:
+        n_layers = -1
+    info = {"label": label, "n_tokens": n_tokens, "n_layers": n_layers, "size_mb": size_mb}
+    if label:
+        print(f"[kv_shape] {label}: {n_tokens} tokens  {n_layers} layers  {size_mb} MB")
+    return info
+
+
 def _truncate(s: str, n: int) -> str:
     if len(s) <= n:
         return s

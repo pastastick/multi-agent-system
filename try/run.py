@@ -31,6 +31,7 @@ from .config import CONFIG, TEST_REGISTRY
 from . import (
     test_planning_evolution, test_proposal_feedback, test_coder_evaluator,
     test_multi_agent_kv, test_pair_propose_construct, test_pair_construct_coder,
+    test_evolution_rekayasa, test_kv_probe_v2,
 )
 
 
@@ -42,6 +43,8 @@ _GROUP_MODULES = {
     "multi_agent_kv": test_multi_agent_kv,
     "pair_propose_construct": test_pair_propose_construct,
     "pair_construct_coder": test_pair_construct_coder,
+    "evolution_rekayasa": test_evolution_rekayasa,
+    "kv_probe_v2": test_kv_probe_v2,
 }
 
 
