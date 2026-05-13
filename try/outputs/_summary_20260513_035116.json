@@ -1,0 +1,25 @@
+[
+  {
+    "group": "evolution_rekayasa",
+    "case": "crossover_rekayasa_momentum_x_meanrev_m10",
+    "ok_format": true,
+    "elapsed_s": 12.88,
+    "n_trials": 3,
+    "n_ok": 3,
+    "latent_steps": 10,
+    "fusion_coverages": [
+      {
+        "p1": 0.154,
+        "p2": 0.182
+      },
+      {
+        "p1": 0.154,
+        "p2": 0.182
+      },
+      {
+        "p1": 0.154,
+        "p2": 0.182
+      }
+    ]
+  }
+]

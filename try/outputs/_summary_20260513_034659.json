@@ -1,0 +1,21 @@
+[
+  {
+    "group": "evolution_rekayasa",
+    "case": "mutation_rekayasa_overfit_meanrev_m10",
+    "ok_format": true,
+    "elapsed_s": 15.42,
+    "n_trials": 3,
+    "n_ok": 3,
+    "latent_steps": 10,
+    "novelty_scores": [
+      0.893,
+      0.906,
+      0.615
+    ],
+    "weakness_ack_scores": [
+      0.107,
+      0.036,
+      0.071
+    ]
+  }
+]

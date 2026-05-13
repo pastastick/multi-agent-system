@@ -1,0 +1,72 @@
+# Test case: evolution_rekayasa/mutation_rekayasa_overfit_meanrev_m10_t3
+# Timestamp: 2026-05-13 03:46:59
+# json_mode: True
+# elapsed_s: 4.43
+# ok_format: True
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are the **Mutation agent** in the Evolution layer of an alpha factor mining pipeline.
+• Receives: ONE parent trajectory (hypothesis, factor expressions, backtest metrics, feedback) as text. Evolution is a fresh start — no latent KV chain from the parent pipeline.
+• Sends: a direction string to a new Propose agent. Propose will turn it into a fresh hypothesis.
+
+Task: diagnose the weakest step in the parent trajectory, then output an orthogonal direction that avoids that failure mode and explores factor space the parent did not reach.
+
+"Orthogonal" means the new direction:
+1. Explores a different market hypothesis (different driver, not just different parameter).
+2. Uses different data dimensions or feature types.
+3. Is grounded in different investment logic or market perspective.
+4. Should produce factors with low expected correlation to the parent's.
+
+The direction must be specific enough that Propose can generate a concrete, testable hypothesis from it.
+
+
+==============================================================================
+USER PROMPT
+==============================================================================
+<parent_trajectory>
+  <hypothesis>Short-term mean-reversion: stocks with strongly negative 5-day cumulative return will recover within 2 days — fade the short-term losers cross-sectionally.</hypothesis>
+  <factors>- MeanReversion_5D: RANK(TS_MEAN($return, 5)) * (-1)
+  Description: Cross-sectional rank of 5-day return, inverted to bet on reversal.
+</factors>
+  <metrics>- IC: 0.041
+- annualized_return: 0.182
+- information_ratio: 0.71
+- max_drawdown: 0.312
+</metrics>
+  <feedback>Strong in-sample IC (0.041) and IR (0.71) but catastrophic max drawdown (31.2%). Strategy collapses during trending regimes — pure contrarian fails when momentum is persistent. No regime filter present. Likely overfit to mean-reverting sub-periods in the test window.</feedback>
+</parent_trajectory>
+
+Generate an orthogonal new strategy direction that diagnoses why the parent failed (or partially succeeded) and points at unexplored space.
+
+Output ONLY this JSON (no markdown fences, no commentary):
+```json
+{
+    "new_hypothesis": "ONE LINE. The new market hypothesis.",
+    "exploration_direction": "ONE LINE. Data dimensions and feature types to explore.",
+    "orthogonality_reason": "ONE LINE. Why this is orthogonal to the parent.",
+    "expected_characteristics": "ONE LINE. Expected factor properties (signal type, time horizon, normalization)."
+}
+```
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+{
+    "new_hypothesis": "Trending momentum: stocks with strong positive 5-day cumulative return will continue to outperform in the next 5 days — capture the short-term momentum cross-sectionally.",
+    "exploration_direction": "Use price momentum signals derived from log returns and incorporate volatility-adjusted rankings.",
+    "orthogonality_reason": "Focuses on momentum rather than mean reversion, uses different signal types and incorporates volatility adjustment.",
+    "expected_characteristics": "Momentum signal, 5-day time horizon, volatility-adjusted ranking."
+}
+
+==============================================================================
+PARSED JSON
+==============================================================================
+{
+  "new_hypothesis": "Trending momentum: stocks with strong positive 5-day cumulative return will continue to outperform in the next 5 days — capture the short-term momentum cross-sectionally.",
+  "exploration_direction": "Use price momentum signals derived from log returns and incorporate volatility-adjusted rankings.",
+  "orthogonality_reason": "Focuses on momentum rather than mean reversion, uses different signal types and incorporates volatility adjustment.",
+  "expected_characteristics": "Momentum signal, 5-day time horizon, volatility-adjusted ranking."
+}

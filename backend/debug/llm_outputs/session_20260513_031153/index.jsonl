@@ -1,0 +1,4 @@
+{"n": 1, "ts": "2026-05-13 03:12:40", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "3aeb0fc1", "text_len": 646, "duration_s": 7.5486, "file": "0001_propose_kv_and_text.json"}
+{"n": 2, "ts": "2026-05-13 03:13:03", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "045284a3", "text_len": 573, "duration_s": 17.1054, "file": "0002_construct_kv_and_text.json"}
+{"n": 3, "ts": "2026-05-13 03:13:42", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "999b06f7", "text_len": 16, "duration_s": 1.1669, "file": "0003_coder_eval_text_only.json"}
+{"n": 4, "ts": "2026-05-13 03:13:45", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "070b0bcb", "text_len": 287, "duration_s": 3.0086, "file": "0004_coder_eval_text_only.json"}

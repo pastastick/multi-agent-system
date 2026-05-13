@@ -1,0 +1,25 @@
+# Test case: kv_probe_v2/kv_probe_v2_minimal_brief_s0_wrong_fn
+# Timestamp: 2026-05-13 04:10:26
+# json_mode: True
+# elapsed_s: 2.51
+# ok_format: False
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+Fix the factor expression. The factor context is already in your memory.
+Allowed variables: $open, $close, $high, $low, $volume, $return.
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Factor: Momentum_Volume_Confirm_5D
+Former expression: TS_SLOPE($return, 20) * RANK(TS_PCTCHANGE($volume, 5))
+Execution log: ExpressionError: Unknown function 'TS_SLOPE' at position 0. Available alternatives: TS_MEAN, EMA, DECAYLINEAR, REGBETA.
+
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+RESPONSE
+==============================================================================

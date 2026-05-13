@@ -52,12 +52,13 @@ Pemakaian:
 
 from __future__ import annotations
 
+import os
 import re
 import time
 from pathlib import Path
 from typing import Optional
 
-from .common import load_yaml, render_format, get_backend, _extract_json, _save_log, PROMPT_PATHS
+from .common import load_yaml, render_format, get_backend, get_latent_backend, _extract_json, _save_log, PROMPT_PATHS
 from .config import CONFIG
 from . import fixtures as fx
 
@@ -125,7 +126,7 @@ def _extract_parent_hyps(summaries_str: str) -> tuple[str, str]:
 
 # ─── Single trial: mutation ───────────────────────────────────────────────────
 
-def _mutation_trial(parent: dict, trial: int) -> dict:
+def _mutation_trial(parent: dict, trial: int, latent_steps: int = 0) -> dict:
     y = _evo()["mutation"]
     sys_p = y["system"]
     usr_p = render_format(
@@ -137,7 +138,7 @@ def _mutation_trial(parent: dict, trial: int) -> dict:
     )
     label = parent["label"]
     group = "evolution_rekayasa"
-    case = f"mutation_rekayasa_{label}_t{trial}"
+    case = f"mutation_rekayasa_{label}_m{latent_steps}_t{trial}"
     ts = time.strftime("%Y%m%d_%H%M%S")
     out_dir = CONFIG.output_dir / group
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -150,20 +151,22 @@ def _mutation_trial(parent: dict, trial: int) -> dict:
         "response": None, "parsed": None,
         "elapsed_s": 0.0, "log_path": str(log_path),
         "novelty_score": 0.0, "weakness_ack_score": 0.0,
+        "latent_steps": latent_steps,
     }
 
-    print(f"\n  ── mutation {label} trial={trial} ──")
+    print(f"\n  ── mutation {label} trial={trial} latent_steps={latent_steps} ──")
 
     if CONFIG.dry_run:
         result["ok_format"] = True
         _save_log(log_path, sys_p, usr_p, "(dry_run)", result)
         return result
 
-    backend = get_backend(CONFIG)
+    backend = get_latent_backend() if latent_steps > 0 else get_backend(CONFIG)
     t0 = time.time()
     try:
         response = backend.build_messages_and_create_chat_completion(
             user_prompt=usr_p, system_prompt=sys_p, json_mode=True,
+            latent_steps=latent_steps if latent_steps > 0 else None,
         )
     except Exception as exc:
         result["error"] = f"{type(exc).__name__}: {exc}"
@@ -200,14 +203,14 @@ def _mutation_trial(parent: dict, trial: int) -> dict:
 
 # ─── Single trial: crossover ──────────────────────────────────────────────────
 
-def _crossover_trial(grp: dict, trial: int) -> dict:
+def _crossover_trial(grp: dict, trial: int, latent_steps: int = 0) -> dict:
     y = _evo()["crossover"]
     sys_p = y["system"]
     usr_p = render_format(y["user"], parent_summaries=grp["parent_summaries_str"])
 
     label = grp["label"]
     group = "evolution_rekayasa"
-    case = f"crossover_rekayasa_{label}_t{trial}"
+    case = f"crossover_rekayasa_{label}_m{latent_steps}_t{trial}"
     ts = time.strftime("%Y%m%d_%H%M%S")
     out_dir = CONFIG.output_dir / group
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -220,20 +223,22 @@ def _crossover_trial(grp: dict, trial: int) -> dict:
         "response": None, "parsed": None,
         "elapsed_s": 0.0, "log_path": str(log_path),
         "fusion_coverage": None,
+        "latent_steps": latent_steps,
     }
 
-    print(f"\n  ── crossover {label} trial={trial} [{grp['description']}] ──")
+    print(f"\n  ── crossover {label} trial={trial} latent_steps={latent_steps} [{grp['description']}] ──")
 
     if CONFIG.dry_run:
         result["ok_format"] = True
         _save_log(log_path, sys_p, usr_p, "(dry_run)", result)
         return result
 
-    backend = get_backend(CONFIG)
+    backend = get_latent_backend() if latent_steps > 0 else get_backend(CONFIG)
     t0 = time.time()
     try:
         response = backend.build_messages_and_create_chat_completion(
             user_prompt=usr_p, system_prompt=sys_p, json_mode=True,
+            latent_steps=latent_steps if latent_steps > 0 else None,
         )
     except Exception as exc:
         result["error"] = f"{type(exc).__name__}: {exc}"
@@ -273,12 +278,14 @@ def _crossover_trial(grp: dict, trial: int) -> dict:
 N_TRIALS = 3
 
 
-def _run_mutation(label: str) -> dict:
+def _run_mutation(label: str, latent_steps: int | None = None) -> dict:
+    if latent_steps is None:
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
     parent = next(p for p in fx.MUTATION_PARENTS if p["label"] == label)
     print(f"\n{'═' * 70}")
-    print(f"▶ [evolution_rekayasa] mutation_rekayasa_{label}  ({N_TRIALS} trials)")
+    print(f"▶ [evolution_rekayasa] mutation_rekayasa_{label}  ({N_TRIALS} trials)  latent_steps={latent_steps}")
     print(f"{'═' * 70}")
-    trials = [_mutation_trial(parent, t) for t in range(1, N_TRIALS + 1)]
+    trials = [_mutation_trial(parent, t, latent_steps=latent_steps) for t in range(1, N_TRIALS + 1)]
     n_ok = sum(1 for r in trials if r.get("ok_format"))
     novelty = [r.get("novelty_score", 0.0) for r in trials]
     weakness = [r.get("weakness_ack_score", 0.0) for r in trials]
@@ -287,31 +294,35 @@ def _run_mutation(label: str) -> dict:
           f"novelty={novelty}  weakness_ack={weakness}  total={elapsed:.2f}s")
     return {
         "group": "evolution_rekayasa",
-        "case": f"mutation_rekayasa_{label}",
+        "case": f"mutation_rekayasa_{label}_m{latent_steps}",
         "ok_format": n_ok == N_TRIALS,
         "elapsed_s": elapsed,
         "n_trials": N_TRIALS, "n_ok": n_ok,
+        "latent_steps": latent_steps,
         "novelty_scores": novelty,
         "weakness_ack_scores": weakness,
     }
 
 
-def _run_crossover(label: str) -> dict:
+def _run_crossover(label: str, latent_steps: int | None = None) -> dict:
+    if latent_steps is None:
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
     grp = next(g for g in fx.CROSSOVER_GROUPS if g["label"] == label)
     print(f"\n{'═' * 70}")
-    print(f"▶ [evolution_rekayasa] crossover_rekayasa_{label}  ({N_TRIALS} trials)")
+    print(f"▶ [evolution_rekayasa] crossover_rekayasa_{label}  ({N_TRIALS} trials)  latent_steps={latent_steps}")
     print(f"{'═' * 70}")
-    trials = [_crossover_trial(grp, t) for t in range(1, N_TRIALS + 1)]
+    trials = [_crossover_trial(grp, t, latent_steps=latent_steps) for t in range(1, N_TRIALS + 1)]
     n_ok = sum(1 for r in trials if r.get("ok_format"))
     fcs = [r["fusion_coverage"] for r in trials if r.get("fusion_coverage")]
     elapsed = sum(r.get("elapsed_s", 0.0) for r in trials)
     print(f"\n── summary  {n_ok}/{N_TRIALS} ok  fusion_coverages={fcs}  total={elapsed:.2f}s")
     return {
         "group": "evolution_rekayasa",
-        "case": f"crossover_rekayasa_{label}",
+        "case": f"crossover_rekayasa_{label}_m{latent_steps}",
         "ok_format": n_ok == N_TRIALS,
         "elapsed_s": elapsed,
         "n_trials": N_TRIALS, "n_ok": n_ok,
+        "latent_steps": latent_steps,
         "fusion_coverages": fcs,
     }
 

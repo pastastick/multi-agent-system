@@ -1,0 +1,53 @@
+# Test case: kv_probe_v2/kv_probe_v2_minimal_detailed_s0_wrong_fn
+# Timestamp: 2026-05-13 04:10:16
+# json_mode: True
+# elapsed_s: 9.09
+# ok_format: True
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+Fix the factor expression. The factor context is already in your memory.
+Allowed variables: $open, $close, $high, $low, $volume, $return.
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+--------------Target factor information:---------------
+factor_name: Momentum_Volume_Confirm_5D
+factor_description: Cross-sectional ranking of 5-day momentum multiplied by the sign of 5-day volume growth.
+
+
+--------------Your former latest attempt:---------------
+=====Expression to the former implementation=====
+TS_SLOPE($return, 20) * RANK(TS_PCTCHANGE($volume, 5))
+
+
+=====EXECUTION LOG (fix this error):=====
+ExpressionError: Unknown function 'TS_SLOPE' at position 0. Available alternatives: TS_MEAN, EMA, DECAYLINEAR, REGBETA.
+
+
+
+
+
+
+
+
+
+
+OUTPUT INSTRUCTION: Respond with ONLY the raw JSON object on a single line. No explanation, no preamble, no analysis. Example: {"expr": "TS_STD($close, 20)"}
+
+OUTPUT INSTRUCTION: Respond with ONLY the raw JSON object on a single line. No explanation, no preamble, no analysis. Example: {"expr": "TS_STD($close, 20)"}
+
+==============================================================================
+RESPONSE
+==============================================================================
+{"expr": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"}
+
+==============================================================================
+PARSED JSON
+==============================================================================
+{
+  "expr": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"
+}

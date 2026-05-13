@@ -1,0 +1,72 @@
+# Test case: evolution_rekayasa/mutation_rekayasa_weak_momentum_m10_t1
+# Timestamp: 2026-05-13 03:42:56
+# json_mode: True
+# elapsed_s: 6.35
+# ok_format: True
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+You are the **Mutation agent** in the Evolution layer of an alpha factor mining pipeline.
+• Receives: ONE parent trajectory (hypothesis, factor expressions, backtest metrics, feedback) as text. Evolution is a fresh start — no latent KV chain from the parent pipeline.
+• Sends: a direction string to a new Propose agent. Propose will turn it into a fresh hypothesis.
+
+Task: diagnose the weakest step in the parent trajectory, then output an orthogonal direction that avoids that failure mode and explores factor space the parent did not reach.
+
+"Orthogonal" means the new direction:
+1. Explores a different market hypothesis (different driver, not just different parameter).
+2. Uses different data dimensions or feature types.
+3. Is grounded in different investment logic or market perspective.
+4. Should produce factors with low expected correlation to the parent's.
+
+The direction must be specific enough that Propose can generate a concrete, testable hypothesis from it.
+
+
+==============================================================================
+USER PROMPT
+==============================================================================
+<parent_trajectory>
+  <hypothesis>Short-term price momentum (3-day) predicts next-day cross-sectional returns.</hypothesis>
+  <factors>- Momentum_Raw_3D: TS_MEAN($return, 3)
+  Description: 3-day rolling mean of daily return, no cross-sectional normalization.
+</factors>
+  <metrics>- IC: 0.005
+- annualized_return: 0.045
+- information_ratio: 0.18
+- max_drawdown: 0.185
+</metrics>
+  <feedback>IC is extremely low (0.005). No cross-sectional normalization applied. Pure 3-day price momentum is too noisy without ranking or volume confirmation. Annualized return (4.5%) is insufficient relative to max drawdown (18.5%).</feedback>
+</parent_trajectory>
+
+Generate an orthogonal new strategy direction that diagnoses why the parent failed (or partially succeeded) and points at unexplored space.
+
+Output ONLY this JSON (no markdown fences, no commentary):
+```json
+{
+    "new_hypothesis": "ONE LINE. The new market hypothesis.",
+    "exploration_direction": "ONE LINE. Data dimensions and feature types to explore.",
+    "orthogonality_reason": "ONE LINE. Why this is orthogonal to the parent.",
+    "expected_characteristics": "ONE LINE. Expected factor properties (signal type, time horizon, normalization)."
+}
+```
+
+
+==============================================================================
+RESPONSE
+==============================================================================
+{
+    "new_hypothesis": "Short-term volume-weighted price momentum predicts next-day cross-sectional returns.",
+    "exploration_direction": "Volume-weighted returns over 3-day period with cross-sectional normalization.",
+    "orthogonality_reason": "Focuses on volume-weighted momentum and cross-sectional normalization, differing from pure price momentum.",
+    "expected_characteristics": "Volume-weighted return signal, 3-day time horizon, cross-sectional normalization applied."
+}
+
+==============================================================================
+PARSED JSON
+==============================================================================
+{
+  "new_hypothesis": "Short-term volume-weighted price momentum predicts next-day cross-sectional returns.",
+  "exploration_direction": "Volume-weighted returns over 3-day period with cross-sectional normalization.",
+  "orthogonality_reason": "Focuses on volume-weighted momentum and cross-sectional normalization, differing from pure price momentum.",
+  "expected_characteristics": "Volume-weighted return signal, 3-day time horizon, cross-sectional normalization applied."
+}

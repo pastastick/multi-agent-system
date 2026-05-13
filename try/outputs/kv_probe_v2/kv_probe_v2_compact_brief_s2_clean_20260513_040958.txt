@@ -1,0 +1,54 @@
+# Test case: kv_probe_v2/kv_probe_v2_compact_brief_s2_clean
+# Timestamp: 2026-05-13 04:10:01
+# json_mode: True
+# elapsed_s: 2.82
+# ok_format: True
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+Fix the factor expression below. You already have the full factor context (scenario, variable list, function library) in your memory from the previous construction step — do NOT restate them.
+
+**WARNING: The expression inherited from the construction step MAY BE STRUCTURALLY INCORRECT. Do not assume it is a valid starting point. Verify the expression independently against the factor description, and rewrite it from scratch if the logic or formulation is broken — do NOT preserve a faulty structure just because it was inherited.**
+
+**Your task:** Produce a corrected expression that is structurally different from the previous attempt and correctly implements the factor described.
+
+**CRITICAL RULES (auto-reject on violation):**
+1. Your new expression MUST be structurally DIFFERENT from `former_expression` — identical or trivially-renamed expressions are rejected.
+2. Read the EXECUTION LOG first — identify the exact root cause (undefined variable, wrong function name, syntax error, wrong data column, etc.), then fix THAT specifically.
+3. Prefer meaningful structural changes: swap operators (TS_STD → TS_MAD), adjust windows, change base variable, add normalization (RANK/ZSCORE).
+4. Do NOT add `+ 1e-8`, wrap with `ABS()`, or rename variables as your only fix — cosmetic changes are rejected.
+
+Allowed variables: $open, $close, $high, $low, $volume, $return.
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+<examples>
+Example 1 — fix undefined variable:
+  BAD:  TS_MEAN($price, 10)      [error: $price is not a valid column]
+  GOOD: TS_MEAN($close, 10)
+
+Example 2 — fix unknown function:
+  BAD:  ROLLING_STD($return, 20)  [error: unknown function ROLLING_STD]
+  GOOD: TS_STD($return, 20)
+</examples>
+
+Factor: Momentum_Volume_Confirm_5D
+Former expression: RANK(TS_MEAN($return, 5))
+Execution log: Execution OK. IC=0.005 — extremely low. Volume component missing: expression uses only price momentum without volume confirmation.
+
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+RESPONSE
+==============================================================================
+{"expr": "RANK(TS_MEAN($return, 5) * SIGN(TS_PCTCHANGE($volume, 5)))"}
+
+==============================================================================
+PARSED JSON
+==============================================================================
+{
+  "expr": "RANK(TS_MEAN($return, 5) * SIGN(TS_PCTCHANGE($volume, 5)))"
+}

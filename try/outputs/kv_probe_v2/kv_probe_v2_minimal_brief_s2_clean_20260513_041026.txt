@@ -1,0 +1,35 @@
+# Test case: kv_probe_v2/kv_probe_v2_minimal_brief_s2_clean
+# Timestamp: 2026-05-13 04:10:29
+# json_mode: True
+# elapsed_s: 2.63
+# ok_format: False
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+Fix the factor expression. The factor context is already in your memory.
+Allowed variables: $open, $close, $high, $low, $volume, $return.
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+<examples>
+Example 1 — fix undefined variable:
+  BAD:  TS_MEAN($price, 10)      [error: $price is not a valid column]
+  GOOD: TS_MEAN($close, 10)
+
+Example 2 — fix unknown function:
+  BAD:  ROLLING_STD($return, 20)  [error: unknown function ROLLING_STD]
+  GOOD: TS_STD($return, 20)
+</examples>
+
+Factor: Momentum_Volume_Confirm_5D
+Former expression: RANK(TS_MEAN($return, 5))
+Execution log: Execution OK. IC=0.005 — extremely low. Volume component missing: expression uses only price momentum without volume confirmation.
+
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+RESPONSE
+==============================================================================

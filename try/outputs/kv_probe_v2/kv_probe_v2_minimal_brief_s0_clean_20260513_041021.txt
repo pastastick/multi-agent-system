@@ -1,0 +1,33 @@
+# Test case: kv_probe_v2/kv_probe_v2_minimal_brief_s0_clean
+# Timestamp: 2026-05-13 04:10:24
+# json_mode: True
+# elapsed_s: 2.75
+# ok_format: True
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+Fix the factor expression. The factor context is already in your memory.
+Allowed variables: $open, $close, $high, $low, $volume, $return.
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+Factor: Momentum_Volume_Confirm_5D
+Former expression: RANK(TS_MEAN($return, 5))
+Execution log: Execution OK. IC=0.005 — extremely low. Volume component missing: expression uses only price momentum without volume confirmation.
+
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+RESPONSE
+==============================================================================
+{"expr": "RANK(TS_MEAN($return, 5)) * RANK(TS_PCTCHANGE($volume, 5))"}
+
+==============================================================================
+PARSED JSON
+==============================================================================
+{
+  "expr": "RANK(TS_MEAN($return, 5)) * RANK(TS_PCTCHANGE($volume, 5))"
+}

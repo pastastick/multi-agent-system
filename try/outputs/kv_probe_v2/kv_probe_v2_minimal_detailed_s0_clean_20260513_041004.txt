@@ -1,0 +1,45 @@
+# Test case: kv_probe_v2/kv_probe_v2_minimal_detailed_s0_clean
+# Timestamp: 2026-05-13 04:10:07
+# json_mode: True
+# elapsed_s: 2.47
+# ok_format: False
+
+==============================================================================
+SYSTEM PROMPT
+==============================================================================
+Fix the factor expression. The factor context is already in your memory.
+Allowed variables: $open, $close, $high, $low, $volume, $return.
+Output ONLY this JSON on one line: {"expr": "YOUR_EXPRESSION"}
+
+==============================================================================
+USER PROMPT
+==============================================================================
+--------------Target factor information:---------------
+factor_name: Momentum_Volume_Confirm_5D
+factor_description: Cross-sectional ranking of 5-day momentum multiplied by the sign of 5-day volume growth.
+
+
+--------------Your former latest attempt:---------------
+=====Expression to the former implementation=====
+RANK(TS_MEAN($return, 5))
+
+
+=====EXECUTION LOG (fix this error):=====
+Execution OK. IC=0.005 — extremely low. Volume component missing: expression uses only price momentum without volume confirmation.
+
+
+
+
+
+
+
+
+
+
+OUTPUT INSTRUCTION: Respond with ONLY the raw JSON object on a single line. No explanation, no preamble, no analysis. Example: {"expr": "TS_STD($close, 20)"}
+
+OUTPUT INSTRUCTION: Respond with ONLY the raw JSON object on a single line. No explanation, no preamble, no analysis. Example: {"expr": "TS_STD($close, 20)"}
+
+==============================================================================
+RESPONSE
+==============================================================================
