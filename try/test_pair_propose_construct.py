@@ -51,6 +51,10 @@ from .common import (
 )
 from .config import CONFIG
 from . import fixtures as fx
+from .probe import (
+    enabled_modes_from_env, run_probes_at,
+    format_probes_for_log, print_probe_summary,
+)
 
 
 # ─── Helpers shared (mirror dari test_multi_agent_kv) ────────────────────────
@@ -202,8 +206,17 @@ def _measure_propose_construct(
     """
     Jalankan Propose (kv_only, dengan optional seed) → Construct (kv_and_text).
     Return semua metrik untuk analisis.
+
+    Jika env var TEST_PROBE diset, probe diagnostik dijalankan di 2 titik:
+      1. Setelah propose_kv terbentuk (sebelum construct memakai KV-nya) —
+         menjawab: "apa yang construct akan 'lihat' dari KV propose?"
+      2. Setelah construct selesai — menjawab: "apa yang ter-encode di
+         KV setelah propose+construct gabungan?"
+      Probe TIDAK mempengaruhi metrik utama (KV di-crop kembali setelahnya).
     """
     temp, top_p = 0.7, 0.95
+    probe_modes = enabled_modes_from_env()
+    probes: list = []
 
     # Propose: kv_only, dengan seed (None untuk fresh, KV untuk seeded)
     print(f"  [{scenario_label}] Propose (kv_only, seed={'YES' if seed_kv is not None else 'NO'})...")
@@ -218,6 +231,14 @@ def _measure_propose_construct(
     propose_kv_len = _kv_len(propose_kv)
     propose_elapsed = round(time.time() - t0, 2)
     print(f"    elapsed={propose_elapsed}s  kv_len={propose_kv_len}")
+
+    # Probe checkpoint #1: introspeksi propose_kv sebelum construct memakainya
+    if probe_modes:
+        print(f"  [{scenario_label}] Probing propose_kv ({len(probe_modes)} mode)...")
+        kv_label = f"propose_kv_{scenario_label}"
+        probe1 = run_probes_at(backend, propose_kv, kv_label=kv_label, modes=probe_modes)
+        print_probe_summary(probe1)
+        probes.extend(probe1)
 
     # Diagnostik propose: jalankan sekali lagi text_only untuk lihat apa yang
     # diproduksi (probe). Kita tidak ambil KV dari ini, hanya untuk inspeksi format.
@@ -249,12 +270,21 @@ def _measure_propose_construct(
     construct_text = r_ctor.text or ""
     construct_json = _extract_json(construct_text)
     construct_schema_ok = _has_construct_schema(construct_json)
-    construct_kv_len = _kv_len(r_ctor.kv_cache)
+    construct_kv = r_ctor.kv_cache
+    construct_kv_len = _kv_len(construct_kv)
     construct_elapsed = round(time.time() - t2, 2)
     construct_text_len = len(construct_text)
     construct_collapse = _is_collapse(construct_text)
     print(f"    text_len={construct_text_len}  schema_ok={construct_schema_ok}  "
           f"collapse={construct_collapse}  elapsed={construct_elapsed}s  kv_len={construct_kv_len}")
+
+    # Probe checkpoint #2: introspeksi construct_kv (state akhir gabungan)
+    if probe_modes:
+        print(f"  [{scenario_label}] Probing construct_kv ({len(probe_modes)} mode)...")
+        kv_label = f"construct_kv_{scenario_label}"
+        probe2 = run_probes_at(backend, construct_kv, kv_label=kv_label, modes=probe_modes)
+        print_probe_summary(probe2)
+        probes.extend(probe2)
 
     return {
         "scenario": scenario_label,
@@ -273,6 +303,7 @@ def _measure_propose_construct(
         "construct_schema_ok": construct_schema_ok,
         "construct_collapse": construct_collapse,
         "construct_kv_len": construct_kv_len,
+        "probes": probes,
     }
 
 
@@ -297,6 +328,10 @@ def _save_scenario_log(log_path: Path, label: str, m: dict, extra_sections: list
         ("PARSED CONSTRUCT JSON", _json.dumps(m["construct_json"], indent=2, ensure_ascii=False)
             if m["construct_json"] else "(parse failed)"),
     ]
+    # KV-introspection probes (only present when TEST_PROBE env var was set)
+    probes = m.get("probes") or []
+    if probes:
+        sections.extend(format_probes_for_log(probes))
     _log_save(log_path, sections)
 
 
@@ -395,6 +430,12 @@ def test_mutation_seeded(latent_steps: int | None = None) -> dict:
     mut_elapsed = round(time.time() - t0, 2)
     print(f"  mutation done: kv_len={mut_kv_len}  elapsed={mut_elapsed}s")
 
+    # Probe seed mutation_kv sebelum propose memakainya — ini titik paling
+    # informatif untuk Bug 1, karena di sinilah polusi format bermula
+    seed_probes = run_probes_at(backend, mut_kv, kv_label="mutation_seed_kv")
+    if seed_probes:
+        print_probe_summary(seed_probes)
+
     # Step 1b: Mutation text probe — lihat output format mutation untuk konfirmasi
     print("── Step 1b: Mutation text probe (untuk inspeksi format JSON) ──")
     t1 = time.time()
@@ -438,6 +479,8 @@ def test_mutation_seeded(latent_steps: int | None = None) -> dict:
         ("POLLUTION INDICATORS in propose output",
          ", ".join(pollution_indicators) if pollution_indicators else "(none)"),
     ]
+    if seed_probes:
+        extra.extend(format_probes_for_log(seed_probes))
     _save_scenario_log(log_path, "MUTATION-SEEDED PROPOSE+CONSTRUCT", m, extra_sections=extra)
     print(f"\n── LOG SAVED ── {log_path}")
 
@@ -499,6 +542,13 @@ def test_feedback_chained(latent_steps: int | None = None) -> dict:
     fb_elapsed = round(time.time() - t0, 2)
     print(f"  feedback done: kv_len={fb_kv_len}  elapsed={fb_elapsed}s")
 
+    # Probe feedback seed KV sebelum propose memakainya — counterfactual ke
+    # mutation case: kalau probe ini SAMA "rapi"-nya dengan probe mutation,
+    # berarti bug bukan di KV pollution melainkan format-prompt collision
+    seed_probes = run_probes_at(backend, fb_kv, kv_label="feedback_seed_kv")
+    if seed_probes:
+        print_probe_summary(seed_probes)
+
     # Step 2: Propose dengan seed KV dari feedback → Construct
     print("\n── Step 2: Propose+Construct dengan feedback_kv sebagai seed ──")
     propose_sys, propose_usr = _build_propose_msgs()
@@ -511,6 +561,8 @@ def test_feedback_chained(latent_steps: int | None = None) -> dict:
 
     extra = [(f"FEEDBACK SEED  kv_len={fb_kv_len}  elapsed={fb_elapsed}s",
               "(KV dari feedback step — bentuk chain antar-iterasi normal)")]
+    if seed_probes:
+        extra.extend(format_probes_for_log(seed_probes))
     _save_scenario_log(log_path, "FEEDBACK-CHAINED PROPOSE+CONSTRUCT", m, extra_sections=extra)
     print(f"\n── LOG SAVED ── {log_path}")
 

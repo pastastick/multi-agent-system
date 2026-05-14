@@ -53,6 +53,10 @@ from .common import (
 from .config import CONFIG
 from . import fixtures as fx
 from .test_coder_evaluator import JSON_ONLY_SUFFIX
+from .probe import (
+    enabled_modes_from_env, run_probes_at,
+    format_probes_for_log, print_probe_summary,
+)
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -371,6 +375,17 @@ def test_retry_loop(
           f"elapsed={elapsed_ctor}s")
     print(f"  initial_expr: {initial_expr!r}")
 
+    # Probe construct_kv SEBELUM retry loop — snapshot baseline.
+    # Setiap probe modes yang aktif via TEST_PROBE akan di-jalankan; results
+    # disimpan untuk dibandingkan dengan probe POST-retry agar terlihat apakah
+    # retry loop mengubah isi KV (Bug 2: crop seharusnya kembali ke baseline).
+    probe_modes = enabled_modes_from_env()
+    pre_retry_probes = run_probes_at(
+        backend, construct_kv, kv_label="construct_kv_pre_retry", modes=probe_modes,
+    )
+    if pre_retry_probes:
+        print_probe_summary(pre_retry_probes)
+
     # Step 2: Validasi initial expression. Tentukan former_feedback untuk retry.
     initial_valid, initial_err = _parse_expression_safe(initial_expr)
     if initial_valid:
@@ -557,6 +572,14 @@ def test_retry_loop(
         print(f"  ℹ text_only fallback recovered {n_fb_recovered}/{n_primary_collapse} "
               f"primary collapses — konsisten dengan production workaround")
 
+    # Probe construct_kv SETELAH retry loop — apakah isi KV bergeser?
+    # Bandingkan dengan pre_retry_probes; deviasi besar = crop tidak efektif.
+    post_retry_probes = run_probes_at(
+        backend, construct_kv, kv_label="construct_kv_post_retry", modes=probe_modes,
+    )
+    if post_retry_probes:
+        print_probe_summary(post_retry_probes)
+
     # ── Save log ─────────────────────────────────────────────────────────────
     table_str = header + "\n"
     for a in attempts:
@@ -598,6 +621,13 @@ def test_retry_loop(
             f"valid={a['new_expr_valid']}",
             body,
         ))
+
+    # Append KV-introspection probes (pre vs post retry) ke akhir log untuk
+    # perbandingan langsung di file yang sama
+    if pre_retry_probes:
+        sections.extend(format_probes_for_log(pre_retry_probes))
+    if post_retry_probes:
+        sections.extend(format_probes_for_log(post_retry_probes))
 
     _log_save(log_path, sections)
     print(f"\n── LOG SAVED ── {log_path}")
