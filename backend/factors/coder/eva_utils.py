@@ -58,7 +58,7 @@ class FactorEvaluator:
         """Return shared llm_backend jika latent, else buat baru."""
         if self._llm_backend is not None:
             return self._llm_backend
-        return LocalLLMBackend(use_chat_cache=use_cache)
+        return LocalLLMBackend()
 
     @property
     def _is_latent(self) -> bool:
@@ -98,7 +98,7 @@ class FactorEvaluator:
             )
             return result.text or ""
         else:
-            api = LocalLLMBackend(use_chat_cache=use_cache)
+            api = LocalLLMBackend()
             return api.build_messages_and_create_chat_completion(
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,

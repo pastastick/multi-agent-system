@@ -1,7 +1,0 @@
-{"n": 1, "ts": "2026-05-03 11:41:45", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "dc5cff7d", "text_len": 1122, "duration_s": 88.6576, "file": "0001_propose_kv_and_text.json"}
-{"n": 2, "ts": "2026-05-03 11:42:48", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "900a33f6", "text_len": 421, "duration_s": 59.2234, "file": "0002_construct_kv_and_text.json"}
-{"n": 3, "ts": "2026-05-03 11:44:02", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "0a7251cb", "text_len": 17, "duration_s": 3.6298, "file": "0003_coder_eval_text_only.json"}
-{"n": 4, "ts": "2026-05-03 11:44:15", "role": "coder_eval", "mode": "text_only", "step": 0, "conv_id": "221308c7", "text_len": 159, "duration_s": 12.9662, "file": "0004_coder_eval_text_only.json"}
-{"n": 5, "ts": "2026-05-03 11:45:18", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "82a06545", "text_len": 0, "duration_s": 4.9231, "file": "0005_feedback_kv_and_text.json"}
-{"n": 6, "ts": "2026-05-03 11:45:20", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "1a636783", "text_len": 0, "duration_s": 0.4024, "file": "0006_feedback_kv_and_text.json"}
-{"n": 7, "ts": "2026-05-03 11:45:22", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "3910e884", "text_len": 0, "duration_s": 0.4098, "file": "0007_feedback_kv_and_text.json"}

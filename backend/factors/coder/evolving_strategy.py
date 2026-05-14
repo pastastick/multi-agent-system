@@ -71,9 +71,7 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                 break
             elif len(queried_similar_error_knowledge_to_render) > 0:
                 queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
-        error_summary_critics = LocalLLMBackend(
-            use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
-        ).build_messages_and_create_chat_completion(
+        error_summary_critics = LocalLLMBackend().build_messages_and_create_chat_completion(
             user_prompt=error_summary_user_prompt, system_prompt=error_summary_system_prompt, json_mode=False
         )
         return error_summary_critics
@@ -181,9 +179,7 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
         for _ in range(10):
             try:
                 code = json.loads(
-                    LocalLLMBackend(
-                        use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
-                    ).build_messages_and_create_chat_completion(
+                    LocalLLMBackend().build_messages_and_create_chat_completion(
                         user_prompt=user_prompt, system_prompt=system_prompt, json_mode=True
                     )
                 )["code"]
@@ -267,7 +263,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         """Return shared llm_backend jika latent, else buat baru."""
         if self._llm_backend is not None:
             return self._llm_backend
-        return LocalLLMBackend(use_chat_cache=use_cache)
+        return LocalLLMBackend()
 
     def _call_llm(self, user_prompt: str, system_prompt: str,
                    json_mode: bool = True, reasoning_flag: bool = False,
@@ -307,9 +303,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     "[LatentCoder] kv_and_text collapse detected (text_len=0), "
                     "fallback to text_only"
                 )
-                text_out = LocalLLMBackend(
-                    use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
-                ).build_messages_and_create_chat_completion(
+                text_out = LocalLLMBackend().build_messages_and_create_chat_completion(
                     user_prompt=user_prompt,
                     system_prompt=system_prompt,
                     json_mode=json_mode,
@@ -321,9 +315,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             self._past_kv = result.kv_cache
             return text_out
         else:
-            return LocalLLMBackend(
-                use_chat_cache=FACTOR_COSTEER_SETTINGS.coder_use_cache
-            ).build_messages_and_create_chat_completion(
+            return LocalLLMBackend().build_messages_and_create_chat_completion(
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,

@@ -226,7 +226,7 @@ latent:
   # ── Latent communication (KV-cache chain) ─────────────────
   # Hard cap on KV tokens carried across loop iterations.
   # Applied after feedback step before chaining to next propose.
-  kv_max_tokens: 2048
+  kv_max_tokens: 20480
 
   # Persist KV-cache to disk (for resume / debugging).
   store_kv: true
@@ -241,7 +241,7 @@ latent:
   knn_strategy: "top"       # "top" | "bottom" | "random"
 
   # ── Generation parameters ─────────────────────────────────
-  max_new_tokens: 4096
+  max_new_tokens: 40960
   temperature: 0.8
   top_p: 0.95
 

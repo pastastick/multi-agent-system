@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-03T11:45:24.535152",
-    "total_factors": 6,
+    "last_updated": "2026-05-14T07:42:23.616227",
+    "total_factors": 7,
     "version": "1.0"
   },
   "factors": {
@@ -321,6 +321,39 @@
         "decision": false,
         "reason": "JSON parse error: Could not parse JSON; original text length: 0: line 1 column 1 (char 0)",
         "new_hypothesis": ""
+      }
+    },
+    "73f7d94ec5233c2f": {
+      "factor_id": "73f7d94ec5233c2f",
+      "factor_name": "$volume",
+      "factor_expression": "RANK(TS_RANK($volume, 5)) * ZSCORE(TS_RANK($volume, 5), 10) - TS_MEAN($volume, 20) + 1e-8",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # derive $return karena prompt + contoh mengiklankan $return,\n    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_STD($close, 20)\" # Your output factor expression will be filled in here\n    name = \"$volume\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Daily trading volume",
+      "factor_formulation": "TS_RANK($volume, 5) * TS_ZSCORE($volume, 10) - TS_MEAN($volume, 20) + 1e-8",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "df60e36f3826479f8947d652b673774e",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/df60e36f3826479f8947d652b673774e/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-14_07-35-49-789019",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "303677bb2c1c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days exhibit stronger positive momentum in the following week.\n                Concise Observation: \n                Concise Justification: Behavioral investors may overreact to news on low-volume days, leading to price distortions that are corrected on high-volume days, creating momentum.\n                Concise Knowledge: Days with low trading volume are often preceded by high volatility, and subsequent high-volume days show stronger price appreciation.\n                concise Specification: Volume thresholds: low-volume days < 500k shares, high-volume days > 1M shares; time horizon: 1 week ahead; expected effect: positive momentum in the following week.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-14T07:42:22.990120"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
       }
     }
   }

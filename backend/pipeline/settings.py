@@ -140,7 +140,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Setelah feedback, KV di-truncate ke jumlah ini sebelum
     # dikirim ke propose step di iterasi berikutnya.
     # Terlalu kecil: hilang konteks.  Terlalu besar: lambat + OOM.
-    kv_max_tokens: int = 2048
+    kv_max_tokens: int = 20480
 
     # Simpan KV-cache ke disk (untuk resume/debugging).
     # Pakai KVCacheStore di llm/client.py.
@@ -166,7 +166,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     knn_strategy: str = "top"         # "top" (paling mirip), "bottom", "random"
 
     # ── Generation parameters ────────────────────────────────────────────
-    max_new_tokens: int = 4096
+    max_new_tokens: int = 40960
     temperature: float = 0.8
     top_p: float = 0.95
 
@@ -178,8 +178,8 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # output coder juga berupa ekspresi yang harus bisa di-parse.
     # Propose: bisa lebih tinggi untuk eksplorasi hipotesis yang beragam.
     temperature_propose: Optional[float] = None     # None = pakai temperature global
-    temperature_construct: float = 0.8              # rendah: formula presisi
-    temperature_coder: float = 0.6                  # rendah: expression fix presisi
+    temperature_construct: float = 0.7              # rendah: formula presisi
+    temperature_coder: float = 0.4                  # rendah: expression fix presisi
     temperature_feedback: Optional[float] = None    # None = pakai temperature global
 
     # ── Guided JSON decoding (construct step) ───────────────────────────
