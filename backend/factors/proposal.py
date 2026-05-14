@@ -18,6 +18,7 @@ from core.proposal import Hypothesis, Scenario, Trace
 from core.experiment import Experiment
 from factors.experiment import QlibFactorExperiment
 from llm.client import LocalLLMBackend, robust_json_parse
+from utils.prompt_markers import wrap as _mv
 import os
 import pandas as pd
 from log import logger
@@ -403,19 +404,19 @@ class AlphaAgentHypothesisGen(FactorHypothesisGen):
                     Environment(undefined=StrictUndefined)
                     .from_string(qa_prompt_dict["hypothesis_gen"]["system_prompt"])
                     .render(
-                        targets=self.targets,
-                        scenario=scenario_desc,
-                        hypothesis_output_format=context_dict["hypothesis_output_format"],
-                        hypothesis_specification=context_dict["hypothesis_specification"],
+                        targets=_mv("targets", self.targets),
+                        scenario=_mv("scenario", scenario_desc),
+                        hypothesis_output_format=_mv("hypothesis_output_format", context_dict["hypothesis_output_format"]),
+                        hypothesis_specification=_mv("hypothesis_specification", context_dict["hypothesis_specification"]),
                     )
                 )
                 user_prompt = (
                     Environment(undefined=StrictUndefined)
                     .from_string(qa_prompt_dict["hypothesis_gen"]["user_prompt"])
                     .render(
-                        targets=self.targets,
-                        hypothesis_and_feedback=context_dict["hypothesis_and_feedback"],
-                        RAG=context_dict["RAG"],
+                        targets=_mv("targets", self.targets),
+                        hypothesis_and_feedback=_mv("hypothesis_and_feedback", context_dict["hypothesis_and_feedback"]),
+                        RAG=_mv("RAG", context_dict["RAG"]),
                         round=len(trace.hist)
                     )
                 )
@@ -437,19 +438,19 @@ class AlphaAgentHypothesisGen(FactorHypothesisGen):
             Environment(undefined=StrictUndefined)
             .from_string(qa_prompt_dict["hypothesis_gen"]["system_prompt"])
             .render(
-                targets=self.targets,
-                scenario=scenario_desc,
-                hypothesis_output_format=context_dict["hypothesis_output_format"],
-                hypothesis_specification=context_dict["hypothesis_specification"],
+                targets=_mv("targets", self.targets),
+                scenario=_mv("scenario", scenario_desc),
+                hypothesis_output_format=_mv("hypothesis_output_format", context_dict["hypothesis_output_format"]),
+                hypothesis_specification=_mv("hypothesis_specification", context_dict["hypothesis_specification"]),
             )
         )
         user_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_prompt_dict["hypothesis_gen"]["user_prompt"])
             .render(
-                targets=self.targets,
-                hypothesis_and_feedback=context_dict["hypothesis_and_feedback"],
-                RAG=context_dict["RAG"],
+                targets=_mv("targets", self.targets),
+                hypothesis_and_feedback=_mv("hypothesis_and_feedback", context_dict["hypothesis_and_feedback"]),
+                RAG=_mv("RAG", context_dict["RAG"]),
                 round=len(trace.hist)
             )
         )
@@ -650,21 +651,21 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
             Environment(undefined=StrictUndefined)
             .from_string(qa_prompt_dict["hypothesis2experiment"]["system_prompt"])
             .render(
-                targets=self.targets,
-                scenario=scenario_desc,
-                experiment_output_format=context["experiment_output_format"],
+                targets=_mv("targets", self.targets),
+                scenario=_mv("scenario", scenario_desc),
+                experiment_output_format=_mv("experiment_output_format", context["experiment_output_format"]),
             )
         )
         user_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
             .render(
-                targets=self.targets,
-                target_hypothesis=context["target_hypothesis"],
-                hypothesis_and_feedback=context["hypothesis_and_feedback"],
-                function_lib_description=context["function_lib_description"],
-                target_list=context["target_list"],
-                RAG=context["RAG"],
+                targets=_mv("targets", self.targets),
+                target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
+                hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                target_list=_mv("target_list", context["target_list"]),
+                RAG=_mv("RAG", context["RAG"]),
                 expression_duplication=None,
             )
         )
@@ -707,10 +708,10 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                     .from_string(_retry_user_tpl)
                     .render(
                         attempt_n=_construct_retries,
-                        error_log=error_summary,
-                        hypothesis_title=_hypothesis_title,
-                        function_lib_description=context["function_lib_description"],
-                        compact_schema=_compact_schema,
+                        error_log=_mv("error_log", error_summary),
+                        hypothesis_title=_mv("hypothesis_title", _hypothesis_title),
+                        function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                        compact_schema=_mv("compact_schema", _compact_schema),
                     )
                 )
                 logger.info(
@@ -770,13 +771,13 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         Environment(undefined=StrictUndefined)
                         .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                         .render(
-                            targets=self.targets,
-                            target_hypothesis=context["target_hypothesis"],
-                            hypothesis_and_feedback=context["hypothesis_and_feedback"],
-                            function_lib_description=context["function_lib_description"],
-                            target_list=context["target_list"],
-                            RAG=context["RAG"],
-                            expression_duplication=expression_duplication_prompt,
+                            targets=_mv("targets", self.targets),
+                            target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
+                            hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                            function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                            target_list=_mv("target_list", context["target_list"]),
+                            RAG=_mv("RAG", context["RAG"]),
+                            expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                         )
                     )
                     break
@@ -806,13 +807,13 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         Environment(undefined=StrictUndefined)
                         .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                         .render(
-                            targets=self.targets,
-                            target_hypothesis=context["target_hypothesis"],
-                            hypothesis_and_feedback=context["hypothesis_and_feedback"],
-                            function_lib_description=context["function_lib_description"],
-                            target_list=context["target_list"],
-                            RAG=context["RAG"],
-                            expression_duplication=expression_duplication_prompt,
+                            targets=_mv("targets", self.targets),
+                            target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
+                            hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                            function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                            target_list=_mv("target_list", context["target_list"]),
+                            RAG=_mv("RAG", context["RAG"]),
+                            expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                         )
                     )
                     break
@@ -909,13 +910,13 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         Environment(undefined=StrictUndefined)
                         .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                         .render(
-                            targets=self.targets,
-                            target_hypothesis=context["target_hypothesis"],
-                            hypothesis_and_feedback=context["hypothesis_and_feedback"],
-                            function_lib_description=context["function_lib_description"],
-                            target_list=context["target_list"],
-                            RAG=context["RAG"], 
-                            expression_duplication=expression_duplication_prompt
+                            targets=_mv("targets", self.targets),
+                            target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
+                            hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                            function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                            target_list=_mv("target_list", context["target_list"]),
+                            RAG=_mv("RAG", context["RAG"]),
+                            expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                         )
                     )
                     break       #* break 'for loop' -> mulai lagi 'while loop'
@@ -961,13 +962,13 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                             Environment(undefined=StrictUndefined)
                             .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                             .render(
-                                targets=self.targets,
-                                target_hypothesis=context["target_hypothesis"],
-                                hypothesis_and_feedback=context["hypothesis_and_feedback"],
-                                function_lib_description=context["function_lib_description"],
-                                target_list=context["target_list"],
-                                RAG=context["RAG"],
-                                expression_duplication=expression_duplication_prompt,
+                                targets=_mv("targets", self.targets),
+                                target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
+                                hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                                function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                                target_list=_mv("target_list", context["target_list"]),
+                                RAG=_mv("RAG", context["RAG"]),
+                                expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                             )
                         )
                         break       #* break for-loop, while-loop akan retry construct

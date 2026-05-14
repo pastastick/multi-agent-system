@@ -23,6 +23,7 @@ from typing import Any, Optional
 import yaml
 
 from log import logger
+from utils.prompt_markers import wrap as _mv
 from llm.client import LocalLLMBackend
 from .trajectory import StrategyTrajectory, RoundPhase
 
@@ -174,15 +175,15 @@ class MutationOperator:
 
         if use_detailed_prompt:
             user_prompt = self.prompts.get("user", "").format(
-                parent_hypothesis=parent_hypothesis,
-                parent_factors=parent_factors,
-                parent_metrics=parent_metrics,
-                parent_feedback=parent_feedback
+                parent_hypothesis=_mv("parent_hypothesis", parent_hypothesis),
+                parent_factors=_mv("parent_factors", parent_factors),
+                parent_metrics=_mv("parent_metrics", parent_metrics),
+                parent_feedback=_mv("parent_feedback", parent_feedback),
             )
         else:
             user_prompt = self.prompts.get("simple_user", "").format(
-                parent_hypothesis=parent_hypothesis,
-                parent_factors=parent_factors
+                parent_hypothesis=_mv("parent_hypothesis", parent_hypothesis),
+                parent_factors=_mv("parent_factors", parent_factors),
             )
 
         # Call LLM

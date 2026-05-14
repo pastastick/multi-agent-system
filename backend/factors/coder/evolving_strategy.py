@@ -23,6 +23,7 @@ from llm._shared import _past_length
 from core.utils import multiprocessing_wrapper
 from core.conf import RD_AGENT_SETTINGS
 from log import logger
+from utils.prompt_markers import wrap as _mv
 
 code_template = CodeTemplate(template_path=Path(__file__).parent / "template.jinjia2")
 implement_prompts = Prompts(file_path=Path(__file__).parent / "prompts.yaml")
@@ -46,9 +47,9 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
             Environment(undefined=StrictUndefined)
             .from_string(implement_prompts["evolving_strategy_error_summary_v2_system"])
             .render(
-                scenario=self.scen.get_scenario_all_desc(target_task),
-                factor_information_str=target_task.get_task_information(),
-                code_and_feedback=queried_former_failed_knowledge_to_render[-1].get_implementation_and_feedback_str(),
+                scenario=_mv("scenario", self.scen.get_scenario_all_desc(target_task)),
+                factor_information_str=_mv("factor_information_str", target_task.get_task_information()),
+                code_and_feedback=_mv("code_and_feedback", queried_former_failed_knowledge_to_render[-1].get_implementation_and_feedback_str()),
             )
             .strip("\n")
         )
@@ -57,7 +58,7 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                 Environment(undefined=StrictUndefined)
                 .from_string(implement_prompts["evolving_strategy_error_summary_v2_user"])
                 .render(
-                    queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                    queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
                 )
                 .strip("\n")
             )
@@ -119,8 +120,8 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                 implement_prompts["evolving_strategy_factor_implementation_v1_system"],
             )
             .render(
-                scenario=self.scen.get_scenario_all_desc(target_task, filtered_tag="feature"),
-                queried_former_failed_knowledge=queried_former_failed_knowledge_to_render,
+                scenario=_mv("scenario", self.scen.get_scenario_all_desc(target_task, filtered_tag="feature")),
+                queried_former_failed_knowledge=_mv("queried_former_failed_knowledge", queried_former_failed_knowledge_to_render),
             )
         )
         
@@ -155,17 +156,12 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
                     implement_prompts["evolving_strategy_factor_implementation_v2_user"],
                 )
                 .render(
-                    # factor_information_str=target_factor_task_information,
-                    # queried_similar_successful_knowledge=queried_similar_successful_knowledge_to_render,
-                    # queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
-                    # error_summary_critics=error_summary_critics,
-                    # latest_attempt_to_latest_successful_execution=latest_attempt_to_latest_successful_execution,
-                    factor_information_str=target_task.get_task_description(),
-                    queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
-                    error_summary_critics=error_summary_critics,
-                    similar_successful_factor_description=similar_successful_factor_description,
-                    similar_successful_expression=similar_successful_expression,
-                    latest_attempt_to_latest_successful_execution=latest_attempt_to_latest_successful_execution,
+                    factor_information_str=_mv("factor_information_str", target_task.get_task_description()),
+                    queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
+                    error_summary_critics=_mv("error_summary_critics", error_summary_critics),
+                    similar_successful_factor_description=_mv("similar_successful_factor_description", similar_successful_factor_description),
+                    similar_successful_expression=_mv("similar_successful_expression", similar_successful_expression),
+                    latest_attempt_to_latest_successful_execution=_mv("latest_attempt_to_latest_successful_execution", latest_attempt_to_latest_successful_execution),
                 )
                 .strip("\n")
             )
@@ -345,9 +341,9 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             Environment(undefined=StrictUndefined)
             .from_string(implement_prompts["evolving_strategy_error_summary_v2_system"])
             .render(
-                scenario=self.scen.get_scenario_all_desc(target_task),
-                factor_information_str=target_task.get_task_information(),
-                code_and_feedback=queried_former_failed_knowledge_to_render[-1].get_implementation_and_feedback_str(),
+                scenario=_mv("scenario", self.scen.get_scenario_all_desc(target_task)),
+                factor_information_str=_mv("factor_information_str", target_task.get_task_information()),
+                code_and_feedback=_mv("code_and_feedback", queried_former_failed_knowledge_to_render[-1].get_implementation_and_feedback_str()),
             )
             .strip("\n")
         )
@@ -356,7 +352,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 Environment(undefined=StrictUndefined)
                 .from_string(implement_prompts["evolving_strategy_error_summary_v2_user"])
                 .render(
-                    queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
+                    queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
                 )
                 .strip("\n")
             )
@@ -447,7 +443,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                         qa_implement_prompts["evolving_strategy_factor_implementation_v1_system"],
                     )
                     .render(
-                        scenario=self.scen.get_scenario_all_desc(target_task, filtered_tag="feature"),
+                        scenario=_mv("scenario", self.scen.get_scenario_all_desc(target_task, filtered_tag="feature")),
                     )
                 )
 
@@ -487,15 +483,15 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                         qa_implement_prompts["evolving_strategy_factor_implementation_v2_user"],
                     )
                     .render(
-                        factor_information_str=target_task.get_task_description(),
-                        queried_similar_error_knowledge=queried_similar_error_knowledge_to_render,
-                        former_expression=self.extract_expr(queried_former_failed_knowledge_to_render[-1].implementation.code),
-                        execution_log=execution_log,
-                        code_comment=code_comment,
-                        error_summary_critics=error_summary_critics,
-                        similar_successful_factor_description=similar_successful_factor_description,
-                        similar_successful_expression=similar_successful_expression,
-                        latest_attempt_to_latest_successful_execution=latest_attempt_to_latest_successful_execution,
+                        factor_information_str=_mv("factor_information_str", target_task.get_task_description()),
+                        queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
+                        former_expression=_mv("former_expression", self.extract_expr(queried_former_failed_knowledge_to_render[-1].implementation.code)),
+                        execution_log=_mv("execution_log", execution_log),
+                        code_comment=_mv("code_comment", code_comment),
+                        error_summary_critics=_mv("error_summary_critics", error_summary_critics),
+                        similar_successful_factor_description=_mv("similar_successful_factor_description", similar_successful_factor_description),
+                        similar_successful_expression=_mv("similar_successful_expression", similar_successful_expression),
+                        latest_attempt_to_latest_successful_execution=_mv("latest_attempt_to_latest_successful_execution", latest_attempt_to_latest_successful_execution),
                     )
                     .strip("\n")
                 )

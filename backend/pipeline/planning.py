@@ -9,6 +9,7 @@ import yaml
 
 from log import logger
 from llm.client import LocalLLMBackend
+from utils.prompt_markers import wrap as _mv
 
 if TYPE_CHECKING:
     # Hindari circular import; hanya untuk type checker
@@ -107,12 +108,16 @@ def generate_parallel_directions(
     user_tpl = prompts.get("user", "")
     output_format = prompts.get("output_format", "")
 
-    system_prompt = sys_tpl.format(initial_direction=initial_direction, n=n)
-    user_prompt = user_tpl.format(initial_direction=initial_direction, n=n)
+    system_prompt = sys_tpl.format(
+        initial_direction=_mv("initial_direction", initial_direction), n=n,
+    )
+    user_prompt = user_tpl.format(
+        initial_direction=_mv("initial_direction", initial_direction), n=n,
+    )
     if output_format:
         if "{n}" in output_format:
             output_format = output_format.replace("{n}", str(n))
-        user_prompt = f"{user_prompt}\n\n{output_format}"
+        user_prompt = f"{user_prompt}\n\n{_mv('output_format', output_format)}"
 
     # ── Inject external context into user prompt ───────────────────────
     past_key_values = None

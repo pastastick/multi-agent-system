@@ -1274,6 +1274,18 @@ class LocalLLMBackend:
         except ImportError:
             _mon = None
 
+        # ── Strip VAR markers before engine sees the messages ──────────────
+        # `messages_marked` preserves the [[VAR:name]]...[[/VAR:name]] wrappers
+        # injected by prompt loaders so `_save_output_snapshot` can annotate
+        # which slice came from which YAML variable. The engine always works
+        # on the stripped copy — the model never sees markers.
+        try:
+            from utils.prompt_markers import strip_messages as _strip_msgs
+            messages_marked = messages
+            messages = _strip_msgs(messages)
+        except Exception:
+            messages_marked = messages  # fail open: no annotation, no crash
+
         _run_t0 = time.time()
         _input_tok_count = 0
         try:
@@ -1411,7 +1423,7 @@ class LocalLLMBackend:
                 )
                 self._save_output_snapshot(
                     conv_id=_conv_id, step=step, role=role, mode=mode,
-                    messages=messages, text=result.text,
+                    messages=messages_marked, text=result.text,
                     temperature=_temp, has_past_kv=past_key_values is not None,
                     input_tokens=_input_tok_count,
                     output_tokens=_snap_out_tok,
@@ -1616,20 +1628,31 @@ class LocalLLMBackend:
         output_tokens  : Optional[int] = None,
         duration_s     : Optional[float] = None,
     ) -> None:
-        """Tulis 1 file .json per call_llm + append 1 baris ke index.jsonl.
+        """Tulis 1 file .md per call_llm + append 1 baris ke index.jsonl.
 
-        Nama file human-readable: NNNN_<role>_<mode>.json (urut chronological).
-        Isi: JSON terformat (indent=2) berisi prompt + response lengkap.
+        Format Markdown human-readable:
+          - Frontmatter-style metadata block
+          - "## Variables" section listing each [[VAR:name]]...[[/VAR:name]]
+            slice yang ditemukan di prompt (sumber dari YAML placeholder)
+          - "## System Prompt" dan "## User Prompt" — isi prompt dengan
+            marker yang di-render jadi `<<<name>>>...<<</name>>>` agar user
+            bisa langsung lihat slice mana datang dari variabel mana
+          - "## Response" — text mentah dari LLM
 
-        Ditulis dengan flush + fsync supaya isi segera ada di disk —
-        kalau pipeline crash tengah iterasi, riwayat call yang sudah
-        tereksekusi tetap bisa di-review.
+        Markers HANYA tampil di file ini; LLM menerima prompt yang sudah
+        di-strip oleh `run()` sebelum engine call.
 
-        Tidak pernah raise: exception di-swallow agar logging tidak
-        mematikan pipeline utama.
+        Ditulis dengan flush+fsync supaya crash di tengah iterasi tetap
+        meninggalkan jejak. Exception di-swallow agar logging tidak pernah
+        mematikan pipeline.
         """
         if self._output_log_dir is None:
             return
+        try:
+            from utils.prompt_markers import render_for_debug
+        except Exception:
+            render_for_debug = None  # fail open
+
         try:
             sys_prompt = ""
             usr_prompt = ""
@@ -1643,33 +1666,69 @@ class LocalLLMBackend:
             n = self._call_counter
             ts = time.strftime("%Y-%m-%d %H:%M:%S")
 
-            filename = f"{n:04d}_{role}_{mode}.json"
+            filename = f"{n:04d}_{role}_{mode}.md"
             filepath = self._output_log_dir / filename
 
-            record = {
-                "call_n"       : n,
-                "ts"           : ts,
-                "conv_id"      : conv_id,
-                "step"         : step,
-                "role"         : role,
-                "mode"         : mode,
-                "temperature"  : temperature,
-                "has_past_kv"  : has_past_kv,
-                "input_tokens" : input_tokens,
-                "output_tokens": output_tokens,
-                "duration_s"   : duration_s,
-                "text_len"     : len(text),
-                "system_prompt": sys_prompt,
-                "user_prompt"  : usr_prompt,
-                "text"         : text,
-            }
+            # Render markers → human-readable inline labels
+            if render_for_debug is not None:
+                sys_annotated, sys_vars = render_for_debug(sys_prompt)
+                usr_annotated, usr_vars = render_for_debug(usr_prompt)
+            else:
+                sys_annotated, sys_vars = sys_prompt, []
+                usr_annotated, usr_vars = usr_prompt, []
 
+            # Build "Variables" section: deduplicate by name (keep first value)
+            all_vars: List[Tuple[str, str]] = []
+            seen_names: set = set()
+            for name, value in (sys_vars + usr_vars):
+                if name in seen_names:
+                    continue
+                seen_names.add(name)
+                all_vars.append((name, value))
+
+            md_parts: List[str] = []
+            md_parts.append(f"# Call {n:04d} — `{role}` ({mode})\n")
+            md_parts.append("## Meta\n")
+            md_parts.append(f"- ts: {ts}")
+            md_parts.append(f"- conv_id: `{conv_id}`")
+            md_parts.append(f"- step: {step}")
+            md_parts.append(f"- temperature: {temperature}")
+            md_parts.append(f"- has_past_kv: {has_past_kv}")
+            md_parts.append(f"- input_tokens: {input_tokens}")
+            md_parts.append(f"- output_tokens: {output_tokens}")
+            md_parts.append(f"- duration_s: {duration_s}")
+            md_parts.append(f"- text_len: {len(text)}\n")
+
+            if all_vars:
+                md_parts.append("## Variables (dari YAML placeholder)\n")
+                for name, value in all_vars:
+                    preview = value if len(value) <= 200 else value[:200] + "…"
+                    preview = preview.replace("\n", " ⏎ ")
+                    md_parts.append(f"- **{name}** ({len(value)} chars): {preview}")
+                md_parts.append("")
+
+            md_parts.append("## System Prompt\n")
+            md_parts.append("```text")
+            md_parts.append(sys_annotated)
+            md_parts.append("```\n")
+
+            md_parts.append("## User Prompt\n")
+            md_parts.append("```text")
+            md_parts.append(usr_annotated)
+            md_parts.append("```\n")
+
+            md_parts.append("## Response\n")
+            md_parts.append("```text")
+            md_parts.append(text)
+            md_parts.append("```")
+
+            content = "\n".join(md_parts) + "\n"
             with open(filepath, "w", encoding="utf-8") as f:
-                json.dump(record, f, ensure_ascii=False, indent=2)
+                f.write(content)
                 f.flush()
                 os.fsync(f.fileno())
 
-            # Index ringan: 1 baris per call, untuk scan tanpa baca semua file
+            # Index ringan: 1 baris JSON per call, untuk scan tanpa baca semua file
             if self._output_index_path is not None:
                 index_entry = {
                     "n"            : n,
@@ -1681,6 +1740,7 @@ class LocalLLMBackend:
                     "text_len"     : len(text),
                     "duration_s"   : duration_s,
                     "file"         : filename,
+                    "vars"         : [name for name, _ in all_vars],
                 }
                 with open(self._output_index_path, "a", encoding="utf-8") as f:
                     f.write(json.dumps(index_entry, ensure_ascii=False) + "\n")

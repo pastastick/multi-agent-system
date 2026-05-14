@@ -11,6 +11,7 @@ from jinja2 import Environment, StrictUndefined
 from core.prompts import Prompts
 from llm.client import LocalLLMBackend, robust_json_parse
 from log import logger
+from utils.prompt_markers import wrap as _mv
 
 consistency_prompts = Prompts(file_path=Path(__file__).parent / "consistency_prompts.yaml")
 
@@ -89,12 +90,12 @@ class FactorConsistencyChecker:
                 Environment(undefined=StrictUndefined)
                 .from_string(consistency_prompts["consistency_check_user"])
                 .render(
-                    hypothesis=hypothesis,
-                    factor_name=factor_name,
-                    factor_description=factor_description,
-                    factor_formulation=factor_formulation,
-                    factor_expression=factor_expression,
-                    variables=variables or {}
+                    hypothesis=_mv("hypothesis", hypothesis),
+                    factor_name=_mv("factor_name", factor_name),
+                    factor_description=_mv("factor_description", factor_description),
+                    factor_formulation=_mv("factor_formulation", factor_formulation),
+                    factor_expression=_mv("factor_expression", factor_expression),
+                    variables=variables or {},
                 )
             )
             

@@ -28,6 +28,7 @@ import yaml
 
 from log import logger
 from llm.client import LocalLLMBackend
+from utils.prompt_markers import wrap as _mv
 from .trajectory import StrategyTrajectory, RoundPhase
 
 
@@ -197,11 +198,11 @@ class CrossoverOperator:
         
         if use_detailed_prompt:
             user_prompt = self.prompts.get("user", "").format(
-                parent_summaries=parent_summaries
+                parent_summaries=_mv("parent_summaries", parent_summaries),
             )
         else:
             user_prompt = self.prompts.get("simple_user", "").format(
-                parent_summaries=parent_summaries
+                parent_summaries=_mv("parent_summaries", parent_summaries),
             )
         
         # Pilih KV-cache dari parent dengan metric terbaik.

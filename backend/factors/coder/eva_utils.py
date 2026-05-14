@@ -14,6 +14,7 @@ from core.prompts import Prompts
 from llm.config import LLM_SETTINGS
 from llm.client import LocalLLMBackend
 from log import logger
+from utils.prompt_markers import wrap as _mv
 
 evaluate_prompts = Prompts(file_path=Path(__file__).parent / "prompts.yaml")
 qa_evaluate_prompts = Prompts(file_path=Path(__file__).parent / "qa_prompts.yaml")
@@ -145,7 +146,7 @@ class FactorCodeEvaluator(FactorEvaluator):
             Environment(undefined=StrictUndefined)
             .from_string(qa_evaluate_prompts["evaluator_code_feedback_v1_system"])
             .render(
-                scenario=(
+                scenario=_mv("scenario", (
                     self.scen.get_scenario_all_desc(
                         target_task,
                         filtered_tag="feature",
@@ -153,7 +154,7 @@ class FactorCodeEvaluator(FactorEvaluator):
                     )
                     if self.scen is not None
                     else "No scenario description."
-                )
+                )),
             )
         )
 
@@ -165,11 +166,11 @@ class FactorCodeEvaluator(FactorEvaluator):
                     qa_evaluate_prompts["evaluator_code_feedback_v1_user"],
                 )
                 .render(
-                    factor_information=factor_information,
-                    code=code,
-                    execution_feedback=execution_feedback_to_render,
-                    value_feedback=value_feedback,
-                    gt_code=gt_implementation.code if gt_implementation else None,
+                    factor_information=_mv("factor_information", factor_information),
+                    code=_mv("code", code),
+                    execution_feedback=_mv("execution_feedback", execution_feedback_to_render),
+                    value_feedback=_mv("value_feedback", value_feedback),
+                    gt_code=_mv("gt_code", gt_implementation.code if gt_implementation else None),
                 )
             )
             if (
@@ -257,11 +258,11 @@ class FactorOutputFormatEvaluator(FactorEvaluator):
                 evaluate_prompts["evaluator_output_format_system"],
             )
             .render(
-                scenario=(
+                scenario=_mv("scenario", (
                     self.scen.get_scenario_all_desc(implementation.target_task, filtered_tag="feature")
                     if self.scen is not None
                     else "No scenario description."
-                )
+                )),
             )
         )
 
@@ -570,11 +571,11 @@ class FactorFinalDecisionEvaluator(FactorEvaluator):
             Environment(undefined=StrictUndefined)
             .from_string(evaluate_prompts["evaluator_final_decision_v1_system"])
             .render(
-                scenario=(
+                scenario=_mv("scenario", (
                     self.scen.get_scenario_all_desc(target_task, filtered_tag="feature")
                     if self.scen is not None
                     else "No scenario description."
-                )
+                )),
             )
         )
         execution_feedback_to_render = execution_feedback
@@ -586,14 +587,14 @@ class FactorFinalDecisionEvaluator(FactorEvaluator):
                     evaluate_prompts["evaluator_final_decision_v1_user"],
                 )
                 .render(
-                    factor_information=target_task.get_task_information(),
-                    execution_feedback=execution_feedback_to_render,
-                    code_feedback=code_feedback,
-                    value_feedback=(
+                    factor_information=_mv("factor_information", target_task.get_task_information()),
+                    execution_feedback=_mv("execution_feedback", execution_feedback_to_render),
+                    code_feedback=_mv("code_feedback", code_feedback),
+                    value_feedback=_mv("value_feedback", (
                         value_feedback
                         if value_feedback is not None
                         else "No Ground Truth Value provided, so no evaluation on value is performed."
-                    ),
+                    )),
                 )
             )
             if (

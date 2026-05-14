@@ -20,6 +20,7 @@ from core.proposal import (
 from log import logger
 from llm.client import LocalLLMBackend, robust_json_parse
 from utils import convert2bool
+from utils.prompt_markers import wrap as _mv
 
 # Max retries for JSON parsing
 MAX_JSON_PARSE_RETRIES = 3
@@ -166,7 +167,7 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
         sys_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(base_feedback_prompts["factor_feedback_generation"]["system"])
-            .render(scenario=self.scen.get_scenario_all_desc())
+            .render(scenario=_mv("scenario", self.scen.get_scenario_all_desc()))
         )
 
         # Generate the user prompt
@@ -174,9 +175,9 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
             Environment(undefined=StrictUndefined)
             .from_string(base_feedback_prompts["factor_feedback_generation"]["user"])
             .render(
-                hypothesis_text=hypothesis_text,
-                task_details=tasks_factors,
-                combined_result=combined_result,
+                hypothesis_text=_mv("hypothesis_text", hypothesis_text),
+                task_details=_mv("task_details", tasks_factors),
+                combined_result=_mv("combined_result", combined_result),
             )
         )
 
@@ -364,7 +365,7 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
         sys_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_feedback_prompts["factor_feedback_generation"]["system"])
-            .render(scenario=scenario_desc)
+            .render(scenario=_mv("scenario", scenario_desc))
         )
 
         # Generate the user prompt
@@ -372,9 +373,9 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
             Environment(undefined=StrictUndefined)
             .from_string(qa_feedback_prompts["factor_feedback_generation"]["user"])
             .render(
-                hypothesis_text=hypothesis_text,
-                task_details=tasks_factors,
-                combined_result=combined_result,
+                hypothesis_text=_mv("hypothesis_text", hypothesis_text),
+                task_details=_mv("task_details", tasks_factors),
+                combined_result=_mv("combined_result", combined_result),
             )
         )
 
