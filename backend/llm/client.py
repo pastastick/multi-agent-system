@@ -23,6 +23,10 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+# Cache-only model load by default. Set HF_LOCAL_ONLY=0 to allow HF Hub fetches
+# (e.g. first download or to refresh an outdated snapshot).
+_HF_LOCAL_ONLY = os.environ.get("HF_LOCAL_ONLY", "1") not in ("0", "false", "False")
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Shared imports from _shared.py (single source of truth)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -546,8 +550,13 @@ def _load_or_get_cached_model(
             print(f"[CoreEngine] Reusing cached {model_name} on {device}")
             return cached
 
-        print(f"[CoreEngine] Loading {model_name} on {device} ...")
-        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        print(
+            f"[CoreEngine] Loading {model_name} on {device} "
+            f"(local_files_only={_HF_LOCAL_ONLY}) ..."
+        )
+        tokenizer = AutoTokenizer.from_pretrained(
+            model_name, use_fast=True, local_files_only=_HF_LOCAL_ONLY,
+        )
         _ensure_pad_token(tokenizer)
 
         with torch.no_grad():
@@ -555,6 +564,7 @@ def _load_or_get_cached_model(
                 model_name,
                 dtype=torch.bfloat16 if torch.cuda.is_available()
                              else torch.float32,
+                local_files_only=_HF_LOCAL_ONLY,
             )
 
         if len(tokenizer) != model.get_input_embeddings().weight.shape[0]:

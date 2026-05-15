@@ -307,7 +307,6 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     user_prompt=user_prompt,
                     system_prompt=system_prompt,
                     json_mode=json_mode,
-                    reasoning_flag=reasoning_flag,
                 )
                 return text_out
             # Update KV state hanya kalau tidak fallback
@@ -319,7 +318,6 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,
-                reasoning_flag=reasoning_flag,
             )
 
     def error_summary(

@@ -22,10 +22,11 @@ Override via env var:
 from __future__ import annotations
 
 import argparse
+import dataclasses
 import json
 import sys
 import time
-from typing import Callable
+from typing import Any, Callable
 
 from .config import CONFIG, TEST_REGISTRY
 from . import (
@@ -144,7 +145,18 @@ def main(argv: list[str] | None = None) -> int:
         {k: v for k, v in r.items() if k != "parsed" or v is None or isinstance(v, dict)}
         for r in results
     ]
-    summary_path.write_text(json.dumps(slim, indent=2, ensure_ascii=False), encoding="utf-8")
+
+    def _json_default(o: Any) -> Any:
+        # ProbeResult & any dataclass → dict (recursively)
+        if dataclasses.is_dataclass(o) and not isinstance(o, type):
+            return dataclasses.asdict(o)
+        # Last-resort: stringify so the dump never crashes on diagnostic data
+        return repr(o)
+
+    summary_path.write_text(
+        json.dumps(slim, indent=2, ensure_ascii=False, default=_json_default),
+        encoding="utf-8",
+    )
     print(f"Summary JSON: {summary_path}")
 
     return 0 if all(r.get("ok_format") for r in results) else 1

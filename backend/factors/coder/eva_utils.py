@@ -103,7 +103,6 @@ class FactorEvaluator:
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,
-                reasoning_flag=reasoning_flag,
                 seed=seed,
             )
 

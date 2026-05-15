@@ -1,0 +1,251 @@
+# Log: mutation_seeded_m10_20260515_043254.txt
+# Timestamp: 2026-05-15 04:34:51
+
+==============================================================================
+SCENARIO: MUTATION-SEEDED PROPOSE+CONSTRUCT
+==============================================================================
+Propose : kv_len=2011  text_len=631  schema_ok=True  collapse=False  elapsed=0.8s
+Construct: kv_len=6690  text_len=750  schema_ok=True  collapse=False  elapsed=14.16s
+
+==============================================================================
+MUTATION SEED  kv_len=526  elapsed=4.77s
+==============================================================================
+{
+    "new_hypothesis": "Stocks with high institutional liquidity and low volatility during earnings announcements outperform in the following week.",
+    "exploration_direction": "Institutional liquidity metrics and volatility measures around earnings events.",
+    "orthogonality_reason": "Shifts from short-term momentum to liquidity and volatility around earnings events, using different data dimensions.",
+    "expected_characteristics": "Signal type: liquidity-volatility contrast; time horizon: earnings event window; normalization: z-scored liquidity and volatility."
+}
+
+==============================================================================
+POLLUTION INDICATORS in propose output
+==============================================================================
+(none)
+
+==============================================================================
+PROBE [rewrite] @ mutation_seed_kv  kv_len=526→526  text_len=508  elapsed=7.79s
+==============================================================================
+--- probe system prompt ---
+You are a literal, honest assistant. Reply in plain English. Do not invent details that were not provided.
+--- probe user prompt ---
+Without adding new ideas, restate clearly: (1) what task you were just given, (2) the scenario you are operating in, (3) the output format you are expected to produce, and (4) any constraints. If your context is incomplete, say so.
+--- probe response ---
+I was given the task of diagnosing the weakest step in a parent trajectory and generating an orthogonal new strategy direction. The scenario is part of an alpha factor mining pipeline where I need to produce a fresh hypothesis based on a specific direction. The output format is a JSON with four specific fields: new_hypothesis, exploration_direction, orthogonality_reason, and expected_characteristics. The constraints are to only use the information provided and not add new ideas. The context is complete.
+
+==============================================================================
+PROBE [summarize] @ mutation_seed_kv  kv_len=526→526  text_len=348  elapsed=4.3s
+==============================================================================
+--- probe system prompt ---
+You are a concise context summarizer.
+--- probe user prompt ---
+Summarize the context you currently hold in exactly 5 bullets: (a) scenario, (b) task, (c) constraints, (d) recent history, (e) expected output format. One short line each.
+--- probe response ---
+(a) Scenario: Parent trajectory with a momentum and volume factor.  
+(b) Task: Generate an orthogonal strategy direction.  
+(c) Constraints: Must be different in hypothesis, data, logic, and factor properties.  
+(d) Recent history: Parent used 5-day momentum and volume, got moderate performance.  
+(e) Expected output format: JSON with four lines.
+
+==============================================================================
+PROBE [continue] @ mutation_seed_kv  kv_len=526→526  text_len=519  elapsed=6.11s
+==============================================================================
+--- probe system prompt ---
+Continue from your current context. Be brief.
+--- probe user prompt ---
+Continue.
+--- probe response ---
+{
+    "new_hypothesis": "Stocks with high institutional liquidity and low volatility during earnings announcements outperform in the following week.",
+    "exploration_direction": "Institutional_liquidity_score and volatility during earnings events.",
+    "orthogonality_reason": "Focuses on earnings event liquidity and volatility rather than short-term momentum and volume.",
+    "expected_characteristics": "Signal type: liquidity-volatility composite, time horizon: earnings event window, normalization: z-score."
+}
+
+==============================================================================
+PROBE [format_check] @ mutation_seed_kv  kv_len=526→526  text_len=82  elapsed=1.35s
+==============================================================================
+--- probe system prompt ---
+You are a structured introspector. Reply with ONLY a list, no prose.
+--- probe user prompt ---
+List every JSON key you remember seeing in the context provided to you so far. One key per line. No commentary, no examples.
+--- probe response ---
+new_hypothesis
+exploration_direction
+orthogonality_reason
+expected_characteristics
+
+==============================================================================
+PROPOSE PROBE OUTPUT (text_only/kv_and_text)
+==============================================================================
+{
+  "hypothesis": "Price momentum × volume confirmation × volatility regime predicts 5-day forward return.",
+  "concise_knowledge": "When volatility is high and volume is rising, momentum signals are more reliable.",
+  "concise_observation": "Previous factor showed improved IC but still had low IR, suggesting room for regime-based refinement.",
+  "concise_justification": "Volatility regimes indicate market conditions where momentum strategies are more effective.",
+  "concise_specification": "Calculate 5-day momentum, 5-day volume growth, and 5-day volatility (ATR), then multiply the first two and normalize by volatility."
+}
+
+==============================================================================
+CONSTRUCT OUTPUT
+==============================================================================
+{"Momentum_Volume_Confirm_5D": {"description": "5-day momentum rank multiplied by sign of 5-day volume growth.", "variables": {"$sym": "Momentum_Volume_Confirm_5D"}, "formulation": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))", "expression": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"}, "Volume_Zscore_20D": {"description": "Z-score of 20-day volume growth.", "variables": {"$sym": "Volume_Zscore_20D"}, "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20))", "expression": "ZSCORE(TS_PCTCHANGE($volume, 20))"}, "Momentum_Zscore_20D": {"description": "Z-score of 20-day momentum.", "variables": {"$sym": "Momentum_Zscore_20D"}, "formulation": "ZSCORE(TS_MEAN($return, 20))", "expression": "ZSCORE(TS_MEAN($return, 20))"}}
+
+==============================================================================
+PARSED PROPOSE JSON
+==============================================================================
+{
+  "hypothesis": "Price momentum × volume confirmation × volatility regime predicts 5-day forward return.",
+  "concise_knowledge": "When volatility is high and volume is rising, momentum signals are more reliable.",
+  "concise_observation": "Previous factor showed improved IC but still had low IR, suggesting room for regime-based refinement.",
+  "concise_justification": "Volatility regimes indicate market conditions where momentum strategies are more effective.",
+  "concise_specification": "Calculate 5-day momentum, 5-day volume growth, and 5-day volatility (ATR), then multiply the first two and normalize by volatility."
+}
+
+==============================================================================
+PARSED CONSTRUCT JSON
+==============================================================================
+{
+  "Momentum_Volume_Confirm_5D": {
+    "description": "5-day momentum rank multiplied by sign of 5-day volume growth.",
+    "variables": {
+      "$sym": "Momentum_Volume_Confirm_5D"
+    },
+    "formulation": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))",
+    "expression": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"
+  },
+  "Volume_Zscore_20D": {
+    "description": "Z-score of 20-day volume growth.",
+    "variables": {
+      "$sym": "Volume_Zscore_20D"
+    },
+    "formulation": "ZSCORE(TS_PCTCHANGE($volume, 20))",
+    "expression": "ZSCORE(TS_PCTCHANGE($volume, 20))"
+  },
+  "Momentum_Zscore_20D": {
+    "description": "Z-score of 20-day momentum.",
+    "variables": {
+      "$sym": "Momentum_Zscore_20D"
+    },
+    "formulation": "ZSCORE(TS_MEAN($return, 20))",
+    "expression": "ZSCORE(TS_MEAN($return, 20))"
+  }
+}
+
+==============================================================================
+PROBE [rewrite] @ propose_kv_mut_seeded  kv_len=2011→2011  text_len=659  elapsed=7.01s
+==============================================================================
+--- probe system prompt ---
+You are a literal, honest assistant. Reply in plain English. Do not invent details that were not provided.
+--- probe user prompt ---
+Without adding new ideas, restate clearly: (1) what task you were just given, (2) the scenario you are operating in, (3) the output format you are expected to produce, and (4) any constraints. If your context is incomplete, say so.
+--- probe response ---
+(1) I was given the task of generating a testable factor hypothesis based on the provided scenario and previous rounds of hypothesis development.  
+(2) The scenario involves creating a factor for quant investment that predicts future returns using historical data, with specific instructions on data handling, factor formulation, and output format.  
+(3) The output format is a JSON object with five fields: hypothesis, concise_knowledge, concise_observation, concise_justification, and concise_specification.  
+(4) Constraints include not adding new ideas, restating the task clearly, and ensuring the output is in the specified JSON format without markdown.
+
+==============================================================================
+PROBE [summarize] @ propose_kv_mut_seeded  kv_len=2011→2011  text_len=529  elapsed=5.85s
+==============================================================================
+--- probe system prompt ---
+You are a concise context summarizer.
+--- probe user prompt ---
+Summarize the context you currently hold in exactly 5 bullets: (a) scenario, (b) task, (c) constraints, (d) recent history, (e) expected output format. One short line each.
+--- probe response ---
+(a) Scenario: Quant investment strategy development using CSI300 dataset with LGBModel.  
+(b) Task: Generate a testable factor hypothesis based on economic or behavioral intuition.  
+(c) Constraints: Factor must be data-grounded, theory-grounded, iterative, and anti-overfit.  
+(d) Recent history: Previous hypotheses focused on momentum and volume, with improvements through normalization and window extension.  
+(e) Expected output format: JSON with hypothesis, concise knowledge, observation, justification, and specification.
+
+==============================================================================
+PROBE [continue] @ propose_kv_mut_seeded  kv_len=2011→2011  text_len=531  elapsed=5.89s
+==============================================================================
+--- probe system prompt ---
+Continue from your current context. Be brief.
+--- probe user prompt ---
+Continue.
+--- probe response ---
+{
+  "hypothesis": "Volume spikes during high volatility periods indicate potential mean-reversion.",
+  "concise_knowledge": "When volatility spikes after low-volume periods, mean-reversion is amplified.",
+  "concise_observation": "Volume and volatility are inversely correlated in low-volume periods.",
+  "concise_justification": "Low volume suggests lack of consensus, leading to price corrections when volatility increases.",
+  "concise_specification": "Volume spikes during high volatility, 10-day window, Z-score normalized."
+}
+
+==============================================================================
+PROBE [format_check] @ propose_kv_mut_seeded  kv_len=2011→2011  text_len=83  elapsed=1.25s
+==============================================================================
+--- probe system prompt ---
+You are a structured introspector. Reply with ONLY a list, no prose.
+--- probe user prompt ---
+List every JSON key you remember seeing in the context provided to you so far. One key per line. No commentary, no examples.
+--- probe response ---
+hypothesis  
+observations  
+evaluation  
+next_direction  
+reasoning  
+improved_sota
+
+==============================================================================
+PROBE [rewrite] @ construct_kv_mut_seeded  kv_len=6690→6690  text_len=466  elapsed=3.01s
+==============================================================================
+--- probe system prompt ---
+You are a literal, honest assistant. Reply in plain English. Do not invent details that were not provided.
+--- probe user prompt ---
+Without adding new ideas, restate clearly: (1) what task you were just given, (2) the scenario you are operating in, (3) the output format you are expected to produce, and (4) any constraints. If your context is incomplete, say so.
+--- probe response ---
+I was asked to generate factor expressions based on a hypothesis, using allowed variables and functions. The scenario involves creating quantitative factors for investment strategies, with specific rules about what can be used. The output format is JSON with factor names, descriptions, variables, formulations, and expressions. Constraints include using allowed functions, variables, and keeping expressions simple. I will now generate the JSON output as requested.
+
+==============================================================================
+PROBE [summarize] @ construct_kv_mut_seeded  kv_len=6690→6690  text_len=448  elapsed=3.18s
+==============================================================================
+--- probe system prompt ---
+You are a concise context summarizer.
+--- probe user prompt ---
+Summarize the context you currently hold in exactly 5 bullets: (a) scenario, (b) task, (c) constraints, (d) recent history, (e) expected output format. One short line each.
+--- probe response ---
+(a) Scenario: Factor expression generation for quant investment strategy.  
+(b) Task: Create 2-3 factor expressions based on allowed functions and variables.  
+(c) Constraints: Use allowed functions, include at least one variable, avoid undefined symbols.  
+(d) Recent history: Previous rounds focused on momentum and volume confirmation.  
+(e) Expected output format: JSON with factor names, descriptions, variables, formulations, and expressions.
+
+==============================================================================
+PROBE [continue] @ construct_kv_mut_seeded  kv_len=6690→6690  text_len=334  elapsed=4.11s
+==============================================================================
+--- probe system prompt ---
+Continue from your current context. Be brief.
+--- probe user prompt ---
+Continue.
+--- probe response ---
+{"Momentum_Volume_Confirm_5D": {"description": "5-day momentum rank multiplied by sign of 5-day volume growth.", "variables": {"$sym": "momentum_rank", "$volume": "volume_growth"}, "formulation": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))", "expression": "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"}}
+
+==============================================================================
+PROBE [format_check] @ construct_kv_mut_seeded  kv_len=6690→6690  text_len=268  elapsed=2.5s
+==============================================================================
+--- probe system prompt ---
+You are a structured introspector. Reply with ONLY a list, no prose.
+--- probe user prompt ---
+List every JSON key you remember seeing in the context provided to you so far. One key per line. No commentary, no examples.
+--- probe response ---
+hypothesis
+factors
+metrics
+feedback
+new_hypothesis
+exploration_direction
+orthogonality_reason
+expected_characteristics
+hypothesis
+concise_knowledge
+concise_observation
+concise_justification
+concise_specification
+factor_name
+description
+variables
+formulation
+expression

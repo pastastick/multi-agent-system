@@ -1,0 +1,39 @@
+[
+  {
+    "group": "pair_construct_coder",
+    "case": "retry_loop_m10_n5",
+    "latent_steps": 10,
+    "n_attempts": 5,
+    "ok_format": true,
+    "elapsed_s": 27.8,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_construct_coder/retry_loop_m10_n5_20260515_042522.txt",
+    "construct_kv_baseline": 3197,
+    "initial_expr": "",
+    "initial_valid": false,
+    "n_attempts_run": 1,
+    "n_collapse": 0,
+    "n_mirror": 0,
+    "n_valid_different": 1,
+    "attempts_summary": [
+      {
+        "attempt": 1,
+        "kv_pre": 3197,
+        "kv_post": 6506,
+        "kv_growth": 3309,
+        "text_len": 91,
+        "primary_text_len": 91,
+        "fallback_used": false,
+        "fallback_text_len": null,
+        "fallback_elapsed_s": null,
+        "elapsed_s": 2.77,
+        "collapse_detected": false,
+        "mirror_detected": false,
+        "new_expr": "RANK(TS_MEAN($close, 5) - TS_MEAN($close, 10)) * SIGN(TS_PCTCHANGE($volume, 5))",
+        "new_expr_valid": true,
+        "new_expr_parse_error": null,
+        "primary_text": "{\"expr\": \"RANK(TS_MEAN($close, 5) - TS_MEAN($close, 10)) * SIGN(TS_PCTCHANGE($volume, 5))\"}"
+      }
+    ],
+    "parsed": null
+  }
+]

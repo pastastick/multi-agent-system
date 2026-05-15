@@ -25,6 +25,7 @@ dependencies = [
     # Agent Framework
     "rdagent",
     "langchain-community",
+    "pyqlib",
     # API & Web
     "requests",
     "python-dotenv",

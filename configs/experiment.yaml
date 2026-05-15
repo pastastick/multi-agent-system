@@ -250,8 +250,8 @@ latent:
   # by QlibFactorParser, so output must be deterministic).
   # Propose/feedback: null → use global (exploration-friendly).
   temperature_propose: null
-  temperature_construct: 0.8
-  temperature_coder: 0.6
+  temperature_construct: 0.7
+  temperature_coder: 0.4
   temperature_feedback: null
 
   # Debug: save input_ids / output_ids / hidden_last tensors to disk.
