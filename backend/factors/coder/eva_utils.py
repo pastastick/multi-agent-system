@@ -74,17 +74,17 @@ class FactorEvaluator:
         Unified LLM call — auto-detect latent vs text-only.
 
         Latent path: build_messages_and_run() dengan mode text_only.
-        Evaluator tidak chain KV ke langkah berikutnya (berbeda dari strategy),
-        tapi MENERIMA konteks latent dari KV-cache yang sudah ada di model.
-        Mode text_only karena evaluator hanya butuh text output untuk decision.
+        TIDAK menerima maupun menghasilkan KV-cache — evaluator yang memakai
+        helper ini (final_decision, output_format) berjalan stateless: hanya
+        butuh text output untuk decision. coder_eval (FactorCodeEvaluator)
+        TIDAK memakai helper ini; ia punya jalur kv_and_text sendiri yang
+        chain KV — lihat FactorCodeEvaluator._call_llm_kv().
 
         Text-only path: build_messages_and_create_chat_completion() (original).
         """
         if self._is_latent:
-            # Evaluator menggunakan text_only: hanya butuh text output,
-            # tidak perlu produce KV untuk chaining downstream.
-            # Tapi tetap benefit dari latent reasoning karena model
-            # sudah punya konteks di KV-cache dari strategy calls.
+            # text_only tanpa past_key_values: call ini stateless —
+            # tidak terima KV dari step sebelumnya, tidak produce KV.
             result = self._llm_backend.build_messages_and_run(
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
@@ -126,9 +126,26 @@ class FactorEvaluator:
     def __str__(self) -> str:
         return self.__class__.__name__
 
-#* LLM review kode
+#* LLM review kode (coder_eval) — kritik ekspresi factor
 # Render prompt dengan: scenario, factor info, code, execution feedback, value feedback
 class FactorCodeEvaluator(FactorEvaluator):
+    """coder_eval — menilai apakah ekspresi factor sesuai deskripsi & benar.
+
+    Latent pipeline: dijalankan mode kv_and_text dan di-chain dari KV coder
+    (construct_kv, atau eval_kv iterasi sebelumnya) yang di-publish
+    FactorParsingStrategy ke shared llm_backend. KV hasil (eval_kv) di-publish
+    balik sebagai llm_backend._coder_eval_kv, lalu dipakai coder_retry sebagai
+    baseline. Tujuannya: model masuk ke perbaikan ekspresi dengan "last
+    thought" = analisis KENAPA ekspresi gagal, bukan state "baru percaya-diri
+    menghasilkan ekspresi" (anchoring) — lihat desain LatentMAS.
+    """
+
+    def __init__(self, scen=None, llm_backend: Optional[Any] = None) -> None:
+        super().__init__(scen=scen, llm_backend=llm_backend)
+        # KV hasil coder_eval terakhir (eval_kv). Juga di-publish ke shared
+        # llm_backend (_coder_eval_kv) agar coder_retry bisa chain darinya.
+        self.last_kv: Optional[Any] = None
+
     def evaluate(
         self,
         target_task: FactorTask,
@@ -183,14 +200,75 @@ class FactorCodeEvaluator(FactorEvaluator):
             else:
                 break
 
-        critic_response = self._call_llm(
+        critic_response = self._call_llm_kv(
             user_prompt=user_prompt,
             system_prompt=system_prompt,
-            json_mode=False,
-            reasoning_flag=False,
         )
 
         return critic_response, None
+
+    def _call_llm_kv(self, user_prompt: str, system_prompt: str) -> str:
+        """LLM call coder_eval — latent: kv_and_text, chain dari KV coder.
+
+        Beda dari FactorEvaluator._call_llm (text_only, stateless): di sini
+        evaluator MENERIMA construct_kv/eval_kv sebagai konteks DAN
+        MENGHASILKAN eval_kv untuk coder_retry.
+
+        Non-latent: perilaku sama seperti sebelumnya (text_only chat call).
+        """
+        if not self._is_latent:
+            api = LocalLLMBackend()
+            return api.build_messages_and_create_chat_completion(
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+                json_mode=False,
+            )
+
+        # Baseline KV: eval_kv iterasi sebelumnya kalau ada, kalau tidak
+        # construct_kv. Keduanya di-publish FactorParsingStrategy ke shared
+        # backend (jembatan tanpa ubah client.py / struktur CoSTEER).
+        base_kv = getattr(self._llm_backend, "_coder_eval_kv", None)
+        if base_kv is None:
+            base_kv = getattr(self._llm_backend, "_coder_kv", None)
+
+        result = self._llm_backend.build_messages_and_run(
+            user_prompt=user_prompt,
+            system_prompt=system_prompt,
+            json_mode=False,
+            past_key_values=base_kv,
+            mode="kv_and_text",
+            role="coder_eval",
+        )
+        text = result.text or ""
+
+        # KV besar + latent steps kadang bikin model collapse (EOS langsung,
+        # text kosong). Fallback text_only tanpa KV — DAN jangan publish
+        # eval_kv yang collapse supaya coder_retry tidak chain dari KV rusak.
+        if not text.strip():
+            logger.warning(
+                "[LatentCoderEval] kv_and_text collapse (text_len=0), "
+                "fallback text_only"
+            )
+            fb = self._llm_backend.build_messages_and_run(
+                user_prompt=user_prompt,
+                system_prompt=system_prompt,
+                json_mode=False,
+                past_key_values=None,
+                mode="text_only",
+                role="coder_eval",
+            )
+            return fb.text or ""
+
+        # Publish eval_kv → coder_retry chain dari sini, bukan construct_kv.
+        if result.kv_cache is not None:
+            self.last_kv = result.kv_cache
+            self._llm_backend._coder_eval_kv = result.kv_cache
+        logger.info(
+            f"[LatentCoderEval] mode=kv_and_text, "
+            f"eval_kv_published={result.kv_cache is not None}, "
+            f"text_len={len(text)}"
+        )
+        return text
 
 # cek tidak boleh ada INF (infinity)
 class FactorInfEvaluator(FactorEvaluator):

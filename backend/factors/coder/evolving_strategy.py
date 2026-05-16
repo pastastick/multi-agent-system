@@ -217,6 +217,11 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
       - Evolve berjalan sequential (bukan multiprocessing) karena
         GPU tensor tidak bisa cross process boundaries
       - last_kv property expose KV terakhir untuk downstream (feedback)
+      - coder_retry (retry path di implement_one_task) TIDAK chain dari
+        construct_kv langsung, tapi dari eval_kv — KV hasil coder_eval yang
+        memuat analisis kegagalan ekspresi. Jembatan-nya via shared
+        llm_backend (_coder_kv = construct baseline, _coder_eval_kv = KV
+        hasil coder_eval). Lihat set_past_kv() & retry path.
     """
 
     def __init__(self, *args,
@@ -241,8 +246,20 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         self._llm_backend = backend
 
     def set_past_kv(self, kv: Optional[Any]) -> None:
-        """Set KV-cache dari construct step."""
+        """Set KV-cache dari construct step.
+
+        Selain disimpan ke _past_kv, KV juga di-publish ke shared
+        llm_backend sebagai _coder_kv — ini baseline yang di-chain
+        FactorCodeEvaluator (coder_eval). _coder_eval_kv di-reset karena
+        eval_kv dari construct step sebelumnya tidak relevan lagi.
+        Publish via shared backend dipakai sebagai jembatan karena strategy
+        & evaluator adalah objek terpisah di CoSTEER — cara ini tidak perlu
+        ubah client.py maupun struktur CoSTEER.
+        """
         self._past_kv = kv
+        if self._llm_backend is not None:
+            self._llm_backend._coder_kv = kv
+            self._llm_backend._coder_eval_kv = None
 
     @property
     def last_kv(self) -> Optional[Any]:
@@ -518,18 +535,29 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             # akan menambah prompt_2 + latent_2 di atasnya, sehingga konteks
             # menumpuk dan model collapse ke output `<think>` saja (output_tokens=3
             # lalu EOS) karena polusi konteks.
-            kv_baseline = self._past_kv
+            # coder_retry chain dari eval_kv (KV hasil coder_eval = analisis
+            # KENAPA ekspresi gagal), bukan langsung construct_kv. construct_kv
+            # berakhir di state "model baru percaya-diri membuat ekspresi" →
+            # anchoring: model 4B cenderung me-regenerate ekspresi yang sama.
+            # Dengan eval_kv, "last thought" model = kegagalan ekspresi,
+            # sehingga perbaikan jadi continuation natural. eval_kv di-publish
+            # FactorCodeEvaluator ke shared backend; fallback ke construct_kv
+            # (_past_kv) bila coder_eval di-skip — mis. gagal regularisasi AST
+            # sebelum eksekusi, sehingga FactorCodeEvaluator tak pernah jalan.
+            eval_kv = (
+                getattr(self._llm_backend, "_coder_eval_kv", None)
+                if self._llm_backend is not None
+                else None
+            )
+            kv_baseline = eval_kv if eval_kv is not None else self._past_kv
             kv_baseline_len = _past_length(kv_baseline) if kv_baseline is not None else 0
 
-            # Paksa model output HANYA JSON — tanpa penjelasan sebelumnya.
-            # Qwen3-4B di large KV context (>13k tok) cenderung generate verbose
-            # analysis dulu baru JSON di akhir. _fix_json bisa gagal ekstrak
-            # kalau JSON tertimbun di teks panjang.
-            json_only_suffix = (
-                "\n\nOUTPUT INSTRUCTION: Respond with ONLY the raw JSON object "
-                "on a single line. No explanation, no preamble, no analysis. "
-                'Example: {"expr": "TS_STD($close, 20)"}'
-            )
+            # Catatan: instruksi "OUTPUT INSTRUCTION: respond with ONLY raw
+            # JSON ..." sudah ADA di template evolving_strategy_factor_
+            # implementation_v2_user (qa_prompts.yaml, baris terakhir). Dulu
+            # di sini ada `json_only_suffix` yang meng-append teks identik →
+            # OUTPUT INSTRUCTION muncul DOBEL di user prompt. Suffix dihapus;
+            # cukup andalkan baris dari template.
 
             # Temperature escalation: 0.3 → 0.7 → 1.0 setelah mirror / JSON fail
             _MAX_ATTEMPTS = 5
@@ -553,8 +581,9 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                             )
                     self._past_kv = kv_baseline
 
-                    # Inject mirror-warning ke user prompt bila attempt sebelumnya mirror
-                    effective_user_prompt = user_prompt + json_only_suffix + mirror_hint
+                    # Inject mirror-warning ke user prompt bila attempt sebelumnya mirror.
+                    # OUTPUT INSTRUCTION sudah dari template (lihat catatan di atas).
+                    effective_user_prompt = user_prompt + mirror_hint
 
                     raw = self._call_llm(
                         user_prompt=effective_user_prompt,
