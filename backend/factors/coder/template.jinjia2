@@ -9,8 +9,10 @@ def calculate_factor(expr: str, name: str):
     # stock dataframe
     df = pd.read_hdf('./daily_pv.h5', key='data')
 
-    # derive $return karena prompt + contoh mengiklankan $return,
-    # sementara daily_pv.h5 hanya punya OHLCV. groupby instrument supaya
+    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via
+    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu
+    # saat file dipasok tanpa kolom $return, derive di sini supaya
+    # ekspresi berbasis $return tetap jalan. groupby instrument supaya
     # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).
     if '$return' not in df.columns:
         idx_names = df.index.names

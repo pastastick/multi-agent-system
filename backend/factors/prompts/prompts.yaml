@@ -20,7 +20,7 @@ potential_direction_transformation: |-
 
   Transform it into a clear, actionable hypothesis. Requirements:
   1. **Specific** — name a concrete market phenomenon, not a generic theme.
-  2. **Testable** — expressible as a formula on OHLCV data.
+  2. **Testable** — expressible as a formula on daily price-volume data ($open, $high, $low, $close, $volume, $return).
   3. **Aligned** — directly tied to the user's direction.
 
 
@@ -56,7 +56,7 @@ hypothesis_output_format: |-
 
 factor_hypothesis_specification: |-
   Hypothesis design guidance:
-  - Data-grounded: align with OHLCV — temporal, cross-sectional, or distributional patterns.
+  - Data-grounded: align with daily price-volume data ($open, $high, $low, $close, $volume, $return) — temporal, cross-sectional, or distributional patterns.
   - Theory-grounded: name an economic or behavioral driver (momentum, mean-reversion, microstructure, regime, sentiment).
   - Iterative: build on latent KV memory — refine within a framework before pivoting.
   - Anti-overfit: prefer robust simple effects over many free parameters.
