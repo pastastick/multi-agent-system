@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-14T07:42:23.616227",
-    "total_factors": 7,
+    "last_updated": "2026-05-16T04:05:07.931425",
+    "total_factors": 13,
     "version": "1.0"
   },
   "factors": {
@@ -346,6 +346,204 @@
         "initial_direction": "",
         "planning_direction": "",
         "created_at": "2026-05-14T07:42:22.990120"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "5c0b7de0af9a3a3d": {
+      "factor_id": "5c0b7de0af9a3a3d",
+      "factor_name": "VolumeShift_5D",
+      "factor_expression": "TS_RANK((TS_SUM($volume, 5) - TS_MEAN($volume, 20)) / (TS_MEAN($volume, 20) + 1e-8), 5)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK((TS_SUM($volume, 5) - TS_MEAN($volume, 20)) / (TS_MEAN($volume, 20) + 1e-8), 5)\" # Your output factor expression will be filled in here\n    name = \"VolumeShift_5D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "5-day volume shift normalized by 20-day average to capture volume trend changes",
+      "factor_formulation": "\\text{TS_RANK}\\left(\\frac{\\text{TS_SUM}(v,5) - \\text{TS_MEAN}(v,20)}{\\text{TS_MEAN}(v,20)}\\right",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "60ab429e7d574401bdb5796aa0873d95",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/60ab429e7d574401bdb5796aa0873d95/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-16_03-38-15-141896",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "99c35a30d534",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days exhibit enhanced mean-reversion in price.\n                Concise Observation: \n                Concise Justification: Behavioral investors may overreact on low-volume days, creating mispricings that are corrected on high-volume days due to increased liquidity and information dissemination.\n                Concise Knowledge: Days with low trading volume followed by high volume show stronger price reversion to previous levels.\n                concise Specification: Volume change over 5-day window, price return over 10-day horizon, applicable to equities with daily data.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-16T03:54:41.966291"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "cecf4ab88fd11903": {
+      "factor_id": "cecf4ab88fd11903",
+      "factor_name": "PriceReversion_10D",
+      "factor_expression": "ZSCORE(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8), 10)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"ZSCORE(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8))\" # Your output factor expression will be filled in here\n    name = \"PriceReversion_10D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "10-day price reversion strength measured by z-score relative to mean",
+      "factor_formulation": "\\text{ZSCORE}\\left(\\frac{c - \\text{TS_MEAN}(c,10)}{\\text{TS_STD}(c,10)}\\right",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "0e4ef992ad9f424ea345613938091992",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/0e4ef992ad9f424ea345613938091992/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-16_03-38-15-141896",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "99c35a30d534",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days exhibit enhanced mean-reversion in price.\n                Concise Observation: \n                Concise Justification: Behavioral investors may overreact on low-volume days, creating mispricings that are corrected on high-volume days due to increased liquidity and information dissemination.\n                Concise Knowledge: Days with low trading volume followed by high volume show stronger price reversion to previous levels.\n                concise Specification: Volume change over 5-day window, price return over 10-day horizon, applicable to equities with daily data.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-16T03:54:43.284697"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "7cafec30c885e226": {
+      "factor_id": "7cafec30c885e226",
+      "factor_name": "VolumeRebound_5D",
+      "factor_expression": "TS_RANK((TS_SUM($volume, 5) - TS_MIN($volume, 5)) / (TS_MEAN($volume, 5) + 1e-8), 5)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK((TS_SUM($volume, 5) - TS_MIN($volume, 5)) / (TS_MEAN($volume, 5) + 1e-8), 5)\" # Your output factor expression will be filled in here\n    name = \"VolumeRebound_5D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Volume rebound strength after low-volume period",
+      "factor_formulation": "\\text{TS_RANK}\\left(\\frac{\\text{TS_SUM}(v,5) - \\text{TS_MIN}(v,5)}{\\text{TS_MEAN}(v,5)}\\right",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "09d5e5a42ef0494582517e15cf16e67b",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/09d5e5a42ef0494582517e15cf16e67b/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-16_03-38-15-141896",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "99c35a30d534",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days exhibit enhanced mean-reversion in price.\n                Concise Observation: \n                Concise Justification: Behavioral investors may overreact on low-volume days, creating mispricings that are corrected on high-volume days due to increased liquidity and information dissemination.\n                Concise Knowledge: Days with low trading volume followed by high volume show stronger price reversion to previous levels.\n                concise Specification: Volume change over 5-day window, price return over 10-day horizon, applicable to equities with daily data.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-16T03:54:44.117419"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "e52b386bbc07d443": {
+      "factor_id": "e52b386bbc07d443",
+      "factor_name": "VolumeTurnover_1D",
+      "factor_expression": "TS_RANK(TS_SUM($volume, 1) / (TS_MEAN($volume, 10) + 1e-8), 1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK(TS_SUM($volume, 1) / (TS_MEAN($volume, 10) + 1e-8), 1)\" # Your output factor expression will be filled in here\n    name = \"VolumeTurnover_1D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "1-day volume turnover rate relative to 10-day average",
+      "factor_formulation": "\\text{TS}_\\text{RANK}\\left(\\frac{\\text{TS}_\\text{SUM}(v,1)}{\\text{TS}_\\text{MEAN}(v,10)}\\right)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "bab0015ae72146008c56f1e99ea50dd0",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/bab0015ae72146008c56f1e99ea50dd0/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-16_03-38-15-141896",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "6b920b04cb71",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days are associated with higher subsequent returns.\n                Concise Observation: \n                Concise Justification: Behavioral investors may adjust their trading strategies based on liquidity signals, leading to increased buying or selling pressure after low-volume periods.\n                Concise Knowledge: Days with low trading volume followed by a surge in volume on the next day show a statistically significant increase in return magnitude.\n                concise Specification: Volume on day t and day t+1, 1-day lookback, expected 5-10% return increase on days with high volume following low volume.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-16T04:05:06.019551"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "a61cbde819bbc2c9": {
+      "factor_id": "a61cbde819bbc2c9",
+      "factor_name": "VolumeReversal_2D",
+      "factor_expression": "TS_RANK(($volume - TS_MEAN($volume, 10)) / (TS_STD($volume, 10) + 1e-8), 1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK(($volume - TS_MEAN($volume, 10)) / (TS_STD($volume, 10) + 1e-8), 1)\" # Your output factor expression will be filled in here\n    name = \"VolumeReversal_2D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "2-day volume deviation from 10-day mean, cross-sectionally ranked",
+      "factor_formulation": "\\text{TS}_\\text{RANK}\\left(\\frac{v - \\text{TS}_\\text{MEAN}(v,10)}{\\text{TS}_\\text{STD}(v,10)}\\right)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "d1894d44b3bb49b1b2944f71c3a38815",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/d1894d44b3bb49b1b2944f71c3a38815/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-16_03-38-15-141896",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "6b920b04cb71",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days are associated with higher subsequent returns.\n                Concise Observation: \n                Concise Justification: Behavioral investors may adjust their trading strategies based on liquidity signals, leading to increased buying or selling pressure after low-volume periods.\n                Concise Knowledge: Days with low trading volume followed by a surge in volume on the next day show a statistically significant increase in return magnitude.\n                concise Specification: Volume on day t and day t+1, 1-day lookback, expected 5-10% return increase on days with high volume following low volume.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-16T04:05:06.590954"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "fb90765a037e0768": {
+      "factor_id": "fb90765a037e0768",
+      "factor_name": "VolumeMomentum_2D",
+      "factor_expression": "TS_RANK(TS_SUM($volume, 2) / (TS_MEAN($volume, 10) + 1e-8), 1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK(TS_SUM($volume, 2) / (TS_MEAN($volume, 10) + 1e-8), 1)\" # Your output factor expression will be filled in here\n    name = \"VolumeMomentum_2D\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "2-day cumulative volume trend normalized by 10-day average",
+      "factor_formulation": "\\text{TS}_\\text{RANK}\\left(\\frac{\\text{TS}_\\text{SUM}(v,2)}{\\text{TS}_\\text{MEAN}(v,10)}\\right)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "dc940d6644ec44abb67b4c64fe54710b",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/dc940d6644ec44abb67b4c64fe54710b/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-16_03-38-15-141896",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "6b920b04cb71",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume days followed by high-volume days are associated with higher subsequent returns.\n                Concise Observation: \n                Concise Justification: Behavioral investors may adjust their trading strategies based on liquidity signals, leading to increased buying or selling pressure after low-volume periods.\n                Concise Knowledge: Days with low trading volume followed by a surge in volume on the next day show a statistically significant increase in return magnitude.\n                concise Specification: Volume on day t and day t+1, 1-day lookback, expected 5-10% return increase on days with high volume following low volume.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-16T04:05:07.186276"
       },
       "backtest_results": {},
       "feedback": {

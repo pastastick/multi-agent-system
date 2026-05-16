@@ -40,6 +40,11 @@ export TRANSFORMERS_CACHE=/workspace/.cache/huggingface/hub
 export TORCH_HOME=/workspace/.cache/torch
 export TORCHINDUCTOR_CACHE_DIR=/workspace/.cache/torchinductor
 
+# Izinkan transformers download model dari HF saat run pertama.
+# Default kode adalah local_files_only=True (offline) — set 0 agar model
+# Qwen3 ter-download otomatis jika belum ada di cache HF.
+export HF_LOCAL_ONLY=0
+
 # Project-specific
 export PYTHONPATH=/workspace/project/multi-agent-system/backend
 ```
@@ -249,6 +254,34 @@ mkdir -p log
 mkdir -p debug/llm_outputs
 ```
 
+### 5e. Download Model Qwen3
+
+> **Penting**: dataset di langkah 5a–5c **tidak** termasuk model LLM. Model `Qwen3-4B` harus tersedia di cache HuggingFace sebelum pipeline dijalankan, jika tidak akan muncul error `We couldn't connect to 'https://huggingface.co' to load the files`.
+
+Kode meload model dengan `local_files_only=True` secara default (mode offline) — dikontrol env var `HF_LOCAL_ONLY` di `backend/llm/client.py`. Ada dua cara:
+
+**Cara A — biarkan ter-download otomatis saat run pertama (direkomendasikan).**
+Set `HF_LOCAL_ONLY=0` di file `.env` (sudah ada di `configs/.env.example`). `launcher.py` memanggil `load_dotenv()` sebelum mengimpor `llm/client.py`, jadi nilai di `.env` pasti terbaca — tidak bergantung pada apakah shell sudah `source runpod_env.sh`. Dengan ini transformers akan cek cache dulu, lalu download dari HF jika belum ada. Run pertama mengunduh ~8 GB; run berikutnya memakai cache.
+
+> `runpod_env.sh` juga mengeset `HF_LOCAL_ONLY=0`, tapi itu hanya berlaku jika shell sudah di-`source`. Menaruhnya di `.env` lebih andal karena selalu dimuat oleh `launcher.py`.
+
+**Cara B — pre-download model secara eksplisit.**
+
+```bash
+source /workspace/runpod_env.sh
+source /workspace/project/multi-agent-system/.venv/bin/activate
+
+# Model di-cache otomatis ke /workspace/.cache/huggingface/hub via HF_HOME
+hf download Qwen/Qwen3-4B
+```
+
+Setelah model tersedia di cache, pipeline bisa berjalan penuh offline (`HF_LOCAL_ONLY=1`).
+
+| Model | Ukuran download | VRAM saat load |
+|---|---|---|
+| `Qwen/Qwen3-4B` | ~8 GB | ~8 GB |
+| `Qwen/Qwen3-14B` | ~28 GB | ~28 GB |
+
 ---
 
 ## 6. Verifikasi Setup
@@ -447,6 +480,14 @@ Kalau `cuda: False` dan versi torch (misal `cu130`) lebih tinggi dari yang diduk
 ```bash
 uv pip install pip
 ```
+
+### `We couldn't connect to 'https://huggingface.co' to load the files`
+
+**Gejala**: pipeline gagal di `[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=True) ...` dengan error `couldn't connect to 'https://huggingface.co'` / `couldn't find them in the cached files`.
+
+**Penyebab**: model Qwen3 belum ada di cache HuggingFace, sementara kode meload dengan `local_files_only=True` (mode offline) sehingga transformers tidak mencoba mengunduh.
+
+**Solusi**: tambahkan `HF_LOCAL_ONLY=0` ke file `.env` (paling andal — `launcher.py` selalu memuat `.env`), atau pre-download model — lihat bagian [5e](#5e-download-model-qwen3). Catatan: meng-`export HF_LOCAL_ONLY=0` di shell saja tidak cukup jika `python launcher.py` dijalankan di shell/tmux yang belum di-`source runpod_env.sh`.
 
 ### CUDA Out of Memory
 
