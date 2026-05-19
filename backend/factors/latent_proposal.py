@@ -253,33 +253,6 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         selalu KV dari attempt terakhir (untuk feedback step chain).
     """
 
-    # Output-format spec untuk construct — format baris berlabel, BUKAN JSON.
-    # Model kecil (Qwen3-4B) gagal pada JSON nested: echo placeholder, salah
-    # escape LaTeX, atau menjatuhkan struktur {factor_name: {...}}. Format
-    # keyword ini hanya minta 4 baris teks per faktor; Python (proposal.py
-    # parse_construct_keywords) yang menyusun ulang ke struktur dict.
-    _COMPACT_OUTPUT_FORMAT = """Write 2-3 factors. For EACH factor write exactly four lines, in this order:
-
-NAME: <short factor name, letters/digits/underscore only, no spaces>
-DESC: <one sentence — what the factor measures>
-VARS: <each variable as $sym=meaning, separated by ;>
-EXPR: <the factor expression on one line>
-
-Separate factors with one blank line. Output ONLY these lines — no JSON, no
-markdown, no commentary. EXPR must use only $open/$close/$high/$low/$volume/$return
-and the allowed operators.
-
-Example (write your own content, do not copy this):
-NAME: VolumeMomentum_5D
-DESC: 5-day cumulative volume trend normalized by the 20-day average
-VARS: $volume=daily trading volume
-EXPR: RANK(TS_SUM($volume, 5) / (TS_MEAN($volume, 20) + 1e-8))
-
-NAME: PriceReversal_10D
-DESC: Short-term price deviation from the 10-day mean, cross-sectionally ranked
-VARS: $close=daily close price
-EXPR: RANK(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8))"""
-
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
                  temperature: Optional[float] = None, **kwargs):
@@ -294,14 +267,13 @@ EXPR: RANK(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8))"""
         self._attempt_idx = 0
 
     def prepare_context(self, hypothesis, trace, history_limit=None):
-        """Replace default output-format (berisi contoh konkret yang
-        di-pattern-match model) dengan _COMPACT_OUTPUT_FORMAT."""
+        """Delegate ke super() — output format dibaca dari prompts.yaml (single source of truth).
+        json_mode False karena construct output adalah keyword lines, bukan JSON.
+        """
         from factors.proposal import DEFAULT_HISTORY_LIMIT
         if history_limit is None:
             history_limit = DEFAULT_HISTORY_LIMIT
         ctx, _ = super().prepare_context(hypothesis, trace, history_limit)
-        ctx["experiment_output_format"] = self._COMPACT_OUTPUT_FORMAT
-        # Output construct kini berlabel keyword, bukan JSON → json_mode False.
         return ctx, False
 
     def _get_scenario_desc(self, trace) -> str:
