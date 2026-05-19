@@ -4,7 +4,6 @@ berisi implementasi dari "propose hypothesis" dan
 di loop.py, class disini di-load via import_class() dari string path di setting.py
 """
 
-import json
 import re
 from pathlib import Path
 from typing import List, Tuple
@@ -64,6 +63,122 @@ def is_input_length_error(error_msg: str) -> bool:
     ]
     error_str = str(error_msg).lower()
     return any(indicator.lower() in error_str for indicator in error_indicators)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Construct output parser — keyword-marked format (NAME / DESC / VARS / EXPR)
+# ─────────────────────────────────────────────────────────────────────────────
+# Construct LLM tidak lagi diminta menghasilkan JSON. Model kecil (Qwen3-4B)
+# sering meng-echo placeholder, salah escape LaTeX, atau menjatuhkan struktur
+# nested {factor_name: {...}}. Sebagai gantinya model menulis baris berlabel
+# dan Python yang menyusun ulang ke struktur dict downstream.
+
+_KW_FIELD_RE = {
+    k: re.compile(rf"(?im)^[ \t]*{k}[ \t]*[:=][ \t]*(.+)$")
+    for k in ("DESC", "VARS", "EXPR")
+}
+
+
+def _kw_field(body: str, key: str) -> str:
+    m = _KW_FIELD_RE[key].search(body)
+    return m.group(1).strip() if m else ""
+
+
+def _parse_vars(raw: str, expr: str) -> dict:
+    """VARS line: '$volume=daily volume; $close=close price'.
+    Token $xxx yang muncul di expr tapi tak disebut VARS tetap ditambahkan."""
+    variables: dict = {}
+    for part in re.split(r"[;,]", raw or ""):
+        part = part.strip()
+        if not part:
+            continue
+        if "=" in part:
+            k, v = part.split("=", 1)
+            variables[k.strip()] = v.strip()
+        else:
+            variables[part] = ""
+    for tok in dict.fromkeys(re.findall(r"\$\w+", expr)):
+        variables.setdefault(tok, "")
+    return variables
+
+
+def _normalize_json_factors(data) -> dict:
+    """Fallback bila model tetap mengeluarkan JSON. Terima nested
+    {name:{...}}, flat {description,...,expression}, atau {"factors":[...]}."""
+    out: dict = {}
+    if isinstance(data, dict) and isinstance(data.get("factors"), list):
+        data = data["factors"]
+    if isinstance(data, list):
+        for i, item in enumerate(data):
+            if not isinstance(item, dict):
+                continue
+            name = item.get("name") or item.get("factor_name") or f"factor_{i + 1}"
+            out[name] = {
+                "description": item.get("description", ""),
+                "variables": item.get("variables", {}) or {},
+                "formulation": item.get("formulation", "") or item.get("expression", ""),
+                "expression": item.get("expression", ""),
+            }
+        return out
+    if isinstance(data, dict):
+        # flat single-factor object: {description, variables, ..., expression}.
+        # Top-level `expression` key = flat; nested {name:{...}} tidak punya itu.
+        if "expression" in data:
+            name = data.get("name") or data.get("factor_name") or "factor_1"
+            return {name: {
+                "description": data.get("description", ""),
+                "variables": data.get("variables", {}) or {},
+                "formulation": data.get("formulation", "") or data.get("expression", ""),
+                "expression": data.get("expression", ""),
+            }}
+        # nested {name: {...}}
+        for name, fd in data.items():
+            if isinstance(fd, dict):
+                out[name] = {
+                    "description": fd.get("description", ""),
+                    "variables": fd.get("variables", {}) or {},
+                    "formulation": fd.get("formulation", "") or fd.get("expression", ""),
+                    "expression": fd.get("expression", ""),
+                }
+    return out
+
+
+def parse_construct_keywords(text: str) -> dict:
+    """Parse output construct ber-marker keyword menjadi
+    {factor_name: {description, variables, formulation, expression}}.
+
+    Tahan terhadap: markdown fences, variasi kapital, spasi ekstra, faktor
+    dipisah baris kosong. Jika model tetap mengeluarkan JSON, fallback ke
+    _normalize_json_factors sehingga downstream tetap mendapat struktur sama."""
+    if not text or not text.strip():
+        return {}
+    cleaned = re.sub(r"```[a-zA-Z]*", "", text)
+    result: dict = {}
+    blocks = re.split(r"(?im)^[ \t]*NAME[ \t]*[:=]", cleaned)
+    for blk in blocks[1:]:
+        lines = blk.splitlines()
+        if not lines:
+            continue
+        name = lines[0].strip().strip('"').strip("'").strip()
+        if not name:
+            continue
+        body = "\n".join(lines[1:])
+        expr = _kw_field(body, "EXPR")
+        if not expr:
+            continue
+        result[name] = {
+            "description": _kw_field(body, "DESC"),
+            "variables": _parse_vars(_kw_field(body, "VARS"), expr),
+            "formulation": expr,
+            "expression": expr,
+        }
+    if result:
+        return result
+    # fallback: model emitted JSON despite the keyword instruction
+    try:
+        return _normalize_json_factors(robust_json_parse(text))
+    except Exception:
+        return {}
+
 
 # QlibFactorHypothesis = Hypothesis dari core/proposal.py
 # dipakai oleh QlibFactorHypothesisGen
@@ -182,7 +297,7 @@ class QlibFactorHypothesis2Experiment(FactorHypothesis2Experiment):
         }, True
 
     def convert_response(self, response: str, trace: Trace) -> FactorExperiment:
-        response_dict = robust_json_parse(response)
+        response_dict = parse_construct_keywords(response)
         tasks = []
 
         for factor_name in response_dict:
@@ -731,12 +846,14 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
             else:
                 resp = self._call_llm(user_prompt, system_prompt, json_flag)
 
-            try:
-                # parse JSON => dict
-                response_dict = robust_json_parse(resp)
-            except json.JSONDecodeError as e:
-                logger.warning(f"JSON parse failed: {e}, retrying...")
-                error_log.append(f"JSON parse failed: output must be raw JSON object starting with {{\"FactorName\"")
+            # parse keyword-marked output => {factor_name: {...}}
+            response_dict = parse_construct_keywords(resp)
+            if not response_dict:
+                logger.warning("Construct output parse failed (no factor found), retrying...")
+                error_log.append(
+                    "no factor parsed — write each factor as 4 lines: "
+                    "NAME: / DESC: / VARS: / EXPR:"
+                )
                 continue
 
             proposed_names = [] # nama faktor yang valid
@@ -989,7 +1106,7 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
     
 
     def convert_response(self, response: str, trace: Trace) -> FactorExperiment:
-        response_dict = robust_json_parse(response)
+        response_dict = parse_construct_keywords(response)
         tasks = []
 
         for factor_name in response_dict:

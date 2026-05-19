@@ -208,14 +208,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     llm_backend=llm_backend,
                     latent_steps=_get_ls("construct") if _get_ls else None,
                     # Construct: temperature rendah → formula lebih presisi.
-                    # Output di-parse oleh QlibFactorParser menjadi Python code.
+                    # Output berlabel keyword (NAME/DESC/VARS/EXPR), di-parse
+                    # oleh proposal.parse_construct_keywords.
                     temperature=_get_temp("construct") if _get_temp else None,
-                    # Guided JSON decoding — struktur output dipaksa valid
-                    # via lm-format-enforcer (prefix_allowed_tokens_fn).
-                    # Default True: model kecil butuh constraint struktural.
-                    guided_decoding=getattr(
-                        PROP_SETTING, "guided_construct_enabled", True,
-                    ),
                 )
                 self.summarizer = LatentFeedback(
                     scen, llm_backend=llm_backend,
@@ -402,14 +397,13 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         self.trace.hist.append((prev_out["factor_propose"], prev_out["factor_backtest"], feedback))
         self._last_feedback = feedback
 
-        # ── KV-cache: chain feedback → next iteration's propose ──
-        feedback_kv = self.summarizer.last_kv
-        if feedback_kv is not None and kv_truncate is not None:
-            self._pipeline_kv = kv_truncate(feedback_kv, self._kv_max_tokens)
-            logger.info(
-                f"[LatentPipeline] Chained feedback KV → next propose "
-                f"(truncated to {self._kv_max_tokens} tokens)"
-            )
+        # Reset pipeline KV after each iteration — propose starts fresh.
+        # Context carryover is handled via self.trace.hist (text), not KV.
+        # Chaining feedback_kv → propose biases the model toward feedback
+        # output format and accumulates stale context; text trace is enough.
+        # Mutation/crossover seeds are injected at __init__ time, consumed in
+        # iteration 1 only — resetting here is safe for subsequent iterations.
+        self._pipeline_kv = None
 
         #* Auto-save factors to unified factor library
         try:

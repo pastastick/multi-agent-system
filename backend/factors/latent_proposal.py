@@ -253,50 +253,40 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         selalu KV dari attempt terakhir (untuk feedback step chain).
     """
 
-    # Compact output-format spec menggantikan `factor_experiment_output_format`.
-    # PENTING: gunakan contoh KONKRET (bukan placeholder abstrak seperti
-    # <factor_name_A> atau "...") karena model kecil (Qwen3-4B) akan
-    # meng-echo placeholder secara literal. Tampilkan struktur nyata lalu
-    # instruksikan "ganti dengan konten kamu sendiri".
-    _COMPACT_OUTPUT_FORMAT = """Output: ONE raw JSON object. No markdown fences, no commentary, no extra text.
-Generate 2-3 factors. Follow this EXACT structure — replace names/values with your own:
+    # Output-format spec untuk construct — format baris berlabel, BUKAN JSON.
+    # Model kecil (Qwen3-4B) gagal pada JSON nested: echo placeholder, salah
+    # escape LaTeX, atau menjatuhkan struktur {factor_name: {...}}. Format
+    # keyword ini hanya minta 4 baris teks per faktor; Python (proposal.py
+    # parse_construct_keywords) yang menyusun ulang ke struktur dict.
+    _COMPACT_OUTPUT_FORMAT = """Write 2-3 factors. For EACH factor write exactly four lines, in this order:
 
-{
-    "VolumeMomentum_5D": {
-        "description": "5-day cumulative volume trend normalized by 20-day average",
-        "variables": {"$volume": "daily trading volume"},
-        "formulation": "\\\\text{RANK}(\\\\frac{\\\\text{TS\\_SUM}(v,5)}{\\\\text{TS\\_MEAN}(v,20)})",
-        "expression": "RANK(TS_SUM($volume, 5) / (TS_MEAN($volume, 20) + 1e-8))"
-    },
-    "PriceReversal_10D": {
-        "description": "Short-term price deviation from 10-day mean, cross-sectionally ranked",
-        "variables": {"$close": "closing price of the stock"},
-        "formulation": "\\\\text{RANK}\\\\left(\\\\frac{c - \\\\text{TS\\_MEAN}(c,10)}{\\\\text{TS\\_STD}(c,10)}\\\\right)",
-        "expression": "RANK(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8))"
-    }
-}
+NAME: <short factor name, letters/digits/underscore only, no spaces>
+DESC: <one sentence — what the factor measures>
+VARS: <each variable as $sym=meaning, separated by ;>
+EXPR: <the factor expression on one line>
 
-CRITICAL RULES — do NOT echo this template:
-- Replace "VolumeMomentum_5D" / "PriceReversal_10D" with your own factor names.
-- Replace ALL values (description, variables, formulation, expression) with your actual content.
-- `expression` must use only $open/$close/$high/$low/$volume/$return and allowed operators.
-- Do NOT output literal "...", "<placeholder>", or any field descriptions as values."""
+Separate factors with one blank line. Output ONLY these lines — no JSON, no
+markdown, no commentary. EXPR must use only $open/$close/$high/$low/$volume/$return
+and the allowed operators.
+
+Example (write your own content, do not copy this):
+NAME: VolumeMomentum_5D
+DESC: 5-day cumulative volume trend normalized by the 20-day average
+VARS: $volume=daily trading volume
+EXPR: RANK(TS_SUM($volume, 5) / (TS_MEAN($volume, 20) + 1e-8))
+
+NAME: PriceReversal_10D
+DESC: Short-term price deviation from the 10-day mean, cross-sectionally ranked
+VARS: $close=daily close price
+EXPR: RANK(($close - TS_MEAN($close, 10)) / (TS_STD($close, 10) + 1e-8))"""
 
     def __init__(self, *args, llm_backend: LocalLLMBackend,
                  latent_steps: Optional[int] = None,
-                 temperature: Optional[float] = None,
-                 guided_decoding: bool = True, **kwargs):
+                 temperature: Optional[float] = None, **kwargs):
         AlphaAgentHypothesis2FactorExpression.__init__(self, *args, **kwargs)
         self._init_latent_state(llm_backend, default_mode="kv_and_text",
                                 latent_steps=latent_steps, temperature=temperature)
         self._attempt_idx: int = 0
-        # Guided JSON decoding via lm-format-enforcer.
-        # Model kecil (<~70B) sering gagal menghasilkan struktur nested
-        # {factor_name → {description, variables, formulation, expression}}
-        # karena anchoring pada token $close/TS_MEAN/dst di prompt → output
-        # meluncur ke flat variables dict. Guided decoding memaksa struktur
-        # via prefix_allowed_tokens_fn di model.generate().
-        self._guided_decoding: bool = guided_decoding
 
     def set_past_kv(self, kv):
         """Override: reset attempt counter saat KV baru di-set (= step construct baru)."""
@@ -309,9 +299,10 @@ CRITICAL RULES — do NOT echo this template:
         from factors.proposal import DEFAULT_HISTORY_LIMIT
         if history_limit is None:
             history_limit = DEFAULT_HISTORY_LIMIT
-        ctx, json_flag = super().prepare_context(hypothesis, trace, history_limit)
+        ctx, _ = super().prepare_context(hypothesis, trace, history_limit)
         ctx["experiment_output_format"] = self._COMPACT_OUTPUT_FORMAT
-        return ctx, json_flag
+        # Output construct kini berlabel keyword, bukan JSON → json_mode False.
+        return ctx, False
 
     def _get_scenario_desc(self, trace) -> str:
         """Compact scenario untuk latent construct mode.
@@ -341,13 +332,9 @@ CRITICAL RULES — do NOT echo this template:
         temp_override = min(base_temp + 0.15 * (self._attempt_idx - 1), 1.0)
         past_kv = self._past_kv
 
-        # Guided JSON schema — paksa struktur output nested 4-field per factor.
-        # Hanya resolve saat diperlukan (None → backend skip build prefix_fn).
-        json_schema = None
-        if self._guided_decoding:
-            from llm.guided_decoding import CONSTRUCT_FACTOR_JSON_SCHEMA
-            json_schema = CONSTRUCT_FACTOR_JSON_SCHEMA
-
+        # Output construct = format keyword (NAME/DESC/VARS/EXPR), bukan JSON →
+        # tidak ada guided JSON decoding. Parsing ditangani Python di
+        # proposal.parse_construct_keywords.
         result = self.llm_backend.build_messages_and_run(
             user_prompt=user_prompt,
             system_prompt=system_prompt,
@@ -357,13 +344,12 @@ CRITICAL RULES — do NOT echo this template:
             role="construct",
             latent_steps=self._latent_steps,
             temperature=temp_override,
-            json_schema=json_schema,
         )
         self.last_result = result
         logger.info(
             f"[LatentHypothesis2Experiment] attempt={self._attempt_idx}, "
             f"mode={self._mode}, has_kv_in={past_kv is not None}, "
-            f"temp={temp_override:.2f}, guided={self._guided_decoding}, "
+            f"temp={temp_override:.2f}, "
             f"text_len={len(result.text or '')}"
         )
         return result.text or ""
