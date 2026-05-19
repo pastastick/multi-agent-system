@@ -716,11 +716,19 @@ class EvolutionController:
         parents = self._crossover_groups[self._crossover_idx]
 
         # Generate crossover guidance
+        # generate_crossover_prompt_suffix memanggil crossover LLM (mode kv_and_text)
+        # dengan best parent's kv_cache sebagai input, menghasilkan crossover_kv.
         suffix = self.crossover_op.generate_crossover_prompt_suffix(parents)
 
-        # Untuk crossover, pilih KV-cache dari parent dengan metric terbaik.
-        # Menggabungkan KV dari konteks yang berbeda bisa misleading,
-        # jadi kita "seed" dengan konteks latent dari parent terkuat.
+        # Gunakan KV output dari crossover LLM (crossover_kv) sebagai seed propose,
+        # bukan best_parent_kv (feedback_kv parent). Alasan sama dengan mutation:
+        # feedback_kv mem-prime model ke format output feedback ("Observations",
+        # "New Hypothesis") bukan format hypothesis standar — propose jadi salah
+        # format. crossover_kv lebih netral: model baru selesai synthesize
+        # hybrid direction, bukan generate feedback.
+        # Fallback ke best_parent_kv jika crossover LLM tidak produce KV
+        # (mis. collapse ke text_only).
+        crossover_kv = self.crossover_op.last_kv
         best_parent_kv = None
         best_metric = -float("inf")
         for p in parents:
@@ -729,6 +737,7 @@ class EvolutionController:
                 if m > best_metric:
                     best_metric = m
                     best_parent_kv = p.kv_cache
+        seed_kv = crossover_kv if crossover_kv is not None else best_parent_kv
 
         task = {
             "phase": RoundPhase.CROSSOVER,
@@ -736,7 +745,7 @@ class EvolutionController:
             "parent_trajectories": parents,
             "strategy_suffix": suffix,
             "round_idx": self._current_round,
-            "parent_kv": best_parent_kv,
+            "parent_kv": seed_kv,
         }
 
         self._crossover_idx += 1
