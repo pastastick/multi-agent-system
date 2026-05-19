@@ -83,18 +83,24 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
     def get_runtime_environment(self) -> str:
         """Override rdagent's get_runtime_environment() yang butuh conda.
         Kita pakai venv, bukan conda — jadi generate deskripsi environment sendiri.
-        Output ini hanya teks informatif yang masuk ke background prompt LLM.
+
+        Hanya library yang relevan untuk implementasi factor (data + numerik)
+        yang dicantumkan. `pip list` penuh = ratusan baris noise yang masuk ke
+        prompt coder dan menggelembungkan KV-cache tanpa nilai untuk tugasnya.
         """
         import sys
-        import subprocess
-        try:
-            pkgs = subprocess.check_output(
-                [sys.executable, "-m", "pip", "list", "--format=freeze"],
-                text=True, timeout=10
-            )
-        except Exception:
-            pkgs = "unavailable"
-        return f"Python {sys.version}\nExecutable: {sys.executable}\nInstalled packages:\n{pkgs}"
+        from importlib.metadata import version, PackageNotFoundError
+
+        relevant = ("pandas", "numpy", "scipy", "pyqlib",
+                    "scikit-learn", "statsmodels")
+        versions = []
+        for name in relevant:
+            try:
+                versions.append(f"{name}=={version(name)}")
+            except PackageNotFoundError:
+                continue
+        pkgs = "\n".join(versions) if versions else "pandas, numpy, scipy available"
+        return f"Python {sys.version.split()[0]}\nKey libraries:\n{pkgs}"
 
     def __init__(self, use_local: bool = True, *args, **kwargs):
         from rdagent.core.scenario import Scenario
