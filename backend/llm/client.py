@@ -531,6 +531,42 @@ class LLMResult:
 _MODEL_CACHE: Dict[Tuple[str, str], Tuple[Any, Any]] = {}
 _MODEL_CACHE_LOCK = threading.Lock()
 
+# ── Global LLM output log state ───────────────────────────────────────────────
+# Semua LocalLLMBackend instance berbagi satu direktori output dan satu counter
+# atomik, sehingga semua output LLM (dari pipeline, evaluator, mutation, dsb.)
+# terkumpul di satu folder flat — tidak tersebar ke banyak session subfolder.
+#
+# Layout:
+#   debug/llm_outputs/
+#     20260520_060618_0001_propose_kv_and_text.md
+#     20260520_060618_0002_construct_kv_and_text.md
+#     20260520_060618_0003_coder_text_only.md
+#     ...
+#     index.jsonl
+#
+# Timestamp prefix (dari _GLOBAL_OUTPUT_RUN_TS) diambil sekali saat modul
+# pertama kali di-import — semua call dalam satu proses pakai prefix yang sama.
+_GLOBAL_OUTPUT_LOG_DIR:  Optional[Path] = None
+_GLOBAL_OUTPUT_INDEX:    Optional[Path] = None
+_GLOBAL_CALL_COUNTER:    int = 0
+_GLOBAL_OUTPUT_LOCK:     threading.Lock = threading.Lock()
+_GLOBAL_OUTPUT_RUN_TS:   str = time.strftime("%Y%m%d_%H%M%S")
+
+
+def _init_global_output_dir(output_log_dir: str) -> None:
+    """Inisialisasi direktori output global (idempoten — hanya sekali per proses)."""
+    global _GLOBAL_OUTPUT_LOG_DIR, _GLOBAL_OUTPUT_INDEX
+    with _GLOBAL_OUTPUT_LOCK:
+        if _GLOBAL_OUTPUT_LOG_DIR is not None:
+            return
+        try:
+            p = Path(output_log_dir)
+            p.mkdir(parents=True, exist_ok=True)
+            _GLOBAL_OUTPUT_LOG_DIR = p
+            _GLOBAL_OUTPUT_INDEX   = p / "index.jsonl"
+        except Exception:
+            pass
+
 
 def _load_or_get_cached_model(
     model_name: str,
@@ -1078,32 +1114,11 @@ class LocalLLMBackend:
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
         self._kv_store = KVCacheStore(kv_dir)        if store_kv    else None
 
-        # ── Per-call LLM output log (1 file .json per call) ──────────────
-        # Ditulis SEGERA setelah text di-generate (bukan di akhir loop),
-        # sehingga crash tengah jalan pun tetap meninggalkan jejak output
-        # LLM yang sudah tereksekusi. Berguna untuk debugging proposal/
-        # coder yang gagal validasi berulang.
-        #
-        # Layout:
-        #   debug/llm_outputs/session_<ts>/
-        #       0001_propose_kv_and_text.json
-        #       0002_construct_kv_and_text.json
-        #       ...
-        #       index.jsonl     <- 1 baris per call, untuk scan cepat
-        try:
-            _date_stamp = time.strftime("%Y%m%d_%H%M%S")
-            self._output_log_dir: Optional[Path] = (
-                Path(output_log_dir) / f"session_{_date_stamp}"
-            )
-            self._output_log_dir.mkdir(parents=True, exist_ok=True)
-            self._output_index_path: Optional[Path] = (
-                self._output_log_dir / "index.jsonl"
-            )
-            self._call_counter: int = 0
-        except Exception:
-            self._output_log_dir = None
-            self._output_index_path = None
-            self._call_counter = 0
+        # ── LLM output log: satu folder flat untuk seluruh proses ───────────
+        # Semua instance berbagi _GLOBAL_OUTPUT_LOG_DIR (inisialisasi idempoten).
+        # Tidak ada session subfolder — semua file ada di satu tempat.
+        _init_global_output_dir(output_log_dir)
+        self._output_log_dir = _GLOBAL_OUTPUT_LOG_DIR
 
     # ── Kompatibilitas APIBackend ──────────────────────────────────────────
 
@@ -1672,11 +1687,15 @@ class LocalLLMBackend:
                 elif m.get("role") == "user":
                     usr_prompt = m.get("content", "") or ""
 
-            self._call_counter += 1
-            n = self._call_counter
-            ts = time.strftime("%Y-%m-%d %H:%M:%S")
+            # Counter global (thread-safe) — semua instance berbagi satu urutan
+            global _GLOBAL_CALL_COUNTER
+            with _GLOBAL_OUTPUT_LOCK:
+                _GLOBAL_CALL_COUNTER += 1
+                n = _GLOBAL_CALL_COUNTER
 
-            filename = f"{n:04d}_{role}_{mode}.md"
+            ts = time.strftime("%Y-%m-%d %H:%M:%S")
+            # Prefix run-ts agar file dari proses berbeda tidak tabrakan nama
+            filename = f"{_GLOBAL_OUTPUT_RUN_TS}_{n:04d}_{role}_{mode}.md"
             filepath = self._output_log_dir / filename
 
             # Render markers → human-readable inline labels
@@ -1739,7 +1758,7 @@ class LocalLLMBackend:
                 os.fsync(f.fileno())
 
             # Index ringan: 1 baris JSON per call, untuk scan tanpa baca semua file
-            if self._output_index_path is not None:
+            if _GLOBAL_OUTPUT_INDEX is not None:
                 index_entry = {
                     "n"            : n,
                     "ts"           : ts,
@@ -1752,10 +1771,11 @@ class LocalLLMBackend:
                     "file"         : filename,
                     "vars"         : [name for name, _ in all_vars],
                 }
-                with open(self._output_index_path, "a", encoding="utf-8") as f:
-                    f.write(json.dumps(index_entry, ensure_ascii=False) + "\n")
-                    f.flush()
-                    os.fsync(f.fileno())
+                with _GLOBAL_OUTPUT_LOCK:
+                    with open(_GLOBAL_OUTPUT_INDEX, "a", encoding="utf-8") as f:
+                        f.write(json.dumps(index_entry, ensure_ascii=False) + "\n")
+                        f.flush()
+                        os.fsync(f.fileno())
         except Exception:
             # Logging TIDAK boleh mematikan pipeline
             pass
