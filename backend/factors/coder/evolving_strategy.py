@@ -490,7 +490,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                         qa_implement_prompts["evolving_strategy_factor_implementation_v2_user"],
                     )
                     .render(
-                        factor_information_str=_mv("factor_information_str", target_task.get_task_description()),
+                        factor_information_str=_mv("factor_information_str", target_task.get_task_information()),
                         queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
                         former_expression=_mv("former_expression", self.extract_expr(queried_former_failed_knowledge_to_render[-1].implementation.code)),
                         execution_log=_mv("execution_log", execution_log),

@@ -145,20 +145,53 @@ function_lib_description: |-
 
 
 experiment_output_format: |-
-  Output ONLY this JSON. No markdown, no commentary.
-  {"<factor_name>": {"description": "...", "variables": {"$sym": "meaning"}, "formulation": "LaTeX", "expression": "..."}}
+  Write 2-3 factors. For EACH factor write exactly four lines, in this order:
 
-  Expression syntax examples (mean-reversion / volume / volatility-momentum):
-  "($close - TS_MEAN($close, 5)) / (TS_MEAN($close, 5) + 1e-8)"
-  "RANK(TS_STD($volume, 10) / (TS_MEAN($volume, 20) + 1e-8))"
-  "RANK(($high - $low) / ($close + 1e-8)) * SIGN(TS_MEAN($return, 5))"
+  NAME: <short factor name, letters/digits/underscore only, no spaces>
+  DESC: <one sentence — what the factor measures>
+  VARS: <each variable as $sym=meaning, separated by ;>
+  EXPR: <the factor expression on one line>
+
+  Separate factors with one blank line. Output ONLY these lines — no JSON, no
+  markdown, no commentary. EXPR must use only $open/$close/$high/$low/$volume/$return
+  and the allowed operators.
+
+  Example (write your own content, do not copy this):
+  NAME: HighVolumeDayCount_10D
+  DESC: Number of days in the past 10 days where volume exceeded its 20-day average, cross-sectionally ranked
+  VARS: $volume=daily trading volume
+  EXPR: RANK(COUNT($volume > TS_MEAN($volume, 20), 10))
+
+  NAME: ReturnOnHighVolumeDays_5D
+  DESC: Cumulative return earned only on days when volume is above its 20-day average over 5 days
+  VARS: $return=daily return;$volume=daily trading volume
+  EXPR: RANK(SUMIF($return, 5, $volume > TS_MEAN($volume, 20)))
 
 
 # ─── Feedback Agent (Evaluation) ─────────────────────────────────────────────
 
 factor_feedback_generation:
   system: |-
-    You are the **Evaluation agent** — assess backtest results and seed the next hypothesis.
+    Role: Evaluation Agent
+
+    Mission
+    Assess backtest results for a set of quantitative factors and produce a concrete next-direction for the Propose agent.
+
+    Evaluation Rules:
+    - IC (Information Coefficient): ≥ 0.02 annualized is meaningful signal; negative IC = signal is reversed or absent
+    - annualized_return: interpret alongside IC — high return + low IC = lucky and fragile, not a real signal
+    - max_drawdown: closer to 0 is better; > 0.3 means the signal is fragile or overfitting to specific periods
+    - Factors with `<implemented>False</implemented>` never ran — skip them entirely, do not comment on them
+    - If `<complexity_warning>` is present: the next hypothesis MUST redesign from scratch (fundamentally simpler structure, not parameter tweaks)
+    - Guiding principle: simple IC=0.03 that generalizes > complex IC=0.06 that overfits to the sample
+
+    Analysis Protocol — work through each question before writing output:
+    Q1: Is IC positive for at least one implemented factor? Does any reach IC ≥ 0.02?
+    Q2: Does annualized_return align with IC direction? (Both positive = consistent signal; diverging = suspect, may be data artifact)
+    Q3: Is max_drawdown < 0.3 for any factor? (Yes = signal is relatively stable across the period)
+    Q4: Overall verdict — hypothesis confirmed (IC + return both positive), partially confirmed (IC positive, weak return), or refuted (IC ≤ 0)?
+    Q5: Based on Q1–Q4, what is the most natural unexplored angle to pursue next? Should be specific (mechanism + data + horizon), not generic.
+
     Prior hypothesis and factor expressions are in latent KV representation.
 
     <scenario>
@@ -188,17 +221,12 @@ factor_feedback_generation:
     {{ combined_result }}
     </backtest_results>
 
-    Metrics: annualized_return and IC (bigger=better), max_drawdown (closer to 0=better).
-    Factors with `<implemented>False</implemented>` were skipped — ignore them.
-    If `<complexity_warning>` present: next hypothesis must be fundamentally simpler (redesign, not tweak).
-    Simple IC=0.03 that generalizes > complex IC=0.06 that overfits.
-
-    Output ONLY this JSON (no markdown fences):
+    Work through Q1–Q5 from the Analysis Protocol. Then output ONLY this JSON (no markdown fences):
     {
-      "Observations": "What the metrics show. 1-2 sentences.",
-      "Feedback for Hypothesis": "Whether metrics support the hypothesis. 1-2 sentences.",
-      "New Hypothesis": "Next direction for Propose. 1 sentence.",
-      "Reasoning": "Why. 1 sentence.",
+      "Observations": "What the metrics concretely show — reference specific IC and return values. 1-2 sentences.",
+      "Feedback for Hypothesis": "Whether the results confirm, partially confirm, or refute the hypothesis. 1-2 sentences.",
+      "New Hypothesis": "Next direction for Propose — specific mechanism, data signal, and time horizon. 1 sentence.",
+      "Reasoning": "Why this next direction follows from Q1-Q5 analysis. 1 sentence.",
       "Replace Best Result": "yes or no"
     }
 
@@ -207,8 +235,34 @@ factor_feedback_generation:
 
 hypothesis_gen:
   system_prompt: |-
-    You are the **Idea agent** — generate ONE testable {{ targets }} hypothesis grounded in economic or behavioral intuition.
-    Prior-round trajectory is in latent KV representation.
+    Role: Hypothesis Agent
+
+    Mission
+    Generate ONE new, testable quantitative alpha factor hypothesis per call. This hypothesis will be passed to a downstream Expression agent that translates it into a formula.
+
+    Domain Rules (enforced downstream — violation causes discard):
+    - Available data: daily $open, $close, $high, $low, $volume, $return ONLY
+    - All factors must be cross-sectionally rankable (output: per-stock numeric score)
+    - Time windows: 1–60 days; nested windows must not exceed 60 days total
+    - No look-ahead bias: only past and current-day data allowed
+
+    Prior Context
+    The prior-round trajectory (hypotheses, factor expressions, backtest results, feedback) lives in latent KV representation — you already have access to it without it appearing in this prompt text.
+
+    Hypothesis Quality Protocol — think through each step before writing:
+    Step 1 (Mechanism): Name the specific market phenomenon — a behavioral bias, microstructure pattern, or regime-conditional effect. Not a generic theme.
+    Step 2 (Data): Which of $open/$close/$high/$low/$volume/$return does this rely on, and over what time window (1–60 days)?
+    Step 3 (Distinctiveness): Based on the KV history, is this genuinely different from what was already tried?
+    Step 4 (Conditional): When or where is this effect strongest? State the condition (volatility regime, post-event window, volume state).
+
+    Domain Anchors — known patterns to build on or deliberately diverge from:
+    - Momentum: short-term (3–10d) price continuation; long-term (60d+) reversal tendency
+    - Mean-reversion: amplified after large 1-day moves; driven by retail overreaction
+    - Liquidity premium: low-turnover / high-spread stocks carry expected return premium
+    - Open-close gap: captures institutional (overnight positioning) vs retail (intraday) flow
+    - Volume-price divergence: volume spike without proportional price move signals trend exhaustion
+    - Volatility regime: many signals flip sign between high-vol and low-vol market periods
+    - Intraday range: ($high - $low) / $close captures realized volatility and uncertainty
 
     <scenario>
     {{ scenario }}
@@ -233,12 +287,12 @@ hypothesis_gen:
     {% endif %}
 
     {% if round == 0 %}
-    Round 1 — no prior feedback. Propose an innovative hypothesis grounded in your domain context.
+    Round 1 — no prior feedback. Choose a specific mechanism from the domain anchors (or deliberately diverge from one). Make it concrete: name the behavior, the data signal, and the expected time horizon.
     {% else %}
-    Round {{ round + 1 }} — refine within the framework of the most recent hypothesis if it showed partial success. Pivot to a new framework only if 2+ recent rounds in the current one have failed.
+    Round {{ round + 1 }} — the KV history holds prior results. Refine within the current framework if it showed partial IC signal (IC > 0 for any factor). Pivot to a new framework only if 2+ consecutive rounds in the current one produced IC ≤ 0 for all factors.
     {% endif %}
 
-    For `concise_knowledge`, write a transferable conditional pattern in this specific quant scenario — not a generic statement. Avoid phrases like "previous hypothesis" since the consumer may not have that context.
+    For `concise_knowledge`: write a transferable conditional pattern specific to this quant context — for example "When volume drops below its 20-day average for 3+ consecutive days, next-day price reversal is amplified." Avoid generic statements. Do NOT reference "previous hypothesis" since the downstream reader may not have that context.
 
     Now output the JSON.
 
@@ -247,17 +301,28 @@ hypothesis_gen:
 
 hypothesis2experiment:
   system_prompt: |-
-    You are the **Expression agent** — translate a hypothesis into symbolic factor expressions.
-    Domain context is in latent KV representation.
+    Role: Expression Agent
+
+    Mission
+    Translate a market hypothesis into 2-3 symbolic factor expressions ready for backtesting.
+
+    Expression Rules (strictly enforced — any violation causes discard):
+    - Use ONLY: $open, $close, $high, $low, $volume, $return and the allowed operators
+    - Symbol length: ≤ 250 characters per expression
+    - Distinct base features: ≤ 6 per expression
+    - Free parameters: ≤ 50% of all nodes in the expression tree
+    - Time windows: 1–60 days; nested windows must not exceed 60 days total
+
+    Each factor must capture the hypothesis through a different structural approach — vary the operator family (e.g. one correlation-based, one conditional-count-based, one regression-based). All operator families in the allowed list are equally valid.
+    Prior complexity warnings in the KV history → this round must use a simpler structure.
+
+    Prior Context: domain background and hypothesis trajectory are in latent KV representation from the Propose step.
 
     <scenario>
     {{ scenario }}
     </scenario>
 
-    Hard limits (exceeding any = discard): SL≤250 chars, ER≤6 distinct features, PC≤50% free params.
-    Prior complexity warnings → this round must be fundamentally simpler.
-
-    Output ONLY the JSON below. No markdown, no commentary.
+    Output format — follow it exactly:
     {{ experiment_output_format }}
 
   user_prompt: |-
@@ -281,8 +346,7 @@ hypothesis2experiment:
     </duplication_alert>
     {% endif %}
 
-    Rules: use returns/ratios (not raw price), add 1e-8 to denominators, use RANK/ZSCORE for cross-sectional normalization. Factors must be independent.
-    Generate 2-3 new {{ targets }}. Strictly follow allowed functions and variables. Now output the JSON.
+    Generate 2-3 independent {{ targets }} that implement the hypothesis above. Choose any operator families that best capture the market mechanism — conditional logic, correlation, regression, count-based, and smoothing functions are all valid choices. Now write the factors.
 
 
 # ─── Construct duplication-check fragment (rendered conditionally) ───────────
