@@ -69,7 +69,8 @@ class LLMHypothesisGen(HypothesisGen):
             )
         )
 
-        resp = LocalLLMBackend().build_messages_and_create_chat_completion(user_prompt, system_prompt, json_mode=json_flag)
+        resp = LocalLLMBackend().build_messages_and_create_chat_completion(
+            user_prompt, system_prompt, json_mode=json_flag, role="proposal")
 
         # parse JSON response dari LLM -> object Hypothesis
         hypothesis = self.convert_response(resp)
@@ -126,7 +127,8 @@ class LLMHypothesis2Experiment(Hypothesis2Experiment[Experiment]):
             )
         )
 
-        resp = LocalLLMBackend().build_messages_and_create_chat_completion(user_prompt, system_prompt, json_mode=json_flag)
+        resp = LocalLLMBackend().build_messages_and_create_chat_completion(
+            user_prompt, system_prompt, json_mode=json_flag, role="construct")
         return self.convert_response(resp, trace)
 
 

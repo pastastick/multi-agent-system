@@ -259,6 +259,7 @@ class MutationOperator:
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,
+                role="mutation",
             )
     
     def _parse_detailed_response(self, response: str) -> dict[str, str]:

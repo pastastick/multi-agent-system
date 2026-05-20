@@ -65,7 +65,7 @@ def is_input_length_error(error_msg: str) -> bool:
     return any(indicator.lower() in error_str for indicator in error_indicators)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Construct output parser — keyword-marked format (NAME / DESC / VARS / EXPR)
+# Construct output parser — keyword-marked format (NAME / DESC / EXPR)
 # ─────────────────────────────────────────────────────────────────────────────
 # Construct LLM tidak lagi diminta menghasilkan JSON. Model kecil (Qwen3-4B)
 # sering meng-echo placeholder, salah escape LaTeX, atau menjatuhkan struktur
@@ -74,7 +74,7 @@ def is_input_length_error(error_msg: str) -> bool:
 
 _KW_FIELD_RE = {
     k: re.compile(rf"(?im)^[ \t]*{k}[ \t]*[:=][ \t]*(.+)$")
-    for k in ("DESC", "VARS", "EXPR")
+    for k in ("DESC", "EXPR")
 }
 
 
@@ -84,8 +84,7 @@ def _kw_field(body: str, key: str) -> str:
 
 
 def _parse_vars(raw: str, expr: str) -> dict:
-    """VARS line: '$volume=daily volume; $close=close price'.
-    Token $xxx yang muncul di expr tapi tak disebut VARS tetap ditambahkan."""
+    """Extract $xxx tokens from expr as the variables dict."""
     variables: dict = {}
     for part in re.split(r"[;,]", raw or ""):
         part = part.strip()
@@ -167,7 +166,7 @@ def parse_construct_keywords(text: str) -> dict:
             continue
         result[name] = {
             "description": _kw_field(body, "DESC"),
-            "variables": _parse_vars(_kw_field(body, "VARS"), expr),
+            "variables": _parse_vars("", expr),
             "formulation": expr,
             "expression": expr,
         }
@@ -495,7 +494,7 @@ class AlphaAgentHypothesisGen(FactorHypothesisGen):
         self.last_result = None
         return self.llm_backend.build_messages_and_create_chat_completion(
             user_prompt=user_prompt, system_prompt=system_prompt,
-            json_mode=json_mode,
+            json_mode=json_mode, role="proposal",
         )
 
     def _get_scenario_desc(self) -> str:
@@ -716,7 +715,7 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
         self.last_result = None
         return self.llm_backend.build_messages_and_create_chat_completion(
             user_prompt=user_prompt, system_prompt=system_prompt,
-            json_mode=json_mode,
+            json_mode=json_mode, role="construct",
         )
 
     def _get_scenario_desc(self, trace: Trace) -> str:
@@ -851,8 +850,8 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
             if not response_dict:
                 logger.warning("Construct output parse failed (no factor found), retrying...")
                 error_log.append(
-                    "no factor parsed — write each factor as 4 lines: "
-                    "NAME: / DESC: / VARS: / EXPR:"
+                    "no factor parsed — write each factor as 3 lines: "
+                    "NAME: / DESC: / EXPR:"
                 )
                 continue
 

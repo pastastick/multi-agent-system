@@ -294,6 +294,7 @@ class CrossoverOperator:
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,
+                role="crossover",
             )
 
     def _parse_detailed_response(self, response: str) -> dict[str, str]:

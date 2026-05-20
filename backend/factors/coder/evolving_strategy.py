@@ -72,7 +72,8 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
             elif len(queried_similar_error_knowledge_to_render) > 0:
                 queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
         error_summary_critics = LocalLLMBackend().build_messages_and_create_chat_completion(
-            user_prompt=error_summary_user_prompt, system_prompt=error_summary_system_prompt, json_mode=False
+            user_prompt=error_summary_user_prompt, system_prompt=error_summary_system_prompt,
+            json_mode=False, role="coder_error_summary",
         )
         return error_summary_critics
 
@@ -180,7 +181,8 @@ class FactorMultiProcessEvolvingStrategy(MultiProcessEvolvingStrategy):
             try:
                 code = json.loads(
                     LocalLLMBackend().build_messages_and_create_chat_completion(
-                        user_prompt=user_prompt, system_prompt=system_prompt, json_mode=True
+                        user_prompt=user_prompt, system_prompt=system_prompt,
+                        json_mode=True, role="coder",
                     )
                 )["code"]
                 return code
@@ -208,20 +210,19 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
     Evolving strategy untuk AlphaAgent pipeline.
 
     Run pertama: render template dari ekspresi (tanpa LLM).
-    Jika gagal: panggil LLM untuk perbaiki ekspresi.
+    Jika gagal: panggil coder agent (repair-or-pass) — output PASS atau FIXED.
 
     Latent pipeline (llm_backend is not None):
       - LLM calls menggunakan build_messages_and_run() dengan KV-cache
       - KV dari construct step di-inject sebagai konteks awal
-      - KV akumulasi antar LLM calls dalam evolve loop
       - Evolve berjalan sequential (bukan multiprocessing) karena
         GPU tensor tidak bisa cross process boundaries
       - last_kv property expose KV terakhir untuk downstream (feedback)
-      - coder_retry (retry path di implement_one_task) TIDAK chain dari
-        construct_kv langsung, tapi dari eval_kv — KV hasil coder_eval yang
-        memuat analisis kegagalan ekspresi. Jembatan-nya via shared
-        llm_backend (_coder_kv = construct baseline, _coder_eval_kv = KV
-        hasil coder_eval). Lihat set_past_kv() & retry path.
+      - coder_retry chain dari construct_kv (_coder_kv) — KV yang memuat
+        scenario + function lib + hipotesis original. Tidak ada perantara
+        eval_kv lagi karena reviewer/final_decision sudah dihapus dari
+        pipeline (semantic gate digabung ke coder agent itu sendiri).
+      - Eskalasi per-attempt via system prompt: minimal → different → bold.
     """
 
     def __init__(self, *args,
@@ -246,20 +247,10 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         self._llm_backend = backend
 
     def set_past_kv(self, kv: Optional[Any]) -> None:
-        """Set KV-cache dari construct step.
-
-        Selain disimpan ke _past_kv, KV juga di-publish ke shared
-        llm_backend sebagai _coder_kv — ini baseline yang di-chain
-        FactorCodeEvaluator (coder_eval). _coder_eval_kv di-reset karena
-        eval_kv dari construct step sebelumnya tidak relevan lagi.
-        Publish via shared backend dipakai sebagai jembatan karena strategy
-        & evaluator adalah objek terpisah di CoSTEER — cara ini tidak perlu
-        ubah client.py maupun struktur CoSTEER.
-        """
+        """Set KV-cache dari construct step (baseline untuk retry attempts)."""
         self._past_kv = kv
         if self._llm_backend is not None:
             self._llm_backend._coder_kv = kv
-            self._llm_backend._coder_eval_kv = None
 
     @property
     def last_kv(self) -> Optional[Any]:
@@ -324,6 +315,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     user_prompt=user_prompt,
                     system_prompt=system_prompt,
                     json_mode=json_mode,
+                    role="coder",
                 )
                 return text_out
             # Update KV state hanya kalau tidak fallback
@@ -335,6 +327,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=json_mode,
+                role="coder",
             )
 
     def error_summary(
@@ -388,6 +381,74 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         else:
             return ""
 
+    # Sentinel yang dikembalikan _parse_repair_output kalau model balas "PASS"
+    # (kontrak repair-or-pass — LLM judge bahwa ekspresi sebenarnya sudah OK).
+    PASS_SENTINEL = "__PASS__"
+
+    @staticmethod
+    def _parse_repair_output(raw: str) -> Optional[str]:
+        """Parse repair-or-pass LLM output.
+
+        Kontrak: satu baris, salah satu dari:
+          PASS                          → keep ekspresi lama (PASS_SENTINEL)
+          FIXED: <expression>           → expression string
+
+        Parser permissive untuk FIXED (case-insensitive FIXED/EXPR/RESULT,
+        strip quote/backtick wrapper, paren balancing). Return:
+          - PASS_SENTINEL bila model balas "PASS"
+          - ekspresi string bila FIXED valid
+          - None bila tidak bisa diparse sama sekali
+        """
+        if not raw:
+            return None
+        text = raw.strip()
+        # Form A: "PASS" (case-insensitive, opsional tanda baca terminal).
+        # Periksa baris pertama saja untuk hindari false match di tengah teks.
+        first_line = text.splitlines()[0].strip() if text.splitlines() else ""
+        if re.fullmatch(r'pass[.!]?', first_line, flags=re.IGNORECASE):
+            return FactorParsingStrategy.PASS_SENTINEL
+        # Form B: "FIXED: <expr>" (EXPR/RESULT diterima sebagai legacy).
+        keyword_re = re.compile(
+            r'^\s*(?:fixed|expr|result)\s*:\s*(.+?)\s*$', flags=re.IGNORECASE
+        )
+        for line in text.splitlines():
+            if not line.strip():
+                continue
+            m = keyword_re.match(line)
+            if m:
+                expr = m.group(1).strip()
+                # Strip pembungkus umum (backtick, quote) di luar ekspresi.
+                for q in ('`', '"', "'"):
+                    if len(expr) >= 2 and expr.startswith(q) and expr.endswith(q):
+                        expr = expr[1:-1].strip()
+                # Kalau model menambah keyword kedua di line yang sama
+                # (mis. "FOO(...) FIXED: BAR(...)"), potong di kemunculan
+                # keyword berikutnya.
+                m2 = re.search(
+                    r'\s+(?:fixed|expr|result)\s*:', expr, flags=re.IGNORECASE,
+                )
+                if m2:
+                    expr = expr[:m2.start()].rstrip()
+                # Paren balancing: kalau penutup ")" lebih banyak dari pembuka,
+                # potong di posisi seimbang (cegah trailing junk yang sering
+                # diappend model 4B di akhir line).
+                depth = 0
+                for i, ch in enumerate(expr):
+                    if ch == '(':
+                        depth += 1
+                    elif ch == ')':
+                        depth -= 1
+                        if depth < 0:
+                            expr = expr[:i].rstrip()
+                            break
+                if expr:
+                    return expr
+        # Fallback: legacy JSON shape {"expr": "..."} — regex non-greedy.
+        m = re.search(r'"(?:expr|fixed)"\s*:\s*"((?:[^"\\]|\\.)*)"', text)
+        if m:
+            return m.group(1).strip()
+        return None
+
 
     def implement_one_task(
         self,
@@ -430,32 +491,44 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             )
             return rendered_code
 
-        #* RETRY(setelah gagal): panggil LLM untuk perbaiki
+        #* RETRY(setelah gagal): panggil coder agent (repair-or-pass)
         else:
-            logger.info(f"[LatentCoder] retry path, former_expr={self.extract_expr(queried_former_failed_knowledge[-1].implementation.code)}")
+            former_expr_raw = self.extract_expr(
+                queried_former_failed_knowledge[-1].implementation.code
+            )
+            logger.info(f"[LatentCoder] retry path, former_expr={former_expr_raw}")
 
             latest_attempt_to_latest_successful_execution = queried_knowledge.task_to_former_failed_traces[
                 target_factor_task_information
             ][1]
 
-            # KV dari construct step sudah encode scenario + function lib →
-            # pakai system prompt ringkas. Text-only fallback tetap butuh full prompt.
+            # Eskalasi per-attempt (minimal → different → bold). Render system
+            # prompt per attempt karena varian beda di-render dari template
+            # yang sama dengan attempt_mode berbeda.
+            _MAX_ATTEMPTS = 3
+            _ATTEMPT_MODES = ["minimal", "different", "bold"]
+            temp_schedule = [None, 0.7, 0.9]
+
+            # Pilih template system prompt: KV-aware compact bila KV ada,
+            # full-context bila fallback text-only.
             if self._past_kv is not None:
-                system_prompt = qa_implement_prompts["evolving_strategy_coder_system_kv"]
-                logger.info("[LatentCoder] using compact KV-aware system prompt")
+                system_prompt_tpl = qa_implement_prompts["evolving_strategy_coder_system_kv"]
+                system_prompt_extra_render = {}
+                logger.info("[LatentCoder] using KV-aware compact system prompt")
             else:
-                system_prompt = (
-                    Environment(undefined=StrictUndefined)
-                    .from_string(
-                        qa_implement_prompts["evolving_strategy_factor_implementation_v1_system"],
-                    )
-                    .render(
-                        scenario=_mv("scenario", self.scen.get_scenario_all_desc(target_task, filtered_tag="feature")),
-                    )
-                )
+                system_prompt_tpl = qa_implement_prompts["evolving_strategy_factor_implementation_v1_system"]
+                system_prompt_extra_render = {
+                    "scenario": _mv("scenario", self.scen.get_scenario_all_desc(target_task, filtered_tag="feature")),
+                }
 
             queried_similar_successful_knowledge_to_render = queried_similar_successful_knowledge
             queried_similar_error_knowledge_to_render = queried_similar_error_knowledge
+
+            # Ambil execution_log dan value_feedback dari last failed attempt.
+            # code_feedback ditiadakan (tidak ada reviewer LLM lagi).
+            last_fb = queried_former_failed_knowledge_to_render[-1].feedback
+            execution_log = getattr(last_fb, "execution_feedback", None) or ""
+            value_feedback = getattr(last_fb, "value_feedback", None) or ""
 
             for _ in range(10):
                 if (
@@ -478,12 +551,6 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     similar_successful_factor_description = queried_similar_successful_knowledge_to_render[-1].target_task.get_task_description()
                     similar_successful_expression = self.extract_expr(queried_similar_successful_knowledge_to_render[-1].implementation.code)
 
-                # Pisahkan execution log (raw traceback) dan code_comment (LLM review)
-                # agar coder langsung melihat error aktual di bagian atas user prompt.
-                last_fb = queried_former_failed_knowledge_to_render[-1].feedback
-                execution_log = getattr(last_fb, "execution_feedback", None) or ""
-                code_comment = getattr(last_fb, "code_feedback", None) or ""
-
                 user_prompt = (
                     Environment(undefined=StrictUndefined)
                     .from_string(
@@ -492,9 +559,9 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     .render(
                         factor_information_str=_mv("factor_information_str", target_task.get_task_information()),
                         queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
-                        former_expression=_mv("former_expression", self.extract_expr(queried_former_failed_knowledge_to_render[-1].implementation.code)),
+                        former_expression=_mv("former_expression", former_expr_raw),
                         execution_log=_mv("execution_log", execution_log),
-                        code_comment=_mv("code_comment", code_comment),
+                        value_feedback=_mv("value_feedback", value_feedback),
                         error_summary_critics=_mv("error_summary_critics", error_summary_critics),
                         similar_successful_factor_description=_mv("similar_successful_factor_description", similar_successful_factor_description),
                         similar_successful_expression=_mv("similar_successful_expression", similar_successful_expression),
@@ -503,9 +570,16 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     .strip("\n")
                 )
 
+                # Token-budget check pakai system prompt attempt-1 (minimal)
+                # sebagai proxy — varian lain panjangnya kira-kira sama.
+                system_prompt_probe = (
+                    Environment(undefined=StrictUndefined)
+                    .from_string(system_prompt_tpl)
+                    .render(attempt_mode=_ATTEMPT_MODES[0], **system_prompt_extra_render)
+                )
                 if (
                     self._get_backend().build_messages_and_calculate_token(
-                        user_prompt=user_prompt, system_prompt=system_prompt
+                        user_prompt=user_prompt, system_prompt=system_prompt_probe
                     )
                     < LLM_SETTINGS.chat_token_limit
                 ):
@@ -519,111 +593,95 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 elif len(queried_similar_error_knowledge_to_render) > 0:
                     queried_similar_error_knowledge_to_render = queried_similar_error_knowledge_to_render[:-1]
 
-            # Capture former_expr untuk validasi anti-mirroring.
-            # Simpan dua versi: yang asli (untuk fallback render) dan yang
-            # ter-normalisasi (untuk pembanding mirror).
-            former_expr_raw = self.extract_expr(
-                queried_former_failed_knowledge_to_render[-1].implementation.code
-            )
             former_expr_norm = former_expr_raw.replace(" ", "").lower()
 
             # Snapshot KV-cache length SEBELUM retry loop. DynamicCache di-mutasi
-            # in-place oleh latent_pass (append prompt + latent steps) — sekedar
-            # menyimpan referensi `kv_baseline = self._past_kv` lalu reassign
-            # `self._past_kv = kv_baseline` TIDAK mengembalikan panjang asli.
-            # Setelah attempt 1 KV sudah memuat prompt_1 + latent_1; attempt 2
-            # akan menambah prompt_2 + latent_2 di atasnya, sehingga konteks
-            # menumpuk dan model collapse ke output `<think>` saja (output_tokens=3
-            # lalu EOS) karena polusi konteks.
-            # coder_retry chain dari eval_kv (KV hasil coder_eval = analisis
-            # KENAPA ekspresi gagal), bukan langsung construct_kv. construct_kv
-            # berakhir di state "model baru percaya-diri membuat ekspresi" →
-            # anchoring: model 4B cenderung me-regenerate ekspresi yang sama.
-            # Dengan eval_kv, "last thought" model = kegagalan ekspresi,
-            # sehingga perbaikan jadi continuation natural. eval_kv di-publish
-            # FactorCodeEvaluator ke shared backend; fallback ke construct_kv
-            # (_past_kv) bila coder_eval di-skip — mis. gagal regularisasi AST
-            # sebelum eksekusi, sehingga FactorCodeEvaluator tak pernah jalan.
-            eval_kv = (
-                getattr(self._llm_backend, "_coder_eval_kv", None)
-                if self._llm_backend is not None
-                else None
-            )
-            kv_baseline = eval_kv if eval_kv is not None else self._past_kv
+            # in-place oleh latent_pass (append prompt + latent steps). Tanpa crop
+            # per attempt, KV menumpuk dan model collapse ke "<think>" saja.
+            # Baseline = construct_kv (_past_kv) langsung — eval_kv tidak ada lagi
+            # karena reviewer/final_decision sudah dihapus.
+            kv_baseline = self._past_kv
             kv_baseline_len = _past_length(kv_baseline) if kv_baseline is not None else 0
 
-            # Catatan: instruksi "OUTPUT INSTRUCTION: respond with ONLY raw
-            # JSON ..." sudah ADA di template evolving_strategy_factor_
-            # implementation_v2_user (qa_prompts.yaml, baris terakhir). Dulu
-            # di sini ada `json_only_suffix` yang meng-append teks identik →
-            # OUTPUT INSTRUCTION muncul DOBEL di user prompt. Suffix dihapus;
-            # cukup andalkan baris dari template.
-
-            # Temperature escalation: 0.3 → 0.7 → 1.0 setelah mirror / JSON fail
-            _MAX_ATTEMPTS = 5
-            temp_schedule = [None, 0.7, 0.9, 1.0, 1.0]
             mirror_hint = ""
             last_expr = None
 
             for attempt in range(_MAX_ATTEMPTS):
-                try:
-                    # Reset KV ke baseline pre-retry. Penting: crop kembali ke
-                    # panjang baseline supaya attempt ini melihat KV yang sama
-                    # dengan attempt 1 — bukan KV yang sudah ter-append oleh
-                    # attempt sebelumnya.
-                    if kv_baseline is not None and hasattr(kv_baseline, "crop"):
-                        try:
-                            kv_baseline.crop(kv_baseline_len)
-                        except Exception as crop_err:
-                            logger.warning(
-                                f"[LatentCoder] attempt {attempt+1}: kv_baseline.crop "
-                                f"failed ({crop_err}); proceeding with current KV"
-                            )
-                    self._past_kv = kv_baseline
-
-                    # Inject mirror-warning ke user prompt bila attempt sebelumnya mirror.
-                    # OUTPUT INSTRUCTION sudah dari template (lihat catatan di atas).
-                    effective_user_prompt = user_prompt + mirror_hint
-
-                    raw = self._call_llm(
-                        user_prompt=effective_user_prompt,
-                        system_prompt=system_prompt,
-                        json_mode=True,
-                        reasoning_flag=False,
-                        temperature=temp_schedule[attempt],
-                    )
-                    expr = json.loads(raw)["expr"]
-                    expr_norm = expr.replace(" ", "").lower()
-
-                    # Validasi: tolak kalau identik dengan former_expr
-                    if expr_norm == former_expr_norm:
-                        last_expr = expr
-                        mirror_hint = (
-                            f"\n\n**PREVIOUS ATTEMPT RETURNED THE SAME EXPRESSION "
-                            f"({last_expr}) — THIS IS A FAILURE. You MUST change operator, "
-                            f"window size, or base variable. Try a structurally different "
-                            f"expression now.**"
-                        )
+                # Reset KV ke baseline pre-retry: crop kembali ke panjang
+                # baseline supaya attempt ini melihat KV yang sama dengan
+                # attempt 1 — bukan KV yang sudah ter-append attempt sebelumnya.
+                if kv_baseline is not None and hasattr(kv_baseline, "crop"):
+                    try:
+                        kv_baseline.crop(kv_baseline_len)
+                    except Exception as crop_err:
                         logger.warning(
-                            f"[LatentCoder] attempt {attempt+1}: LLM mirrored former_expr, retrying with temp={temp_schedule[min(attempt+1, _MAX_ATTEMPTS-1)]}"
+                            f"[LatentCoder] attempt {attempt+1}: kv_baseline.crop "
+                            f"failed ({crop_err}); proceeding with current KV"
                         )
-                        continue
+                self._past_kv = kv_baseline
 
-                    logger.info(
-                        f"[LatentCoder] attempt {attempt+1}: new expr accepted (diff from former)"
-                    )
-                    rendered_code = code_template.render(
-                        expression=expr,
-                        factor_name=target_task.factor_name
-                    )
-                    return rendered_code
+                # Render system prompt sesuai attempt_mode (minimal/different/bold).
+                system_prompt = (
+                    Environment(undefined=StrictUndefined)
+                    .from_string(system_prompt_tpl)
+                    .render(attempt_mode=_ATTEMPT_MODES[attempt], **system_prompt_extra_render)
+                )
 
-                except json.decoder.JSONDecodeError:
-                    logger.warning(f"[LatentCoder] attempt {attempt+1}: JSON parse failed, retrying")
+                effective_user_prompt = user_prompt + mirror_hint
+
+                raw = self._call_llm(
+                    user_prompt=effective_user_prompt,
+                    system_prompt=system_prompt,
+                    json_mode=False,
+                    reasoning_flag=False,
+                    temperature=temp_schedule[attempt],
+                )
+                expr = self._parse_repair_output(raw)
+                if expr is None:
+                    logger.warning(
+                        f"[LatentCoder] attempt {attempt+1}: failed to parse "
+                        f"'PASS' or 'FIXED:' line from output (head=%r), retrying",
+                        (raw or "").strip()[:160],
+                    )
                     continue
 
-            # Fallback: semua attempt mirror/fail → pakai expr terakhir dengan
-            # warning agar pipeline tetap jalan (evaluator akan reject kalau beneran bad)
+                # PASS: LLM judge ekspresi sebenarnya sudah OK, biarkan apa adanya.
+                if expr == self.PASS_SENTINEL:
+                    logger.info(
+                        f"[LatentCoder] attempt {attempt+1}: model returned PASS, "
+                        f"keeping former_expr={former_expr_raw}"
+                    )
+                    return code_template.render(
+                        expression=former_expr_raw,
+                        factor_name=target_task.factor_name,
+                    )
+
+                expr_norm = expr.replace(" ", "").lower()
+                if expr_norm == former_expr_norm:
+                    last_expr = expr
+                    mirror_hint = (
+                        f"\n\n**PREVIOUS ATTEMPT RETURNED THE SAME EXPRESSION "
+                        f"({last_expr}) — THIS IS A FAILURE. You MUST change operator, "
+                        f"window size, or base variable. Try a structurally different "
+                        f"expression now.**"
+                    )
+                    logger.warning(
+                        f"[LatentCoder] attempt {attempt+1}: LLM mirrored former_expr, "
+                        f"retrying with mode={_ATTEMPT_MODES[min(attempt+1, _MAX_ATTEMPTS-1)]}"
+                    )
+                    continue
+
+                logger.info(
+                    f"[LatentCoder] attempt {attempt+1} ({_ATTEMPT_MODES[attempt]}): "
+                    f"new expr accepted"
+                )
+                return code_template.render(
+                    expression=expr,
+                    factor_name=target_task.factor_name,
+                )
+
+            # Fallback: semua attempt mirror/fail → pakai expr terakhir kalau ada,
+            # else former_expr_raw. Evaluator akan reject kalau benar-benar bad.
             if last_expr is not None:
                 logger.error(
                     f"[LatentCoder] all {_MAX_ATTEMPTS} attempts mirrored former_expr, "
@@ -631,15 +689,12 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 )
                 return code_template.render(
                     expression=last_expr,
-                    factor_name=target_task.factor_name
+                    factor_name=target_task.factor_name,
                 )
-            # Kalau semua JSON fail, return template dengan former_expr ASLI
-            # (bukan yang ter-normalisasi lower+nospace, karena parser DSL
-            # case-sensitive — TS_STD bukan ts_std).
-            logger.error(f"[LatentCoder] all {_MAX_ATTEMPTS} attempts failed JSON parse, using former_expr")
+            logger.error(f"[LatentCoder] all {_MAX_ATTEMPTS} attempts failed parse, using former_expr")
             return code_template.render(
                 expression=former_expr_raw,
-                factor_name=target_task.factor_name
+                factor_name=target_task.factor_name,
             )
 
     def evolve(

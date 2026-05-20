@@ -284,7 +284,8 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
         # dari panggilan latent sebelumnya.
         self.last_result = None
         return self.llm_backend.build_messages_and_create_chat_completion(
-            user_prompt=user_prompt, system_prompt=system_prompt, json_mode=json_mode
+            user_prompt=user_prompt, system_prompt=system_prompt, json_mode=json_mode,
+            role="feedback",
         )
 
     def generate_feedback(self, exp: Experiment, hypothesis: Hypothesis, trace: Trace) -> HypothesisFeedback:
@@ -463,6 +464,7 @@ class QlibModelHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
                     user_prompt=user_prompt,
                     system_prompt=system_prompt,
                     json_mode=True,
+                    role="feedback",
                 )
                 # Parse the JSON response using robust parser
                 response_json_hypothesis = robust_json_parse(response_hypothesis)

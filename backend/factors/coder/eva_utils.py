@@ -7,17 +7,13 @@ from typing import Any, Optional, Tuple
 import pandas as pd
 from jinja2 import Environment, StrictUndefined
 
-from factors.coder.config import FACTOR_COSTEER_SETTINGS
-from factors.coder.factor import FactorTask
 from core.experiment import Task, Workspace
 from core.prompts import Prompts
-from llm.config import LLM_SETTINGS
 from llm.client import LocalLLMBackend
 from log import logger
 from utils.prompt_markers import wrap as _mv
 
 evaluate_prompts = Prompts(file_path=Path(__file__).parent / "prompts.yaml")
-qa_evaluate_prompts = Prompts(file_path=Path(__file__).parent / "qa_prompts.yaml")
 
 
 #* evaluasi hasi DataFrame
@@ -73,14 +69,10 @@ class FactorEvaluator:
         """
         Unified LLM call — auto-detect latent vs text-only.
 
-        Latent path: build_messages_and_run() dengan mode text_only.
-        TIDAK menerima maupun menghasilkan KV-cache — evaluator yang memakai
-        helper ini (final_decision, output_format) berjalan stateless: hanya
-        butuh text output untuk decision. coder_eval (FactorCodeEvaluator)
-        TIDAK memakai helper ini; ia punya jalur kv_and_text sendiri yang
-        chain KV — lihat FactorCodeEvaluator._call_llm_kv().
-
-        Text-only path: build_messages_and_create_chat_completion() (original).
+        Stateless: tidak menerima maupun menghasilkan KV-cache. Dipakai oleh
+        FactorOutputFormatEvaluator yang hanya butuh text output untuk
+        decision. Gate semantik + repair sudah digabung ke dalam coder agent
+        (lihat FactorParsingStrategy.implement_one_task retry path).
         """
         if self._is_latent:
             # text_only tanpa past_key_values: call ini stateless —
@@ -104,6 +96,7 @@ class FactorEvaluator:
                 system_prompt=system_prompt,
                 json_mode=json_mode,
                 seed=seed,
+                role="output_format_eval",
             )
 
     def _get_df(self, gt_implementation: Workspace, implementation: Workspace):
@@ -125,150 +118,6 @@ class FactorEvaluator:
 
     def __str__(self) -> str:
         return self.__class__.__name__
-
-#* LLM review kode (coder_eval) — kritik ekspresi factor
-# Render prompt dengan: scenario, factor info, code, execution feedback, value feedback
-class FactorCodeEvaluator(FactorEvaluator):
-    """coder_eval — menilai apakah ekspresi factor sesuai deskripsi & benar.
-
-    Latent pipeline: dijalankan mode kv_and_text dan di-chain dari KV coder
-    (construct_kv, atau eval_kv iterasi sebelumnya) yang di-publish
-    FactorParsingStrategy ke shared llm_backend. KV hasil (eval_kv) di-publish
-    balik sebagai llm_backend._coder_eval_kv, lalu dipakai coder_retry sebagai
-    baseline. Tujuannya: model masuk ke perbaikan ekspresi dengan "last
-    thought" = analisis KENAPA ekspresi gagal, bukan state "baru percaya-diri
-    menghasilkan ekspresi" (anchoring) — lihat desain LatentMAS.
-    """
-
-    def __init__(self, scen=None, llm_backend: Optional[Any] = None) -> None:
-        super().__init__(scen=scen, llm_backend=llm_backend)
-        # KV hasil coder_eval terakhir (eval_kv). Juga di-publish ke shared
-        # llm_backend (_coder_eval_kv) agar coder_retry bisa chain darinya.
-        self.last_kv: Optional[Any] = None
-
-    def evaluate(
-        self,
-        target_task: FactorTask,
-        implementation: Workspace,
-        execution_feedback: str,
-        value_feedback: str = "",
-        gt_implementation: Workspace = None,
-        **kwargs,
-    ):
-        factor_information = target_task.get_task_information()
-        code = implementation.code
-
-        system_prompt = (
-            Environment(undefined=StrictUndefined)
-            .from_string(qa_evaluate_prompts["evaluator_code_feedback_v1_system"])
-            .render(
-                scenario=_mv("scenario", (
-                    self.scen.get_scenario_all_desc(
-                        target_task,
-                        filtered_tag="feature",
-                        simple_background=FACTOR_COSTEER_SETTINGS.simple_background,
-                    )
-                    if self.scen is not None
-                    else "No scenario description."
-                )),
-            )
-        )
-
-        execution_feedback_to_render = execution_feedback
-        for _ in range(10):  # 10 times to split the content is enough
-            user_prompt = (
-                Environment(undefined=StrictUndefined)
-                .from_string(
-                    qa_evaluate_prompts["evaluator_code_feedback_v1_user"],
-                )
-                .render(
-                    factor_information=_mv("factor_information", factor_information),
-                    code=_mv("code", code),
-                    execution_feedback=_mv("execution_feedback", execution_feedback_to_render),
-                    value_feedback=_mv("value_feedback", value_feedback),
-                    gt_code=_mv("gt_code", gt_implementation.code if gt_implementation else None),
-                )
-            )
-            if (
-                self._get_backend().build_messages_and_calculate_token(
-                    user_prompt=user_prompt,
-                    system_prompt=system_prompt,
-                )
-                > LLM_SETTINGS.chat_token_limit
-            ):
-                execution_feedback_to_render = execution_feedback_to_render[len(execution_feedback_to_render) // 2 :]
-            else:
-                break
-
-        critic_response = self._call_llm_kv(
-            user_prompt=user_prompt,
-            system_prompt=system_prompt,
-        )
-
-        return critic_response, None
-
-    def _call_llm_kv(self, user_prompt: str, system_prompt: str) -> str:
-        """LLM call coder_eval — latent: kv_and_text, chain dari KV coder.
-
-        Beda dari FactorEvaluator._call_llm (text_only, stateless): di sini
-        evaluator MENERIMA construct_kv/eval_kv sebagai konteks DAN
-        MENGHASILKAN eval_kv untuk coder_retry.
-
-        Non-latent: perilaku sama seperti sebelumnya (text_only chat call).
-        """
-        if not self._is_latent:
-            api = LocalLLMBackend()
-            return api.build_messages_and_create_chat_completion(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
-                json_mode=False,
-            )
-
-        # Baseline KV: eval_kv iterasi sebelumnya kalau ada, kalau tidak
-        # construct_kv. Keduanya di-publish FactorParsingStrategy ke shared
-        # backend (jembatan tanpa ubah client.py / struktur CoSTEER).
-        base_kv = getattr(self._llm_backend, "_coder_eval_kv", None)
-        if base_kv is None:
-            base_kv = getattr(self._llm_backend, "_coder_kv", None)
-
-        result = self._llm_backend.build_messages_and_run(
-            user_prompt=user_prompt,
-            system_prompt=system_prompt,
-            json_mode=False,
-            past_key_values=base_kv,
-            mode="kv_and_text",
-            role="coder_eval",
-        )
-        text = result.text or ""
-
-        # KV besar + latent steps kadang bikin model collapse (EOS langsung,
-        # text kosong). Fallback text_only tanpa KV — DAN jangan publish
-        # eval_kv yang collapse supaya coder_retry tidak chain dari KV rusak.
-        if not text.strip():
-            logger.warning(
-                "[LatentCoderEval] kv_and_text collapse (text_len=0), "
-                "fallback text_only"
-            )
-            fb = self._llm_backend.build_messages_and_run(
-                user_prompt=user_prompt,
-                system_prompt=system_prompt,
-                json_mode=False,
-                past_key_values=None,
-                mode="text_only",
-                role="coder_eval",
-            )
-            return fb.text or ""
-
-        # Publish eval_kv → coder_retry chain dari sini, bukan construct_kv.
-        if result.kv_cache is not None:
-            self.last_kv = result.kv_cache
-            self._llm_backend._coder_eval_kv = result.kv_cache
-        logger.info(
-            f"[LatentCoderEval] mode=kv_and_text, "
-            f"eval_kv_published={result.kv_cache is not None}, "
-            f"text_len={len(text)}"
-        )
-        return text
 
 # cek tidak boleh ada INF (infinity)
 class FactorInfEvaluator(FactorEvaluator):
@@ -634,84 +483,3 @@ class FactorValueEvaluator(FactorEvaluator):
         return conclusion_str, decision_from_value_check
 
 
-# LLM keputusan akhir
-class FactorFinalDecisionEvaluator(FactorEvaluator):
-    def evaluate(
-        self,
-        target_task: FactorTask,
-        execution_feedback: str,
-        value_feedback: str,
-        code_feedback: str,
-        **kwargs,
-    ) -> Tuple:
-        system_prompt = (
-            Environment(undefined=StrictUndefined)
-            .from_string(evaluate_prompts["evaluator_final_decision_v1_system"])
-            .render(
-                scenario=_mv("scenario", (
-                    self.scen.get_scenario_all_desc(target_task, filtered_tag="feature")
-                    if self.scen is not None
-                    else "No scenario description."
-                )),
-            )
-        )
-        execution_feedback_to_render = execution_feedback
-
-        for _ in range(10):  # 10 times to split the content is enough
-            user_prompt = (
-                Environment(undefined=StrictUndefined)
-                .from_string(
-                    evaluate_prompts["evaluator_final_decision_v1_user"],
-                )
-                .render(
-                    factor_information=_mv("factor_information", target_task.get_task_information()),
-                    execution_feedback=_mv("execution_feedback", execution_feedback_to_render),
-                    code_feedback=_mv("code_feedback", code_feedback),
-                    value_feedback=_mv("value_feedback", (
-                        value_feedback
-                        if value_feedback is not None
-                        else "No Ground Truth Value provided, so no evaluation on value is performed."
-                    )),
-                )
-            )
-            if (
-                self._get_backend().build_messages_and_calculate_token(
-                    user_prompt=user_prompt,
-                    system_prompt=system_prompt,
-                )
-                > LLM_SETTINGS.chat_token_limit
-            ):
-                execution_feedback_to_render = execution_feedback_to_render[len(execution_feedback_to_render) // 2 :]
-            else:
-                break
-
-        attempts = 0
-        max_attempts = 3
-
-        while attempts < max_attempts:
-            try:
-                resp = self._call_llm(
-                    user_prompt=user_prompt,
-                    system_prompt=system_prompt,
-                    reasoning_flag=False,
-                    json_mode=True,
-                    use_cache=(attempts == 0),
-                    seed=attempts,
-                )
-                final_evaluation_dict = json.loads(resp)
-                final_decision = final_evaluation_dict["final_decision"]
-                final_feedback = final_evaluation_dict["final_feedback"]
-
-                final_decision = str(final_decision).lower() in ["true", "1"]
-                return final_decision, final_feedback
-
-            except json.JSONDecodeError as e:
-                raise ValueError("Failed to decode JSON response from API.") from e
-            except KeyError as e:
-                attempts += 1
-                if attempts >= max_attempts:
-                    raise KeyError(
-                        "Response from API is missing 'final_decision' or 'final_feedback' key after multiple attempts."
-                    ) from e
-
-        return None, None

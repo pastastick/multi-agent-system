@@ -102,7 +102,8 @@ class FactorConsistencyChecker:
             response = LocalLLMBackend().build_messages_and_create_chat_completion(
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
-                json_mode=True
+                json_mode=True,
+                role="consistency_check",
             )
             
             result_dict = robust_json_parse(response)

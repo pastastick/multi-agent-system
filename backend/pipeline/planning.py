@@ -155,6 +155,7 @@ def generate_parallel_directions(
                 system_prompt=system_prompt,
                 json_mode=False,
                 past_key_values=past_key_values,
+                role="planning",
             )
             directions = _parse_directions(resp, n)
             if directions:

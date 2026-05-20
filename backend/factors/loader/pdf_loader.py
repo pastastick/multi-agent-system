@@ -94,6 +94,7 @@ def classify_report_from_dict(
                 user_prompt=user_prompt,
                 system_prompt=system_prompt,
                 json_mode=True,
+                role="pdf_classify",
             )
             try:
                 res = json.loads(res)
@@ -277,6 +278,7 @@ def __check_factor_dict_relevance(
         system_prompt=document_process_prompts["factor_relevance_system"],
         user_prompt=factor_df_string,
         json_mode=True,
+        role="pdf_relevance",
     )
     return json.loads(extract_result_resp)
 
@@ -320,6 +322,7 @@ def __check_factor_dict_viability_simulate_json_mode(
         system_prompt=document_process_prompts["factor_viability_system"],
         user_prompt=factor_df_string,
         json_mode=True,
+        role="pdf_viability",
     )
     return json.loads(extract_result_resp)
 
