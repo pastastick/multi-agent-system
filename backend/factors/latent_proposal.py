@@ -304,7 +304,7 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         temp_override = min(base_temp + 0.15 * (self._attempt_idx - 1), 1.0)
         past_kv = self._past_kv
 
-        # Output construct = format keyword (NAME/DESC/VARS/EXPR), bukan JSON →
+        # Output construct = format keyword (NAME/DESC/EXPR), bukan JSON →
         # tidak ada guided JSON decoding. Parsing ditangani Python di
         # proposal.parse_construct_keywords.
         result = self.llm_backend.build_messages_and_run(

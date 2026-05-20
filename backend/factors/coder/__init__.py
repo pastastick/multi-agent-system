@@ -60,11 +60,14 @@ class FactorParser(CoSTEER):
     ) -> None:
         setting = FACTOR_COSTEER_SETTINGS
 
-        # Thread llm_backend ke evaluator agar LLM calls di
-        # FactorCodeEvaluator dan FactorFinalDecisionEvaluator
-        # menggunakan shared backend + bisa terima KV-cache.
+        # Thread llm_backend ke evaluator. Saat ini evaluator pakai gate
+        # hard-signal saja (tidak memanggil LLM), tapi parameter tetap
+        # diteruskan untuk backward-compat dan untuk FactorValueEvaluator yg
+        # boleh share backend bila ke depan butuh.
         eva = CoSTEERMultiEvaluator(
-            FactorEvaluatorForCoder(scen=scen, llm_backend=llm_backend),
+            FactorEvaluatorForCoder(
+                scen=scen, llm_backend=llm_backend, latent_steps=latent_steps,
+            ),
             scen=scen,
             llm_backend=llm_backend,
         )

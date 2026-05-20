@@ -4,18 +4,14 @@ Evaluator utama yang dipanggil CoSTEER setelah kode di-generate
 
 
 import re
-from pathlib import Path
+from typing import Optional
 
 from coder.costeer.evaluators import (
     CoSTEEREvaluator,
     CoSTEERMultiFeedback,
     CoSTEERSingleFeedback,
 )
-from factors.coder.eva_utils import (
-    FactorCodeEvaluator,
-    FactorFinalDecisionEvaluator,
-    FactorValueEvaluator,
-)
+from factors.coder.eva_utils import FactorValueEvaluator
 from factors.coder.factor import FactorTask
 from factors.coder.config import FACTOR_COSTEER_SETTINGS
 from core.evolving_framework import QueriedKnowledge
@@ -28,25 +24,24 @@ FactorMultiFeedback = CoSTEERMultiFeedback
 
 
 class FactorEvaluatorForCoder(CoSTEEREvaluator):
-    """This class is the v1 version of evaluator for a single factor implementation.
-    It calls several evaluators in share modules to evaluate the factor implementation.
-    Now includes AST-based regularization checks for factor quality.
+    """Hard-signal-only evaluator untuk satu factor implementation.
 
-    Saat llm_backend tersedia (latent pipeline), sub-evaluators yang
-    melakukan LLM calls (FactorCodeEvaluator, FactorFinalDecisionEvaluator)
-    menggunakan shared backend sehingga benefit dari latent reasoning
-    context yang sudah ada di model dari strategy calls.
+    Gate deterministik:
+      - AST regularization
+      - Execution (real Python exec via Workspace.execute)
+      - Value evaluator (row_count, index, equal_value, IC/RankIC vs GT)
+
+    Tidak ada LLM gate (review / final_decision) — semantic + repair sudah
+    digabung ke dalam coder agent di FactorParsingStrategy.implement_one_task
+    (output PASS atau FIXED). llm_backend masih diterima parameternya untuk
+    backward-compat, tapi tidak dipakai di sini.
     """
 
     def __init__(self, *args, factor_zoo_path: str = None, duplication_threshold: int = None,
-                 llm_backend=None, **kwargs) -> None:
+                 llm_backend=None, latent_steps: Optional[int] = None, **kwargs) -> None:
         super().__init__(*args, **kwargs)
 
-        # Thread llm_backend ke sub-evaluators yang pakai LLM
-        #* inisialisasi sub-evaluator
         self.value_evaluator = FactorValueEvaluator(self.scen, llm_backend=llm_backend)
-        self.code_evaluator = FactorCodeEvaluator(self.scen, llm_backend=llm_backend)
-        self.final_decision_evaluator = FactorFinalDecisionEvaluator(self.scen, llm_backend=llm_backend)
         # Initialize FactorRegulator for AST-based regularization checks
         # Use config settings if not explicitly provided
         factor_zoo_path = factor_zoo_path or FACTOR_COSTEER_SETTINGS.factor_zoo_path
@@ -263,47 +258,32 @@ class FactorEvaluatorForCoder(CoSTEEREvaluator):
                 )
 
             factor_feedback.final_decision_based_on_gt = gt_implementation is not None
-            # import pdb; pdb.set_trace()
-            if decision_from_value_check is not None and decision_from_value_check is True:
-                # To avoid confusion, when same_value_or_high_correlation is True, we do not need code feedback
-                factor_feedback.code_feedback = "Final decision is True and there are no code critics."
-                factor_feedback.final_decision = decision_from_value_check
-                factor_feedback.final_feedback = "Value evaluation passed, skip final decision evaluation."
-            elif decision_from_value_check is not None and decision_from_value_check is False:
-                factor_feedback.code_feedback, _ = self.code_evaluator.evaluate(
-                    target_task=target_task,
-                    implementation=implementation,
-                    execution_feedback=factor_feedback.execution_feedback,
-                    value_feedback=factor_feedback.value_feedback,
-                    gt_implementation=gt_implementation,
-                )
-                factor_feedback.final_decision = decision_from_value_check
-                factor_feedback.final_feedback = "Value evaluation failed, skip final decision evaluation."
+
+            # Hard-signal decision tree (deterministik, tidak ada LLM gate).
+            # Semantic check + repair dilakukan oleh coder agent saat retry
+            # (FactorParsingStrategy.implement_one_task), bukan di sini.
+            #
+            # - gen_df None  → eksekusi gagal, force retry.
+            # - value True   → IC tinggi vs GT, jelas sukses.
+            # - value False  → row/index/value mismatch vs GT, force retry.
+            # - value None   → tidak ada GT untuk bandingkan, eksekusi OK.
+            #   Trust construct agent: ekspresi sintaksis valid & berasal dari
+            #   hipotesis. Kalau ekspresi semantically salah, baru ketahuan di
+            #   backtest stage berikutnya, bukan di sini.
+            if gen_df is None:
+                factor_feedback.code_feedback = "Execution failed; repair required."
+                factor_feedback.final_decision = False
+                factor_feedback.final_feedback = "Execution failed."
+            elif decision_from_value_check is True:
+                factor_feedback.code_feedback = "Hard signals passed (value check)."
+                factor_feedback.final_decision = True
+                factor_feedback.final_feedback = "Value evaluation passed."
+            elif decision_from_value_check is False:
+                factor_feedback.code_feedback = "Value check failed; repair required."
+                factor_feedback.final_decision = False
+                factor_feedback.final_feedback = "Value evaluation failed."
             else:
-                factor_feedback.code_feedback, _ = self.code_evaluator.evaluate(
-                    target_task=target_task,
-                    implementation=implementation,
-                    execution_feedback=factor_feedback.execution_feedback,
-                    value_feedback=factor_feedback.value_feedback,
-                    gt_implementation=gt_implementation,
-                )
-                (
-                    factor_feedback.final_decision,
-                    factor_feedback.final_feedback,
-                ) = self.final_decision_evaluator.evaluate(
-                    target_task=target_task,
-                    execution_feedback=factor_feedback.execution_feedback,
-                    value_feedback=factor_feedback.value_feedback,
-                    code_feedback=factor_feedback.code_feedback,
-                )
+                factor_feedback.code_feedback = "Execution succeeded; no ground truth available."
+                factor_feedback.final_decision = True
+                factor_feedback.final_feedback = "Trusted on execution success (no GT)."
             return factor_feedback
-
-
-# TODO:
-def shorten_prompt(tpl: str, render_kwargs: dict, shorten_key: str, max_trail: int = 10) -> str:
-    """When the prompt is too long. We have to shorten it.
-    But we should not truncate the prompt directly, so we should find the key we want to shorten and then shorten it.
-    """
-    # TODO: this should replace most of code in
-    # - FactorFinalDecisionEvaluator.evaluate
-    # - FactorCodeEvaluator.evaluate

@@ -286,5 +286,13 @@ class QlibAlphaAgentScenario(QlibFactorScenario):
                 )
             return "\n".join(sections)
 
+        if step == "review":
+            # Reviewer (coder_eval): hanya menilai DSL expression, BUKAN menulis kode Python.
+            # Tidak butuh runtime_environment, source_data, interface, atau output_format —
+            # itu konteks coder, bukan reviewer. Domain background + allowed operators
+            # (sudah ada di system prompt qa_prompts) sudah cukup. KV reviewer jadi ramping
+            # → kapasitas latent reasoning lebih besar untuk menilai semantik ekspresi.
+            return f"<scenario_background>\n{self._domain_background}\n</scenario_background>"
+
         # Fallback: full compact (semua section dengan markers).
         return self.get_scenario_all_desc(simple_background=True)

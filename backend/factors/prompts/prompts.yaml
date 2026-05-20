@@ -145,27 +145,24 @@ function_lib_description: |-
 
 
 experiment_output_format: |-
-  Write 2-3 factors. For EACH factor write exactly four lines, in this order:
+  Write 2-3 factors. For EACH factor write exactly three lines, in this order:
 
   NAME: <short factor name, letters/digits/underscore only, no spaces>
   DESC: <one sentence — what the factor measures>
-  VARS: <each variable as $sym=meaning, separated by ;>
   EXPR: <the factor expression on one line>
 
   Separate factors with one blank line. Output ONLY these lines — no JSON, no
   markdown, no commentary. EXPR must use only $open/$close/$high/$low/$volume/$return
   and the allowed operators.
 
-  Example (write your own content, do not copy this):
-  NAME: HighVolumeDayCount_10D
-  DESC: Number of days in the past 10 days where volume exceeded its 20-day average, cross-sectionally ranked
-  VARS: $volume=daily trading volume
-  EXPR: RANK(COUNT($volume > TS_MEAN($volume, 20), 10))
-
-  NAME: ReturnOnHighVolumeDays_5D
-  DESC: Cumulative return earned only on days when volume is above its 20-day average over 5 days
-  VARS: $return=daily return;$volume=daily trading volume
-  EXPR: RANK(SUMIF($return, 5, $volume > TS_MEAN($volume, 20)))
+  Composition guideline (abstract — invent your own operators, variables, and windows):
+  - A single function applied to one variable is almost always too weak. Combine at least two operators that reinforce each other.
+  - Typical compositions:
+      * <cross_sectional_op>( <time_series_op>(<variable>, <window>) )
+      * <time_series_op_A>(<variable>, <window>) <arith> <time_series_op_B>(<variable>, <window>)
+      * <aggregator>( <transform_A>(<variable_X>), <transform_B>(<variable_Y>), <window> )
+  - Free to mix cross-sectional, time-series, conditional/logical, regression, and smoothing operators in any combination — as long as Expression Rules above are satisfied.
+  - Do NOT copy the structural placeholders literally; replace them with concrete operators that best capture the hypothesis mechanism.
 
 
 # ─── Feedback Agent (Evaluation) ─────────────────────────────────────────────
@@ -346,7 +343,9 @@ hypothesis2experiment:
     </duplication_alert>
     {% endif %}
 
-    Generate 2-3 independent {{ targets }} that implement the hypothesis above. Choose any operator families that best capture the market mechanism — conditional logic, correlation, regression, count-based, and smoothing functions are all valid choices. Now write the factors.
+    Generate 2-3 independent {{ targets }} that implement the hypothesis above. Choose any operator families that best capture the market mechanism — conditional logic, correlation, regression, count-based, and smoothing functions are all valid choices.
+
+    Be exploratory: favor untested operator combinations over patterns already seen in the KV history. Bold structural choices are encouraged, as long as the Expression Rules above are satisfied. Now write the factors.
 
 
 # ─── Construct duplication-check fragment (rendered conditionally) ───────────
