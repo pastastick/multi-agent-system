@@ -339,7 +339,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         """Summarize errors from previous attempts. Latent-aware."""
         error_summary_system_prompt = (
             Environment(undefined=StrictUndefined)
-            .from_string(implement_prompts["evolving_strategy_error_summary_v2_system"])
+            .from_string(qa_implement_prompts["evolving_strategy_error_summary_v2_system"])
             .render(
                 scenario=_mv("scenario", self.scen.get_scenario_all_desc(target_task)),
                 factor_information_str=_mv("factor_information_str", target_task.get_task_information()),
@@ -350,7 +350,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
         for _ in range(10):
             error_summary_user_prompt = (
                 Environment(undefined=StrictUndefined)
-                .from_string(implement_prompts["evolving_strategy_error_summary_v2_user"])
+                .from_string(qa_implement_prompts["evolving_strategy_error_summary_v2_user"])
                 .render(
                     queried_similar_error_knowledge=_mv("queried_similar_error_knowledge", queried_similar_error_knowledge_to_render),
                 )
@@ -530,21 +530,29 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             execution_log = getattr(last_fb, "execution_feedback", None) or ""
             value_feedback = getattr(last_fb, "value_feedback", None) or ""
 
-            for _ in range(10):
-                if (
-                    isinstance(queried_knowledge, CoSTEERQueriedKnowledgeV2)
-                    and FACTOR_COSTEER_SETTINGS.v2_error_summary
-                    and len(queried_similar_error_knowledge_to_render) != 0
-                    and len(queried_former_failed_knowledge_to_render) != 0
-                ):
-                    error_summary_critics = self.error_summary(
-                        target_task,
-                        queried_former_failed_knowledge_to_render,
-                        queried_similar_error_knowledge_to_render,
-                    )
-                else:
-                    error_summary_critics = None
+            # Error summary dan prior-attempt expression dihitung SEKALI di sini,
+            # bukan di dalam token-budget loop (mencegah LLM call berulang per trimming iteration).
+            if (
+                isinstance(queried_knowledge, CoSTEERQueriedKnowledgeV2)
+                and FACTOR_COSTEER_SETTINGS.v2_error_summary
+                and len(queried_similar_error_knowledge_to_render) != 0
+                and len(queried_former_failed_knowledge_to_render) != 0
+            ):
+                error_summary_critics = self.error_summary(
+                    target_task,
+                    queried_former_failed_knowledge_to_render,
+                    queried_similar_error_knowledge_to_render,
+                )
+            else:
+                error_summary_critics = None
 
+            latest_attempt_expr = ""
+            if latest_attempt_to_latest_successful_execution is not None:
+                latest_attempt_expr = self.extract_expr(
+                    latest_attempt_to_latest_successful_execution.implementation.code
+                )
+
+            for _ in range(10):
                 similar_successful_factor_description = ""
                 similar_successful_expression = ""
                 if len(queried_similar_successful_knowledge_to_render) > 0:
@@ -566,6 +574,7 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                         similar_successful_factor_description=_mv("similar_successful_factor_description", similar_successful_factor_description),
                         similar_successful_expression=_mv("similar_successful_expression", similar_successful_expression),
                         latest_attempt_to_latest_successful_execution=_mv("latest_attempt_to_latest_successful_execution", latest_attempt_to_latest_successful_execution),
+                        latest_attempt_expr=_mv("latest_attempt_expr", latest_attempt_expr),
                     )
                     .strip("\n")
                 )

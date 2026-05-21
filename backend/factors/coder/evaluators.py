@@ -239,8 +239,8 @@ class FactorEvaluatorForCoder(CoSTEEREvaluator):
                 [line for line in execution_feedback.split("\n") if "warning" not in line.lower()]
             )
             
-            # Add AST regularization check result to execution feedback if passed
-            if ast_feedback and ast_feedback != "":
+            # Hanya prepend jika ada warning aktual — bukan clean pass string
+            if ast_feedback and ast_feedback != "AST Regularization Check Passed":
                 factor_feedback.execution_feedback = f"{ast_feedback}\n\n{factor_feedback.execution_feedback}"
 
             # 2. Get factor value feedback

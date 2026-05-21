@@ -213,7 +213,7 @@ evolving_strategy_factor_implementation_v2_user: |-
 
   {% if latest_attempt_to_latest_successful_execution is not none %}
   <prior_attempt>
-  <expression>{{ latest_attempt_to_latest_successful_execution.implementation.code }}</expression>
+  <expression>{{ latest_attempt_expr }}</expression>
   <feedback>{{ latest_attempt_to_latest_successful_execution.feedback }}</feedback>
   </prior_attempt>
   {% endif %}
