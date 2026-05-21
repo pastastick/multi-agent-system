@@ -604,6 +604,25 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
 
             former_expr_norm = former_expr_raw.replace(" ", "").lower()
 
+            # Set LENGKAP semua ekspresi yang pernah dicoba untuk task ini
+            # (dari semua CoSTEER loop sebelumnya, bukan hanya former_expr_raw).
+            # Ini mencegah cross-loop oscillation: model bergantian antara dua
+            # ekspresi A↔B karena check lama hanya bandingkan dengan former_expr_norm
+            # (yang berubah tiap loop), bukan dengan seluruh riwayat gagal.
+            all_tried_exprs_norm: set = {former_expr_norm}
+            for _k in queried_former_failed_knowledge:
+                try:
+                    _e = self.extract_expr(_k.implementation.code)
+                    if _e:
+                        all_tried_exprs_norm.add(_e.replace(" ", "").lower())
+                except Exception:
+                    pass
+            if latest_attempt_expr:
+                all_tried_exprs_norm.add(latest_attempt_expr.replace(" ", "").lower())
+            logger.info(
+                f"[LatentCoder] full-history set built: {len(all_tried_exprs_norm)} unique tried exprs"
+            )
+
             # Snapshot KV-cache length SEBELUM retry loop. DynamicCache di-mutasi
             # in-place oleh latent_pass (append prompt + latent steps). Tanpa crop
             # per attempt, KV menumpuk dan model collapse ke "<think>" saja.
@@ -666,16 +685,22 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                     )
 
                 expr_norm = expr.replace(" ", "").lower()
-                if expr_norm == former_expr_norm:
+                # BUG-FIX: bandingkan dengan SEMUA ekspresi yang pernah dicoba
+                # (all_tried_exprs_norm), bukan hanya former_expr_norm.
+                # Ini menghentikan oscillasi A→B→A→B lintas CoSTEER loop.
+                if expr_norm in all_tried_exprs_norm:
                     last_expr = expr
                     mirror_hint = (
-                        f"\n\n**PREVIOUS ATTEMPT RETURNED THE SAME EXPRESSION "
-                        f"({last_expr}) — THIS IS A FAILURE. You MUST change operator, "
-                        f"window size, or base variable. Try a structurally different "
-                        f"expression now.**"
+                        f"\n\n**PREVIOUS ATTEMPT RETURNED EXPRESSION "
+                        f"({expr}) WHICH HAS ALREADY BEEN TRIED AND FAILED "
+                        f"IN A PREVIOUS ROUND — THIS IS A FAILURE. "
+                        f"You MUST use a completely different operator family, "
+                        f"window size, or base variable. Do NOT re-use any "
+                        f"expression from prior rounds.**"
                     )
                     logger.warning(
-                        f"[LatentCoder] attempt {attempt+1}: LLM mirrored former_expr, "
+                        f"[LatentCoder] attempt {attempt+1}: expr already tried before "
+                        f"(expr={expr[:60]!r}), "
                         f"retrying with mode={_ATTEMPT_MODES[min(attempt+1, _MAX_ATTEMPTS-1)]}"
                     )
                     continue
