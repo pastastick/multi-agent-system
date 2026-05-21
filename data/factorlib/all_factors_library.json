@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-16T04:05:07.931425",
-    "total_factors": 13,
+    "last_updated": "2026-05-21T08:50:57.539489",
+    "total_factors": 19,
     "version": "1.0"
   },
   "factors": {
@@ -552,6 +552,264 @@
         "decision": false,
         "reason": "Backtest failed or returned empty result.",
         "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "0eb732d5d314b3d9": {
+      "factor_id": "0eb732d5d314b3d9",
+      "factor_name": "INTRADAY_RANGE",
+      "factor_expression": "(MAX($high, $low) - MIN($high, $low)) / $close",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(MAX($high, $low) - MIN($high, $low)) / $close\" # Your output factor expression will be filled in here\n    name = \"INTRADAY_RANGE\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Measures the intraday price range relative to the closing price.",
+      "factor_formulation": "(MAX($high, $low) - MIN($high, $low)) / $close",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "bfc026ba4fbf47ef821d8d5840c10a4a",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/bfc026ba4fbf47ef821d8d5840c10a4a/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-21_08-36-02-967922",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "aac3c94fa79c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volatility stocks with shrinking intraday ranges exhibit stronger mean-reversion after large 1-day price moves.\n                Concise Observation: Stocks with tight price ranges and low volatility show stronger price corrections after sharp moves.\n                Concise Justification: Tight ranges suggest limited uncertainty, and large moves may trigger retail overreaction leading to rapid mean-reversion.\n                Concise Knowledge: When intraday range ($high - $low) shrinks below 1% of $close for 3+ days, mean-reversion is amplified following large 1-day returns.\n                concise Specification: Cross-sectionally rank stocks by ($high - $low)/$close over 3-day window, filter for stocks with ($high - $low)/$close < 1% and absolute $return > 2% on day 0, then score based on next-day $return.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-21T08:43:18.591371"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "24a3bab497f358b8": {
+      "factor_id": "24a3bab497f358b8",
+      "factor_name": "VOLATILITY_RANK",
+      "factor_expression": "RANK((MAX($high, $low) - MIN($high, $low)) / $close, 3)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_QUANTILE((MAX($high, $low) - MIN($high, $low)) / $close, 0.5, 3)\" # Your output factor expression will be filled in here\n    name = \"VOLATILITY_RANK\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Ranks stocks by volatility based on intraday range.",
+      "factor_formulation": "RANK((MAX($high, $low) - MIN($high, $low)) / $close, 3)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "b7ff116075f042f1b95faa752052c2e7",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/b7ff116075f042f1b95faa752052c2e7/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-21_08-36-02-967922",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "aac3c94fa79c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volatility stocks with shrinking intraday ranges exhibit stronger mean-reversion after large 1-day price moves.\n                Concise Observation: Stocks with tight price ranges and low volatility show stronger price corrections after sharp moves.\n                Concise Justification: Tight ranges suggest limited uncertainty, and large moves may trigger retail overreaction leading to rapid mean-reversion.\n                Concise Knowledge: When intraday range ($high - $low) shrinks below 1% of $close for 3+ days, mean-reversion is amplified following large 1-day returns.\n                concise Specification: Cross-sectionally rank stocks by ($high - $low)/$close over 3-day window, filter for stocks with ($high - $low)/$close < 1% and absolute $return > 2% on day 0, then score based on next-day $return.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-21T08:43:19.977493"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "46619389ac7fb974": {
+      "factor_id": "46619389ac7fb974",
+      "factor_name": "LARGE_RETURN_FILTER",
+      "factor_expression": "FILTER((ABS($return) > 0.02), 1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"FILTER((ABS($return) > 0.02), 1)\" # Your output factor expression will be filled in here\n    name = \"LARGE_RETURN_FILTER\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Filters stocks with large 1-day returns.",
+      "factor_formulation": "FILTER((ABS($return) > 0.02), 1)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "a3ac303b7cc64519970ebb5ce468fb10",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/a3ac303b7cc64519970ebb5ce468fb10/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-21_08-36-02-967922",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "aac3c94fa79c",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volatility stocks with shrinking intraday ranges exhibit stronger mean-reversion after large 1-day price moves.\n                Concise Observation: Stocks with tight price ranges and low volatility show stronger price corrections after sharp moves.\n                Concise Justification: Tight ranges suggest limited uncertainty, and large moves may trigger retail overreaction leading to rapid mean-reversion.\n                Concise Knowledge: When intraday range ($high - $low) shrinks below 1% of $close for 3+ days, mean-reversion is amplified following large 1-day returns.\n                concise Specification: Cross-sectionally rank stocks by ($high - $low)/$close over 3-day window, filter for stocks with ($high - $low)/$close < 1% and absolute $return > 2% on day 0, then score based on next-day $return.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-21T08:43:20.632023"
+      },
+      "backtest_results": {},
+      "feedback": {
+        "observations": "Backtest result not available (execution failed).",
+        "hypothesis_evaluation": "Unable to evaluate — no result data.",
+        "decision": false,
+        "reason": "Backtest failed or returned empty result.",
+        "new_hypothesis": "Retry with the same hypothesis after fixing the execution environment."
+      }
+    },
+    "cc7d0ecd9fdb3230": {
+      "factor_id": "cc7d0ecd9fdb3230",
+      "factor_name": "VOLAT",
+      "factor_expression": "TS_STD($high - $low, 20) / TS_MEAN($volume, 20)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_STD($high - $low, 20) / TS_MEAN($volume, 20)\" # Your output factor expression will be filled in here\n    name = \"VOLAT\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Volatility measure based on price range and volume",
+      "factor_formulation": "TS_STD($high - $low, 20) / TS_MEAN($volume, 20)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "b90a868b51e2417c90ef067591d71626",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/b90a868b51e2417c90ef067591d71626/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-21_08-36-02-967922",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "f228f602222a",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volatility stocks with recent price consolidation exhibit stronger mean-reversion in high-volatility regimes.\n                Concise Observation: Stocks with narrow intraday ranges and low volume show sharper price corrections during volatile periods.\n                Concise Justification: Retail traders overreact to large moves, creating temporary mispricings that are corrected in high-volatility environments.\n                Concise Knowledge: When volatility spikes after low-volume periods, mean-reversion is amplified.\n                concise Specification: 20-day average volatility, 5-day intraday range, 3-day volume, 10-day mean-reversion signal in high-volatility regimes.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-21T08:50:53.291686"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.07855155,
+        "1day.excess_return_with_cost.information_ratio": 1.05415149,
+        "1day.excess_return_with_cost.annualized_return": 0.11764825,
+        "1day.excess_return_with_cost.std": 0.00723426,
+        "1day.excess_return_with_cost.mean": 0.00049432,
+        "1day.excess_return_without_cost.max_drawdown": -0.07855155,
+        "1day.excess_return_without_cost.information_ratio": 1.25857748,
+        "1day.excess_return_without_cost.annualized_return": 0.14033722,
+        "1day.excess_return_without_cost.std": 0.00722777,
+        "1day.excess_return_without_cost.mean": 0.00058965,
+        "Rank ICIR": 0.11425164,
+        "Rank IC": 0.01737895,
+        "ICIR": 0.03251603,
+        "IC": 0.0048203,
+        "l2.valid": 0.99529577,
+        "l2.train": 0.99179573
+      },
+      "feedback": {
+        "observations": "The information coefficient (IC) is 0.0048, which is below the threshold of 0.02, indicating a weak or non-existent signal. The annualized return is 0.14, which is high but does not align with the low IC, suggesting potential luck rather than a real signal.",
+        "hypothesis_evaluation": "The results refute the hypothesis as the IC is too low to indicate a meaningful signal, and the high return does not align with the low IC, suggesting potential overfitting or luck.",
+        "decision": true,
+        "reason": "The low IC suggests the current factors may not be effectively capturing the intended signal, so a simpler factor design is needed to better identify the underlying mechanism.",
+        "new_hypothesis": "Explore the mean-reversion signal in volatile regimes using a simpler factor that directly measures volatility and price consolidation without complex transformations."
+      }
+    },
+    "1660877a209b12f0": {
+      "factor_id": "1660877a209b12f0",
+      "factor_name": "CONS",
+      "factor_expression": "TS_STD($close, 5) / TS_MEAN($close, 5)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_STD($close, 5) / TS_MEAN($close, 5)\" # Your output factor expression will be filled in here\n    name = \"CONS\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Price consolidation intensity over recent days",
+      "factor_formulation": "TS_STD($close, 5) / TS_MEAN($close, 5)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "8586d1750c064e0f897be35a68693872",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/8586d1750c064e0f897be35a68693872/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-21_08-36-02-967922",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "f228f602222a",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volatility stocks with recent price consolidation exhibit stronger mean-reversion in high-volatility regimes.\n                Concise Observation: Stocks with narrow intraday ranges and low volume show sharper price corrections during volatile periods.\n                Concise Justification: Retail traders overreact to large moves, creating temporary mispricings that are corrected in high-volatility environments.\n                Concise Knowledge: When volatility spikes after low-volume periods, mean-reversion is amplified.\n                concise Specification: 20-day average volatility, 5-day intraday range, 3-day volume, 10-day mean-reversion signal in high-volatility regimes.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-21T08:50:54.771756"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.07855155,
+        "1day.excess_return_with_cost.information_ratio": 1.05415149,
+        "1day.excess_return_with_cost.annualized_return": 0.11764825,
+        "1day.excess_return_with_cost.std": 0.00723426,
+        "1day.excess_return_with_cost.mean": 0.00049432,
+        "1day.excess_return_without_cost.max_drawdown": -0.07855155,
+        "1day.excess_return_without_cost.information_ratio": 1.25857748,
+        "1day.excess_return_without_cost.annualized_return": 0.14033722,
+        "1day.excess_return_without_cost.std": 0.00722777,
+        "1day.excess_return_without_cost.mean": 0.00058965,
+        "Rank ICIR": 0.11425164,
+        "Rank IC": 0.01737895,
+        "ICIR": 0.03251603,
+        "IC": 0.0048203,
+        "l2.valid": 0.99529577,
+        "l2.train": 0.99179573
+      },
+      "feedback": {
+        "observations": "The information coefficient (IC) is 0.0048, which is below the threshold of 0.02, indicating a weak or non-existent signal. The annualized return is 0.14, which is high but does not align with the low IC, suggesting potential luck rather than a real signal.",
+        "hypothesis_evaluation": "The results refute the hypothesis as the IC is too low to indicate a meaningful signal, and the high return does not align with the low IC, suggesting potential overfitting or luck.",
+        "decision": true,
+        "reason": "The low IC suggests the current factors may not be effectively capturing the intended signal, so a simpler factor design is needed to better identify the underlying mechanism.",
+        "new_hypothesis": "Explore the mean-reversion signal in volatile regimes using a simpler factor that directly measures volatility and price consolidation without complex transformations."
+      }
+    },
+    "5e8241021548635a": {
+      "factor_id": "5e8241021548635a",
+      "factor_name": "MEAN",
+      "factor_expression": "RANK((TS_ZSCORE($return, 10) * TS_STD($high - $low, 20)) > 0.5)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK((TS_ZSCORE($return, 10) * TS_STD($high - $low, 20)) > 0.5)\" # Your output factor expression will be filled in here\n    name = \"MEAN\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Mean-reversion signal in volatile regimes",
+      "factor_formulation": "RANK((TS_ZSCORE($return, 10) * TS_STD($high - $low, 20)) > 0.5)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "feaa7d0039e14d1aad9f6cd1016dc3f2",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/feaa7d0039e14d1aad9f6cd1016dc3f2/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-21_08-36-02-967922",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "f228f602222a",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volatility stocks with recent price consolidation exhibit stronger mean-reversion in high-volatility regimes.\n                Concise Observation: Stocks with narrow intraday ranges and low volume show sharper price corrections during volatile periods.\n                Concise Justification: Retail traders overreact to large moves, creating temporary mispricings that are corrected in high-volatility environments.\n                Concise Knowledge: When volatility spikes after low-volume periods, mean-reversion is amplified.\n                concise Specification: 20-day average volatility, 5-day intraday range, 3-day volume, 10-day mean-reversion signal in high-volatility regimes.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-21T08:50:56.147313"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.07855155,
+        "1day.excess_return_with_cost.information_ratio": 1.05415149,
+        "1day.excess_return_with_cost.annualized_return": 0.11764825,
+        "1day.excess_return_with_cost.std": 0.00723426,
+        "1day.excess_return_with_cost.mean": 0.00049432,
+        "1day.excess_return_without_cost.max_drawdown": -0.07855155,
+        "1day.excess_return_without_cost.information_ratio": 1.25857748,
+        "1day.excess_return_without_cost.annualized_return": 0.14033722,
+        "1day.excess_return_without_cost.std": 0.00722777,
+        "1day.excess_return_without_cost.mean": 0.00058965,
+        "Rank ICIR": 0.11425164,
+        "Rank IC": 0.01737895,
+        "ICIR": 0.03251603,
+        "IC": 0.0048203,
+        "l2.valid": 0.99529577,
+        "l2.train": 0.99179573
+      },
+      "feedback": {
+        "observations": "The information coefficient (IC) is 0.0048, which is below the threshold of 0.02, indicating a weak or non-existent signal. The annualized return is 0.14, which is high but does not align with the low IC, suggesting potential luck rather than a real signal.",
+        "hypothesis_evaluation": "The results refute the hypothesis as the IC is too low to indicate a meaningful signal, and the high return does not align with the low IC, suggesting potential overfitting or luck.",
+        "decision": true,
+        "reason": "The low IC suggests the current factors may not be effectively capturing the intended signal, so a simpler factor design is needed to better identify the underlying mechanism.",
+        "new_hypothesis": "Explore the mean-reversion signal in volatile regimes using a simpler factor that directly measures volatility and price consolidation without complex transformations."
       }
     }
   }

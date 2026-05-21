@@ -305,8 +305,18 @@ python -m pip --version
 ls backend/data/qlib/cn_data/          # harus ada: calendars/ features/ instruments/
 ls backend/git_ignore_folder/factor_implementation_source_data/  # harus ada: daily_pv.h5
 
-# Test import
+# Test import pipeline
 PYTHONPATH=backend python -c "from pipeline.settings import ALPHA_AGENT_FACTOR_PROP_SETTING; print('OK:', ALPHA_AGENT_FACTOR_PROP_SETTING.latent_model_name)"
+
+# Verifikasi qlib + mlflow kompatibel (wajib — ini path yang sering error)
+python -c "
+import qlib, mlflow
+from qlib.workflow import R
+from qlib.model.trainer import task_train
+from mlflow.exceptions import MlflowException
+print('qlib:', qlib.__version__, '| mlflow:', mlflow.__version__)
+print('qlib + mlflow: OK')
+"
 
 # Cek GPU
 nvidia-smi
@@ -498,7 +508,59 @@ uv pip install pip
 nvidia-smi -l 1
 ```
 
-### ImportError / ModuleNotFoundError
+### `ImportError: cannot import name 'service' from 'google.protobuf'`
+
+**Gejala**: backtest gagal dengan traceback seperti ini:
+
+```
+File ".venv/lib/.../mlflow/protos/service_pb2.py", line 11, in <module>
+    from google.protobuf import service as _service
+ImportError: cannot import name 'service' from 'google.protobuf'
+```
+
+**Penyebab**: `rdagent` menarik `mlflow 1.27.0` sebagai transitive dependency. `mlflow 1.x` bergantung pada `google.protobuf.service` yang **dihapus di protobuf ≥ 4.x**. Karena `grpcio` dan `vllm` membutuhkan `protobuf 6.x`, terjadi konflik versi.
+
+**Verifikasi**:
+```bash
+.venv/bin/pip show mlflow protobuf
+# mlflow harus >= 3.0.0
+# protobuf harus < 8.0 dan >= 3.12
+```
+
+**Solusi** (pilih salah satu):
+
+A. **Upgrade mlflow** (rekomendasi, sudah tercover oleh `pyproject.toml`):
+```bash
+.venv/bin/pip install "mlflow>=3.0.0"
+```
+
+B. Jika `uv sync` menarik ulang mlflow 1.x (karena rdagent pinning), jalankan setelah sync:
+```bash
+uv sync
+.venv/bin/pip install "mlflow>=3.0.0" --force-reinstall
+```
+
+Verifikasi fix:
+```bash
+.venv/bin/python -c "
+import qlib, mlflow
+from qlib.model.trainer import task_train
+print('qlib:', qlib.__version__, '| mlflow:', mlflow.__version__)
+"
+# Harus mencetak: qlib: 0.9.7 | mlflow: 3.x.x
+```
+
+**Kompatibilitas yang sudah diverifikasi**:
+| Package | Versi | Catatan |
+|---|---|---|
+| `pyqlib` | 0.9.7 | |
+| `mlflow` | **3.12.0** | Versi 1.x tidak kompatibel dengan protobuf ≥4 |
+| `protobuf` | 6.33.6 | mlflow 3.x requires `<8` |
+| `numpy` | 2.2.6 | |
+| `pandas` | 2.3.3 | |
+| `torch` | 2.11.0+cu130 | |
+
+### ImportError / ModuleNotFoundError (umum)
 
 ```bash
 # Pastikan PYTHONPATH sudah di-set

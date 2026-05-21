@@ -26,6 +26,10 @@ dependencies = [
     "rdagent",
     "langchain-community",
     "pyqlib",
+    # mlflow: pin >= 3.0.0 agar tidak tertarik ke 1.27.0 via rdagent transitive dep.
+    # mlflow 1.x tidak kompatibel dengan protobuf >=4 (google.protobuf.service dihapus).
+    # mlflow 3.x requires protobuf <8 → cocok dengan protobuf 6.x yang dipakai grpcio/vllm.
+    "mlflow>=3.0.0",
     # API & Web
     "requests",
     "python-dotenv",
