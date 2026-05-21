@@ -75,6 +75,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     # Setelah load, atribut ini jadi None — caller harus re-inject.
     _non_picklable_attrs = (
         "_pipeline_kv",
+        "_coder_kv",
         "llm_backend",
         "hypothesis_generator",
         "factor_constructor",
@@ -131,6 +132,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             self._last_hypothesis = None
             self._last_experiment = None
             self._last_feedback = None
+            # KV dari coder repair (disimpan factor_calculate, dibaca feedback)
+            self._coder_kv = None
 
             logger.info(f"Initialized AlphaAgentLoop, backtest in {'local' if use_local else 'Docker'}")
             if potential_direction:
@@ -342,11 +345,15 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
             logger.log_object(factor.sub_workspace_list, tag="coder result")
 
+            # Simpan coder_kv untuk dipakai feedback step.
+            # coder_kv ada jika LLM repair dipanggil (expression gagal pertama kali).
+            # None jika template langsung OK — feedback fallback ke construct_kv.
+            coder_kv = getattr(self.coder, 'last_kv', None)
+            self._coder_kv = coder_kv
             if construct_kv is not None:
-                coder_kv = getattr(self.coder, 'last_kv', None)
                 logger.info(
                     f"[LatentPipeline] Coder KV chain: "
-                    f"construct_kv={'yes'} → coder_kv={'yes' if coder_kv is not None else 'no'}"
+                    f"construct_kv=yes → coder_kv={'yes' if coder_kv is not None else 'no (template OK, no repair)'}"
                 )
 
         return factor
@@ -376,14 +383,19 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     def feedback(self, prev_out: dict[str, Any]):
         _mon = _get_monitor() if _HAS_MONITOR else None
 
-        # Feedback menerima construct_kv: sudah mengandung konteks propose + factor expressions.
-        # Lebih informatif dari propose_kv saja karena feedback perlu tahu FAKTOR yang dihasilkan,
-        # bukan hanya hipotesis. Chain: propose → construct → feedback (lossless per LatentMAS).
+        # Feedback menerima KV terbaik yang tersedia:
+        #   coder_kv  — jika LLM repair dipanggil: mengandung construct context
+        #               + repair reasoning. Lebih informatif karena feedback
+        #               seharusnya "tahu" bagaimana expression diperbaiki.
+        #   construct_kv — fallback jika tidak ada repair (template langsung OK):
+        #               mengandung propose context + factor expressions.
         construct_kv = getattr(self.factor_constructor, 'last_kv', None)
-        feedback_input_kv = construct_kv
+        coder_kv = getattr(self, '_coder_kv', None)
+        feedback_input_kv = coder_kv if coder_kv is not None else construct_kv
         self.summarizer.set_past_kv(feedback_input_kv)
         if feedback_input_kv is not None:
-            logger.info("[LatentPipeline] Feedback receives KV from construct step")
+            _kv_src = "coder (repair)" if coder_kv is not None else "construct (no repair)"
+            logger.info(f"[LatentPipeline] Feedback receives KV from {_kv_src}")
 
         with _mon.track_step("feedback") if _mon else _nullcontext():
             feedback = self.summarizer.generate_feedback(prev_out["factor_backtest"], prev_out["factor_propose"], self.trace)
@@ -404,6 +416,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         # Mutation/crossover seeds are injected at __init__ time, consumed in
         # iteration 1 only — resetting here is safe for subsequent iterations.
         self._pipeline_kv = None
+        self._coder_kv = None  # reset per-iteration, set ulang di factor_calculate berikutnya
 
         #* Auto-save factors to unified factor library
         try:
