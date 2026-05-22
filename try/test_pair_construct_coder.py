@@ -57,6 +57,12 @@ from .probe import (
     enabled_modes_from_env, run_probes_at,
     format_probes_for_log, print_probe_summary,
 )
+from .prompt_ab import (
+    PROMPT_VARIANTS, run_full_chain,
+    build_construct_msgs, build_coder_msgs, build_feedback_msgs,
+    diff_prompt_structure, render_prompt_diff_table,
+    kv_length,
+)
 
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -651,9 +657,157 @@ def test_retry_loop(
     }
 
 
+# ─── Test C: prompt_ab_retry_chain ───────────────────────────────────────────
+
+def test_prompt_ab_retry_chain(latent_steps: int | None = None) -> dict:
+    """
+    Bandingkan prompt OLD vs NEW vs IMPLICIT lewat chain
+    Construct → Coder retry (live) → Feedback (synthetic backtest).
+
+    Berbeda dari pair_propose_construct/prompt_ab_chain, test ini FOKUS ke
+    retry behavior — bagaimana coder retry & feedback merespon ketika
+    construct prompt punya gaya yang berbeda (XML verbose vs compact vs
+    implicit reference).
+
+    Per variant, di-trace:
+      - Construct expr awal (apakah relevan dengan hipotesis?)
+      - Coder retry attempts (apakah collapse? mirror? generate expr beda?)
+      - Feedback final (apakah baca formulasi & beri diagnosis teknis,
+        atau cuma echo metrik?)
+
+    Untuk variant 'implicit', construct prompt secara sengaja TIDAK menulis
+    hipotesis literal → model harus mengandalkan KV upstream. Diagnostik
+    kunci untuk memahami batas KV-cache transfer.
+    """
+    if latent_steps is None:
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
+
+    group, case = "pair_construct_coder", f"prompt_ab_retry_chain_m{latent_steps}"
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = CONFIG.output_dir / group
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log_path = out_dir / f"{case}_{ts}.txt"
+
+    print("\n" + "═" * 78)
+    print(f"▶ [{group}] {case}  (A/B/C — construct→coder retry→feedback)")
+    print("═" * 78)
+
+    # Render construct prompt untuk diff (sebelum chain dijalankan)
+    rendered: dict[str, str] = {}
+    for v in PROMPT_VARIANTS:
+        _, usr = build_construct_msgs(v)
+        rendered[v] = usr
+    diff_old_new = diff_prompt_structure("old", rendered["old"], "new", rendered["new"])
+    diff_new_impl = diff_prompt_structure("new", rendered["new"], "implicit", rendered["implicit"])
+    print("\n── Construct user diff: old vs new ──")
+    print(render_prompt_diff_table(diff_old_new))
+    print("\n── Construct user diff: new vs implicit ──")
+    print(render_prompt_diff_table(diff_new_impl))
+
+    if CONFIG.dry_run:
+        sections = [
+            ("CONSTRUCT user diff: old vs new", render_prompt_diff_table(diff_old_new)),
+            ("CONSTRUCT user diff: new vs implicit", render_prompt_diff_table(diff_new_impl)),
+        ]
+        for v in PROMPT_VARIANTS:
+            sections.append((f"RENDERED CONSTRUCT USER [{v}]", rendered[v]))
+        _log_save(log_path, sections)
+        return {"group": group, "case": case, "ok_format": True,
+                "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0,
+                "log_path": str(log_path)}
+
+    backend = get_latent_backend()
+    n_attempts = int(os.environ.get("TEST_AB_CODER_ATTEMPTS", "3"))
+
+    chains: dict[str, dict] = {}
+    for v in PROMPT_VARIANTS:
+        print("\n" + "─" * 78)
+        print(f"  ▶ variant={v!r}  (n_coder_attempts={n_attempts})")
+        print("─" * 78)
+        t0 = time.time()
+        chains[v] = run_full_chain(
+            backend, v,
+            latent_steps=latent_steps,
+            do_live_coder=True,
+            n_coder_attempts=n_attempts,
+            chain_label="ab_retry",
+        )
+        chains[v]["total_chain_s"] = round(time.time() - t0, 2)
+
+    # ── Ringkasan tabel ─────────────────────────────────────────────────────
+    print("\n── A/B/C RETRY CHAIN SUMMARY ──")
+    header = (f"{'variant':<9} | {'ctor_expr':>34} | {'n_coder':>7} | "
+              f"{'coder_final':>34} | {'fb_ok':>5} | {'total_s':>7}")
+    print(header); print("─" * len(header))
+    for v in PROMPT_VARIANTS:
+        c = chains[v]
+        ce = (c["construct"].get("factor_expr") or "")[:34]
+        coder_attempts = c.get("coder", {}).get("attempts", [])
+        final = (c.get("coder", {}).get("final_expr") or "")[:34]
+        fb = c["feedback"]
+        print(f"{v:<9} | {ce:>34} | {len(coder_attempts):>7} | "
+              f"{final:>34} | {('Y' if fb['json'] else 'N'):>5} | {c['total_chain_s']:>6.2f}s")
+
+    # Per-variant collapse / mirror diagnostics
+    print("\n── Coder retry collapse diagnostics ──")
+    for v in PROMPT_VARIANTS:
+        c = chains[v]
+        atts = c.get("coder", {}).get("attempts", [])
+        if not atts:
+            print(f"  [{v}] (coder skipped)")
+            continue
+        collapse_n = sum(1 for a in atts if a["text_len"] < 20)
+        mirror_n = 0
+        prev_expr = ""
+        for a in atts:
+            if a["expr"] and a["expr"] == prev_expr:
+                mirror_n += 1
+            prev_expr = a["expr"] or prev_expr
+        print(f"  [{v}] attempts={len(atts)}  collapse(<20)={collapse_n}  mirror={mirror_n}")
+
+    # ── Save log ────────────────────────────────────────────────────────────
+    sections: list[tuple[str, str]] = [
+        ("CONSTRUCT user diff: old vs new", render_prompt_diff_table(diff_old_new)),
+        ("CONSTRUCT user diff: new vs implicit", render_prompt_diff_table(diff_new_impl)),
+    ]
+    for v in PROMPT_VARIANTS:
+        c = chains[v]
+        sections.append((f"=== VARIANT [{v}]  total={c['total_chain_s']}s ===",
+                         f"propose_kv={c['propose']['kv_len']}  "
+                         f"construct_kv={c['construct']['kv_len']}"))
+        sections.append((f"[{v}] CONSTRUCT OUTPUT", c["construct"]["text"]))
+        atts = c.get("coder", {}).get("attempts", [])
+        if atts:
+            sections.append((
+                f"[{v}] CODER RETRY ATTEMPTS ({len(atts)})",
+                "\n".join(
+                    f"  a{a['attempt']}: text_len={a['text_len']}  "
+                    f"expr={a['expr']!r}  json_ok={a['json_ok']}  kv={a['kv_len']}"
+                    for a in atts
+                )
+            ))
+        sections.append((f"[{v}] FEEDBACK OUTPUT", c["feedback"]["text"]))
+        if c.get("probes_construct"):
+            sections.extend(format_probes_for_log(c["probes_construct"]))
+    _log_save(log_path, sections)
+    print(f"\n── LOG SAVED ── {log_path}")
+
+    return {
+        "group": group, "case": case, "latent_steps": latent_steps,
+        "ok_format": all(chains[v]["feedback"]["json"] is not None for v in PROMPT_VARIANTS),
+        "elapsed_s": round(sum(chains[v]["total_chain_s"] for v in PROMPT_VARIANTS), 2),
+        "log_path": str(log_path),
+        "chains": chains,
+        "diffs": {"construct_old_vs_new": diff_old_new,
+                  "construct_new_vs_implicit": diff_new_impl},
+        "parsed": None,
+    }
+
+
 # ─── Registry ────────────────────────────────────────────────────────────────
 
 CASES = {
-    "first_run":  test_first_run,
-    "retry_loop": test_retry_loop,
+    "first_run":             test_first_run,
+    "retry_loop":            test_retry_loop,
+    "prompt_ab_retry_chain": test_prompt_ab_retry_chain,
 }

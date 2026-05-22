@@ -55,6 +55,12 @@ from .probe import (
     enabled_modes_from_env, run_probes_at,
     format_probes_for_log, print_probe_summary,
 )
+from .prompt_ab import (
+    PROMPT_VARIANTS, run_full_chain,
+    build_propose_msgs, build_construct_msgs, build_feedback_msgs,
+    diff_prompt_structure, render_prompt_diff_table,
+    concat_kv_raw, kv_length,
+)
 
 
 # ─── Helpers shared (mirror dari test_multi_agent_kv) ────────────────────────
@@ -578,10 +584,410 @@ def test_feedback_chained(latent_steps: int | None = None) -> dict:
     }
 
 
+# ─── Test D: prompt_ab_chain (A/B/C comparison: full chain hingga feedback) ─
+
+def test_prompt_ab_chain(latent_steps: int | None = None) -> dict:
+    """
+    Bandingkan 3 variant prompt (old/new/implicit) lewat FULL CHAIN:
+    Propose → Construct → Coder (live) → Feedback (synthetic backtest).
+
+    Setiap variant pakai SAMA fixtures + SAMA backend instance, jadi
+    perbedaan output murni karena perbedaan prompt + KV-cache transfer.
+
+    Yang diukur per variant:
+      - Per-stage text_len & kv_len (apakah chain stabil?)
+      - schema_ok di propose/construct/feedback
+      - Coder retry behavior
+      - Quantitative prompt diff (XML tags, hypothesis anchor, implicit phrases)
+
+    Membantu jawab:
+      a) Apakah verbosity OLD prompt (XML markup) bantu/sakit model kecil?
+      b) Apakah "hypothesis written explicitly" >> "in latent KV" ketika
+         model di-bias dengan kalimat 'see prior context'?
+      c) Bagaimana isi KV-cache yang ter-transfer (via probe)?
+    """
+    if latent_steps is None:
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
+
+    group, case = "pair_propose_construct", f"prompt_ab_chain_m{latent_steps}"
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = CONFIG.output_dir / group
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log_path = out_dir / f"{case}_{ts}.txt"
+
+    print("\n" + "═" * 78)
+    print(f"▶ [{group}] {case}  (A/B/C chain — old vs new vs implicit)")
+    print("═" * 78)
+
+    # Render & diff prompts BEFORE any LLM call — sehingga walau dry_run
+    # bagian comparisonnya tetap informatif.
+    diffs_construct: dict[str, dict] = {}
+    diffs_feedback: dict[str, dict] = {}
+    rendered_construct: dict[str, str] = {}
+    rendered_feedback: dict[str, str] = {}
+    for v in PROMPT_VARIANTS:
+        _sys_c, usr_c = build_construct_msgs(v)
+        _sys_f, usr_f = build_feedback_msgs(v, factor_summary="- F1: `RANK($volume)` [implemented=True]")
+        rendered_construct[v] = usr_c
+        rendered_feedback[v] = usr_f
+    # Pairwise diffs vs 'new' baseline
+    diffs_construct = diff_prompt_structure(
+        "old", rendered_construct["old"], "new", rendered_construct["new"]
+    )
+    diffs_construct_vs_impl = diff_prompt_structure(
+        "new", rendered_construct["new"], "implicit", rendered_construct["implicit"]
+    )
+    diffs_feedback = diff_prompt_structure(
+        "old", rendered_feedback["old"], "new", rendered_feedback["new"]
+    )
+
+    print("\n── Prompt diff (CONSTRUCT user) old vs new ──")
+    print(render_prompt_diff_table(diffs_construct))
+    print("\n── Prompt diff (CONSTRUCT user) new vs implicit ──")
+    print(render_prompt_diff_table(diffs_construct_vs_impl))
+    print("\n── Prompt diff (FEEDBACK user) old vs new ──")
+    print(render_prompt_diff_table(diffs_feedback))
+
+    if CONFIG.dry_run:
+        sections = [
+            ("PROMPT DIFF — CONSTRUCT user (old vs new)", render_prompt_diff_table(diffs_construct)),
+            ("PROMPT DIFF — CONSTRUCT user (new vs implicit)",
+             render_prompt_diff_table(diffs_construct_vs_impl)),
+            ("PROMPT DIFF — FEEDBACK user (old vs new)", render_prompt_diff_table(diffs_feedback)),
+        ]
+        for v in PROMPT_VARIANTS:
+            sections.append((f"RENDERED CONSTRUCT USER [{v}]", rendered_construct[v]))
+            sections.append((f"RENDERED FEEDBACK USER [{v}]", rendered_feedback[v]))
+        _log_save(log_path, sections)
+        return {"group": group, "case": case, "ok_format": True,
+                "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0,
+                "log_path": str(log_path),
+                "diffs": {"construct_old_vs_new": diffs_construct,
+                          "construct_new_vs_implicit": diffs_construct_vs_impl,
+                          "feedback_old_vs_new": diffs_feedback}}
+
+    backend = get_latent_backend()
+    chains: dict[str, dict] = {}
+    n_attempts = int(os.environ.get("TEST_AB_CODER_ATTEMPTS", "2"))
+    for v in PROMPT_VARIANTS:
+        print("\n" + "─" * 78)
+        print(f"  ▶ variant={v!r}")
+        print("─" * 78)
+        t0 = time.time()
+        chains[v] = run_full_chain(
+            backend, v,
+            latent_steps=latent_steps,
+            do_live_coder=True,
+            n_coder_attempts=n_attempts,
+            chain_label="ab",
+        )
+        chains[v]["total_chain_s"] = round(time.time() - t0, 2)
+
+    # ── Ringkasan tabel cross-variant ───────────────────────────────────────
+    print("\n── CROSS-VARIANT SUMMARY ──")
+    header = (f"{'variant':<9} | {'prop_len':>8} | {'prop_kv':>7} | "
+              f"{'ctor_len':>8} | {'ctor_kv':>7} | {'ctor_expr':>30} | "
+              f"{'fb_len':>6} | {'fb_ok':>5} | {'total_s':>8}")
+    print(header); print("─" * len(header))
+    for v in PROMPT_VARIANTS:
+        c = chains[v]
+        expr = (c["construct"].get("factor_expr") or "")[:30]
+        fb = c["feedback"]
+        print(f"{v:<9} | {len(c['propose']['text']):>8} | {c['propose']['kv_len']:>7} | "
+              f"{len(c['construct']['text']):>8} | {c['construct']['kv_len']:>7} | "
+              f"{expr:>30} | {len(fb['text']):>6} | "
+              f"{('Y' if fb['json'] else 'N'):>5} | {c['total_chain_s']:>7.2f}s")
+
+    # ── Save log ────────────────────────────────────────────────────────────
+    sections: list[tuple[str, str]] = [
+        ("PROMPT DIFF — CONSTRUCT user (old vs new)", render_prompt_diff_table(diffs_construct)),
+        ("PROMPT DIFF — CONSTRUCT user (new vs implicit)",
+         render_prompt_diff_table(diffs_construct_vs_impl)),
+        ("PROMPT DIFF — FEEDBACK user (old vs new)", render_prompt_diff_table(diffs_feedback)),
+    ]
+    for v in PROMPT_VARIANTS:
+        c = chains[v]
+        sections.append((f"=== VARIANT [{v}]  total={c['total_chain_s']}s ===",
+                         f"propose_kv={c['propose']['kv_len']}  construct_kv={c['construct']['kv_len']}"))
+        sections.append((f"[{v}] PROPOSE TEXT (len={len(c['propose']['text'])})", c["propose"]["text"]))
+        sections.append((f"[{v}] CONSTRUCT TEXT (len={len(c['construct']['text'])})", c["construct"]["text"]))
+        if "attempts" in c.get("coder", {}):
+            attempts_str = "\n".join(
+                f"  a{a['attempt']}: text_len={a['text_len']}  expr={a['expr']!r}  ok={a['json_ok']}"
+                for a in c["coder"]["attempts"]
+            )
+            sections.append((f"[{v}] CODER ATTEMPTS", attempts_str))
+        sections.append((f"[{v}] FEEDBACK TEXT (len={len(c['feedback']['text'])})", c["feedback"]["text"]))
+        if c.get("probes_construct"):
+            sections.extend(format_probes_for_log(c["probes_construct"]))
+    _log_save(log_path, sections)
+    print(f"\n── LOG SAVED ── {log_path}")
+
+    return {
+        "group": group, "case": case, "latent_steps": latent_steps,
+        "ok_format": all(chains[v]["feedback"]["json"] is not None for v in PROMPT_VARIANTS),
+        "elapsed_s": round(sum(chains[v]["total_chain_s"] for v in PROMPT_VARIANTS), 2),
+        "log_path": str(log_path),
+        "chains": chains,
+        "diffs": {
+            "construct_old_vs_new": diffs_construct,
+            "construct_new_vs_implicit": diffs_construct_vs_impl,
+            "feedback_old_vs_new": diffs_feedback,
+        },
+        "parsed": None,
+    }
+
+
+# ─── Test E: kv_combine_raw (BUKAN seed-extend — concat mentah, RoPE rusak) ──
+
+def test_kv_combine_raw(latent_steps: int | None = None) -> dict:
+    """
+    Eksperimen: concat propose_kv + feedback_kv MENTAH (tanpa fix-up posisi
+    RoPE), lalu pakai sebagai past_key_values untuk construct.
+
+    Expected behavior (per RoPE math):
+      Keys feedback_kv di-encode di RoPE positions [0..L_b], tapi dalam
+      combined cache mereka di sequence positions [L_a..L_a+L_b]. Query
+      construct akan compute attention scores WRT keys yang RoPE-nya
+      mismatch dengan posisi mereka → atensi melenceng → output collapse
+      atau halusinasi.
+
+    Diagnostik:
+      - Bandingkan output construct dengan SAME prompt ke propose_kv saja
+        (baseline) dan ke corrected chain (test_kv_combine_corrected).
+      - Probe combined_kv: apakah model masih bisa baca scenario / hipotesis?
+    """
+    if latent_steps is None:
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
+
+    group, case = "pair_propose_construct", f"kv_combine_raw_m{latent_steps}"
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = CONFIG.output_dir / group
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log_path = out_dir / f"{case}_{ts}.txt"
+
+    print("\n" + "═" * 78)
+    print(f"▶ [{group}] {case}  (RAW KV concat — no RoPE fix-up)")
+    print("═" * 78)
+
+    if CONFIG.dry_run:
+        print("dry_run: would build propose_kv + feedback_kv, concat raw, then construct")
+        return {"group": group, "case": case, "ok_format": True,
+                "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0, "log_path": str(log_path)}
+
+    backend = get_latent_backend()
+
+    # Step 1: Build propose_kv (kv_only — KV saja, no text needed)
+    print("── Step 1: Propose kv_only → propose_kv ──")
+    sys_p, usr_p = build_propose_msgs("new")
+    t0 = time.time()
+    r_prop = backend.build_messages_and_run(
+        user_prompt=usr_p, system_prompt=sys_p,
+        mode="kv_only", latent_steps=latent_steps,
+        temperature=0.7, top_p=0.95, role="kvcomb_raw_propose",
+    )
+    propose_kv = r_prop.kv_cache
+    L_a = kv_length(propose_kv)
+    elapsed_a = round(time.time() - t0, 2)
+    print(f"  propose_kv len={L_a}  elapsed={elapsed_a}s")
+
+    # Step 2: Build feedback_kv (kv_only, INDEPENDENT — tidak seeded dari propose)
+    # Ini krusial untuk eksperimen "raw concat" — kedua KV harus dibangun
+    # independent supaya posisi mereka benar-benar tumpang tindih.
+    print("── Step 2: Feedback kv_only INDEPENDENT (no seed) → feedback_kv ──")
+    sys_f, usr_f = build_feedback_msgs(
+        "new",
+        hypothesis_text=fx.HYPOTHESIS_DICT["hypothesis"],
+        factor_summary="- F1: `RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))` [implemented=True]",
+        combined_result=fx.COMBINED_RESULT_STR,
+    )
+    t1 = time.time()
+    r_fb = backend.build_messages_and_run(
+        user_prompt=usr_f, system_prompt=sys_f,
+        mode="kv_only", latent_steps=latent_steps,
+        temperature=0.7, top_p=0.95, role="kvcomb_raw_feedback",
+    )
+    feedback_kv = r_fb.kv_cache
+    L_b = kv_length(feedback_kv)
+    elapsed_b = round(time.time() - t1, 2)
+    print(f"  feedback_kv len={L_b}  elapsed={elapsed_b}s")
+
+    # Step 3: RAW concat
+    print(f"── Step 3: concat_kv_raw(propose_kv, feedback_kv) — RoPE positions WILL DRIFT ──")
+    combined = concat_kv_raw(propose_kv, feedback_kv)
+    L_c = kv_length(combined)
+    expected = L_a + L_b
+    print(f"  combined_kv len={L_c}  (expected {expected}, drift={L_c - expected})")
+
+    # Step 4: Probe combined_kv — apa yang model "lihat"?
+    print("── Step 4: Probing combined_kv ──")
+    probe_modes = enabled_modes_from_env() or ["rewrite", "format_check"]
+    probes = run_probes_at(backend, combined, kv_label="combined_raw_kv", modes=probe_modes)
+    if probes:
+        print_probe_summary(probes)
+
+    # Step 5: Run construct dengan combined_kv sebagai past_key_values
+    print("── Step 5: Construct dengan combined_kv (raw) ──")
+    sys_c, usr_c = build_construct_msgs("new")
+    t2 = time.time()
+    r_ctor = backend.build_messages_and_run(
+        user_prompt=usr_c, system_prompt=sys_c,
+        json_mode=True, mode="kv_and_text",
+        past_key_values=combined, latent_steps=latent_steps,
+        temperature=0.7, top_p=0.95, role="kvcomb_raw_construct",
+    )
+    construct_text = r_ctor.text or ""
+    construct_json = _extract_json(construct_text)
+    elapsed_c = round(time.time() - t2, 2)
+    print(f"  construct: text_len={len(construct_text)}  schema_ok={_has_construct_schema(construct_json)}  "
+          f"elapsed={elapsed_c}s")
+    print(f"  preview: {construct_text[:200]!r}")
+
+    sections = [
+        (f"RAW CONCAT EXPERIMENT  L_a={L_a}  L_b={L_b}  L_combined={L_c}  "
+         f"expected={expected}  RoPE drift expected for B's positions", ""),
+        ("CONSTRUCT OUTPUT (under raw-combined KV)", construct_text),
+        ("PARSED JSON", _json.dumps(construct_json, indent=2, ensure_ascii=False)
+         if construct_json else "(parse failed)"),
+    ]
+    sections.extend(format_probes_for_log(probes))
+    _log_save(log_path, sections)
+    print(f"\n── LOG SAVED ── {log_path}")
+
+    return {
+        "group": group, "case": case, "latent_steps": latent_steps,
+        "ok_format": construct_json is not None and _has_construct_schema(construct_json),
+        "elapsed_s": round(elapsed_a + elapsed_b + elapsed_c, 2),
+        "log_path": str(log_path),
+        "kv_lens": {"propose": L_a, "feedback": L_b, "combined": L_c, "expected": expected},
+        "construct_text_len": len(construct_text),
+        "parsed": construct_json,
+    }
+
+
+# ─── Test F: kv_combine_corrected (seed-and-extend, RoPE benar) ──────────────
+
+def test_kv_combine_corrected(latent_steps: int | None = None) -> dict:
+    """
+    Counterfactual ke test_kv_combine_raw: kombinasi dua konteks lewat
+    SEED-AND-EXTEND. propose_kv menjadi seed, lalu feedback prompt
+    di-PROCESS DI ATAS-nya (positions di-RoPE di posisi yang benar).
+
+    Hasil corrected_kv: model "tahu" propose context + feedback context
+    dengan urutan dan positions yang konsisten. Inilah cara codebase
+    sekarang melakukan "combining" antar agent.
+
+    Output yang diharapkan:
+      - Construct yang melanjutkan corrected_kv harus menghasilkan factor
+        yang aligned dengan hypothesis di propose.
+      - Probe corrected_kv: model bisa restate scenario + factor + metric.
+    """
+    if latent_steps is None:
+        latent_steps = int(os.environ.get("TEST_LATENT_STEPS", "10"))
+
+    group, case = "pair_propose_construct", f"kv_combine_corrected_m{latent_steps}"
+    ts = time.strftime("%Y%m%d_%H%M%S")
+    out_dir = CONFIG.output_dir / group
+    out_dir.mkdir(parents=True, exist_ok=True)
+    log_path = out_dir / f"{case}_{ts}.txt"
+
+    print("\n" + "═" * 78)
+    print(f"▶ [{group}] {case}  (CORRECTED — seed-and-extend, RoPE positions benar)")
+    print("═" * 78)
+
+    if CONFIG.dry_run:
+        return {"group": group, "case": case, "ok_format": True,
+                "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0, "log_path": str(log_path)}
+
+    backend = get_latent_backend()
+
+    # Step 1: propose_kv (sama seperti raw case)
+    print("── Step 1: Propose kv_only → propose_kv ──")
+    sys_p, usr_p = build_propose_msgs("new")
+    t0 = time.time()
+    r_prop = backend.build_messages_and_run(
+        user_prompt=usr_p, system_prompt=sys_p,
+        mode="kv_only", latent_steps=latent_steps,
+        temperature=0.7, top_p=0.95, role="kvcomb_corr_propose",
+    )
+    propose_kv = r_prop.kv_cache
+    L_a = kv_length(propose_kv)
+    elapsed_a = round(time.time() - t0, 2)
+    print(f"  propose_kv len={L_a}  elapsed={elapsed_a}s")
+
+    # Step 2: Process feedback prompt AT TOP OF propose_kv → corrected combined
+    print("── Step 2: Feedback kv_only DENGAN SEED propose_kv → corrected_kv ──")
+    sys_f, usr_f = build_feedback_msgs(
+        "new",
+        hypothesis_text=fx.HYPOTHESIS_DICT["hypothesis"],
+        factor_summary="- F1: `RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))` [implemented=True]",
+        combined_result=fx.COMBINED_RESULT_STR,
+    )
+    t1 = time.time()
+    r_fb = backend.build_messages_and_run(
+        user_prompt=usr_f, system_prompt=sys_f,
+        mode="kv_only", past_key_values=propose_kv,
+        latent_steps=latent_steps,
+        temperature=0.7, top_p=0.95, role="kvcomb_corr_feedback",
+    )
+    corrected_kv = r_fb.kv_cache
+    L_c = kv_length(corrected_kv)
+    elapsed_b = round(time.time() - t1, 2)
+    print(f"  corrected_kv len={L_c}  (>= L_a={L_a} expected)  elapsed={elapsed_b}s")
+
+    # Step 3: Probe corrected_kv
+    print("── Step 3: Probing corrected_kv ──")
+    probe_modes = enabled_modes_from_env() or ["rewrite", "format_check"]
+    probes = run_probes_at(backend, corrected_kv, kv_label="combined_corrected_kv", modes=probe_modes)
+    if probes:
+        print_probe_summary(probes)
+
+    # Step 4: Construct dengan corrected_kv
+    print("── Step 4: Construct dengan corrected_kv ──")
+    sys_c, usr_c = build_construct_msgs("new")
+    t2 = time.time()
+    r_ctor = backend.build_messages_and_run(
+        user_prompt=usr_c, system_prompt=sys_c,
+        json_mode=True, mode="kv_and_text",
+        past_key_values=corrected_kv, latent_steps=latent_steps,
+        temperature=0.7, top_p=0.95, role="kvcomb_corr_construct",
+    )
+    construct_text = r_ctor.text or ""
+    construct_json = _extract_json(construct_text)
+    elapsed_c = round(time.time() - t2, 2)
+    print(f"  construct: text_len={len(construct_text)}  schema_ok={_has_construct_schema(construct_json)}  "
+          f"elapsed={elapsed_c}s")
+    print(f"  preview: {construct_text[:200]!r}")
+
+    sections = [
+        (f"CORRECTED SEED-EXTEND  L_a={L_a}  L_corrected={L_c}  Δ={L_c - L_a}  "
+         f"(feedback prompt processed on top of propose KV → positions benar)", ""),
+        ("CONSTRUCT OUTPUT (under corrected KV)", construct_text),
+        ("PARSED JSON", _json.dumps(construct_json, indent=2, ensure_ascii=False)
+         if construct_json else "(parse failed)"),
+    ]
+    sections.extend(format_probes_for_log(probes))
+    _log_save(log_path, sections)
+    print(f"\n── LOG SAVED ── {log_path}")
+
+    return {
+        "group": group, "case": case, "latent_steps": latent_steps,
+        "ok_format": construct_json is not None and _has_construct_schema(construct_json),
+        "elapsed_s": round(elapsed_a + elapsed_b + elapsed_c, 2),
+        "log_path": str(log_path),
+        "kv_lens": {"propose": L_a, "corrected": L_c, "growth": L_c - L_a},
+        "construct_text_len": len(construct_text),
+        "parsed": construct_json,
+    }
+
+
 # ─── Registry ────────────────────────────────────────────────────────────────
 
 CASES = {
-    "fresh_start":      test_fresh_start,
-    "mutation_seeded":  test_mutation_seeded,
-    "feedback_chained": test_feedback_chained,
+    "fresh_start":           test_fresh_start,
+    "mutation_seeded":       test_mutation_seeded,
+    "feedback_chained":      test_feedback_chained,
+    "prompt_ab_chain":       test_prompt_ab_chain,
+    "kv_combine_raw":        test_kv_combine_raw,
+    "kv_combine_corrected":  test_kv_combine_corrected,
 }
