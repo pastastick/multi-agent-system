@@ -679,8 +679,8 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
                 if expr is None:
                     logger.warning(
                         f"[LatentCoder] attempt {attempt+1}: failed to parse "
-                        f"'PASS' or 'FIXED:' line from output (head=%r), retrying",
-                        (raw or "").strip()[:160],
+                        f"'PASS' or 'FIXED:' line from output "
+                        f"(head={(raw or '').strip()[:160]!r}), retrying"
                     )
                     continue
 
