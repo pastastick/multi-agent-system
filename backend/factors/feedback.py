@@ -169,6 +169,16 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
         ]
         complexity_warnings = " | ".join(complexity_warnings_list) if complexity_warnings_list else ""
 
+        # Build compact factor summary: "- NAME: `EXPR` [implemented=True/False]"
+        factor_summary_lines = []
+        for t in tasks_factors:
+            name = t.get("factor_name", "?")
+            expr = t.get("factor_formulation", "") or t.get("factor_expression", "")
+            impl = t.get("factor_implementation", "?")
+            if expr:
+                factor_summary_lines.append(f"- {name}: `{expr}` [implemented={impl}]")
+        factor_summary = "\n".join(factor_summary_lines) if factor_summary_lines else "(no factor details available)"
+
         sys_prompt = base_feedback_prompts["factor_feedback_generation"]["system"]
 
         usr_prompt = (
@@ -176,6 +186,7 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
             .from_string(base_feedback_prompts["factor_feedback_generation"]["user"])
             .render(
                 hypothesis_oneline=_mv("hypothesis_oneline", hypothesis_text),
+                factor_summary=_mv("factor_summary", factor_summary),
                 complexity_warnings=_mv("complexity_warnings", complexity_warnings),
                 combined_result=_mv("combined_result", combined_result),
             )
@@ -184,7 +195,7 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
         # Call the APIBackend to generate the response for hypothesis feedback with retry
         response_json = None
         last_error = None
-        
+
         for attempt in range(MAX_JSON_PARSE_RETRIES):
             try:
                 response = self._call_llm(usr_prompt, sys_prompt, json_mode=True)
@@ -369,15 +380,27 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
         ]
         complexity_warnings = " | ".join(complexity_warnings_list) if complexity_warnings_list else ""
 
+        # Build compact factor summary: "- NAME: `EXPR` [implemented=True/False]"
+        # Feedback needs to know WHAT formulas were tried to give technically grounded diagnosis.
+        factor_summary_lines = []
+        for t in tasks_factors:
+            name = t.get("factor_name", "?")
+            expr = t.get("factor_formulation", "") or t.get("factor_expression", "")
+            impl = t.get("factor_implementation", "?")
+            if expr:
+                factor_summary_lines.append(f"- {name}: `{expr}` [implemented={impl}]")
+        factor_summary = "\n".join(factor_summary_lines) if factor_summary_lines else "(no factor details available)"
+
         # System prompt: no scenario (already in propose KV upstream).
         sys_prompt = qa_feedback_prompts["factor_feedback_generation"]["system"]
 
-        # User prompt: single-line hypothesis anchor + new backtest data + complexity flag.
+        # User prompt: hypothesis + compact factor list + backtest metrics + complexity flag.
         usr_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_feedback_prompts["factor_feedback_generation"]["user"])
             .render(
                 hypothesis_oneline=_mv("hypothesis_oneline", hypothesis_text),
+                factor_summary=_mv("factor_summary", factor_summary),
                 complexity_warnings=_mv("complexity_warnings", complexity_warnings),
                 combined_result=_mv("combined_result", combined_result),
             )

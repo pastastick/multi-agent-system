@@ -184,17 +184,20 @@ factor_feedback_generation:
     }
 
   user: |-
-    Hypothesis under evaluation: {{ hypothesis_oneline }}
+    Hypothesis: {{ hypothesis_oneline }}
+
+    Factors tested this round:
+    {{ factor_summary }}
     {% if complexity_warnings %}
 
-    Complexity warnings flagged this round: {{ complexity_warnings }}
+    Complexity warnings: {{ complexity_warnings }}
     {% endif %}
 
     <backtest_results>
     {{ combined_result }}
     </backtest_results>
 
-    Diagnose: which factors carried signal, which were noise/reversed, and what unexplored angle is the natural next step. Output the JSON.
+    Diagnose: which factors carried signal (and WHY given their formulation), which were noise, and what is the natural next direction. Output the JSON.
 
 
 # ─── Propose Agent (Idea generator) ──────────────────────────────────────────
@@ -216,6 +219,14 @@ hypothesis_gen:
 
     {{ hypothesis_specification }}
     {% endif %}
+
+    Domain patterns (build on or deliberately diverge from):
+    - Momentum: short-term (3–10d) continuation; long-term (60d+) reversal
+    - Mean-reversion: amplified after large 1-day moves (retail overreaction)
+    - Volume-price divergence: volume spike without proportional price move = trend exhaustion
+    - Intraday range: ($high-$low)/$close = realized volatility proxy
+    - Volatility regime: many signals flip sign in high-vol vs low-vol periods
+    - Open-close gap: overnight (institutional) vs intraday (retail) flow divergence
 
     Output ONLY this JSON (no markdown fences, no commentary):
     {{ hypothesis_output_format }}
@@ -253,7 +264,8 @@ hypothesis2experiment:
     {{ experiment_output_format }}
 
   user_prompt: |-
-    Target hypothesis is already in the prior context
+    Hypothesis to implement:
+    {{ target_hypothesis_oneline }}
 
     Allowed operators:
     {{ function_lib_description }}
@@ -263,7 +275,7 @@ hypothesis2experiment:
     {{ expression_duplication }}
     {% endif %}
 
-    Write 2-3 independent {{ targets }} for the hypothesis above. Pick whichever operator families best capture the mechanism — correlation, conditional logic, regression, count-based, smoothing, etc. Favor combinations not already seen in the prior context. Now output the factors in the required format.
+    Write 2-3 independent {{ targets }} that implement the hypothesis above. Each factor MUST structurally encode the specific mechanism described — do NOT produce trivial single-function wrappers like RANK($volume). Pick operator families that capture the causal chain: correlation, conditional, regression, count-based, smoothing, or combinations. Now output the factors in the required format.
 
 
 # ─── Construct duplication-check fragment (rendered conditionally) ───────────
@@ -279,7 +291,7 @@ expression_duplication: |-
   - **Parsimony check FAILED**: free-args ratio ({{ "%.2f"|format(free_args_ratio * 100) }}%) ≥ 50% ({{ num_free_args }} of {{ num_all_nodes }} nodes). Reduce free parameters.
   {% endif %}
   {% if unique_vars_ratio >= 0.5 %}
-  - **Diversity check FAILED**: unique-vars ratio ({{ "%.2f"|format(unique_vars_ratio * 100) }}%) ≥ 50% ({{ num_unique_vars }} of {{ num_all_nodes }}). Repeat variables more or use simpler structures.
+  - **Diversity check FAILED**: unique-vars ratio ({{ "%.2f"|format(unique_vars_ratio * 100) }}%) ≥ 50% ({{ num_unique_vars }} of {{ num_all_nodes }}). Expression is too shallow — wrap in more operators (e.g. `RANK(TS_MEAN($volume, 20)) * SIGN(TS_MEAN($return, 5))` instead of `RANK($volume)`).
   {% endif %}
   {% if symbol_length > symbol_length_threshold %}
   - **SL check FAILED**: expression length ({{ symbol_length }}) > limit ({{ symbol_length_threshold }}). Overfitting risk. Redesign from scratch — target 50-150 chars.
