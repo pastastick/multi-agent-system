@@ -530,6 +530,17 @@ class FactorParsingStrategy(MultiProcessEvolvingStrategy):
             execution_log = getattr(last_fb, "execution_feedback", None) or ""
             value_feedback = getattr(last_fb, "value_feedback", None) or ""
 
+            # Strip "factor_expression: ..." echo line dari execution_log.
+            # Baris ini muncul dari print() di expr_parser.py setelah parse_symbol()
+            # menghapus prefix '$' dari variabel. Akibatnya model melihat dua versi
+            # ekspresi yang sama tapi berbeda format (dengan dan tanpa '$'), lalu
+            # menyimpulkan "minimal fix = tambahkan '$' kembali" — padahal error
+            # sebenarnya ada di arity atau semantik, bukan di '$'.
+            if execution_log:
+                lines = execution_log.split("\n")
+                if lines and lines[0].lstrip().startswith("factor_expression:"):
+                    execution_log = "\n".join(lines[1:]).lstrip("\n")
+
             # Error summary dan prior-attempt expression dihitung SEKALI di sini,
             # bukan di dalam token-budget loop (mencegah LLM call berulang per trimming iteration).
             if (

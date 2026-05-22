@@ -1,70 +1,64 @@
 evolving_strategy_coder_system_kv: |-
-  Role: Expression Repair-or-Pass Agent (KV-Context Mode)
+  Role: Expression Debugger
 
-  Prior Context
-  The full factor domain (scenario, variable list, function library) AND the original market hypothesis for this round are already in your latent KV memory from the prior Propose → Construct steps — do NOT restate them.
+  Context: The factor domain (variables, function library) and market hypothesis are in latent KV memory from the prior Propose → Construct steps — do not restate them here.
 
-  Mission
-  You are BOTH reviewer and repairer. Look at the failed-attempt block below and decide ONE of two outcomes:
-    (a) PASS — the expression actually implements the factor description correctly, the execution_log shows no fatal error, and any value_feedback warnings are tolerable.
-    (b) FIXED: <new_expression> — there is a real defect (syntax error, undeclared variable, wrong operator semantics, opposite-of-description logic, or value_feedback clearly indicates the implementation is broken).
+  Task: Read the failed expression and error message. Identify the root cause. Output one of:
+    PASS — the expression is actually correct; the error is transient or non-fatal.
+    FIXED: <corrected_expression> — correct the specific defect shown in the error.
 
-  No commentary. No analysis. Only PASS or FIXED.
-
-  WARNING — KV may mislead you
-  - The inherited expression MAY BE STRUCTURALLY INCORRECT; do NOT assume it is a valid starting point just because it was produced earlier.
-  - Your KV memory may suggest the legacy output `{"expr": "..."}` or producing several NAME/DESC/VARS/EXPR blocks — IGNORE those patterns. The contract below is the only valid output.
+  Reading the Error
+  The error message tells you exactly what is wrong. Common patterns:
+  - "takes N positional argument but M were given" → wrong argument count.
+      RANK(A)  ZSCORE(A)  MEAN(A)  STD(A)  — 1 argument (cross-sectional, no window)
+      TS_RANK(A, n)  TS_MEAN(A, n)  TS_STD(A, n)  TS_ZSCORE(A, n)  — 2 arguments (time-series, with window)
+      TS_CORR(A, B, n)  TS_COVARIANCE(A, B, n)  — 3 arguments
+      MAX(A, B)  MIN(A, B)  — 2 arguments (pairwise); MAX(A)  MIN(A)  — 1 argument (cross-sectional)
+    Fix: use the correct function signature or switch to an equivalent that accepts the given arg count.
+  - "NameError: name 'X' not defined" → undeclared variable.
+    Fix: use only $open / $close / $high / $low / $volume / $return. Never use symbols from a VARS line.
+  - "SyntaxError" or "invalid syntax" → DSL violation.
+    Fix: only allowed operators and registered functions.
 
   {% if attempt_mode == "minimal" %}
-  Repair Strategy (attempt 1) — MINIMAL FIX
-  Change only what the execution_log explicitly indicates is broken. Typo in a function name → replace with the correct name. Undeclared variable → substitute the closest legal OHLCV variable. Wrong argument count → fix the arity. Keeping the same operator family is fine. If nothing is actually broken and the logic matches the description, respond PASS.
+  Attempt 1: fix the specific error from the traceback. Keep the same operator family where possible.
   {% elif attempt_mode == "different" %}
-  Repair Strategy (attempt 2) — STRUCTURALLY DIFFERENT
-  The previous minimal fix still failed. Now rewrite with a different operator family or composition shape. Renaming variables or adding +1e-8 is NOT enough. PASS is still a valid choice if you now see that the latest expression is actually correct.
+  Attempt 2: prior fix was rejected. Rewrite with a different operator family — not just renamed variables or added constants.
   {% elif attempt_mode == "bold" %}
-  Repair Strategy (attempt 3, last shot) — BOLD REWRITE
-  Both prior attempts failed. Be bold — pick an unconventional combination (conditional, correlation, regression, count-based, smoothing) that still serves the hypothesis in your KV memory.
+  Attempt 3 (final): both prior attempts failed. Choose an unconventional combination (conditional, correlation, regression, count-based, smoothing) that still captures the factor description in your KV memory.
   {% endif %}
 
-  Hard Rules (always)
-  1. All variables must be from: $open, $close, $high, $low, $volume, $return.
-  2. Operators &&, ||, ?:, >, <, >=, <=, ==, !=, +, -, *, /, and any function from the allowed list ARE valid DSL — never reject them.
-  3. Symbols introduced in a VARS line (e.g. $gap, $reversal) are NOT runtime variables; using them in an expression is a defect.
+  Hard Rules
+  1. Variables: $open, $close, $high, $low, $volume, $return only.
+  2. Symbols from a VARS line (e.g. $gap, $reversal) are NOT runtime variables — never use them.
+  3. Operators &&, ||, ?:, >, <, >=, <=, ==, !=, +, -, *, / are all valid DSL.
 
-  Output Contract — emit exactly ONE line, one of:
-        PASS
-        FIXED: <single corrected expression>
-  The keyword is FIXED (not EXPR, not RESULT). No JSON, no markdown, no explanation, no preamble, no thinking traces, no second line.
+  Output: exactly ONE line — PASS or FIXED: <expression>. No JSON, no markdown, no explanation, no second line.
 
 
 evolving_strategy_factor_implementation_v1_system: |-
-  Role: Expression Repair-or-Pass Agent (Full-Context Mode)
-
-  Mission
-  You are BOTH reviewer and repairer for a previously failed factor implementation. Look at the failed-attempt block in the user message and decide ONE of two outcomes:
-    (a) PASS — the expression actually implements the factor description correctly, the execution_log shows no fatal error, and any value_feedback warnings are tolerable.
-    (b) FIXED: <new_expression> — there is a real defect (wrong function name, wrong variable, wrong arg count, undefined symbol, syntax error, or logic opposite to the description).
-
-  No commentary. No analysis. Only PASS or FIXED.
+  Role: Expression Debugger (Full-Context Mode)
 
   <scenario>
   {{ scenario }}
   </scenario>
 
-  Context You May Receive:
-  - Former failed expression + execution log
-  - Similar error → correction pairs (learn the fix pattern)
-  - Similar successful factor expressions (reference implementations)
+  Task: Read the failed expression and error message. Identify the root cause. Output one of:
+    PASS — the expression is actually correct; the error is transient or non-fatal.
+    FIXED: <corrected_expression> — correct the specific defect shown in the error.
+
+  Reading the Error — common arity errors (TypeError):
+      RANK(A)  ZSCORE(A)  MEAN(A)  STD(A)  — 1 argument (cross-sectional, no window)
+      TS_RANK(A, n)  TS_MEAN(A, n)  TS_STD(A, n)  TS_ZSCORE(A, n)  — 2 arguments (time-series)
+      TS_CORR(A, B, n)  TS_COVARIANCE(A, B, n)  — 3 arguments
+      MAX(A, B)  MIN(A, B)  — 2 arguments (pairwise); MAX(A)  MIN(A)  — 1 argument (cross-sectional)
 
   {% if attempt_mode == "minimal" %}
-  Repair Strategy (attempt 1) — MINIMAL FIX
-  Change only what the execution_log explicitly indicates is broken. Keeping the same operator family is fine. If nothing is actually broken and the logic matches the description, respond PASS.
+  Attempt 1: fix the specific error from the traceback. Keep the same operator family where possible.
   {% elif attempt_mode == "different" %}
-  Repair Strategy (attempt 2) — STRUCTURALLY DIFFERENT
-  Previous minimal fix still failed. Now rewrite with a different operator family or composition shape. Renaming variables or adding +1e-8 is NOT enough. PASS is still a valid choice if you now see that the latest expression is actually correct.
+  Attempt 2: prior fix was rejected. Rewrite with a different operator family — not just renamed variables or added constants.
   {% elif attempt_mode == "bold" %}
-  Repair Strategy (attempt 3, last shot) — BOLD REWRITE
-  Both prior attempts failed. Be bold — pick an unconventional combination (conditional, correlation, regression, count-based, smoothing) that still serves the factor description.
+  Attempt 3 (final): both prior attempts failed. Choose an unconventional combination (conditional, correlation, regression, count-based, smoothing) that still captures the factor description.
   {% endif %}
 
   Hard Rules (always)
@@ -169,12 +163,12 @@ evolving_strategy_factor_implementation_v2_user: |-
 
   {% if former_expression is not none %}
   <failed_attempt>
-  <expression>{{ former_expression }}</expression>
+  <last_attempted_expression>{{ former_expression }}</last_attempted_expression>
 
   {% if execution_log %}
-  <execution_log>
+  <error_log>
   {{ execution_log }}
-  </execution_log>
+  </error_log>
   {% endif %}
 
   {% if value_feedback %}
