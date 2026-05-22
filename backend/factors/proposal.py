@@ -760,26 +760,24 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
             Attempt 3+: juga reset past_kv ke None (KV clean slate).
         """
         context, json_flag = self.prepare_context(hypothesis, trace, history_limit)
-        scenario_desc = self._get_scenario_desc(trace)
+        # System prompt: no scenario (already in propose KV upstream).
         system_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_prompt_dict["hypothesis2experiment"]["system_prompt"])
             .render(
-                targets=_mv("targets", self.targets),
-                scenario=_mv("scenario", scenario_desc),
                 experiment_output_format=_mv("experiment_output_format", context["experiment_output_format"]),
             )
         )
+        # User prompt: single-line hypothesis anchor + function library + duplication alert.
+        # The full hypothesis JSON and prior feedback are already in propose KV.
+        hypothesis_oneline = getattr(hypothesis, "hypothesis", "") or str(hypothesis).replace("\n", " ").strip()
         user_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
             .render(
                 targets=_mv("targets", self.targets),
-                target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
-                hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
                 function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
-                target_list=_mv("target_list", context["target_list"]),
-                RAG=_mv("RAG", context["RAG"]),
                 expression_duplication=None,
             )
         )
@@ -888,11 +886,8 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                         .render(
                             targets=_mv("targets", self.targets),
-                            target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
-                            hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                            target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
                             function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
-                            target_list=_mv("target_list", context["target_list"]),
-                            RAG=_mv("RAG", context["RAG"]),
                             expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                         )
                     )
@@ -924,11 +919,8 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                         .render(
                             targets=_mv("targets", self.targets),
-                            target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
-                            hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                            target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
                             function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
-                            target_list=_mv("target_list", context["target_list"]),
-                            RAG=_mv("RAG", context["RAG"]),
                             expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                         )
                     )
@@ -1027,11 +1019,8 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                         .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                         .render(
                             targets=_mv("targets", self.targets),
-                            target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
-                            hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                            target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
                             function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
-                            target_list=_mv("target_list", context["target_list"]),
-                            RAG=_mv("RAG", context["RAG"]),
                             expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                         )
                     )
@@ -1079,11 +1068,8 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                             .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
                             .render(
                                 targets=_mv("targets", self.targets),
-                                target_hypothesis=_mv("target_hypothesis", context["target_hypothesis"]),
-                                hypothesis_and_feedback=_mv("hypothesis_and_feedback", context["hypothesis_and_feedback"]),
+                                target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
                                 function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
-                                target_list=_mv("target_list", context["target_list"]),
-                                RAG=_mv("RAG", context["RAG"]),
                                 expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
                             )
                         )

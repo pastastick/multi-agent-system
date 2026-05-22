@@ -289,22 +289,16 @@ class EvolutionController:
             for idx in range(self._crossover_idx, len(self._crossover_groups)):
                 parents = self._crossover_groups[idx]
                 suffix = self.crossover_op.generate_crossover_prompt_suffix(parents)
-                # Pilih KV dari parent terbaik
-                best_kv = None
-                best_m = -float("inf")
-                for p in parents:
-                    if p.kv_cache is not None:
-                        m = p.get_primary_metric() or 0.0
-                        if m > best_m:
-                            best_m = m
-                            best_kv = p.kv_cache
+                # parent_kv = None: sama dengan mutation, parent feedback KV
+                # mem-prime propose ke format feedback. Crossover guidance sudah
+                # lengkap di text suffix.
                 tasks.append({
                     "phase": RoundPhase.CROSSOVER,
                     "direction_id": idx,
                     "parent_trajectories": parents,
                     "strategy_suffix": suffix,
                     "round_idx": self._current_round,
-                    "parent_kv": best_kv,
+                    "parent_kv": None,
                 })
             
             # If no tasks, transition phase for next call
@@ -472,13 +466,12 @@ class EvolutionController:
             #* generate prompt suffix berisi info parent trajectory
             #* yang akan disisipkan ke prompt LLM supaya tahu harus "memutasi" apa
 
-            # Gunakan KV output dari mutation LLM (bukan parent feedback KV).
-            # Parent feedback KV mem-prime propose untuk generate output format
-            # feedback ("Observations", "New Hypothesis") bukan format hypothesis
-            # standar ("hypothesis", "concise_observation") → semua field kosong.
-            # Mutation KV lebih netral sebagai titik awal propose.
-            mutation_kv = self.mutation_op.last_kv
-            seed_kv = mutation_kv if mutation_kv is not None else parent.kv_cache
+            # parent_kv = None: clean slate. Mutation guidance sudah lengkap di
+            # text suffix. Mengirim KV (parent_kv atau mutation_op.last_kv) ke
+            # propose terbukti mem-prime propose untuk meniru format JSON dari
+            # KV source (mutation: {new_hypothesis,...}, feedback: {Observations,...})
+            # alih-alih format hypothesis standar — kontaminasi ini lalu turun
+            # ke construct via KV chain dan menghasilkan output non-faktor.
 
             task = {
                 "phase": RoundPhase.MUTATION,
@@ -486,7 +479,7 @@ class EvolutionController:
                 "parent_trajectories": [parent],
                 "strategy_suffix": suffix,      #* instruksi mutation untuk LLM
                 "round_idx": self._current_round,
-                "parent_kv": seed_kv,
+                "parent_kv": None,
             }
 
             self._mutation_idx += 1

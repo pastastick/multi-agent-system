@@ -163,20 +163,20 @@ class QlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Feedback):
         # Process the results to filter important metrics
         combined_result = process_results(current_result, sota_result)
 
-        # Generate the system prompt
-        sys_prompt = (
-            Environment(undefined=StrictUndefined)
-            .from_string(base_feedback_prompts["factor_feedback_generation"]["system"])
-            .render(scenario=_mv("scenario", self.scen.get_scenario_all_desc()))
-        )
+        complexity_warnings_list = [
+            t["complexity_feedback"] for t in tasks_factors
+            if t.get("complexity_feedback")
+        ]
+        complexity_warnings = " | ".join(complexity_warnings_list) if complexity_warnings_list else ""
 
-        # Generate the user prompt
+        sys_prompt = base_feedback_prompts["factor_feedback_generation"]["system"]
+
         usr_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(base_feedback_prompts["factor_feedback_generation"]["user"])
             .render(
-                hypothesis_text=_mv("hypothesis_text", hypothesis_text),
-                task_details=_mv("task_details", tasks_factors),
+                hypothesis_oneline=_mv("hypothesis_oneline", hypothesis_text),
+                complexity_warnings=_mv("complexity_warnings", complexity_warnings),
                 combined_result=_mv("combined_result", combined_result),
             )
         )
@@ -361,21 +361,24 @@ class AlphaAgentQlibFactorHypothesisExperiment2Feedback(HypothesisExperiment2Fee
         # Process the results to filter important metrics
         combined_result = process_results(current_result, sota_result)
 
-        # Generate the system prompt
-        scenario_desc = self._get_scenario_desc()
-        sys_prompt = (
-            Environment(undefined=StrictUndefined)
-            .from_string(qa_feedback_prompts["factor_feedback_generation"]["system"])
-            .render(scenario=_mv("scenario", scenario_desc))
-        )
+        # Aggregate complexity warnings across all tasks (was duplicated per-factor in prompt;
+        # construct context already in KV, only the warning summary is new info for feedback).
+        complexity_warnings_list = [
+            t["complexity_feedback"] for t in tasks_factors
+            if t.get("complexity_feedback")
+        ]
+        complexity_warnings = " | ".join(complexity_warnings_list) if complexity_warnings_list else ""
 
-        # Generate the user prompt
+        # System prompt: no scenario (already in propose KV upstream).
+        sys_prompt = qa_feedback_prompts["factor_feedback_generation"]["system"]
+
+        # User prompt: single-line hypothesis anchor + new backtest data + complexity flag.
         usr_prompt = (
             Environment(undefined=StrictUndefined)
             .from_string(qa_feedback_prompts["factor_feedback_generation"]["user"])
             .render(
-                hypothesis_text=_mv("hypothesis_text", hypothesis_text),
-                task_details=_mv("task_details", tasks_factors),
+                hypothesis_oneline=_mv("hypothesis_oneline", hypothesis_text),
+                complexity_warnings=_mv("complexity_warnings", complexity_warnings),
                 combined_result=_mv("combined_result", combined_result),
             )
         )
