@@ -205,28 +205,41 @@ def build_construct_msgs(
     return sys_c, usr_c
 
 
+_ATTEMPT_MODES = {1: "minimal", 2: "different", 3: "bold"}
+
+
 def build_coder_msgs(
     factor_info_str: str,
     former_expression: str,
     former_feedback: str,
+    attempt_index: int = 1,
 ) -> tuple[str, str]:
-    """Coder retry prompt — TIDAK berubah lintas commit. Variant tidak relevan."""
+    """Coder retry prompt — TIDAK berubah lintas commit. Variant tidak relevan.
+
+    attempt_index menentukan mode instruksi di system prompt:
+      1 → "minimal"   : fix error spesifik, pertahankan operator family
+      2 → "different" : prior fix ditolak, gunakan operator family berbeda
+      3 → "bold"      : dua attempt gagal, pilih kombinasi unconventional
+    """
+    attempt_mode = _ATTEMPT_MODES.get(attempt_index, "bold")
     y = _yaml_coder_qa()
     scen_desc = fx.SCENARIO.get_scenario_all_desc(filtered_tag="feature")
     sys_c = _jinja(
         y["evolving_strategy_factor_implementation_v1_system"],
         scenario=scen_desc,
+        attempt_mode=attempt_mode,
     )
     usr_c = _jinja(
         y["evolving_strategy_factor_implementation_v2_user"],
         factor_information_str=factor_info_str,
         former_expression=former_expression,
         execution_log=former_feedback,
-        code_comment=None,
+        value_feedback=None,
         queried_similar_error_knowledge=[],
         error_summary_critics=None,
         similar_successful_factor_description=None,
         similar_successful_expression=None,
+        latest_attempt_expr=former_expression,
         latest_attempt_to_latest_successful_execution=None,
     )
     return sys_c, usr_c + JSON_ONLY_SUFFIX
@@ -433,8 +446,43 @@ def _synth_backtest_after(coder_expr: str) -> str:
     )
 
 
-def _extract_construct_first_expr(json_obj: dict | None) -> tuple[str, str, str]:
-    """Return (factor_name, expression, description) for the first factor."""
+def _extract_construct_first_expr(
+    json_obj: dict | None,
+    raw_text: str = "",
+) -> tuple[str, str, str]:
+    """Return (factor_name, expression, description) for the first factor.
+
+    Prompt construct di prompts.yaml meminta format plain text NAME:/DESC:/EXPR:
+    (bukan JSON). Parser ini mencoba dua format:
+      1. Primary  : plain text  NAME: / DESC: / EXPR:  (per-line)
+      2. Fallback : JSON dict   {factor_name: {"expression": ..., "description": ...}}
+
+    Sebelumnya hanya ada path (2), sehingga factor_expr selalu "" ketika model
+    mengikuti instruksi prompt dengan benar → coder selalu di-skip.
+    """
+    # ── 1. Plain text parser: NAME: / DESC: / EXPR: ──────────────────────────
+    if raw_text:
+        name, desc, expr = "", "", ""
+        for line in raw_text.splitlines():
+            stripped = line.strip()
+            if stripped.upper().startswith("NAME:"):
+                candidate = stripped[5:].strip()
+                if candidate and not name:      # ambil factor pertama saja
+                    name = candidate
+            elif stripped.upper().startswith("DESC:"):
+                candidate = stripped[5:].strip()
+                if candidate and not desc:
+                    desc = candidate
+            elif stripped.upper().startswith("EXPR:"):
+                candidate = stripped[5:].strip()
+                if candidate and not expr:
+                    expr = candidate
+            if name and desc and expr:          # factor pertama lengkap, stop
+                break
+        if expr:
+            return name or "F1", expr, desc
+
+    # ── 2. Fallback: JSON dict ────────────────────────────────────────────────
     if not json_obj or not isinstance(json_obj, dict):
         return "", "", ""
     try:
@@ -448,6 +496,24 @@ def _extract_coder_expr(json_obj: dict | None) -> str:
     if not json_obj or not isinstance(json_obj, dict):
         return ""
     return str(json_obj.get("expr", ""))
+
+
+def _extract_coder_expr_plaintext(text: str) -> str:
+    """Parse output coder format: 'FIXED: <expr>' atau 'PASS'.
+
+    qa_prompts.yaml coder contract:
+      - 'PASS'            → ekspresi sudah benar, tidak perlu ubah
+      - 'FIXED: <expr>'   → ekspresi baru setelah dikoreksi
+    Return expr string, atau "" jika PASS / tidak match.
+    """
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.upper().startswith("FIXED:"):
+            expr = stripped[6:].strip()
+            if expr:
+                return expr
+        # PASS → kembalikan "" agar former_expr dipertahankan
+    return ""
 
 
 def run_full_chain(
@@ -518,15 +584,18 @@ def run_full_chain(
     t1 = time.time()
     r_ctor = backend.build_messages_and_run(
         user_prompt=usr_c, system_prompt=sys_c,
-        json_mode=True, mode="kv_and_text",
+        json_mode=False, mode="kv_and_text",   # prompt minta plain text NAME:/DESC:/EXPR:
         past_key_values=propose_kv, latent_steps=latent_steps,
         temperature=0.7, top_p=0.95, role=f"construct_{role_tag}",
     )
     construct_text = r_ctor.text or ""
-    construct_json = _extract_json(construct_text)
+    construct_json = _extract_json(construct_text)   # masih dicoba untuk fallback
     construct_kv = r_ctor.kv_cache
     construct_kv_len = kv_length(construct_kv)
-    factor_name, factor_expr, factor_desc = _extract_construct_first_expr(construct_json)
+    # Primary: parse NAME:/DESC:/EXPR:  Fallback: JSON dict
+    factor_name, factor_expr, factor_desc = _extract_construct_first_expr(
+        construct_json, raw_text=construct_text
+    )
     result["construct"] = {
         "sys_prompt": sys_c, "usr_prompt": usr_c,
         "text": construct_text, "json": construct_json,
@@ -550,7 +619,7 @@ def run_full_chain(
             "ValueError: NaN > 5% of output rows.\n"
             "Suggestion: ensure RANK/ZSCORE wrapping for cross-sectional output."
         )
-        sys_co, usr_co = build_coder_msgs(factor_info, factor_expr, synthetic_err)
+        sys_co, usr_co = build_coder_msgs(factor_info, factor_expr, synthetic_err, attempt_index=1)
         t2 = time.time()
         coder_attempts = []
         former_expr = factor_expr
@@ -558,14 +627,14 @@ def run_full_chain(
         for ai in range(n_coder_attempts):
             r_co = backend.build_messages_and_run(
                 user_prompt=usr_co, system_prompt=sys_co,
-                json_mode=True, mode="kv_and_text",
+                json_mode=False, mode="kv_and_text",  # coder output: PASS / FIXED: <expr>
                 past_key_values=construct_kv, latent_steps=latent_steps,
                 temperature=0.7 + 0.15 * ai, top_p=0.95,
                 role=f"coder_{role_tag}_a{ai+1}",
             )
             ct = r_co.text or ""
             cj = _extract_json(ct)
-            ce = _extract_coder_expr(cj)
+            ce = _extract_coder_expr(cj) or _extract_coder_expr_plaintext(ct)
             coder_attempts.append({
                 "attempt": ai + 1, "text_len": len(ct),
                 "expr": ce, "json_ok": cj is not None,
@@ -575,8 +644,10 @@ def run_full_chain(
             if ce and ce != former_expr:
                 former_expr = ce
                 break
-            # Rebuild user prompt with latest expr+feedback for next attempt
-            sys_co, usr_co = build_coder_msgs(factor_info, former_expr, former_fb)
+            # Rebuild dengan attempt_index naik → instruksi mode berubah (minimal→different→bold)
+            sys_co, usr_co = build_coder_msgs(
+                factor_info, former_expr, former_fb, attempt_index=ai + 2
+            )
         result["coder"] = {
             "sys_prompt": sys_co, "usr_prompt": usr_co,
             "attempts": coder_attempts,
