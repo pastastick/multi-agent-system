@@ -1,0 +1,179 @@
+# Log: prompt_ab_chain_m10_20260523_014955.txt
+# Timestamp: 2026-05-23 01:51:49
+
+==============================================================================
+PROMPT DIFF — CONSTRUCT user (old vs new)
+==============================================================================
+metric                                            old                  new
+──────────────────────────────────────────────────────────────────────────
+char_len                                         9394                 6877
+line_count                                        124                   86
+n_xml_tags                                         16                    0
+hypothesis_anchor_present                        True                 True
+explicit_history_block                           True                False
+implicit_phrases_present                       (none)               (none)
+n_jinja_unrendered                                  0                    0
+
+xml_tags found:
+  [old] ['allowed_functions', 'allowed_variables', 'evaluation', 'history', 'hypothesis', 'improved_sota', 'next_direction', 'observations', 'reasoning', 'target_hypothesis']
+  [new] (none)
+
+==============================================================================
+PROMPT DIFF — CONSTRUCT user (new vs implicit)
+==============================================================================
+metric                                            new             implicit
+──────────────────────────────────────────────────────────────────────────
+char_len                                         6877                 6819
+line_count                                         86                   86
+n_xml_tags                                          0                    0
+hypothesis_anchor_present                        True                False
+explicit_history_block                          False                False
+implicit_phrases_present                       (none) already loaded in kv
+n_jinja_unrendered                                  0                    0
+
+xml_tags found:
+  [new] (none)
+  [implicit] (none)
+
+==============================================================================
+PROMPT DIFF — FEEDBACK user (old vs new)
+==============================================================================
+metric                                            old                  new
+──────────────────────────────────────────────────────────────────────────
+char_len                                         1724                  910
+line_count                                         33                   16
+n_xml_tags                                          7                    1
+hypothesis_anchor_present                        True                 True
+explicit_history_block                          False                False
+implicit_phrases_present                       (none)               (none)
+n_jinja_unrendered                                  0                    0
+
+xml_tags found:
+  [old] ['backtest_results', 'description', 'factors', 'formulation', 'implemented', 'target_hypothesis', 'variables']
+  [new] ['backtest_results']
+
+==============================================================================
+=== VARIANT [old]  total=25.23s ===
+==============================================================================
+propose_kv=2136  construct_kv=5913
+
+==============================================================================
+[old] PROPOSE TEXT (len=596)
+==============================================================================
+{
+  "hypothesis": "Low-volume stocks with recent price declines outperform in high-volatility regimes.",
+  "concise_knowledge": "When volatility exceeds 2% and volume is below 10-day average, price reversal is stronger.",
+  "concise_observation": "Stocks with low volume and recent price drops show higher returns in volatile periods.",
+  "concise_justification": "Low-volume stocks are more sensitive to institutional trading, which can drive sharp reversals in volatile markets.",
+  "concise_specification": "Use 10-day volume average, 5-day price decline, and volatility > 2% for screening."
+}
+
+==============================================================================
+[old] CONSTRUCT TEXT (len=519)
+==============================================================================
+NAME: VOL_REVERSAL
+DESC: Z-scored volume below 10-day average multiplied by price decline rank
+EXPR: ZSCORE($volume, 10) * RANK(TS_PCTCHANGE($close, 5))
+
+NAME: VOL_PRICE_COND
+DESC: Conditional score for low-volume, price-declining stocks in volatile periods
+EXPR: (TS_STD($close, 20) > 2) * (ZSCORE($volume, 10) < -1) * RANK(TS_MEAN($return, 5))
+
+NAME: VOL_REVERSAL_2
+DESC: Volatility-adjusted low-volume stock reversal signal
+EXPR: (TS_PCTCHANGE($close, 5) < -1) * (ZSCORE($volume, 10) < -1) * (TS_STD($close, 20) > 2)
+
+==============================================================================
+[old] FEEDBACK TEXT (len=761)
+==============================================================================
+{
+  "Observations": "The factor shows a positive Information Coefficient (IC = 0.022) and annualized return of 0.112, indicating a weak but present signal. The max drawdown is 0.122, suggesting some instability.",
+  "Feedback for Hypothesis": "The results partially confirm the hypothesis, as the factor performs positively in IC but shows moderate drawdown, indicating potential fragility in high-volatility environments.",
+  "New Hypothesis": "Low-volume stocks with recent price declines outperform in high-volatility regimes during post-market event windows.",
+  "Reasoning": "The current result shows a positive IC but moderate drawdown, suggesting the signal is present but needs refinement in volatility-specific timing.",
+  "Replace Best Result": "no"
+}
+
+==============================================================================
+=== VARIANT [new]  total=19.92s ===
+==============================================================================
+propose_kv=1570  construct_kv=3833
+
+==============================================================================
+[new] PROPOSE TEXT (len=615)
+==============================================================================
+{
+  "hypothesis": "Volume growth normalized by price momentum predicts 5-day forward return.",
+  "concise_knowledge": "When volume growth is high relative to price momentum, mean-reversion is amplified.",
+  "concise_observation": "Normalized volume growth in conjunction with momentum shows stronger predictive power than either alone.",
+  "concise_justification": "High volume growth relative to momentum suggests retail participation, which may indicate overreaction and subsequent mean-reversion.",
+  "concise_specification": "Z-score normalized volume growth divided by 10-day momentum, 5-day forward return."
+}
+
+==============================================================================
+[new] CONSTRUCT TEXT (len=469)
+==============================================================================
+NAME: VOLUME_GROWTH_Z
+DESC: Z-score of volume growth over the past 10 days, normalized by price momentum.
+EXPR: TS_ZSCORE($volume, 10) / TS_MEAN($close, 10)
+
+NAME: MOMENTUM_VOLUME_RATIO
+DESC: Ratio of price momentum to volume growth over the past 5 days.
+EXPR: TS_PCTCHANGE($close, 5) / TS_ZSCORE($volume, 5)
+
+NAME: REGRESS_VOLUME_MOMENTUM
+DESC: Residual from regression of volume on price momentum over the past 20 days.
+EXPR: REGRESI($volume, TS_MEAN($close, 20), 20)
+
+==============================================================================
+[new] FEEDBACK TEXT (len=693)
+==============================================================================
+{
+  "Observations": "The factor shows a moderate information ratio of 0.5720 and an IC of 0.0220, indicating a weak but consistent signal. The max drawdown is 0.1220, suggesting some fragility.",
+  "Feedback for Hypothesis": "The hypothesis is partially confirmed, as the factor shows a positive IC but with a low information ratio, indicating room for improvement.",
+  "New Hypothesis": "Volume growth normalized by price momentum and volatility predicts 5-day forward return.",
+  "Reasoning": "Adding volatility as a component can help refine the signal by accounting for market conditions that may affect the relationship between volume and price momentum.",
+  "Replace Best Result": "no"
+}
+
+==============================================================================
+=== VARIANT [implicit]  total=19.36s ===
+==============================================================================
+propose_kv=1570  construct_kv=3831
+
+==============================================================================
+[implicit] PROPOSE TEXT (len=635)
+==============================================================================
+{
+  "hypothesis": "Volume growth in the 10-day prior period amplifies the effect of price momentum on future returns.",
+  "concise_knowledge": "When volume growth is high and price momentum is positive, future returns are more likely to be positive.",
+  "concise_observation": "Positive momentum combined with rising volume shows stronger predictive power for future returns.",
+  "concise_justification": "Increased trading volume suggests stronger investor sentiment, which can reinforce price trends.",
+  "concise_specification": "10-day price momentum × 10-day volume growth, normalized by Z-score, predicts 5-day forward return."
+}
+
+==============================================================================
+[implicit] CONSTRUCT TEXT (len=411)
+==============================================================================
+NAME: VOL_ZSCORE  
+DESC: Z-score of volume relative to its cross-sectional distribution.  
+EXPR: ZSCORE($volume, 60)  
+
+NAME: CLOSE_TREND  
+DESC: Trend strength in close prices using exponential moving average and percentage change.  
+EXPR: EMA($close, 20) * TS_PCTCHANGE($close, 5)  
+
+NAME: VOL_CORR  
+DESC: Correlation between volume and close price over the past 30 days.  
+EXPR: TS_CORR($volume, $close, 30)
+
+==============================================================================
+[implicit] FEEDBACK TEXT (len=798)
+==============================================================================
+{
+  "Observations": "The factor shows a low but positive IC of 0.022, with a moderate information ratio of 0.57 and a max drawdown of 0.122. The annualized return is 0.112, which is higher than the SOTA but not significantly so.",
+  "Feedback for Hypothesis": "The hypothesis is partially confirmed, as the factor shows a positive IC and reasonable information ratio, but the max drawdown suggests potential overfitting or fragility.",
+  "New Hypothesis": "Volume growth in the 10-day prior period combined with Z-score normalized price momentum predicts 5-day forward returns.",
+  "Reasoning": "The positive IC and information ratio support the hypothesis, but the drawdown indicates the need for more robust normalization and combination with additional factors.",
+  "Replace Best Result": "no"
+}
