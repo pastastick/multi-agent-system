@@ -203,9 +203,32 @@ def _mk_feedback(obs: str, eva: str, new_h: str, reason: str, decision: bool) ->
     )
 
 
+def _mk_hypothesis(
+    hypothesis: str,
+    concise_observation: str = "",
+    concise_justification: str = "",
+    concise_knowledge: str = "",
+    concise_specification: str = "",
+) -> SimpleNamespace:
+    """Mirror AlphaAgentHypothesis fields yang diakses template hypothesis_and_feedback."""
+    return SimpleNamespace(
+        hypothesis=hypothesis,
+        concise_observation=concise_observation,
+        concise_justification=concise_justification,
+        concise_knowledge=concise_knowledge,
+        concise_specification=concise_specification,
+    )
+
+
 TRACE_HIST = [
     (
-        "Hypothesis: Simple 10-day price momentum predicts forward return.",
+        _mk_hypothesis(
+            hypothesis="Simple 10-day price momentum predicts forward return.",
+            concise_observation="10-day rolling mean of returns shows cross-sectional spread.",
+            concise_justification="Short-term momentum is a well-documented anomaly.",
+            concise_knowledge="If TS_MEAN($return, 10) > 0, forward return tends to be positive.",
+            concise_specification="Use 10-day window, no cross-sectional normalization.",
+        ),
         _mk_workspace('expr = "TS_MEAN($return, 10)"'),
         _mk_feedback(
             obs="IC = 0.012, very low. Max drawdown 15%.",
@@ -216,7 +239,13 @@ TRACE_HIST = [
         ),
     ),
     (
-        "Hypothesis: Price momentum × volume confirmation predicts 5-day forward return.",
+        _mk_hypothesis(
+            hypothesis="Price momentum × volume confirmation predicts 5-day forward return.",
+            concise_observation="Pairing 5-day momentum with volume growth improves IC.",
+            concise_justification="Volume confirmation reduces false signals from price alone.",
+            concise_knowledge="RANK(TS_MEAN($return,5)) * SIGN(TS_PCTCHANGE($volume,5)) > 0 → outperformance.",
+            concise_specification="5-day window, cross-sectional RANK, volume pct-change > 0.",
+        ),
         _mk_workspace(
             'expr = "RANK(TS_MEAN($return, 5)) * SIGN(TS_PCTCHANGE($volume, 5))"'
         ),
