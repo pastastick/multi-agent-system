@@ -129,22 +129,50 @@ def _normalize_expr(expr: str) -> str:
     return "".join(expr.split()).lower()
 
 
-def _extract_expr_from_construct(construct_json: dict | None) -> str:
-    """Ambil expression dari faktor pertama di construct output."""
-    if not construct_json:
+def _extract_expr_from_construct(construct_json_or_text) -> str:
+    """Ambil expression dari faktor pertama di construct output.
+
+    Format baru (post-commit 94e873d): plain text NAME:/DESC:/EXPR: per factor.
+    Format lama (fallback): JSON nested dict {name: {expression: ...}}.
+    """
+    # ── 1. Plain text: cari baris EXPR: pertama yang non-empty ──────────────
+    if isinstance(construct_json_or_text, str):
+        for ln in construct_json_or_text.splitlines():
+            stripped = ln.strip()
+            if stripped.upper().startswith("EXPR:"):
+                expr = stripped[5:].strip()
+                if expr:
+                    return expr
+        return ""
+    # ── 2. JSON dict fallback ─────────────────────────────────────────────────
+    if not construct_json_or_text or not isinstance(construct_json_or_text, dict):
         return ""
     try:
-        _, info = next(iter(construct_json.items()))
+        _, info = next(iter(construct_json_or_text.items()))
         return str(info.get("expression", ""))
     except (StopIteration, AttributeError):
         return ""
 
 
-def _extract_expr_from_coder(coder_json: dict | None) -> str:
-    """Ambil expr dari coder output {"expr": "..."}."""
-    if not coder_json:
+def _extract_expr_from_coder(coder_text_or_json) -> str:
+    """Ambil expr dari coder output.
+
+    Format baru (post-commit 94e873d): plain text 'PASS' atau 'FIXED: <expr>'
+    Format lama (fallback): JSON {"expr": "..."}
+    """
+    # ── Plain text: cari baris FIXED: ────────────────────────────────────────
+    if isinstance(coder_text_or_json, str):
+        for ln in coder_text_or_json.splitlines():
+            stripped = ln.strip()
+            if stripped.upper().startswith("FIXED:"):
+                expr = stripped[6:].strip()
+                if expr:
+                    return expr
+        return ""  # "PASS" atau tidak ada FIXED: → biarkan former_expr dipertahankan
+    # ── JSON fallback ─────────────────────────────────────────────────────────
+    if not coder_text_or_json or not isinstance(coder_text_or_json, dict):
         return ""
-    return str(coder_json.get("expr", ""))
+    return str(coder_text_or_json.get("expr", ""))
 
 
 def _log_save(log_path: Path, sections: list[tuple[str, str]]) -> None:
@@ -164,54 +192,68 @@ def _render_hf(trace, limit: int = 6) -> str:
     return _jinja(y["hypothesis_and_feedback"], trace=lt)
 
 
-def _build_construct_msgs(target_hypothesis: str = "") -> tuple[str, str]:
+def _build_construct_msgs(target_hypothesis_oneline: str = "") -> tuple[str, str]:
+    """Build construct prompts sesuai format baru (post-commit 94e873d).
+
+    Template hypothesis2experiment berubah:
+      - system: hanya {{ experiment_output_format }} (tidak lagi ada {{ targets }}/{{ scenario }})
+      - user  : {{ target_hypothesis_oneline }} (bukan target_hypothesis),
+                tidak ada hypothesis_and_feedback / target_list / RAG
+    Output model: plain text NAME:/DESC:/EXPR: (bukan JSON nested)
+    """
     y = _factors_yaml()
-    trace = fx.TRACE
-    scen_desc = trace.scen.get_scenario_all_desc(filtered_tag="hypothesis_and_experiment")
-    hf = _render_hf(trace)
     sys_c = _jinja(
         y["hypothesis2experiment"]["system_prompt"],
-        targets="factor", scenario=scen_desc,
         experiment_output_format=y["experiment_output_format"],
     )
     usr_c = _jinja(
         y["hypothesis2experiment"]["user_prompt"],
-        targets="factor", target_hypothesis=target_hypothesis,
-        hypothesis_and_feedback=hf,
+        targets="factor",
+        target_hypothesis_oneline=target_hypothesis_oneline or fx.HYPOTHESIS_DICT["hypothesis"],
         function_lib_description=y["function_lib_description"],
-        target_list=None, RAG=None, expression_duplication=None,
+        expression_duplication=None,
     )
     return sys_c, usr_c
+
+
+_CODER_ATTEMPT_MODES = {1: "minimal", 2: "different", 3: "bold"}
 
 
 def _build_coder_retry_msgs(
     factor_info_str: str,
     former_expression: str,
     former_feedback: str,
+    attempt_index: int = 1,
 ) -> tuple[str, str]:
     """
     Build coder retry prompt (FactorParsingStrategy.implement_one_task retry path).
-    Mirror dari production: system + user + JSON_ONLY_SUFFIX.
+    Mirror dari production: system + user.
+
+    Template evolving_strategy_factor_implementation_v1_system berubah (post-commit 94e873d):
+      - Tidak lagi pakai {{ scenario }} di system prompt
+      - Pakai {{ attempt_mode }} untuk memilih instruksi attempt 1/2/3
+    Output coder: 'PASS' atau 'FIXED: <expr>' (bukan JSON)
     """
+    attempt_mode = _CODER_ATTEMPT_MODES.get(attempt_index, "bold")
     y = _coder_qa_yaml()
-    scen_desc = fx.SCENARIO.get_scenario_all_desc(filtered_tag="feature")
     sys_c = _jinja(
         y["evolving_strategy_factor_implementation_v1_system"],
-        scenario=scen_desc,
+        attempt_mode=attempt_mode,
     )
     usr_c = _jinja(
         y["evolving_strategy_factor_implementation_v2_user"],
         factor_information_str=factor_info_str,
         former_expression=former_expression,
         execution_log=former_feedback,
-        code_comment=None,
+        value_feedback=None,
         queried_similar_error_knowledge=[],
         error_summary_critics=None,
         similar_successful_factor_description=None,
         similar_successful_expression=None,
         latest_attempt_to_latest_successful_execution=None,
+        latest_attempt_expr=former_expression,
     )
-    return sys_c, usr_c + JSON_ONLY_SUFFIX
+    return sys_c, usr_c
 
 
 def _build_factor_info_from_construct(construct_json: dict | None) -> str:
@@ -259,23 +301,23 @@ def test_first_run(latent_steps: int | None = None) -> dict:
                 "response": "(dry_run)", "parsed": None, "elapsed_s": 0.0, "log_path": str(log_path)}
 
     backend = get_latent_backend()
-    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis="")
+    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis_oneline="")
 
     # Step 1: Construct (text_only — kita tidak butuh KV chain di test ini)
     print("── Step 1: Construct (text_only) untuk hasilkan factor expression ──")
     t0 = time.time()
     r_ctor = backend.build_messages_and_run(
         user_prompt=construct_usr, system_prompt=construct_sys,
-        json_mode=True, mode="text_only",
+        json_mode=False, mode="text_only",  # format baru: plain text NAME:/DESC:/EXPR:
         temperature=0.7, top_p=0.95, role="construct_first_run",
     )
     construct_text = r_ctor.text or ""
-    construct_json = _extract_json(construct_text)
+    construct_json = _extract_json(construct_text)  # fallback untuk logging saja
     elapsed_ctor = round(time.time() - t0, 2)
-    print(f"  text_len={len(construct_text)}  json_ok={construct_json is not None}  elapsed={elapsed_ctor}s")
+    print(f"  text_len={len(construct_text)}  elapsed={elapsed_ctor}s")
 
-    # Step 2: Ekstrak expression + parse
-    expr = _extract_expr_from_construct(construct_json)
+    # Step 2: Ekstrak expression dari plain text (NAME:/DESC:/EXPR: format)
+    expr = _extract_expr_from_construct(construct_text)
     print(f"\n── Step 2: Ekstrak & parse expression: {expr!r}")
     valid, err_msg = _parse_expression_safe(expr)
     print(f"  parse_expression: {'VALID — first-run success, NO LLM CALL needed' if valid else 'INVALID'}")
@@ -363,20 +405,20 @@ def test_retry_loop(
     # Step 1: Construct (kv_and_text untuk dapat construct_kv yang akan jadi
     # kv_baseline di retry loop, mirror production behavior)
     print("── Step 1: Construct (kv_and_text) untuk hasilkan kv_baseline + initial expr ──")
-    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis="")
+    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis_oneline="")
     t0 = time.time()
     r_ctor = backend.build_messages_and_run(
         user_prompt=construct_usr, system_prompt=construct_sys,
-        json_mode=True, mode="kv_and_text",
+        json_mode=False, mode="kv_and_text",  # format baru: plain text NAME:/DESC:/EXPR:
         latent_steps=latent_steps,
         temperature=0.7, top_p=0.95, role="construct_for_retry",
     )
     construct_text = r_ctor.text or ""
-    construct_json = _extract_json(construct_text)
+    construct_json = _extract_json(construct_text)  # fallback untuk logging saja
     construct_kv = r_ctor.kv_cache
     construct_kv_len = _kv_len(construct_kv)
     elapsed_ctor = round(time.time() - t0, 2)
-    initial_expr = _extract_expr_from_construct(construct_json)
+    initial_expr = _extract_expr_from_construct(construct_text)  # parse dari plain text
     print(f"  construct: text_len={len(construct_text)}  kv_len={construct_kv_len}  "
           f"elapsed={elapsed_ctor}s")
     print(f"  initial_expr: {initial_expr!r}")
@@ -410,12 +452,11 @@ def test_retry_loop(
         print(f"  initial expr is INVALID — using real parser error as former_feedback")
     print(f"  former_feedback (truncated): {former_feedback[:150]!r}")
 
-    # Step 3: Build coder retry prompt template (sys + usr_template tanpa eksekusi)
-    factor_info = _build_factor_info_from_construct(construct_json)
-    coder_sys, coder_usr_initial = _build_coder_retry_msgs(
-        factor_info_str=factor_info,
-        former_expression=initial_expr,
-        former_feedback=former_feedback,
+    # Step 3: Build factor_info dari construct output (untuk coder prompt)
+    # Gunakan raw text karena format baru adalah NAME:/DESC:/EXPR:
+    factor_info = _build_factor_info_from_construct(construct_json) if construct_json else (
+        f"Factor: (extracted from construct)\n"
+        f"Expression: {initial_expr}"
     )
 
     # Step 4: Retry loop dengan production crop behavior
@@ -447,11 +488,13 @@ def test_retry_loop(
         else:
             kv_pre = _kv_len(construct_kv)
 
-        # Build prompt untuk attempt ini (former_expr + former_feedback dari prev)
-        _, coder_usr = _build_coder_retry_msgs(
+        # Build sys+usr untuk attempt ini — attempt_index menentukan mode instruksi
+        # (1=minimal, 2=different, 3=bold) sesuai production behavior
+        coder_sys, coder_usr = _build_coder_retry_msgs(
             factor_info_str=factor_info,
             former_expression=former_expr_for_attempt,
             former_feedback=former_feedback_for_attempt,
+            attempt_index=i + 1,
         )
 
         # Mirror hint kalau attempt sebelumnya mirror (production behavior)
@@ -466,7 +509,7 @@ def test_retry_loop(
         t1 = time.time()
         r_coder = backend.build_messages_and_run(
             user_prompt=coder_usr, system_prompt=coder_sys,
-            json_mode=True, mode="kv_and_text",
+            json_mode=False, mode="kv_and_text",  # format baru: PASS / FIXED: <expr>
             past_key_values=construct_kv, latent_steps=latent_steps,
             temperature=temp_schedule[min(i, 4)], top_p=0.95,
             role=f"coder_retry_a{i+1}",
@@ -488,7 +531,7 @@ def test_retry_loop(
             t_fb = time.time()
             r_fb = backend.build_messages_and_run(
                 user_prompt=coder_usr, system_prompt=coder_sys,
-                json_mode=True, mode="text_only",
+                json_mode=False, mode="text_only",
                 past_key_values=construct_kv,
                 temperature=temp_schedule[min(i, 4)], top_p=0.95,
                 role=f"coder_retry_a{i+1}_textonly",
@@ -499,10 +542,11 @@ def test_retry_loop(
                   f"elapsed={fallback_elapsed_s}s")
 
         coder_text = fallback_text if fallback_used else primary_text
-        coder_json = _extract_json(coder_text)
+        coder_json = _extract_json(coder_text)  # fallback untuk logging saja
         elapsed_a = round(elapsed_primary + (fallback_elapsed_s or 0), 2)
 
-        new_expr = _extract_expr_from_coder(coder_json)
+        # Parse dari plain text (PASS / FIXED: <expr>)
+        new_expr = _extract_expr_from_coder(coder_text)
         collapse = _is_collapse(coder_text)
         mirror = (_normalize_expr(new_expr) == _normalize_expr(former_expr_for_attempt)) and bool(new_expr)
         new_valid, new_err = _parse_expression_safe(new_expr) if new_expr else (False, "no expression extracted")

@@ -1,0 +1,20 @@
+[
+  {
+    "group": "pair_propose_construct",
+    "case": "fresh_start",
+    "error": "'target_hypothesis_oneline' is undefined",
+    "ok_format": false
+  },
+  {
+    "group": "pair_propose_construct",
+    "case": "mutation_seeded",
+    "error": "'target_hypothesis_oneline' is undefined",
+    "ok_format": false
+  },
+  {
+    "group": "pair_propose_construct",
+    "case": "feedback_chained",
+    "error": "'hypothesis_oneline' is undefined",
+    "ok_format": false
+  }
+]

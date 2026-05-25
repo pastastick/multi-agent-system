@@ -1,0 +1,29 @@
+[
+  {
+    "group": "pair_propose_construct",
+    "case": "fresh_start_m10",
+    "ok_format": true,
+    "response": "(dry_run)",
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_propose_construct/fresh_start_m10_20260525_090147.txt"
+  },
+  {
+    "group": "pair_propose_construct",
+    "case": "mutation_seeded_m10",
+    "ok_format": true,
+    "response": "(dry_run)",
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_propose_construct/mutation_seeded_m10_20260525_090147.txt"
+  },
+  {
+    "group": "pair_propose_construct",
+    "case": "feedback_chained_m10",
+    "ok_format": true,
+    "response": "(dry_run)",
+    "parsed": null,
+    "elapsed_s": 0.0,
+    "log_path": "/workspace/project/multi-agent-system/try/outputs/pair_propose_construct/feedback_chained_m10_20260525_090147.txt"
+  }
+]

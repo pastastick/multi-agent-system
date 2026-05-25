@@ -104,14 +104,27 @@ def _has_propose_schema(parsed: dict | None) -> bool:
     return REQUIRED.issubset(set(parsed.keys()))
 
 
-def _has_construct_schema(parsed: dict | None) -> bool:
-    """Cek apakah output construct memiliki nested schema 4-key."""
-    if not parsed or not isinstance(parsed, dict):
+def _has_construct_schema(text_or_json) -> bool:
+    """Cek apakah output construct well-formed.
+
+    Format baru (post-commit 94e873d): plain text NAME:/DESC:/EXPR: per factor.
+    Format lama (fallback): nested JSON dict dengan key description/expression/...
+
+    Menerima raw text string ATAU parsed dict agar caller tidak perlu diubah.
+    """
+    # ── Plain text format: cukup ada ≥1 baris EXPR: yang non-empty ──────────
+    if isinstance(text_or_json, str):
+        return any(
+            ln.strip().upper().startswith("EXPR:") and ln.strip()[5:].strip()
+            for ln in text_or_json.splitlines()
+        )
+    # ── JSON fallback (format lama) ──────────────────────────────────────────
+    if not text_or_json or not isinstance(text_or_json, dict):
         return False
-    for v in parsed.values():
+    for v in text_or_json.values():
         if not isinstance(v, dict):
             return False
-        if not all(k in v for k in ("description", "variables", "formulation", "expression")):
+        if not all(k in v for k in ("description", "expression")):
             return False
     return True
 
@@ -152,22 +165,26 @@ def _build_propose_msgs() -> tuple[str, str]:
     return sys_p, usr_p
 
 
-def _build_construct_msgs(target_hypothesis: str = "") -> tuple[str, str]:
+def _build_construct_msgs(target_hypothesis_oneline: str = "") -> tuple[str, str]:
+    """Build construct prompts sesuai format baru (post-commit 94e873d).
+
+    Template hypothesis2experiment berubah:
+      - system: tidak lagi pakai {{ targets }} / {{ scenario }}, hanya {{ experiment_output_format }}
+      - user  : {{ target_hypothesis_oneline }} (bukan target_hypothesis),
+                tidak ada hypothesis_and_feedback / target_list / RAG
+    Output model: plain text NAME:/DESC:/EXPR: (bukan JSON nested)
+    """
     y = _factors_yaml()
-    trace = fx.TRACE
-    scen_desc = trace.scen.get_scenario_all_desc(filtered_tag="hypothesis_and_experiment")
-    hf = _render_hf(trace)
     sys_c = _jinja(
         y["hypothesis2experiment"]["system_prompt"],
-        targets="factor", scenario=scen_desc,
         experiment_output_format=y["experiment_output_format"],
     )
     usr_c = _jinja(
         y["hypothesis2experiment"]["user_prompt"],
-        targets="factor", target_hypothesis=target_hypothesis,
-        hypothesis_and_feedback=hf,
+        targets="factor",
+        target_hypothesis_oneline=target_hypothesis_oneline or fx.HYPOTHESIS_DICT["hypothesis"],
         function_lib_description=y["function_lib_description"],
-        target_list=None, RAG=None, expression_duplication=None,
+        expression_duplication=None,
     )
     return sys_c, usr_c
 
@@ -191,12 +208,20 @@ def _build_mutation_msgs() -> tuple[str, str]:
 
 def _build_feedback_msgs() -> tuple[str, str]:
     y = _factors_yaml()
-    scen_desc = fx.SCENARIO.get_scenario_all_desc()
-    sys_f = _jinja(y["factor_feedback_generation"]["system"], scenario=scen_desc)
+    # System prompt (new format tidak pakai {{ scenario }})
+    sys_f = y["factor_feedback_generation"]["system"]
+    # Build factor_summary compact string dari fixture (format baru: hypothesis_oneline +
+    # factor_summary, bukan lagi hypothesis_text + task_details)
+    factor_summary = (
+        f"- {fx.FACTOR_TASK.factor_name}: "
+        f"`{fx.FACTOR_TASK.factor_expression}` "
+        f"[implemented={fx.FACTOR_TASK.factor_implementation}]"
+    )
     usr_f = _jinja(
         y["factor_feedback_generation"]["user"],
-        hypothesis_text=fx.HYPOTHESIS_DICT["hypothesis"],
-        task_details=fx.TASK_DETAILS,
+        hypothesis_oneline=fx.HYPOTHESIS_DICT["hypothesis"],
+        factor_summary=factor_summary,
+        complexity_warnings="",
         combined_result=fx.COMBINED_RESULT_STR,
     )
     return sys_f, usr_f
@@ -269,13 +294,13 @@ def _measure_propose_construct(
     t2 = time.time()
     r_ctor = backend.build_messages_and_run(
         user_prompt=construct_usr, system_prompt=construct_sys,
-        json_mode=True, mode="kv_and_text",
+        json_mode=False, mode="kv_and_text",   # format baru: plain text NAME:/DESC:/EXPR:
         past_key_values=propose_kv, latent_steps=latent_steps,
         temperature=temp, top_p=top_p, role=f"construct_{scenario_label}",
     )
     construct_text = r_ctor.text or ""
-    construct_json = _extract_json(construct_text)
-    construct_schema_ok = _has_construct_schema(construct_json)
+    construct_json = _extract_json(construct_text)  # fallback untuk logging saja
+    construct_schema_ok = _has_construct_schema(construct_text)
     construct_kv = r_ctor.kv_cache
     construct_kv_len = _kv_len(construct_kv)
     construct_elapsed = round(time.time() - t2, 2)
@@ -369,7 +394,7 @@ def test_fresh_start(latent_steps: int | None = None) -> dict:
 
     backend = get_latent_backend()
     propose_sys, propose_usr = _build_propose_msgs()
-    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis="")
+    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis_oneline="")
 
     m = _measure_propose_construct(
         backend, propose_sys, propose_usr, construct_sys, construct_usr,
@@ -458,7 +483,7 @@ def test_mutation_seeded(latent_steps: int | None = None) -> dict:
     # Step 2: Propose dengan seed KV dari mutation → Construct
     print("\n── Step 2: Propose+Construct dengan mutation_kv sebagai seed ──")
     propose_sys, propose_usr = _build_propose_msgs()
-    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis="")
+    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis_oneline="")
 
     m = _measure_propose_construct(
         backend, propose_sys, propose_usr, construct_sys, construct_usr,
@@ -558,7 +583,7 @@ def test_feedback_chained(latent_steps: int | None = None) -> dict:
     # Step 2: Propose dengan seed KV dari feedback → Construct
     print("\n── Step 2: Propose+Construct dengan feedback_kv sebagai seed ──")
     propose_sys, propose_usr = _build_propose_msgs()
-    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis="")
+    construct_sys, construct_usr = _build_construct_msgs(target_hypothesis_oneline="")
 
     m = _measure_propose_construct(
         backend, propose_sys, propose_usr, construct_sys, construct_usr,
@@ -832,14 +857,14 @@ def test_kv_combine_raw(latent_steps: int | None = None) -> dict:
     t2 = time.time()
     r_ctor = backend.build_messages_and_run(
         user_prompt=usr_c, system_prompt=sys_c,
-        json_mode=True, mode="kv_and_text",
+        json_mode=False, mode="kv_and_text",
         past_key_values=combined, latent_steps=latent_steps,
         temperature=0.7, top_p=0.95, role="kvcomb_raw_construct",
     )
     construct_text = r_ctor.text or ""
     construct_json = _extract_json(construct_text)
     elapsed_c = round(time.time() - t2, 2)
-    print(f"  construct: text_len={len(construct_text)}  schema_ok={_has_construct_schema(construct_json)}  "
+    print(f"  construct: text_len={len(construct_text)}  schema_ok={_has_construct_schema(construct_text)}  "
           f"elapsed={elapsed_c}s")
     print(f"  preview: {construct_text[:200]!r}")
 
@@ -856,7 +881,7 @@ def test_kv_combine_raw(latent_steps: int | None = None) -> dict:
 
     return {
         "group": group, "case": case, "latent_steps": latent_steps,
-        "ok_format": construct_json is not None and _has_construct_schema(construct_json),
+        "ok_format": _has_construct_schema(construct_text),
         "elapsed_s": round(elapsed_a + elapsed_b + elapsed_c, 2),
         "log_path": str(log_path),
         "kv_lens": {"propose": L_a, "feedback": L_b, "combined": L_c, "expected": expected},
@@ -948,14 +973,14 @@ def test_kv_combine_corrected(latent_steps: int | None = None) -> dict:
     t2 = time.time()
     r_ctor = backend.build_messages_and_run(
         user_prompt=usr_c, system_prompt=sys_c,
-        json_mode=True, mode="kv_and_text",
+        json_mode=False, mode="kv_and_text",
         past_key_values=corrected_kv, latent_steps=latent_steps,
         temperature=0.7, top_p=0.95, role="kvcomb_corr_construct",
     )
     construct_text = r_ctor.text or ""
     construct_json = _extract_json(construct_text)
     elapsed_c = round(time.time() - t2, 2)
-    print(f"  construct: text_len={len(construct_text)}  schema_ok={_has_construct_schema(construct_json)}  "
+    print(f"  construct: text_len={len(construct_text)}  schema_ok={_has_construct_schema(construct_text)}  "
           f"elapsed={elapsed_c}s")
     print(f"  preview: {construct_text[:200]!r}")
 
@@ -963,8 +988,8 @@ def test_kv_combine_corrected(latent_steps: int | None = None) -> dict:
         (f"CORRECTED SEED-EXTEND  L_a={L_a}  L_corrected={L_c}  Δ={L_c - L_a}  "
          f"(feedback prompt processed on top of propose KV → positions benar)", ""),
         ("CONSTRUCT OUTPUT (under corrected KV)", construct_text),
-        ("PARSED JSON", _json.dumps(construct_json, indent=2, ensure_ascii=False)
-         if construct_json else "(parse failed)"),
+        ("PARSED JSON (atau parse attempt dari plain text)", _json.dumps(construct_json, indent=2, ensure_ascii=False)
+         if construct_json else "(plain text format — tidak ada JSON)"),
     ]
     sections.extend(format_probes_for_log(probes))
     _log_save(log_path, sections)
@@ -972,7 +997,7 @@ def test_kv_combine_corrected(latent_steps: int | None = None) -> dict:
 
     return {
         "group": group, "case": case, "latent_steps": latent_steps,
-        "ok_format": construct_json is not None and _has_construct_schema(construct_json),
+        "ok_format": _has_construct_schema(construct_text),
         "elapsed_s": round(elapsed_a + elapsed_b + elapsed_c, 2),
         "log_path": str(log_path),
         "kv_lens": {"propose": L_a, "corrected": L_c, "growth": L_c - L_a},
