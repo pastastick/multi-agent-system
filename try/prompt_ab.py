@@ -607,6 +607,19 @@ def run_full_chain(
     print(f"  [{variant}] construct: text_len={len(construct_text)}  kv_len={construct_kv_len}  "
           f"elapsed={result['construct']['elapsed_s']}s  expr={factor_expr[:60]!r}")
 
+    # ── Probe construct_kv SEBELUM feedback memutasinya ─────────────────────
+    # PENTING: probe harus di sini, bukan setelah feedback. DynamicCache adalah
+    # mutable object — feedback step melakukan .update() in-place pada
+    # construct_kv sehingga setelah Step 4, construct_kv sudah berisi
+    # feedback tokens dan probe akan memperlihatkan konteks feedback, bukan construct.
+    probe_modes = enabled_modes_from_env()
+    if probe_modes:
+        probes_construct = run_probes_at(
+            backend, construct_kv,
+            kv_label=f"construct_kv_{variant}", modes=probe_modes,
+        )
+        result["probes_construct"] = probes_construct
+
     # ── Step 3: Coder (live, dengan retry) ──────────────────────────────────
     if do_live_coder and factor_expr:
         factor_info = (
@@ -700,14 +713,5 @@ def run_full_chain(
     }
     print(f"  [{variant}] feedback: text_len={len(fb_text)}  schema_ok={fb_json is not None}  "
           f"elapsed={result['feedback']['elapsed_s']}s")
-
-    # ── Optional KV probing (TEST_PROBE env) ────────────────────────────────
-    probe_modes = enabled_modes_from_env()
-    if probe_modes:
-        probes_construct = run_probes_at(
-            backend, construct_kv,
-            kv_label=f"construct_kv_{variant}", modes=probe_modes,
-        )
-        result["probes_construct"] = probes_construct
 
     return result
