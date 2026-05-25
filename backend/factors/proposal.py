@@ -831,13 +831,30 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                     f" (error: {error_summary[:80]})"
                 )
                 if _construct_retries >= 3 and self._past_kv is not None:
-                    # KV reset: hapus kontaminasi dari propose step
+                    # KV reset: hapus kontaminasi dari propose step yang sudah
+                    # accumulated (meski seharusnya sudah dihandle oleh crop di
+                    # _call_llm, ini fallback tambahan untuk model sangat kecil).
                     _saved_kv = self._past_kv
+                    # Simpan last_result SEBELUM no-KV call. _call_llm akan
+                    # update self.last_result dengan hasil no-KV run, sehingga
+                    # last_kv (= last_result.kv_cache) akan mengembalikan KV
+                    # tanpa propose-chain context — coder jadi chain dari KV
+                    # yang salah. Setelah finally, restore last_result agar
+                    # last_kv tetap menunjuk ke KV hasil run yang ada konteksnya.
+                    _saved_last_result = getattr(self, "last_result", None)
                     self._past_kv = None
                     try:
                         resp = self._call_llm(_cur_user, _cur_sys, json_flag)
                     finally:
                         self._past_kv = _saved_kv
+                        # Restore hanya jika _saved_last_result punya KV yang valid.
+                        # Jika sebelumnya belum ada (attempt pertama langsung KV-reset),
+                        # biarkan last_result dari no-KV call — itu yang terbaik.
+                        if (
+                            _saved_last_result is not None
+                            and getattr(_saved_last_result, "kv_cache", None) is not None
+                        ):
+                            self.last_result = _saved_last_result
                 else:
                     resp = self._call_llm(_cur_user, _cur_sys, json_flag)
             else:

@@ -53,6 +53,7 @@ from typing import Any, Optional
 from log import logger
 
 from llm.client import LocalLLMBackend, LLMResult, KVCache, OutputMode
+from llm._shared import _past_length
 
 
 def _is_collapse(text: str) -> bool:
@@ -260,11 +261,22 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
         self._init_latent_state(llm_backend, default_mode="kv_and_text",
                                 latent_steps=latent_steps, temperature=temperature)
         self._attempt_idx: int = 0
+        # Panjang KV baseline sebelum latent_pass pertama extend _past_kv.
+        # Direkam saat set_past_kv dipanggil, dipakai _call_llm untuk crop
+        # sebelum setiap attempt → mencegah akumulasi KV antar retry.
+        self._kv_baseline_len: Optional[int] = None
 
     def set_past_kv(self, kv):
-        """Override: reset attempt counter saat KV baru di-set (= step construct baru)."""
+        """Override: reset attempt counter dan rekam KV baseline length.
+
+        _kv_baseline_len direkam SEKALI di sini (sebelum attempt pertama).
+        _call_llm akan crop ke nilai ini setiap retry sehingga setiap attempt
+        selalu berangkat dari propose_kv yang sama, bukan dari KV yang sudah
+        diextend oleh attempt sebelumnya.
+        """
         super().set_past_kv(kv)
         self._attempt_idx = 0
+        self._kv_baseline_len = _past_length(kv) if kv is not None else None
 
     def prepare_context(self, hypothesis, trace, history_limit=None):
         """Delegate ke super() — output format dibaca dari prompts.yaml (single source of truth).
@@ -296,10 +308,24 @@ class LatentHypothesis2Experiment(_LatentMixin, AlphaAgentHypothesis2FactorExpre
     def _call_llm(self, user_prompt: str, system_prompt: str, json_mode: bool = False) -> str:
         self._attempt_idx += 1
 
+        # Crop KV ke baseline sebelum setiap attempt.
+        # build_messages_and_run extends _past_kv in-place via latent_pass,
+        # kemudian crops ke post-latent length — bukan ke pre-attempt baseline.
+        # Tanpa crop ini, setiap retry menumpuk KV (~+latent_tokens per attempt)
+        # → OOM atau model collapse pada attempt 3-6.
+        # Pola ini identik dengan apa yang dilakukan coder's implement_one_task():
+        #   kv_baseline.crop(kv_baseline_len) sebelum setiap attempt.
+        if self._past_kv is not None and self._kv_baseline_len is not None:
+            if hasattr(self._past_kv, "crop"):
+                try:
+                    self._past_kv.crop(self._kv_baseline_len)
+                except Exception as _crop_err:
+                    logger.debug(
+                        f"[LatentHypothesis2Experiment] KV crop failed "
+                        f"(baseline_len={self._kv_baseline_len}): {_crop_err}"
+                    )
+
         # Retry strategy: escalate temperature untuk dorong variasi.
-        # past_kv dari propose step TETAP dipakai di semua attempt — filosofi
-        # Latent-MAS: chain latent reasoning antar step. Drop past_kv malah
-        # buang konteks yang dibutuhkan construct untuk mengikuti hypothesis.
         base_temp = self._temperature if self._temperature is not None else 0.3
         temp_override = min(base_temp + 0.15 * (self._attempt_idx - 1), 1.0)
         past_kv = self._past_kv
