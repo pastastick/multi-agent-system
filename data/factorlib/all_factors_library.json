@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-21T08:50:57.539489",
-    "total_factors": 19,
+    "last_updated": "2026-05-25T08:10:37.276256",
+    "total_factors": 22,
     "version": "1.0"
   },
   "factors": {
@@ -810,6 +810,165 @@
         "decision": true,
         "reason": "The low IC suggests the current factors may not be effectively capturing the intended signal, so a simpler factor design is needed to better identify the underlying mechanism.",
         "new_hypothesis": "Explore the mean-reversion signal in volatile regimes using a simpler factor that directly measures volatility and price consolidation without complex transformations."
+      }
+    },
+    "9ce1300162f37521": {
+      "factor_id": "9ce1300162f37521",
+      "factor_name": "INTRADAY_VOL_RANK",
+      "factor_expression": "RANK(TS_STD($high - $low, 1))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_STD($high - $low, 1))\" # Your output factor expression will be filled in here\n    name = \"INTRADAY_VOL_RANK\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Rank of stocks based on intraday volatility relative to their volume",
+      "factor_formulation": "RANK(TS_STD($high - $low, 1))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "9418fb7e47f74227bae5c8c3181bd5f8",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/9418fb7e47f74227bae5c8c3181bd5f8/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-25_07-28-45-915734",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "2789c3b5cab5",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: High-frequency trading activity during intraday volatility spikes leads to increased mean-reversion in the next trading day.\n                Concise Observation: Intraday volatility and volume spikes correlate with subsequent price reversion in the next trading day.\n                Concise Justification: High-frequency traders may reverse positions after intraday volatility, leading to price reversion.\n                Concise Knowledge: When intraday range exceeds 2% of close and volume spikes, mean-reversion is amplified the next day.\n                concise Specification: Intraday range > 2% of close and volume > 1.5x average, next day mean-reversion expected.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-25T08:10:29.078610"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.09823785,
+        "1day.excess_return_with_cost.information_ratio": 1.00694066,
+        "1day.excess_return_with_cost.annualized_return": 0.13293286,
+        "1day.excess_return_with_cost.std": 0.00855736,
+        "1day.excess_return_with_cost.mean": 0.00055854,
+        "1day.excess_return_without_cost.max_drawdown": -0.09261559,
+        "1day.excess_return_without_cost.information_ratio": 1.18266494,
+        "1day.excess_return_without_cost.annualized_return": 0.15603041,
+        "1day.excess_return_without_cost.std": 0.00855183,
+        "1day.excess_return_without_cost.mean": 0.00065559,
+        "Rank ICIR": 0.19108796,
+        "Rank IC": 0.02479177,
+        "ICIR": 0.05369077,
+        "IC": 0.00711823,
+        "l2.valid": 0.99643904,
+        "l2.train": 0.99289323
+      },
+      "feedback": {
+        "observations": "The information ratio is slightly lower than the SOTA result, but the IC is close to zero, indicating a weak or reversed signal. The annualized return is high but does not align with a meaningful IC.",
+        "hypothesis_evaluation": "The results partially refute the hypothesis, as the IC is near zero, suggesting the signal is weak or reversed, despite a high return.",
+        "decision": false,
+        "reason": "The weak IC suggests the current formulation is not capturing a strong signal, so a simpler approach focusing on direct volatility-reversion relationship is needed.",
+        "new_hypothesis": "Focus on the correlation between intraday volatility and subsequent price reversion using a simpler, lagged correlation structure over a 2-day horizon."
+      }
+    },
+    "417306e42457eb0b": {
+      "factor_id": "417306e42457eb0b",
+      "factor_name": "HIGH_VOL_CONDITION",
+      "factor_expression": "TS_STD($high - $low, 1) > TS_MEAN($high - $low, 1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_STD($high - $low, 1) > TS_MEAN($high - $low, 1)\" # Your output factor expression will be filled in here\n    name = \"HIGH_VOL_CONDITION\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Boolean indicator for stocks with high intraday volatility",
+      "factor_formulation": "TS_STD($high - $low, 1) > TS_MEAN($high - $low, 1)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "364f99b3c617445f9f5b3c380f0ead27",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/364f99b3c617445f9f5b3c380f0ead27/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-25_07-28-45-915734",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "2789c3b5cab5",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: High-frequency trading activity during intraday volatility spikes leads to increased mean-reversion in the next trading day.\n                Concise Observation: Intraday volatility and volume spikes correlate with subsequent price reversion in the next trading day.\n                Concise Justification: High-frequency traders may reverse positions after intraday volatility, leading to price reversion.\n                Concise Knowledge: When intraday range exceeds 2% of close and volume spikes, mean-reversion is amplified the next day.\n                concise Specification: Intraday range > 2% of close and volume > 1.5x average, next day mean-reversion expected.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-25T08:10:30.945022"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.09823785,
+        "1day.excess_return_with_cost.information_ratio": 1.00694066,
+        "1day.excess_return_with_cost.annualized_return": 0.13293286,
+        "1day.excess_return_with_cost.std": 0.00855736,
+        "1day.excess_return_with_cost.mean": 0.00055854,
+        "1day.excess_return_without_cost.max_drawdown": -0.09261559,
+        "1day.excess_return_without_cost.information_ratio": 1.18266494,
+        "1day.excess_return_without_cost.annualized_return": 0.15603041,
+        "1day.excess_return_without_cost.std": 0.00855183,
+        "1day.excess_return_without_cost.mean": 0.00065559,
+        "Rank ICIR": 0.19108796,
+        "Rank IC": 0.02479177,
+        "ICIR": 0.05369077,
+        "IC": 0.00711823,
+        "l2.valid": 0.99643904,
+        "l2.train": 0.99289323
+      },
+      "feedback": {
+        "observations": "The information ratio is slightly lower than the SOTA result, but the IC is close to zero, indicating a weak or reversed signal. The annualized return is high but does not align with a meaningful IC.",
+        "hypothesis_evaluation": "The results partially refute the hypothesis, as the IC is near zero, suggesting the signal is weak or reversed, despite a high return.",
+        "decision": false,
+        "reason": "The weak IC suggests the current formulation is not capturing a strong signal, so a simpler approach focusing on direct volatility-reversion relationship is needed.",
+        "new_hypothesis": "Focus on the correlation between intraday volatility and subsequent price reversion using a simpler, lagged correlation structure over a 2-day horizon."
+      }
+    },
+    "9b9635e89353883b": {
+      "factor_id": "9b9635e89353883b",
+      "factor_name": "VOLUME_REVERSION",
+      "factor_expression": "TS_CORR($volume, $return, 2) * SIGN(TS_MEAN($return, 5))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_CORR($volume, $return, 2) * SIGN(TS_MEAN($return, 5))\" # Your output factor expression will be filled in here\n    name = \"VOLUME_REVERSION\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Mean-reversion strength based on volume and price return",
+      "factor_formulation": "TS_CORR($volume, $return, 2) * SIGN(TS_MEAN($return, 5))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "c43f2877c7f74600a7924baaaa43b12c",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/c43f2877c7f74600a7924baaaa43b12c/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-25_07-28-45-915734",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "2789c3b5cab5",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: High-frequency trading activity during intraday volatility spikes leads to increased mean-reversion in the next trading day.\n                Concise Observation: Intraday volatility and volume spikes correlate with subsequent price reversion in the next trading day.\n                Concise Justification: High-frequency traders may reverse positions after intraday volatility, leading to price reversion.\n                Concise Knowledge: When intraday range exceeds 2% of close and volume spikes, mean-reversion is amplified the next day.\n                concise Specification: Intraday range > 2% of close and volume > 1.5x average, next day mean-reversion expected.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-25T08:10:35.453277"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.09823785,
+        "1day.excess_return_with_cost.information_ratio": 1.00694066,
+        "1day.excess_return_with_cost.annualized_return": 0.13293286,
+        "1day.excess_return_with_cost.std": 0.00855736,
+        "1day.excess_return_with_cost.mean": 0.00055854,
+        "1day.excess_return_without_cost.max_drawdown": -0.09261559,
+        "1day.excess_return_without_cost.information_ratio": 1.18266494,
+        "1day.excess_return_without_cost.annualized_return": 0.15603041,
+        "1day.excess_return_without_cost.std": 0.00855183,
+        "1day.excess_return_without_cost.mean": 0.00065559,
+        "Rank ICIR": 0.19108796,
+        "Rank IC": 0.02479177,
+        "ICIR": 0.05369077,
+        "IC": 0.00711823,
+        "l2.valid": 0.99643904,
+        "l2.train": 0.99289323
+      },
+      "feedback": {
+        "observations": "The information ratio is slightly lower than the SOTA result, but the IC is close to zero, indicating a weak or reversed signal. The annualized return is high but does not align with a meaningful IC.",
+        "hypothesis_evaluation": "The results partially refute the hypothesis, as the IC is near zero, suggesting the signal is weak or reversed, despite a high return.",
+        "decision": false,
+        "reason": "The weak IC suggests the current formulation is not capturing a strong signal, so a simpler approach focusing on direct volatility-reversion relationship is needed.",
+        "new_hypothesis": "Focus on the correlation between intraday volatility and subsequent price reversion using a simpler, lagged correlation structure over a 2-day horizon."
       }
     }
   }
