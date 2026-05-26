@@ -116,10 +116,10 @@ function_lib_description: |-
   ### **Conditional and Logical Functions**
   - **COUNT(C, n)**: Count of samples satisfying condition C in the past n periods. Here, C is a logical expression, e.g., `$close > $open`.
   - **SUMIF(A, n, C)**: Sum of A over the past n periods if condition C is met. Here, C is a logical expression.
-  - **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is presented in a logical expression form, with the same size as A.
-  - **(C1)&&(C2)**: Logical operation "and". Both C1 and C2 are logical expressions, such as A > B.
-  - **(C1)||(C2)**: Logical operation "or". Both C1 and C2 are logical expressions, such as A > B.
-  - **(C1)?(A):(B)**: Logical operation "If condition C1 holds, then A, otherwise B". C1 is a logical expression, such as A > B.
+  - **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is a logical expression with the same size as A.
+  - **(C1)&&(C2)**: Logical AND — both C1 and C2 are logical expressions.
+  - **(C1)||(C2)**: Logical OR — both C1 and C2 are logical expressions.
+  - **(C1)?(A):(B)**: Ternary — if C1 holds, result is A, otherwise B. C1 is a logical expression.
 
   ### **Regression and Residual Functions**
   - **SEQUENCE(n)**: A single-column sequence of length n, ranging from 1 to integer n. `SEQUENCE()` should always be nested in `REGBETA()` or `REGRESI()` as argument B.
@@ -164,28 +164,33 @@ experiment_output_format: |-
 
 factor_feedback_generation:
   system: |-
-    You are evaluating backtest results for a set of quantitative factors (the hypothesis and factor expressions are already in the prior context) and producing the next direction for the Propose agent.
+    You evaluate backtest results for quantitative factors. The hypothesis and factor expressions are already in your context from prior agents — do not restate them.
 
-    Metric interpretation:
-    - IC ≥ 0.02 annualized = meaningful signal; IC ≤ 0 = signal is reversed or absent
-    - annualized_return only matters if IC agrees with it (high return + low IC = lucky, not real signal)
-    - max_drawdown > 0.3 = fragile / overfit to specific periods
-    - factors with implemented=False never ran — ignore them
-    - complexity warnings → the next hypothesis must redesign with a simpler structure, not just tweak parameters
-    - Prefer a simple IC=0.03 that generalizes over a complex IC=0.06 that overfits
+    Diagnostic framework — work through these in order before writing the JSON:
+    1. Signal presence: Is IC > 0? Does the return direction agree with the IC sign?
+    2. Signal strength: IC ≥ 0.02 = meaningful; IC ≥ 0.05 = strong. How does it compare to SOTA?
+    3. Robustness: max_drawdown > 0.30 = fragile or overfit; < 0.20 = robust.
+    4. Factor-level diagnosis: which of the 2-3 factors carried signal and which were noise — and WHY given their operator structure?
+    5. What structural change would improve the weakest factor?
+
+    Decision rules:
+    - IC > 0.02 AND max_drawdown < 0.30: REFINE — same hypothesis, vary the implementation.
+    - 0 < IC ≤ 0.02: PARTIAL — weak signal; amplify with additional operators or a conditional gate.
+    - IC ≤ 0: PIVOT — mechanism is absent; propose a structurally different hypothesis.
+    - Ignore factors with implemented=False.
+    - Complexity warnings present → next hypothesis must use a simpler structure, not just tweak parameters.
+    - Prefer a simple IC=0.03 that generalizes over a complex IC=0.06 that overfits.
 
     Output ONLY this JSON (no markdown fences):
     {
-      "Observations": "What the metrics show — cite specific IC and return values. 1-2 sentences.",
-      "Feedback for Hypothesis": "Whether the results confirm, partially confirm, or refute it. 1-2 sentences.",
-      "New Hypothesis": "Next direction for Propose — specific mechanism, data signal, and time horizon. 1 sentence.",
-      "Reasoning": "Why this next direction follows from the evidence above. 1 sentence.",
+      "Reasoning": "2-3 sentences working through the diagnostic questions with specific numbers.",
+      "Observations": "1-2 sentences citing specific IC and return values, compared with SOTA.",
+      "Feedback for Hypothesis": "Whether results confirm, partially confirm, or refute it. Name which factors carried signal and why based on their operator structure.",
+      "New Hypothesis": "Next direction — specific mechanism, operator families to try, and time horizon. 1 sentence.",
       "Replace Best Result": "yes or no"
     }
 
   user: |-
-    Hypothesis: {{ hypothesis_oneline }}
-
     Factors tested this round:
     {{ factor_summary }}
     {% if complexity_warnings %}
@@ -197,20 +202,39 @@ factor_feedback_generation:
     {{ combined_result }}
     </backtest_results>
 
-    Diagnose: which factors carried signal (and WHY given their formulation), which were noise, and what is the natural next direction. Output the JSON.
+    Apply the diagnostic framework, then output the JSON.
 
 
 # ─── Propose Agent (Idea generator) ──────────────────────────────────────────
 
 hypothesis_gen:
   system_prompt: |-
-    You are proposing ONE new, testable quantitative alpha factor hypothesis.
-    A downstream agent will translate your hypothesis into a symbolic formula on daily price-volume data.
+    You generate alpha factor hypotheses for a quantitative mining pipeline.
+
+    An alpha factor is a numeric score assigned to every stock every day — high-scoring stocks are bought, low-scoring sold. The score is a mathematical formula over daily price-volume data ($open, $high, $low, $close, $volume, $return), built by composing operators across families: time-series (TS_MEAN, TS_RANK, TS_ZSCORE, TS_CORR, DELTA, EMA, DECAYLINEAR, RSI, MACD...), cross-sectional (RANK, ZSCORE, MEDIAN...), conditional ((C)?(A):(B), COUNT, SUMIF), regression (REGBETA, REGRESI), and math transforms (LOG, SQRT, ABS, SIGN, POW).
 
     Scenario:
     {{ scenario }}
 
-    Constraints (downstream will reject violations):
+    Your hypothesis will be read by a Construct agent (via KV-cache) which translates it into 2-3 DSL expressions. For this to work, your hypothesis must be constructible from daily OHLCV data.
+
+    What makes a hypothesis constructible and useful:
+    - Names a specific, measurable data signal — not a vague theme
+    - Names a mechanism: mean-reversion, momentum exhaustion, liquidity dynamics, volatility clustering
+    - Names a time horizon: how many days forward does the signal predict?
+    - Implies a multi-layer operator composition rather than a single function
+    - Is structurally different from prior rounds (avoid repeating the same mechanism with different words)
+
+    How to think about hypothesis creation:
+    1. Pick a market phenomenon from price, volume, or intraday range dynamics
+    2. Identify which OHLCV columns carry the signal
+    3. Imagine a 2-3 layer composition: transform → normalize/rank → condition or combine
+    4. Specify window(s) and expected return direction
+    5. Write the hypothesis as a single testable statement
+
+    You are discovering formulas that have not been published. Boldness is rewarded; restating textbook patterns adds no value.
+
+    Constraints:
     - Data: daily $open, $close, $high, $low, $volume, $return only
     - Factor must be cross-sectionally rankable (one numeric score per stock per day)
     - Time windows: 1–60 days; nested windows total ≤ 60 days
@@ -219,14 +243,6 @@ hypothesis_gen:
 
     {{ hypothesis_specification }}
     {% endif %}
-
-    Domain patterns (build on or deliberately diverge from):
-    - Momentum: short-term (3–10d) continuation; long-term (60d+) reversal
-    - Mean-reversion: amplified after large 1-day moves (retail overreaction)
-    - Volume-price divergence: volume spike without proportional price move = trend exhaustion
-    - Intraday range: ($high-$low)/$close = realized volatility proxy
-    - Volatility regime: many signals flip sign in high-vol vs low-vol periods
-    - Open-close gap: overnight (institutional) vs intraday (retail) flow divergence
 
     Output ONLY this JSON (no markdown fences, no commentary):
     {{ hypothesis_output_format }}
@@ -241,32 +257,45 @@ hypothesis_gen:
     {% if round == 0 %}
     First round. Propose a hypothesis that names a concrete mechanism (behavior, microstructure pattern, or regime effect), the data signal it uses, and the time horizon over which it should hold.
     {% else %}
-    Round {{ round + 1 }}. If the last round showed positive IC on any factor, refine within that framework. If 2+ consecutive rounds produced IC ≤ 0, pivot to a different mechanism.
+    Round {{ round + 1 }}. If the last round showed positive IC, refine within that framework — try different windows, add a conditional gate, or combine a second signal. If 2+ consecutive rounds produced IC ≤ 0, pivot to a structurally different mechanism.
     {% endif %}
 
-    The hypothesis must be specific enough that someone could turn it into a formula. Make `concise_knowledge` a transferable conditional pattern (e.g. "When X holds, Y is amplified"), not a generic statement. Now output the JSON.
+    Think step-by-step:
+    1. What market phenomenon am I targeting?
+    2. Which OHLCV columns carry this signal?
+    3. What operator composition (2-3 layers) would capture it?
+    4. How is this structurally different from prior rounds?
+
+    The hypothesis must be specific enough to turn into a formula. Make `concise_specification` name the operator families and data columns to use, not just vague themes. Output the JSON.
 
 
 # ─── Construct Agent (Expression generator) ──────────────────────────────────
 
 hypothesis2experiment:
   system_prompt: |-
-    You are translating a quantitative alpha hypothesis (already in the prior context) into 2-3 symbolic factor expressions for backtesting.
+    You translate the alpha factor hypothesis (already in your KV-cache from the Propose agent) into 2-3 symbolic DSL expressions for backtesting. Do not restate the hypothesis.
 
-    Expression rules (downstream will discard violators):
-    - Use ONLY $open, $close, $high, $low, $volume, $return and the operators listed in the user message
-    - Length ≤ 250 chars per expression; ≤ 6 distinct base features
-    - Free parameters ≤ 50% of nodes; time windows 1–60 days (nested totals ≤ 60)
+    Expression design process:
+    1. Identify the core signal the hypothesis describes.
+    2. Choose structural skeletons — each factor must use a DIFFERENT one:
+       - Normalization-based: wrap a time-series op inside a cross-sectional RANK or ZSCORE
+       - Interaction-based: combine two signals via arithmetic, TS_CORR, or REGBETA
+       - Conditional-based: gate a signal using COUNT, SUMIF, (C)?(A):(B), or FILTER
+    3. Vary windows across factors — do not use the same window for all.
+    4. Validate each: ≤ 250 chars, ≤ 6 distinct base features, windows 1–60 days (nested total ≤ 60).
+    5. If prior complexity warnings appear in context, choose simpler structures.
 
-    The 2-3 factors must vary structurally — different operator families (e.g. one correlation-based, one conditional, one regression). Prefer simple compositions; if prior complexity warnings appear in context, choose a simpler structure than before.
+    Diversity rules (hard constraints, downstream will flag violations):
+    - The 2-3 factors MUST use at least 3 different operator families.
+    - At least one factor MUST include conditional or logical elements: COUNT, SUMIF, (C)?(A):(B), or FILTER.
+    - Do NOT produce structural variations of the same template — "TS_X($col,w) / TS_Y($col,w)" repeated with different X,Y is not structural diversity.
+
+    You are discovering novel factor combinations. A single RANK or basic TS_CORR is already well-known — your value is cross-family compositions that have not been published.
 
     Output format — follow it exactly:
     {{ experiment_output_format }}
 
   user_prompt: |-
-    Hypothesis to implement:
-    {{ target_hypothesis_oneline }}
-
     Allowed operators:
     {{ function_lib_description }}
     {% if expression_duplication %}
@@ -275,7 +304,7 @@ hypothesis2experiment:
     {{ expression_duplication }}
     {% endif %}
 
-    Write 2-3 independent {{ targets }} that implement the hypothesis above. Each factor MUST structurally encode the specific mechanism described — do NOT produce trivial single-function wrappers like RANK($volume). Pick operator families that capture the causal chain: correlation, conditional, regression, count-based, smoothing, or combinations. Now output the factors in the required format.
+    Output 2-3 structurally diverse {{ targets }}. Each must encode the hypothesis mechanism — no trivial single-function wrappers. At least one MUST use conditional logic (COUNT, SUMIF, ternary, or FILTER). Now output in the required format.
 
 
 # ─── Construct duplication-check fragment (rendered conditionally) ───────────

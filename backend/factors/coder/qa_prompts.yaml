@@ -133,10 +133,10 @@ evolving_strategy_factor_implementation_v1_system: |-
   ### **Conditional and Logical Functions**
   - **COUNT(C, n)**: Count of samples satisfying condition C in the past n periods. Here, C is a logical expression, e.g., `$close > $open`.
   - **SUMIF(A, n, C)**: Sum of A over the past n periods if condition C is met. Here, C is a logical expression.
-  - **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is presented in a logical expression form, with the same size as A.
-  - **(C1)&&(C2)**: Logical operation "and". Both C1 and C2 are logical expressions, such as A > B.
-  - **(C1)||(C2)**: Logical operation "or". Both C1 and C2 are logical expressions, such as A > B.
-  - **(C1)?(A):(B)**: Logical operation "If condition C1 holds, then A, otherwise B". C1 is a logical expression, such as A > B.
+  - **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is a logical expression with the same size as A.
+  - **(C1)&&(C2)**: Logical AND — both C1 and C2 are logical expressions.
+  - **(C1)||(C2)**: Logical OR — both C1 and C2 are logical expressions.
+  - **(C1)?(A):(B)**: Ternary — if C1 holds, result is A, otherwise B. C1 is a logical expression.
 
   ### **Regression and Residual Functions**
   - **SEQUENCE(n)**: A single-column sequence of length n, ranging from 1 to integer n. `SEQUENCE()` should always be nested in `REGBETA()` or `REGRESI()` as argument B.
@@ -149,8 +149,6 @@ evolving_strategy_factor_implementation_v1_system: |-
   - **BB_MIDDLE(A, n)**: Middle Bollinger Band, calculated as the n-period simple moving average of sequence A.
   - **BB_UPPER(A, n)**: Upper Bollinger Band, calculated as middle band plus two standard deviations of sequence A over n periods.
   - **BB_LOWER(A, n)**: Lower Bollinger Band, calculated as middle band minus two standard deviations of sequence A over n periods.
-
-
 
   Note that:
   - Only the variables provided in data (e.g., `$open`), arithmetic operators (`+, -, *, /`), logical operators (`&&, ||`), and the operations above are allowed in the factor expression.
@@ -370,10 +368,10 @@ function_lib_description: |-
   ### **Conditional and Logical Functions**
   - **COUNT(C, n)**: Count of samples satisfying condition C in the past n periods. Here, C is a logical expression, e.g., `$close > $open`.
   - **SUMIF(A, n, C)**: Sum of A over the past n periods if condition C is met. Here, C is a logical expression.
-  - **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is presented in a logical expression form, with the same size as A.
-  - **(C1)&&(C2)**: Logical operation "and". Both C1 and C2 are logical expressions, such as A > B.
-  - **(C1)||(C2)**: Logical operation "or". Both C1 and C2 are logical expressions, such as A > B.
-  - **(C1)?(A):(B)**: Logical operation "If condition C1 holds, then A, otherwise B". C1 is a logical expression, such as A > B.
+  - **FILTER(A, C)**: Filtering multi-column sequence A based on condition C. Here, C is a logical expression with the same size as A.
+  - **(C1)&&(C2)**: Logical AND — both C1 and C2 are logical expressions.
+  - **(C1)||(C2)**: Logical OR — both C1 and C2 are logical expressions.
+  - **(C1)?(A):(B)**: Ternary — if C1 holds, result is A, otherwise B. C1 is a logical expression.
 
   ### **Regression and Residual Functions**
   - **SEQUENCE(n)**: A single-column sequence of length n, ranging from 1 to integer n. `SEQUENCE()` should always be nested in `REGBETA()` or `REGRESI()` as argument B.
