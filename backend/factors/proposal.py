@@ -794,6 +794,12 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
         error_log: list[str] = []               # error log ringkas untuk retry prompt
         _MAX_CONSTRUCT_RETRIES = 6
         _construct_retries = 0
+        # Default fallback — mencegah NameError jika semua attempt parse-kosong
+        # dan kode langsung hit _MAX_CONSTRUCT_RETRIES break sebelum `proposed_names`
+        # sempat dideklarasikan di dalam loop.
+        proposed_names: list[str] = []
+        proposed_exprs: list[str] = []
+        response_dict: dict = {}
         while True:
             if flag:
                 break   #* semua faktor sudah valid -> keluar loop
@@ -1102,25 +1108,47 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
 
         #* Add valid factors to the factor regulator
         self.factor_regulator.add_factor(proposed_names, proposed_exprs)
-                
-        #* parse JSON terakhir -> buat FactorExperiment
-        return self.convert_response(resp, trace)
+
+        # Bangun experiment dari response_dict yang sudah dikoreksi di memori,
+        # bukan dari re-parse `resp` (string original LLM) yang membuang semua
+        # corrected_expression hasil consistency check.
+        #
+        # Filter ke proposed_names: hanya faktor yang benar-benar lolos semua
+        # gate (parsable + evaluate + acceptable + no-intra-dup).
+        # Pada path normal (flag=True), proposed_names == semua key response_dict.
+        # Pada path timeout (_MAX_CONSTRUCT_RETRIES), proposed_names mungkin subset.
+        valid_dict = {
+            name: response_dict[name]
+            for name in proposed_names
+            if name in response_dict
+        }
+        # Fallback: jika proposed_names kosong (semua gagal), pakai response_dict
+        # penuh agar pipeline tidak return experiment kosong tanpa alasan jelas.
+        return self._build_experiment_from_dict(valid_dict if valid_dict else response_dict, trace)
     
 
-    def convert_response(self, response: str, trace: Trace) -> FactorExperiment:
-        response_dict = parse_construct_keywords(response)
+    def _build_experiment_from_dict(self, response_dict: dict, trace: Trace) -> FactorExperiment:
+        """Bangun FactorExperiment dari response_dict yang sudah diparse (dan mungkin dikoreksi).
+
+        Dipakai oleh dua jalur:
+          - _convert_with_history_limit → pakai response_dict in-memory yang
+            corrected_expression-nya sudah diupdate oleh consistency check.
+          - convert_response → pakai dict hasil parse ulang dari string response.
+
+        Memisahkan logika ini mencegah koreksi hilang saat `convert_response`
+        dipanggil dengan string `resp` original (yang tidak tahu tentang koreksi).
+        """
         tasks = []
 
         for factor_name in response_dict:
             factor_data = response_dict.get(factor_name, {})
             if not isinstance(factor_data, dict):
                 continue
-            description = factor_data.get("description", "")
-            formulation = factor_data.get("formulation", "")
-            expression = factor_data.get("expression", "")
-            variables = factor_data.get("variables", {})
-            
-            # setiap entry JSON -> satu FactorTask
+            description  = factor_data.get("description", "")
+            formulation  = factor_data.get("formulation", "")
+            expression   = factor_data.get("expression", "")
+            variables    = factor_data.get("variables", {})
+
             tasks.append(
                 FactorTask(
                     factor_name=factor_name,
@@ -1130,20 +1158,16 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                     variables=variables,
                 )
             )
-            
-        #* buat eksperimen baru
+
         exp = QlibFactorExperiment(tasks)
-        
-        #* based_experiments = experiment sebelumnya yang sukses
-        # dipakai untuk cek duplikasi nama faktor
-        exp.based_experiments = [QlibFactorExperiment(sub_tasks=[])] + [t[1] for t in trace.hist if t[2]]
+        exp.based_experiments = (
+            [QlibFactorExperiment(sub_tasks=[])]
+            + [t[1] for t in trace.hist if t[2]]
+        )
 
         unique_tasks = []
-
         for task in tasks:
             duplicate = False
-            
-            # proses pengecekan duplikasinya
             for based_exp in exp.based_experiments:
                 for sub_task in based_exp.sub_tasks:
                     if task.factor_name == sub_task.factor_name:
@@ -1156,6 +1180,15 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
 
         exp.tasks = unique_tasks
         return exp
+
+    def convert_response(self, response: str, trace: Trace) -> FactorExperiment:
+        """Dipanggil oleh base-class interface (LLMHypothesis2Experiment.convert).
+        Parse string response menjadi dict, lalu delegasikan ke _build_experiment_from_dict.
+        Jalur ini TIDAK membawa koreksi in-memory — gunakan _build_experiment_from_dict
+        langsung jika response_dict sudah terkoreksi.
+        """
+        response_dict = parse_construct_keywords(response)
+        return self._build_experiment_from_dict(response_dict, trace)
 
 
 #* Dipakai oleh FactorBackTestBasePropSetting — load faktor dari CSV file.
