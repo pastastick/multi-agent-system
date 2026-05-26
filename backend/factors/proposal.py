@@ -645,14 +645,16 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
         """Lazy-load FactorQualityGate."""
         
         #*  lazy-load: hanya buat kalau dibutuhkan DAN consistency_enabled=True
-        #*  FactorQualityGate: cek apakah faktor konsisten dengan hipotesis
+        #*  FactorQualityGate dipakai khusus untuk variable-declaration consistency.
+        #*  Complexity & redundancy dimatikan di sini karena sudah ditangani
+        #*  oleh factor_regulator.is_expression_acceptable di construct loop.
         if self._quality_gate is None and self.consistency_enabled:
             try:
                 from factors.regulator.consistency_checker import FactorQualityGate
                 self._quality_gate = FactorQualityGate(
                     consistency_enabled=self.consistency_enabled,
-                    complexity_enabled=True,
-                    redundancy_enabled=True
+                    complexity_enabled=False,
+                    redundancy_enabled=False,
                 )
             except ImportError as e:
                 logger.warning(f"Could not load consistency checker: {e}")
@@ -943,36 +945,45 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                     )
                     break
                 
-                #* Consistency check (if enabled)
+                #* Consistency check (pure-Python, no LLM call)
                 if self.consistency_enabled and self.quality_gate is not None:
                     try:
                         passed, feedback, results = self.quality_gate.evaluate(
-                            hypothesis=str(hypothesis),
                             factor_name=factor_name,
-                            factor_description=description,
-                            factor_formulation=formulation,
                             factor_expression=expr,
-                            variables=variables
+                            variables=variables,
                         )
-                        
-                        # Use corrected expression from consistency check if provided
-                        # update dengan yang sudah di cek
-                        if results.get("corrected_expression") and results["corrected_expression"] != expr:
-                            logger.info(f"Consistency check corrected expression: {expr} -> {results['corrected_expression']}")
-                            expr = results["corrected_expression"]
-                            factor_data["expression"] = expr
-                            response_dict[factor_name] = factor_data
-                            
-                            # Re-check corrected expression
-                            if not self.factor_regulator.is_parsable(expr):
-                                logger.warning(f"Corrected expression could not be parsed: {expr}")
-                                break
-                            success, eval_dict = self.factor_regulator.evaluate(expr)
-                            if not success:
-                                break
-                        
+
+                        # Attach result for downstream consumers (coder repair, logging)
+                        factor_data["consistency_log"] = results
+                        response_dict[factor_name] = factor_data
+
                         if not passed:
-                            logger.warning(f"Consistency check failed: {factor_name}, feedback: {feedback}")
+                            logger.warning(
+                                f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: "
+                                f"consistency failed: {factor_name}: {feedback}"
+                            )
+                            error_log.append(
+                                f"consistency failed: {factor_name} — {feedback[:80]}"
+                            )
+                            consistency_fb = (
+                                f"- Consistency Check Failed for `{factor_name}`: {feedback}"
+                            )
+                            expression_duplication_prompt = (
+                                '\n\n'.join([expression_duplication_prompt, consistency_fb])
+                                if expression_duplication_prompt else consistency_fb
+                            )
+                            user_prompt = (
+                                Environment(undefined=StrictUndefined)
+                                .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
+                                .render(
+                                    targets=_mv("targets", self.targets),
+                                    target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
+                                    function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                                    expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
+                                )
+                            )
+                            break
                     except Exception as e:
                         logger.warning(f"Consistency check error: {e}")
                 

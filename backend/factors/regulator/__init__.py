@@ -3,25 +3,24 @@ Factor Regulator Module.
 
 Provides:
 - FactorRegulator: Factor duplication and complexity checking
-- FactorConsistencyChecker: Semantic consistency between hypothesis, description, expression
+- StaticConsistencyChecker: Pure-Python variable-declaration consistency
 - FactorQualityGate: Integrated quality gate
 """
 
 from factors.regulator.factor_regulator import FactorRegulator
 
-# Optional: consistency checker (optional dependency)
 try:
     from factors.regulator.consistency_checker import (
-        FactorConsistencyChecker,
+        StaticConsistencyChecker,
         ConsistencyCheckResult,
         ComplexityChecker,
         RedundancyChecker,
-        FactorQualityGate
+        FactorQualityGate,
     )
     CONSISTENCY_CHECKER_AVAILABLE = True
 except ImportError:
     CONSISTENCY_CHECKER_AVAILABLE = False
-    FactorConsistencyChecker = None
+    StaticConsistencyChecker = None
     ConsistencyCheckResult = None
     ComplexityChecker = None
     RedundancyChecker = None
@@ -30,10 +29,10 @@ except ImportError:
 
 __all__ = [
     'FactorRegulator',
-    'FactorConsistencyChecker',
+    'StaticConsistencyChecker',
     'ConsistencyCheckResult',
     'ComplexityChecker',
     'RedundancyChecker',
     'FactorQualityGate',
-    'CONSISTENCY_CHECKER_AVAILABLE'
+    'CONSISTENCY_CHECKER_AVAILABLE',
 ]
