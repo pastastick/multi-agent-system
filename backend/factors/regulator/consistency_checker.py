@@ -365,13 +365,13 @@ class RedundancyChecker:
 
 class FactorQualityGate:
     """Factor quality gate: integrates consistency/complexity/redundancy checks to decide if factor can proceed to backtest."""
-    
+
     def __init__(
         self,
         consistency_checker: FactorConsistencyChecker = None,
         complexity_checker: ComplexityChecker = None,
         redundancy_checker: RedundancyChecker = None,
-        consistency_enabled: bool = False,
+        consistency_enabled: bool = False,  # Default: disabled per experiment.yaml
         complexity_enabled: bool = True,
         redundancy_enabled: bool = True
     ):

@@ -149,7 +149,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 )
                 
             #* consistency: apakah faktor konsisten dengan hipotesis?
-            consistency_enabled = self.quality_gate_config.get("consistency_enabled", True)
+            consistency_enabled = self.quality_gate_config.get("consistency_enabled", False)
             #* complexity: apakah faktor terlalu kompleks?
             complexity_enabled = self.quality_gate_config.get("complexity_enabled", True)
             #* redundancy: apakah faktor redundant dengan faktor lain yang sudah ada?
