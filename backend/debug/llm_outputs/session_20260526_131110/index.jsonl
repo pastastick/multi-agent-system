@@ -1,0 +1,2 @@
+{"n": 1, "ts": "2026-05-26 13:13:01", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "299debd2", "text_len": 691, "duration_s": 9.2941, "file": "0001_propose_kv_and_text.md", "vars": ["scenario", "hypothesis_specification", "hypothesis_output_format", "hypothesis_and_feedback"]}
+{"n": 2, "ts": "2026-05-26 13:13:08", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "b9bfc53a", "text_len": 412, "duration_s": 5.7056, "file": "0002_construct_kv_and_text.md", "vars": ["experiment_output_format", "function_lib_description", "targets"]}
