@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-25T08:10:37.276256",
-    "total_factors": 22,
+    "last_updated": "2026-05-26T13:40:13.332080",
+    "total_factors": 25,
     "version": "1.0"
   },
   "factors": {
@@ -969,6 +969,165 @@
         "decision": false,
         "reason": "The weak IC suggests the current formulation is not capturing a strong signal, so a simpler approach focusing on direct volatility-reversion relationship is needed.",
         "new_hypothesis": "Focus on the correlation between intraday volatility and subsequent price reversion using a simpler, lagged correlation structure over a 2-day horizon."
+      }
+    },
+    "3a263d0fc6e95a94": {
+      "factor_id": "3a263d0fc6e95a94",
+      "factor_name": "VOLATILITY_RANK",
+      "factor_expression": "RANK(TS_STD($close, 20))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_STD($close, 20))\" # Your output factor expression will be filled in here\n    name = \"VOLATILITY_RANK\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Rank of stocks based on volatility relative to the market.",
+      "factor_formulation": "RANK(TS_STD($close, 20))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "03ac147e4cf84cf4b7a0c9b113aa32c7",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/03ac147e4cf84cf4b7a0c9b113aa32c7/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-26_13-12-54-682600",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume stocks with declining high-low ranges exhibit increased price resilience in the following 10 days.\n                Concise Observation: Stochastic volume and range patterns precede price stability in thinly traded stocks.\n                Concise Justification: Thinly traded stocks face greater price pressure from large orders, leading to more stable prices when volume declines.\n                Concise Knowledge: When volume drops below 10% of the 30-day average and high-low range declines, price volatility decreases.\n                concise Specification: Use VOL_RANK(10), TS_CORR(HIGH-LOW, 30), and RANK(VOL_RANK(10)) over 10-day horizon.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-26T13:40:10.479090"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.06813827,
+        "1day.excess_return_with_cost.information_ratio": 0.50229633,
+        "1day.excess_return_with_cost.annualized_return": 0.04331227,
+        "1day.excess_return_with_cost.std": 0.00558937,
+        "1day.excess_return_with_cost.mean": 0.00018198,
+        "1day.excess_return_without_cost.max_drawdown": -0.06178002,
+        "1day.excess_return_without_cost.information_ratio": 0.87209452,
+        "1day.excess_return_without_cost.annualized_return": 0.07510466,
+        "1day.excess_return_without_cost.std": 0.00558232,
+        "1day.excess_return_without_cost.mean": 0.00031557,
+        "Rank ICIR": 0.24389822,
+        "Rank IC": 0.02842773,
+        "ICIR": 0.07656018,
+        "IC": 0.00980167,
+        "l2.valid": 0.99689759,
+        "l2.train": 0.99322757
+      },
+      "feedback": {
+        "observations": "The IC is 0.0098, slightly above the 0.008033 SOTA result, but the signal is weak compared to the 0.02 threshold.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to the weak signal. VOLATILITY_RANK carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is 0.0098, which is below 0.02, indicating a weak signal. The max_drawdown is -0.0618, which is not directly comparable to the fragility threshold. The factor-level diagnosis suggests that VOLATILITY_RANK may have carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
+        "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength, such as using a basic volatility rank without conditional complexity."
+      }
+    },
+    "6711331073912823": {
+      "factor_id": "6711331073912823",
+      "factor_name": "VOLUME_ZSCORE",
+      "factor_expression": "ZSCORE(TS_SUM($volume, 10))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"ZSCORE(TS_SUM($volume, 10))\" # Your output factor expression will be filled in here\n    name = \"VOLUME_ZSCORE\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Z-score of daily volume relative to the market.",
+      "factor_formulation": "ZSCORE(TS_SUM($volume, 10))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "2b5e31387328410caf3ea08d5a1779e3",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/2b5e31387328410caf3ea08d5a1779e3/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-26_13-12-54-682600",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume stocks with declining high-low ranges exhibit increased price resilience in the following 10 days.\n                Concise Observation: Stochastic volume and range patterns precede price stability in thinly traded stocks.\n                Concise Justification: Thinly traded stocks face greater price pressure from large orders, leading to more stable prices when volume declines.\n                Concise Knowledge: When volume drops below 10% of the 30-day average and high-low range declines, price volatility decreases.\n                concise Specification: Use VOL_RANK(10), TS_CORR(HIGH-LOW, 30), and RANK(VOL_RANK(10)) over 10-day horizon.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-26T13:40:11.596694"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.06813827,
+        "1day.excess_return_with_cost.information_ratio": 0.50229633,
+        "1day.excess_return_with_cost.annualized_return": 0.04331227,
+        "1day.excess_return_with_cost.std": 0.00558937,
+        "1day.excess_return_with_cost.mean": 0.00018198,
+        "1day.excess_return_without_cost.max_drawdown": -0.06178002,
+        "1day.excess_return_without_cost.information_ratio": 0.87209452,
+        "1day.excess_return_without_cost.annualized_return": 0.07510466,
+        "1day.excess_return_without_cost.std": 0.00558232,
+        "1day.excess_return_without_cost.mean": 0.00031557,
+        "Rank ICIR": 0.24389822,
+        "Rank IC": 0.02842773,
+        "ICIR": 0.07656018,
+        "IC": 0.00980167,
+        "l2.valid": 0.99689759,
+        "l2.train": 0.99322757
+      },
+      "feedback": {
+        "observations": "The IC is 0.0098, slightly above the 0.008033 SOTA result, but the signal is weak compared to the 0.02 threshold.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to the weak signal. VOLATILITY_RANK carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is 0.0098, which is below 0.02, indicating a weak signal. The max_drawdown is -0.0618, which is not directly comparable to the fragility threshold. The factor-level diagnosis suggests that VOLATILITY_RANK may have carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
+        "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength, such as using a basic volatility rank without conditional complexity."
+      }
+    },
+    "3e06f8a6cc7931d3": {
+      "factor_id": "3e06f8a6cc7931d3",
+      "factor_name": "VOL_CONDITIONAL",
+      "factor_expression": "(COUNT($volume < 10000, 10) > 5) ? RANK(TS_STD($close, 20)) : 0",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(COUNT($volume < 10000, 10) > 5) ? RANK(TS_STD($close, 20)) : 0\" # Your output factor expression will be filled in here\n    name = \"VOL_CONDITIONAL\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Stocks with low volume and high volatility are ranked higher.",
+      "factor_formulation": "(COUNT($volume < 10000, 10) > 5) ? RANK(TS_STD($close, 20)) : 0",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "6e54607acbb24811bce13baf0ba7c0d3",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/6e54607acbb24811bce13baf0ba7c0d3/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-05-26_13-12-54-682600",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume stocks with declining high-low ranges exhibit increased price resilience in the following 10 days.\n                Concise Observation: Stochastic volume and range patterns precede price stability in thinly traded stocks.\n                Concise Justification: Thinly traded stocks face greater price pressure from large orders, leading to more stable prices when volume declines.\n                Concise Knowledge: When volume drops below 10% of the 30-day average and high-low range declines, price volatility decreases.\n                concise Specification: Use VOL_RANK(10), TS_CORR(HIGH-LOW, 30), and RANK(VOL_RANK(10)) over 10-day horizon.\n                ",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-05-26T13:40:12.482281"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.06813827,
+        "1day.excess_return_with_cost.information_ratio": 0.50229633,
+        "1day.excess_return_with_cost.annualized_return": 0.04331227,
+        "1day.excess_return_with_cost.std": 0.00558937,
+        "1day.excess_return_with_cost.mean": 0.00018198,
+        "1day.excess_return_without_cost.max_drawdown": -0.06178002,
+        "1day.excess_return_without_cost.information_ratio": 0.87209452,
+        "1day.excess_return_without_cost.annualized_return": 0.07510466,
+        "1day.excess_return_without_cost.std": 0.00558232,
+        "1day.excess_return_without_cost.mean": 0.00031557,
+        "Rank ICIR": 0.24389822,
+        "Rank IC": 0.02842773,
+        "ICIR": 0.07656018,
+        "IC": 0.00980167,
+        "l2.valid": 0.99689759,
+        "l2.train": 0.99322757
+      },
+      "feedback": {
+        "observations": "The IC is 0.0098, slightly above the 0.008033 SOTA result, but the signal is weak compared to the 0.02 threshold.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to the weak signal. VOLATILITY_RANK carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is 0.0098, which is below 0.02, indicating a weak signal. The max_drawdown is -0.0618, which is not directly comparable to the fragility threshold. The factor-level diagnosis suggests that VOLATILITY_RANK may have carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
+        "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength, such as using a basic volatility rank without conditional complexity."
       }
     }
   }
