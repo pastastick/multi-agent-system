@@ -77,6 +77,7 @@ class AgentResult:
     n_input_tokens: int = 0
     n_output_tokens: int = 0
     kv_seq_len: int = 0
+    latent_steps: int = 0
     parsed: Any = None
     hidden_last: Any = None
     latent_vecs: Any = None
@@ -93,6 +94,7 @@ class AgentResult:
         return {
             "role": self.role, "mode": self.mode, "ok": self.ok,
             "duration_s": round(self.duration_s, 3),
+            "latent_steps": self.latent_steps,
             "text_len": len(self.text) if self.text else 0,
             "n_out_tok": self.n_output_tokens,
             "kv": kv_describe(self.kv_cache),
@@ -160,6 +162,11 @@ class LatentAgent:
             )
         dur = time.time() - t0
 
+        # latent steps efektif: override spec, else default engine
+        eff_latent = self.spec.latent_steps
+        if eff_latent is None:
+            eff_latent = getattr(getattr(self.backend, "_engine", None), "latent_steps", 0)
+
         parsed = None
         if self.spec.parser is not None and res.text:
             try:
@@ -177,6 +184,7 @@ class LatentAgent:
             n_input_tokens=int(res.input_ids.shape[-1]) if res.input_ids is not None else 0,
             n_output_tokens=int(res.output_ids.shape[-1]) if res.output_ids is not None else 0,
             kv_seq_len=kv_seq_len(res.kv_cache),
+            latent_steps=eff_latent or 0,
             parsed=parsed,
             hidden_last=res.hidden_last,
             latent_vecs=res.latent_vecs,

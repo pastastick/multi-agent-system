@@ -81,6 +81,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         "factor_constructor",
         "coder",
         "summarizer",
+        # ── new LatentMAS pipeline (latent_mas) ──
+        "_front",        # FrontEndPipeline (holds backend + agents)
+        "_front_out",    # last FrontEndOutput (GPU KV tensors)
+        "_runlog",       # RunLogger (file handles)
     )
     
     @measure_time  #log berapa lama waktu yang dibutuhkan untuk inisialisasi loop
@@ -181,50 +185,46 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     + "\n\n[External Macro Context]\n"
                     + external_context
                 )
+            self._effective_direction = effective_direction or ""
+            # State threaded across the 5 LoopBase steps within one iteration.
+            self._front_out = None       # FrontEndOutput dari step propose
+            self._prior_feedback = ""    # New Hypothesis dari feedback → propose berikutnya
+            self._last_factor_name = ""  # diisi _build_experiment, dipakai feedback block
 
             # ── KV-cache config dari settings ────────────────────────────
             # Baca per-step latent_steps dan temperature dari PROP_SETTING.
             # getattr() dengan fallback agar tetap kompatibel jika settings
             # belum punya field latent (misal BaseFacSetting).
-            self._kv_max_tokens = getattr(PROP_SETTING, 'kv_max_tokens', 2048)  
+            self._kv_max_tokens = getattr(PROP_SETTING, 'kv_max_tokens', 20480)  
 
             # ── Instantiate proposal classes ─────────────────────────────
             # When llm_backend is provided, use Latent variants with
             # KV-cache support.  Otherwise, use standard classes.
             if llm_backend is not None and _HAS_LOCAL_LLM:
-                from factors.latent_proposal import (
-                    LatentHypothesisGen,
-                    LatentHypothesis2Experiment,
-                    LatentFeedback,
+                # ── NEW: LatentMAS pipeline (menggantikan factors.latent_proposal) ──
+                # proposal→construct→consistency→judger→gate→repair dalam satu
+                # FrontEndPipeline; feedback via agent. Substrat backtest/library
+                # tetap dipakai ulang (lihat _build_experiment & feedback()).
+                from latent_mas.runlog import get_run_logger
+                from latent_mas.pipeline import FrontEndPipeline, default_quality_gate
+                self._latent = True
+                self._runlog = get_run_logger(
+                    run_name=f"loop_{evolution_phase}_{round_idx}_{direction_id}"
                 )
-                # Per-step config dari settings (None = pakai default engine)
-                _get_ls = getattr(PROP_SETTING, 'get_latent_steps_for', None)
-                _get_temp = getattr(PROP_SETTING, 'get_temperature_for', None)
-
-                self.hypothesis_generator = LatentHypothesisGen(
-                    scen, effective_direction, llm_backend=llm_backend,
-                    latent_steps=_get_ls("propose") if _get_ls else None,
-                    temperature=_get_temp("propose") if _get_temp else None,
+                self._front = FrontEndPipeline(
+                    llm_backend, runlog=self._runlog,
+                    quality_gate=default_quality_gate, max_repair_attempts=3,
                 )
-                self.factor_constructor = LatentHypothesis2Experiment(
-                    consistency_enabled=consistency_enabled,
-                    llm_backend=llm_backend,
-                    latent_steps=_get_ls("construct") if _get_ls else None,
-                    # Construct: temperature rendah → formula lebih presisi.
-                    # Output berlabel keyword (NAME/DESC/VARS/EXPR), di-parse
-                    # oleh proposal.parse_construct_keywords.
-                    temperature=_get_temp("construct") if _get_temp else None,
-                )
-                self.summarizer = LatentFeedback(
-                    scen, llm_backend=llm_backend,
-                    latent_steps=_get_ls("feedback") if _get_ls else None,
-                    temperature=_get_temp("feedback") if _get_temp else None,
-                )
+                # Atribut path-standar di-set None agar pickle-exclusion & getattr aman.
+                self.hypothesis_generator = None
+                self.factor_constructor = None
+                self.summarizer = None
                 logger.info(
-                    f"[LatentPipeline] Using Latent proposal classes with KV-cache chaining "
+                    f"[LatentMAS] FrontEndPipeline active "
                     f"(kv_max_tokens={self._kv_max_tokens})"
                 )
             else:
+                self._latent = False
                 self.hypothesis_generator: HypothesisGen = import_class(PROP_SETTING.hypothesis_gen)(scen, effective_direction)
                 
                 #   "factors.proposal.AlphaAgentHypothesis2FactorExpression"
@@ -289,6 +289,26 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     def factor_propose(self, prev_out: dict[str, Any]):
         """Propose hypothesis as the basis for factor construction."""
         _mon = _get_monitor() if _HAS_MONITOR else None
+
+        # ── NEW LatentMAS path: run proposal→construct→consistency→judger→gate→repair
+        if getattr(self, "_latent", False):
+            with logger.tag("r"):
+                front = self._front.run(
+                    direction=self._effective_direction,
+                    seed_kv=self._pipeline_kv,
+                    prior_feedback=self._prior_feedback,
+                )
+            self._front_out = front
+            self._last_hypothesis = front.hypothesis
+            logger.info(
+                f"[LatentMAS] propose→judger: hypo_len={len(front.hypothesis)}, "
+                f"expr={front.expression!r}, repaired={front.repaired}, "
+                f"gate_error={front.gate_error or 'none'}"
+            )
+            if not front.expression:
+                raise FactorEmptyError("Front-end produced no expression")
+            return front.hypothesis
+
         with logger.tag("r"):
             # ── KV-cache: inject seed from planning/external agents ──
             self.hypothesis_generator.set_past_kv(self._pipeline_kv)
@@ -315,6 +335,15 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     def factor_construct(self, prev_out: dict[str, Any]):
         """Construct multiple factors from the hypothesis."""
         _mon = _get_monitor() if _HAS_MONITOR else None
+
+        # ── NEW LatentMAS path: bridge (hypothesis, expression) → QlibFactorExperiment
+        if getattr(self, "_latent", False):
+            with logger.tag("r"):
+                front = self._front_out
+                exp = self._build_experiment(front.hypothesis, front.expression)
+            logger.log_object(exp.sub_tasks, tag="experiment generation")
+            return exp
+
         with logger.tag("r"):
             self.factor_constructor.set_past_kv(self.hypothesis_generator.last_kv)
 
@@ -336,6 +365,12 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     def factor_calculate(self, prev_out: dict[str, Any]):  #* tulis kode dari rumus faktor
         """Compute factor values from factor expressions."""
         _mon = _get_monitor() if _HAS_MONITOR else None
+
+        # ── NEW LatentMAS path: kode + workspace sudah dirender di _build_experiment
+        # (judger+gate+repair menggantikan coder LLM). Tidak ada yang dikerjakan di sini.
+        if getattr(self, "_latent", False):
+            return prev_out["factor_construct"]
+
         with logger.tag("d"):  # develop
 
             construct_kv = getattr(self.factor_constructor, 'last_kv', None)
@@ -383,22 +418,27 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     def feedback(self, prev_out: dict[str, Any]):
         _mon = _get_monitor() if _HAS_MONITOR else None
 
-        # Feedback menerima KV terbaik yang tersedia:
-        #   coder_kv  — jika LLM repair dipanggil: mengandung construct context
-        #               + repair reasoning. Lebih informatif karena feedback
-        #               seharusnya "tahu" bagaimana expression diperbaiki.
-        #   construct_kv — fallback jika tidak ada repair (template langsung OK):
-        #               mengandung propose context + factor expressions.
-        construct_kv = getattr(self.factor_constructor, 'last_kv', None)
-        coder_kv = getattr(self, '_coder_kv', None)
-        feedback_input_kv = coder_kv if coder_kv is not None else construct_kv
-        self.summarizer.set_past_kv(feedback_input_kv)
-        if feedback_input_kv is not None:
-            _kv_src = "coder (repair)" if coder_kv is not None else "construct (no repair)"
-            logger.info(f"[LatentPipeline] Feedback receives KV from {_kv_src}")
+        if getattr(self, "_latent", False):
+            # ── NEW LatentMAS path: feedback agent membaca CLONE kv_consist
+            # (anti-bias kv_judger — lihat desain). Mengembalikan dict feedback.
+            feedback = self._run_latent_feedback(prev_out)
+        else:
+            # Feedback menerima KV terbaik yang tersedia:
+            #   coder_kv  — jika LLM repair dipanggil: mengandung construct context
+            #               + repair reasoning. Lebih informatif karena feedback
+            #               seharusnya "tahu" bagaimana expression diperbaiki.
+            #   construct_kv — fallback jika tidak ada repair (template langsung OK):
+            #               mengandung propose context + factor expressions.
+            construct_kv = getattr(self.factor_constructor, 'last_kv', None)
+            coder_kv = getattr(self, '_coder_kv', None)
+            feedback_input_kv = coder_kv if coder_kv is not None else construct_kv
+            self.summarizer.set_past_kv(feedback_input_kv)
+            if feedback_input_kv is not None:
+                _kv_src = "coder (repair)" if coder_kv is not None else "construct (no repair)"
+                logger.info(f"[LatentPipeline] Feedback receives KV from {_kv_src}")
 
-        with _mon.track_step("feedback") if _mon else _nullcontext():
-            feedback = self.summarizer.generate_feedback(prev_out["factor_backtest"], prev_out["factor_propose"], self.trace)
+            with _mon.track_step("feedback") if _mon else _nullcontext():
+                feedback = self.summarizer.generate_feedback(prev_out["factor_backtest"], prev_out["factor_propose"], self.trace)
 
         with logger.tag("ef"):
             logger.log_object(feedback, tag="feedback")
@@ -417,6 +457,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         # iteration 1 only — resetting here is safe for subsequent iterations.
         self._pipeline_kv = None
         self._coder_kv = None  # reset per-iteration, set ulang di factor_calculate berikutnya
+
+        # Latent: simpan "New Hypothesis" sebagai konteks teks untuk propose berikutnya
+        # (carryover lewat teks, bukan KV chain — konsisten dengan reset di atas).
+        if getattr(self, "_latent", False) and isinstance(feedback, dict):
+            self._prior_feedback = feedback.get("New Hypothesis", "") or ""
 
         #* Auto-save factors to unified factor library
         try:
@@ -505,11 +550,99 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             "loop_idx": self.loop_idx,
             "round_idx": self.round_idx,
             "hypothesis_embedding": hypothesis_embedding,
-            # KV-cache dari akhir loop (setelah feedback + truncate).
-            # Digunakan oleh evolution controller untuk meneruskan konteks
-            # latent ke mutation/crossover round berikutnya.
-            "pipeline_kv": getattr(self, "_pipeline_kv", None),
+            # KV-cache untuk evolution (mutation/crossover round berikutnya).
+            # Latent: kv_judger dari front-end terakhir (membawa seluruh rantai
+            #   proposal→construct→consistency→judger). _pipeline_kv sendiri
+            #   sudah di-reset None tiap akhir feedback.
+            # Standar: _pipeline_kv lama.
+            "pipeline_kv": (
+                getattr(self._front_out, "kv_judger", None)
+                if getattr(self, "_latent", False) and self._front_out is not None
+                else getattr(self, "_pipeline_kv", None)
+            ),
         }
+
+    # ── NEW LatentMAS helpers ────────────────────────────────────────────────
+
+    def _build_experiment(self, hypothesis: str, expression: str):
+        """Bridge: (hypothesis, expression) → QlibFactorExperiment siap-backtest.
+
+        Mirror persis proposal.convert_response lama: FactorTask + based_experiments
+        dari trace.hist + render template + inject_code ke FactorFBWorkspace.
+        Substrat (rdagent/qlib) dipakai ulang, bukan ditulis ulang.
+        """
+        import re as _re
+        from factors.coder.factor import FactorTask, FactorFBWorkspace
+        from factors.experiment import QlibFactorExperiment
+        from factors.coder.evolving_strategy import code_template
+
+        factor_name = _re.sub(r"[^a-zA-Z0-9]+", "_", (hypothesis or "").strip())[:40].strip("_")
+        factor_name = factor_name or f"latent_factor_{getattr(self, 'loop_idx', 0)}"
+        self._last_factor_name = factor_name
+
+        task = FactorTask(
+            factor_name=factor_name,
+            factor_description=hypothesis,
+            factor_formulation=expression,
+            factor_expression=expression,
+            variables={},
+        )
+        exp = QlibFactorExperiment([task])
+        exp.based_experiments = (
+            [QlibFactorExperiment(sub_tasks=[])]
+            + [h[1] for h in self.trace.hist if h[2]]
+        )
+        code = code_template.render(expression=expression, factor_name=factor_name)
+        ws = FactorFBWorkspace(target_task=task)
+        ws.inject_code(**{"factor.py": code})
+        exp.sub_workspace_list = [ws]
+        return exp
+
+    def _run_latent_feedback(self, prev_out: dict[str, Any]) -> dict:
+        """Feedback via agent latent_mas. Return dict feedback (JSON parsed)."""
+        from llm._shared import robust_json_parse
+        from latent_mas import kv_ops
+
+        front = self._front_out
+        exp = prev_out["factor_backtest"]
+
+        # sinyal kompleksitas (constraint gate QuantaAlpha) → masuk ke feedback
+        complexity = ""
+        try:
+            from factors.regulator.consistency_checker import ComplexityChecker
+            ok, msg = ComplexityChecker().check(front.expression)
+            complexity = "" if ok else f"COMPLEXITY WARNING: {msg}"
+        except Exception:
+            pass
+
+        factor_block = (
+            f"- {self._last_factor_name}: {front.hypothesis}\n"
+            f"  Expression: {front.expression}"
+        )
+        if complexity:
+            factor_block += f"\n  {complexity}"
+
+        res = getattr(exp, "result", None)
+        if res is None:
+            backtest_results = "backtest produced no result (factor may have failed)"
+        elif hasattr(res, "to_string"):
+            backtest_results = res.to_string()
+        else:
+            backtest_results = str(res)
+
+        fb_agent = self._front.agents["feedback"]
+        with _get_monitor().track_step("feedback") if (_HAS_MONITOR and _get_monitor()) else _nullcontext():
+            r = fb_agent.run(
+                past_kv=kv_ops.kv_deepcopy(front.kv_consist),
+                hypothesis_text=front.hypothesis,
+                factor_block=factor_block,
+                backtest_results=backtest_results,
+                sota_block="none yet",
+            )
+        try:
+            return robust_json_parse(r.text) if r.text else {}
+        except Exception:
+            return {"Observations": r.text or ""}
 
 
 
