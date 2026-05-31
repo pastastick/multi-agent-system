@@ -1,0 +1,57 @@
+{"t": 0.0078, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "latent_runs/20260531_024922_mining", "pid": 21116}
+{"t": 0.0101, "kind": "log", "level": "INFO", "msg": "new mining loop", "direction": "overnight gap reversal", "iterations": 3}
+{"t": 60.4491, "kind": "log", "level": "INFO", "msg": "iteration 1/3", "direction": "overnight gap reversal"}
+{"t": 60.4569, "kind": "step_start", "step": "proposal"}
+{"t": 61.1863, "kind": "step_end", "step": "proposal", "duration_s": 0.7285, "error": null}
+{"t": 61.1922, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.735, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 115, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 16.17}, "parsed": null}
+{"t": 61.1953, "kind": "step_start", "step": "construct"}
+{"t": 61.3309, "kind": "step_end", "step": "construct", "duration_s": 0.1345, "error": null}
+{"t": 61.3322, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.137, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 329, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 46.27}, "parsed": null}
+{"t": 61.3339, "kind": "step_start", "step": "consistency"}
+{"t": 61.3926, "kind": "step_end", "step": "consistency", "duration_s": 0.0578, "error": null}
+{"t": 61.3937, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.06, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 483, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 67.92}, "parsed": null}
+{"t": 61.4158, "kind": "step_start", "step": "judger"}
+{"t": 63.7333, "kind": "step_end", "step": "judger", "duration_s": 2.3164, "error": null}
+{"t": 63.735, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.318, "text_len": 160, "n_out_tok": 43, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 696, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 97.88}, "parsed": "HypothesisExpr(hypothesis=\"Overnight gap reversal is predicted by the magnitude of the previous day's volume relative to its moving average.\", expression='TS_ZSCORE($volume, 20)')"}
+{"t": 64.1644, "kind": "step_start", "step": "backtest"}
+{"t": 556.4935, "kind": "step_end", "step": "backtest", "duration_s": 492.328, "error": null}
+{"t": 556.5223, "kind": "step_start", "step": "feedback"}
+{"t": 568.2209, "kind": "step_end", "step": "feedback", "duration_s": 11.6975, "error": null}
+{"t": 568.2219, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 11.7, "text_len": 1491, "n_out_tok": 342, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1185, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 166.64}, "parsed": null}
+{"t": 568.2238, "kind": "log", "level": "INFO", "msg": "iteration 2/3", "direction": "overnight gap reversal"}
+{"t": 568.2263, "kind": "step_start", "step": "proposal"}
+{"t": 568.2642, "kind": "step_end", "step": "proposal", "duration_s": 0.0372, "error": null}
+{"t": 568.265, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.039, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 148, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 20.81}, "parsed": null}
+{"t": 568.2667, "kind": "step_start", "step": "construct"}
+{"t": 568.3078, "kind": "step_end", "step": "construct", "duration_s": 0.0405, "error": null}
+{"t": 568.3085, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.042, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 362, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 50.91}, "parsed": null}
+{"t": 568.3101, "kind": "step_start", "step": "consistency"}
+{"t": 568.3498, "kind": "step_end", "step": "consistency", "duration_s": 0.0392, "error": null}
+{"t": 568.3506, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.04, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 516, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 72.56}, "parsed": null}
+{"t": 568.3535, "kind": "step_start", "step": "judger"}
+{"t": 570.0111, "kind": "step_end", "step": "judger", "duration_s": 1.657, "error": null}
+{"t": 570.0122, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 1.659, "text_len": 167, "n_out_tok": 49, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 729, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 102.52}, "parsed": "HypothesisExpr(hypothesis=\"Overnight gap reversal is predicted by the z-score of the previous day's volume relative to its 20-day moving average.\", expression='TS_ZSCORE($volume, 20)')"}
+{"t": 570.3141, "kind": "step_start", "step": "backtest"}
+{"t": 750.592, "kind": "step_end", "step": "backtest", "duration_s": 180.2772, "error": null}
+{"t": 750.6216, "kind": "step_start", "step": "feedback"}
+{"t": 762.3817, "kind": "step_end", "step": "feedback", "duration_s": 11.7591, "error": null}
+{"t": 762.3822, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 11.761, "text_len": 1497, "n_out_tok": 333, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1578, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 221.91}, "parsed": null}
+{"t": 762.3839, "kind": "log", "level": "INFO", "msg": "iteration 3/3", "direction": "overnight gap reversal"}
+{"t": 762.3862, "kind": "step_start", "step": "proposal"}
+{"t": 762.4295, "kind": "step_end", "step": "proposal", "duration_s": 0.0372, "error": null}
+{"t": 762.4302, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.044, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 147, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 20.67}, "parsed": null}
+{"t": 762.4319, "kind": "step_start", "step": "construct"}
+{"t": 762.473, "kind": "step_end", "step": "construct", "duration_s": 0.0406, "error": null}
+{"t": 762.4737, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.042, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 361, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 50.77}, "parsed": null}
+{"t": 762.4747, "kind": "step_start", "step": "consistency"}
+{"t": 762.5145, "kind": "step_end", "step": "consistency", "duration_s": 0.0393, "error": null}
+{"t": 762.5153, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.041, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 515, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 72.42}, "parsed": null}
+{"t": 762.5184, "kind": "step_start", "step": "judger"}
+{"t": 764.0271, "kind": "step_end", "step": "judger", "duration_s": 1.508, "error": null}
+{"t": 764.028, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 1.509, "text_len": 150, "n_out_tok": 44, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 728, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 102.38}, "parsed": "HypothesisExpr(hypothesis=\"Overnight gap reversal is predicted by the previous day's volume relative to its 20-day moving average.\", expression='TS_ZSCORE($volume, 20)')"}
+{"t": 764.3603, "kind": "step_start", "step": "backtest"}
+{"t": 941.2695, "kind": "step_end", "step": "backtest", "duration_s": 176.9082, "error": null}
+{"t": 941.3362, "kind": "step_start", "step": "feedback"}
+{"t": 950.904, "kind": "step_end", "step": "feedback", "duration_s": 9.5667, "error": null}
+{"t": 950.9048, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 9.569, "text_len": 958, "n_out_tok": 242, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1574, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 221.34}, "parsed": null}
+{"t": 950.9132, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 950.905}

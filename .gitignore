@@ -27,8 +27,7 @@ books/
 *.gguf
 
 # logs & runtime artifacts
-*.log
-*.jsonl
+
 backend/debug/conv_logs/
 backend/workspace/
 backend/__session__/

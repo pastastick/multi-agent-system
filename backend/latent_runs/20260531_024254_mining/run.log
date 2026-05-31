@@ -1,0 +1,5 @@
+[    0.01s] INFO    run started  run_dir=latent_runs/20260531_024254_mining pid=19169
+[    0.01s] INFO    new mining loop  direction=overnight gap reversal iterations=1
+[  114.64s] WARNING backtest disabled (--no-backtest)
+[  114.64s] INFO    iteration 1/1  direction=overnight gap reversal
+[  131.22s] INFO    run finished  wall_clock_s=131.211
