@@ -135,34 +135,50 @@ class FrontEndPipeline:
             judger_text=r_judge.text or "",
         )
 
-        # ── quality gate + repair ────────────────────────────────────────────
-        ok, err = self.gate(expression) if expression else (False, "no expression")
-        if ok:
-            return out
+        # ── quality gate + repair (logika dipakai ulang oleh evolution) ──────
+        out.expression, out.repaired, out.repair_attempts, out.gate_error = \
+            self._gate_and_repair(expression, kv_consist)
+        return out
 
-        out.gate_error = err
+    def _gate_and_repair(
+        self,
+        expression: str,
+        kv_baseline: Optional[KVCache],
+    ) -> "tuple[str, bool, int, str]":
+        """Gate ekspresi; jika gagal jalankan repair (≤ max attempts), tiap attempt
+        berangkat dari CLONE pristine kv_baseline. Dipakai jalur front-end
+        (original) MAUPUN evolution (mutation/crossover) agar kualitas seragam.
+
+        Returns: (final_expression, repaired, attempts, gate_error).
+        Pada exhaustion, kembalikan ekspresi ASAL (perilaku sama dengan front-end lama).
+        """
+        rl = self.runlog
+        if expression:
+            ok, err = self.gate(expression)
+        else:
+            ok, err = False, "no expression"
+        if ok:
+            return expression, False, 0, ""
+
+        gate_error = err
         tried = {expression.replace(" ", "").lower()} if expression else set()
         modes = ["minimal", "different", "bold"]
         former = expression
 
         for attempt in range(self.max_repair_attempts):
             mode = modes[min(attempt, len(modes) - 1)]
-            # tiap attempt berangkat dari baseline yang SAMA & pristine
             r_rep = self._a("repair").run(
-                past_kv=kv_ops.kv_deepcopy(kv_consist),
+                past_kv=kv_ops.kv_deepcopy(kv_baseline),
                 former_expression=former, error_log=err,
                 value_feedback="", attempt_mode=mode,
             )
-            out.repair_attempts = attempt + 1
             parsed = r_rep.parsed
             if parsed is None:
                 if rl: rl.warn(f"repair attempt {attempt+1} unparseable")
                 continue
             if parsed == PASS_SENTINEL:
                 if rl: rl.info("repair returned PASS; keeping expression")
-                out.expression = former
-                out.repaired = True
-                return out
+                return former, True, attempt + 1, gate_error
             norm = parsed.replace(" ", "").lower()
             if norm in tried:
                 if rl: rl.warn(f"repair attempt {attempt+1} repeated a tried expr")
@@ -170,19 +186,26 @@ class FrontEndPipeline:
                 continue
             ok2, err2 = self.gate(parsed)
             if ok2:
-                out.expression = parsed
-                out.repaired = True
-                return out
+                return parsed, True, attempt + 1, gate_error
             tried.add(norm)
             former, err = parsed, err2
 
-        if rl: rl.error("repair exhausted; using last judger expression", expr=expression)
-        return out
+        if rl: rl.error("repair exhausted; keeping original expression", expr=expression)
+        return expression, False, self.max_repair_attempts, gate_error
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Evolution operators
 # ─────────────────────────────────────────────────────────────────────────────
+
+@dataclass
+class EvolutionOutput:
+    """Hasil mutation/crossover: hipotesis+ekspresi + KV judger (untuk feedback)."""
+    hypothesis: str
+    expression: str
+    kv: Optional[KVCache]          # KV judger evolution → baseline feedback & next round
+    raw_text: str = ""
+
 
 class EvolutionOps:
     """Mutation (sequential 2-step) + Crossover (hierarchical KV concat)."""
@@ -205,7 +228,7 @@ class EvolutionOps:
         parent_expression: str,
         parent_feedback: str,
         backtest_summary: str,
-    ) -> HypothesisExpr | None:
+    ) -> Optional[EvolutionOutput]:
         r_ref = self._a("mutation_reflection").run(
             past_kv=kv_ops.kv_deepcopy(parent_kv_feedback),
             parent_hypothesis=parent_hypothesis,
@@ -221,14 +244,17 @@ class EvolutionOps:
             diagnosis_step=diag.failure_step,
             diagnosis_reason=diag.reason,
         )
-        return r_mut.parsed
+        he: Optional[HypothesisExpr] = r_mut.parsed
+        if he is None:
+            return None
+        return EvolutionOutput(he.hypothesis, he.expression, r_mut.kv_cache, r_mut.text or "")
 
     # ── Crossover: concat k parent KV (hierarchical) → judger ────────────────
     def crossover(
         self,
         *,
         parent_kvs: List[Optional[KVCache]],
-    ) -> HypothesisExpr | None:
+    ) -> Optional[EvolutionOutput]:
         # clone tiap parent lalu concat layer-wise (LatentMAS hierarchical).
         clones = [kv_ops.kv_deepcopy(kv) for kv in parent_kvs]
         merged = kv_ops.kv_concat(clones)
@@ -239,4 +265,7 @@ class EvolutionOps:
         r_cross = self._a("crossover_judger").run(
             past_kv=merged, n_parents=len([k for k in parent_kvs if k is not None]),
         )
-        return r_cross.parsed
+        he: Optional[HypothesisExpr] = r_cross.parsed
+        if he is None:
+            return None
+        return EvolutionOutput(he.hypothesis, he.expression, r_cross.kv_cache, r_cross.text or "")

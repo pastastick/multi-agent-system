@@ -275,6 +275,9 @@ def _run_evolution_task( #* jalankan satu task dalam evolution loop (Original/Mu
         evolution_phase=phase.value,
         trajectory_id=trajectory_id,
         parent_trajectory_ids=parent_ids,
+        # Objek parent (bukan hanya id) untuk EvolutionOps mutation/crossover.
+        # Hanya berisi KV-tensor di mode sequential (latent memaksa sequential).
+        parent_trajectories=parent_trajectories,
         direction_id=direction_id,
         round_idx=round_idx,
         quality_gate_config=quality_gate_cfg or {},

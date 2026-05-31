@@ -34,7 +34,9 @@ _EXPORTS = {
     "load_agent": "latent_mas.agent",
     "load_all_agents": "latent_mas.agent",
     "FrontEndPipeline": "latent_mas.pipeline",
+    "FrontEndOutput": "latent_mas.pipeline",
     "EvolutionOps": "latent_mas.pipeline",
+    "EvolutionOutput": "latent_mas.pipeline",
     "default_quality_gate": "latent_mas.pipeline",
 }
 

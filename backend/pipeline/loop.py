@@ -85,6 +85,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         "_front",        # FrontEndPipeline (holds backend + agents)
         "_front_out",    # last FrontEndOutput (GPU KV tensors)
         "_runlog",       # RunLogger (file handles)
+        "_evo",          # EvolutionOps (holds backend + agents)
+        "_parent_trajectories",  # parent KV tensors (GPU)
     )
     
     @measure_time  #log berapa lama waktu yang dibutuhkan untuk inisialisasi loop
@@ -104,6 +106,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         external_context: Optional[str] = None,
         llm_backend: Optional["LocalLLMBackend"] = None,
         past_kv: Optional["KVCache"] = None,
+        parent_trajectories: Optional[list] = None,
     ):
         with logger.tag("init"): # semua log di sini ditandai "init"
             self.use_local = use_local
@@ -190,6 +193,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             self._front_out = None       # FrontEndOutput dari step propose
             self._prior_feedback = ""    # New Hypothesis dari feedback → propose berikutnya
             self._last_factor_name = ""  # diisi _build_experiment, dipakai feedback block
+            # Parent trajectories (objek, BUKAN hanya id) untuk EvolutionOps —
+            # hanya tersedia di mode sequential (KV tensor tak bisa cross-process).
+            self._parent_trajectories = parent_trajectories or []
 
             # ── KV-cache config dari settings ────────────────────────────
             # Baca per-step latent_steps dan temperature dari PROP_SETTING.
@@ -206,7 +212,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 # FrontEndPipeline; feedback via agent. Substrat backtest/library
                 # tetap dipakai ulang (lihat _build_experiment & feedback()).
                 from latent_mas.runlog import get_run_logger
-                from latent_mas.pipeline import FrontEndPipeline, default_quality_gate
+                from latent_mas.pipeline import (
+                    FrontEndPipeline, EvolutionOps, default_quality_gate,
+                )
                 self._latent = True
                 self._runlog = get_run_logger(
                     run_name=f"loop_{evolution_phase}_{round_idx}_{direction_id}"
@@ -214,6 +222,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 self._front = FrontEndPipeline(
                     llm_backend, runlog=self._runlog,
                     quality_gate=default_quality_gate, max_repair_attempts=3,
+                )
+                # EvolutionOps berbagi agents (& backend) yang sama dengan front-end.
+                self._evo = EvolutionOps(
+                    llm_backend, runlog=self._runlog, agents=self._front.agents,
                 )
                 # Atribut path-standar di-set None agar pickle-exclusion & getattr aman.
                 self.hypothesis_generator = None
@@ -290,18 +302,28 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         """Propose hypothesis as the basis for factor construction."""
         _mon = _get_monitor() if _HAS_MONITOR else None
 
-        # ── NEW LatentMAS path: run proposal→construct→consistency→judger→gate→repair
+        # ── NEW LatentMAS path: phase menentukan generator ──────────────────
+        #   original → FrontEndPipeline (proposal→construct→consistency→judger)
+        #   mutation → EvolutionOps.mutate  (reflection→judger, baca parent KV)
+        #   crossover→ EvolutionOps.crossover (kv_concat parent → judger)
         if getattr(self, "_latent", False):
+            phase = getattr(self, "evolution_phase", "original")
+            parents = getattr(self, "_parent_trajectories", []) or []
             with logger.tag("r"):
-                front = self._front.run(
-                    direction=self._effective_direction,
-                    seed_kv=self._pipeline_kv,
-                    prior_feedback=self._prior_feedback,
-                )
+                if phase == "mutation" and parents:
+                    front = self._evolution_propose(parents, crossover=False)
+                elif phase == "crossover" and parents:
+                    front = self._evolution_propose(parents, crossover=True)
+                else:
+                    front = self._front.run(
+                        direction=self._effective_direction,
+                        seed_kv=self._pipeline_kv,
+                        prior_feedback=self._prior_feedback,
+                    )
             self._front_out = front
             self._last_hypothesis = front.hypothesis
             logger.info(
-                f"[LatentMAS] propose→judger: hypo_len={len(front.hypothesis)}, "
+                f"[LatentMAS] phase={phase}: hypo_len={len(front.hypothesis)}, "
                 f"expr={front.expression!r}, repaired={front.repaired}, "
                 f"gate_error={front.gate_error or 'none'}"
             )
@@ -597,6 +619,60 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         ws.inject_code(**{"factor.py": code})
         exp.sub_workspace_list = [ws]
         return exp
+
+    @staticmethod
+    def _parent_expr(parent) -> str:
+        """Ambil ekspresi faktor pertama dari parent StrategyTrajectory."""
+        factors = getattr(parent, "factors", None) or []
+        if factors and isinstance(factors[0], dict):
+            return factors[0].get("expression", "") or ""
+        return ""
+
+    def _evolution_propose(self, parents: list, *, crossover: bool):
+        """EvolutionOps → (hypothesis, expression) → gate+repair → FrontEndOutput.
+
+        Membungkus hasil mutation/crossover sebagai FrontEndOutput supaya step
+        construct & feedback berikutnya tidak peduli phase. Fallback ke
+        FrontEndPipeline bila EvolutionOps gagal — evolution tak boleh dead-end.
+        """
+        from latent_mas.pipeline import FrontEndOutput
+
+        if crossover:
+            parent_kvs = [getattr(p, "kv_cache", None) for p in parents]
+            evo = self._evo.crossover(parent_kvs=parent_kvs)
+            label = f"crossover(n={len(parents)})"
+        else:
+            p = parents[0]
+            evo = self._evo.mutate(
+                parent_kv_feedback=getattr(p, "kv_cache", None),
+                parent_hypothesis=getattr(p, "hypothesis", "") or "",
+                parent_expression=self._parent_expr(p),
+                parent_feedback=str(getattr(p, "feedback", "") or ""),
+                backtest_summary=str(getattr(p, "backtest_metrics", "") or ""),
+            )
+            label = "mutation"
+
+        if evo is None or not evo.expression:
+            logger.warning(
+                f"[LatentMAS] {label} produced no expression; fallback to front-end"
+            )
+            return self._front.run(
+                direction=self._effective_direction,
+                seed_kv=self._pipeline_kv,
+                prior_feedback=self._prior_feedback,
+            )
+
+        # Gate+repair pakai logika front-end; baseline = KV judger evolution.
+        expr, repaired, attempts, gate_err = self._front._gate_and_repair(
+            evo.expression, evo.kv,
+        )
+        logger.info(f"[LatentMAS] {label}: expr={evo.expression!r} → final={expr!r}")
+        return FrontEndOutput(
+            hypothesis=evo.hypothesis, expression=expr,
+            kv_consist=evo.kv, kv_judger=evo.kv,
+            judger_text=evo.raw_text, repaired=repaired,
+            repair_attempts=attempts, gate_error=gate_err,
+        )
 
     def _run_latent_feedback(self, prev_out: dict[str, Any]) -> dict:
         """Feedback via agent latent_mas. Return dict feedback (JSON parsed)."""
