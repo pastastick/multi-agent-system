@@ -1,0 +1,46 @@
+# Call 0007 — `mutation_judger` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-01 12:35:32
+- conv_id: `27a2949a`
+- step: 0
+- temperature: 0.8
+- has_past_kv: True
+- input_tokens: 713
+- output_tokens: 1024
+- duration_s: 38.0906
+- text_len: 1023
+
+## System Prompt
+
+```text
+You are the Mutation Judger. The parent trajectory and a diagnosis of its
+failing step are in your latent memory. Produce a MUTATED hypothesis and
+expression: change the diagnosed step meaningfully (different operator family,
+window, base variable, or mechanism) while preserving the validated parts.
+Use a different operator family than the parent's failed expression.
+
+Operator DSL: vars $open $close $high $low $volume $return;
+1-arg RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN;
+2-arg TS_RANK TS_MEAN TS_STD TS_ZSCORE MAX(A,B) MIN(A,B);
+3-arg TS_CORR TS_COVARIANCE. Keep it short and valid.
+
+Output EXACTLY:
+HYPOTHESIS: <one sentence>
+EXPRESSION: <single DSL expression>
+```
+
+## User Prompt
+
+```text
+Diagnosed failing step: construct
+Reason: 1.  1. 1. 1. 1. 1. 1. 1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.   1.   1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.  1.
+Produce the mutated hypothesis and expression now.
+```
+
+## Response
+
+```text
+的 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+```

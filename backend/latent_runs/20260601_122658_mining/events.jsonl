@@ -1,0 +1,31 @@
+{"t": 0.0249, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260601_122658_mining", "pid": 50318}
+{"t": 0.0273, "kind": "log", "level": "INFO", "msg": "new mining loop", "direction": "price-volume momentum forecast", "iterations": 1, "latent_steps": 10, "use_realign": true, "knn": true}
+{"t": 113.2608, "kind": "log", "level": "WARNING", "msg": "backtest disabled (--no-backtest)"}
+{"t": 113.2637, "kind": "log", "level": "INFO", "msg": "iteration 1/1", "direction": "price-volume momentum forecast"}
+{"t": 113.269, "kind": "step_start", "step": "proposal"}
+{"t": 115.3554, "kind": "step_end", "step": "proposal", "duration_s": 2.0848, "error": null}
+{"t": 115.3564, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 2.087, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 125, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 17.58}, "parsed": null}
+{"t": 115.3588, "kind": "step_start", "step": "construct"}
+{"t": 116.1785, "kind": "step_end", "step": "construct", "duration_s": 0.818, "error": null}
+{"t": 116.1802, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.821, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 324, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 45.56}, "parsed": null}
+{"t": 116.182, "kind": "step_start", "step": "consistency"}
+{"t": 116.5708, "kind": "step_end", "step": "consistency", "duration_s": 0.3875, "error": null}
+{"t": 116.5723, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.39, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 423, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 59.48}, "parsed": null}
+{"t": 116.5832, "kind": "step_start", "step": "judger"}
+{"t": 151.4605, "kind": "step_end", "step": "judger", "duration_s": 34.8766, "error": null}
+{"t": 151.4636, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": false, "duration_s": 34.88, "latent_steps": 10, "text_len": 0, "n_out_tok": 1024, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 561, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 78.89}, "parsed": null}
+{"t": 151.4685, "kind": "log", "level": "WARNING", "msg": "judger output unparseable", "head": ""}
+{"t": 151.4743, "kind": "step_start", "step": "repair"}
+{"t": 168.4733, "kind": "step_end", "step": "repair", "duration_s": 16.9979, "error": null}
+{"t": 168.4753, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 17.0, "latent_steps": 10, "text_len": 1213, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 565, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 79.45}, "parsed": "<expression>        \u2014 there is a real defect; emit the corrected"}
+{"t": 168.481, "kind": "step_start", "step": "repair"}
+{"t": 168.8993, "kind": "step_end", "step": "repair", "duration_s": 0.4172, "error": null}
+{"t": 168.9007, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": false, "duration_s": 0.42, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 592, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 83.25}, "parsed": null}
+{"t": 168.904, "kind": "log", "level": "WARNING", "msg": "repair attempt 2 unparseable"}
+{"t": 168.9094, "kind": "step_start", "step": "repair"}
+{"t": 186.5561, "kind": "step_end", "step": "repair", "duration_s": 17.6372, "error": null}
+{"t": 186.5585, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 17.649, "latent_steps": 10, "text_len": 549, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 592, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 83.25}, "parsed": null}
+{"t": 186.5632, "kind": "log", "level": "WARNING", "msg": "repair attempt 3 unparseable"}
+{"t": 186.5664, "kind": "log", "level": "ERROR", "msg": "repair exhausted; keeping original expression", "expr": ""}
+{"t": 186.5687, "kind": "log", "level": "ERROR", "msg": "front-end produced no expression; skipping backtest"}
+{"t": 186.5886, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 186.57}

@@ -1,0 +1,68 @@
+{"t": 0.0083, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260601_110353_evolution", "pid": 30811}
+{"t": 0.0099, "kind": "log", "level": "INFO", "msg": "evolution isolation test", "mode": "both", "latent_steps": 10, "use_realign": true, "knn": true}
+{"t": 51.6051, "kind": "log", "level": "INFO", "msg": "building parent-1 via front-end"}
+{"t": 51.6107, "kind": "step_start", "step": "proposal"}
+{"t": 53.4802, "kind": "step_end", "step": "proposal", "duration_s": 1.8679, "error": null}
+{"t": 53.4811, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.87, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 125, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 17.58}, "parsed": null}
+{"t": 53.4832, "kind": "step_start", "step": "construct"}
+{"t": 54.2243, "kind": "step_end", "step": "construct", "duration_s": 0.7397, "error": null}
+{"t": 54.2318, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.748, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 324, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 45.56}, "parsed": null}
+{"t": 54.2337, "kind": "step_start", "step": "consistency"}
+{"t": 54.5889, "kind": "step_end", "step": "consistency", "duration_s": 0.3546, "error": null}
+{"t": 54.5896, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.356, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 423, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 59.48}, "parsed": null}
+{"t": 54.5993, "kind": "step_start", "step": "judger"}
+{"t": 55.5988, "kind": "step_end", "step": "judger", "duration_s": 0.9988, "error": null}
+{"t": 55.5997, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": false, "duration_s": 1.0, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 561, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 78.89}, "parsed": null}
+{"t": 55.6014, "kind": "log", "level": "WARNING", "msg": "judger output unparseable", "head": ""}
+{"t": 55.6113, "kind": "step_start", "step": "repair"}
+{"t": 56.0593, "kind": "step_end", "step": "repair", "duration_s": 0.4469, "error": null}
+{"t": 56.0602, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": false, "duration_s": 0.449, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 565, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 79.45}, "parsed": null}
+{"t": 56.0617, "kind": "log", "level": "WARNING", "msg": "repair attempt 1 unparseable"}
+{"t": 56.0661, "kind": "step_start", "step": "repair"}
+{"t": 56.5324, "kind": "step_end", "step": "repair", "duration_s": 0.4653, "error": null}
+{"t": 56.5337, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": false, "duration_s": 0.468, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 572, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 80.44}, "parsed": null}
+{"t": 56.5358, "kind": "log", "level": "WARNING", "msg": "repair attempt 2 unparseable"}
+{"t": 56.5403, "kind": "step_start", "step": "repair"}
+{"t": 56.9705, "kind": "step_end", "step": "repair", "duration_s": 0.4291, "error": null}
+{"t": 56.9727, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": false, "duration_s": 0.432, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 572, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 80.44}, "parsed": null}
+{"t": 56.9761, "kind": "log", "level": "WARNING", "msg": "repair attempt 3 unparseable"}
+{"t": 56.9783, "kind": "log", "level": "ERROR", "msg": "repair exhausted; keeping original expression", "expr": ""}
+{"t": 56.9803, "kind": "log", "level": "INFO", "msg": "building parent-2 via front-end", "direction": " mean-reversion in small-caps"}
+{"t": 56.9828, "kind": "step_start", "step": "proposal"}
+{"t": 57.3381, "kind": "step_end", "step": "proposal", "duration_s": 0.3537, "error": null}
+{"t": 57.3392, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.356, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 128, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 18.0}, "parsed": null}
+{"t": 57.3409, "kind": "step_start", "step": "construct"}
+{"t": 57.6982, "kind": "step_end", "step": "construct", "duration_s": 0.3558, "error": null}
+{"t": 57.6992, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.358, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 326, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 45.84}, "parsed": null}
+{"t": 57.7004, "kind": "step_start", "step": "consistency"}
+{"t": 58.0534, "kind": "step_end", "step": "consistency", "duration_s": 0.352, "error": null}
+{"t": 58.0553, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.355, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 424, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 59.62}, "parsed": null}
+{"t": 58.0614, "kind": "step_start", "step": "judger"}
+{"t": 92.7875, "kind": "step_end", "step": "judger", "duration_s": 34.7249, "error": null}
+{"t": 92.7904, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 34.728, "latent_steps": 10, "text_len": 4218, "n_out_tok": 1024, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 562, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 79.03}, "parsed": "HypothesisExpr(hypothesis='<one sentence>', expression='<single DSL expression>')"}
+{"t": 97.6607, "kind": "step_start", "step": "repair"}
+{"t": 98.1906, "kind": "step_end", "step": "repair", "duration_s": 0.5285, "error": null}
+{"t": 98.1928, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": false, "duration_s": 0.532, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 582, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 81.84}, "parsed": null}
+{"t": 98.1962, "kind": "log", "level": "WARNING", "msg": "repair attempt 1 unparseable"}
+{"t": 98.2046, "kind": "step_start", "step": "repair"}
+{"t": 98.6624, "kind": "step_end", "step": "repair", "duration_s": 0.456, "error": null}
+{"t": 98.6636, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": false, "duration_s": 0.459, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 589, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 82.83}, "parsed": null}
+{"t": 98.6664, "kind": "log", "level": "WARNING", "msg": "repair attempt 2 unparseable"}
+{"t": 98.6715, "kind": "step_start", "step": "repair"}
+{"t": 116.2373, "kind": "step_end", "step": "repair", "duration_s": 17.5638, "error": null}
+{"t": 116.2391, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 17.567, "latent_steps": 10, "text_len": 490, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 589, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 82.83}, "parsed": null}
+{"t": 116.2415, "kind": "log", "level": "WARNING", "msg": "repair attempt 3 unparseable"}
+{"t": 116.2435, "kind": "log", "level": "ERROR", "msg": "repair exhausted; keeping original expression", "expr": "<single DSL expression>"}
+{"t": 116.2451, "kind": "log", "level": "INFO", "msg": "running mutation (reflection \u2192 judger)"}
+{"t": 116.2489, "kind": "step_start", "step": "mutation_reflection"}
+{"t": 118.9491, "kind": "step_end", "step": "mutation_reflection", "duration_s": 2.699, "error": null}
+{"t": 118.9522, "kind": "agent_done", "role": "mutation_reflection", "mode": "kv_and_text", "ok": true, "duration_s": 2.702, "latent_steps": 10, "text_len": 192, "n_out_tok": 64, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 626, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 88.03}, "parsed": "MutationDiagnosis(failure_step='construct', reason='user\\nParent hypothesis:  \\nBacktest summary:   IC=0.010 RankIC=0.024 annualized_return=3.5% MDD=-9.5%\\nParent feedback:    Low IC (0.01). Expression too volume-heavy; mechanism weak under noise.')"}
+{"t": 118.9566, "kind": "step_start", "step": "mutation_judger"}
+{"t": 153.8103, "kind": "step_end", "step": "mutation_judger", "duration_s": 34.8529, "error": null}
+{"t": 153.8126, "kind": "agent_done", "role": "mutation_judger", "mode": "kv_and_text", "ok": true, "duration_s": 34.856, "latent_steps": 10, "text_len": 382, "n_out_tok": 1024, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 774, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 108.84}, "parsed": "HypothesisExpr(hypothesis='Backtest summary:   IC=0.010 RankIC=0.024 annualized_return=3.5% MDD=-9.5%\\nParent feedback:    Low IC (0.01). Expression too volume-heavy; mechanism weak under noise.\\nProduce the mutated hypothesis and expression now.\\n\\nOutput EXACTLY:\\nHYPOTHESIS: <one sentence>', expression='<single DSL expression>')"}
+{"t": 153.8154, "kind": "log", "level": "INFO", "msg": "running crossover (kv_concat \u2192 judger)"}
+{"t": 153.8327, "kind": "log", "level": "INFO", "msg": "crossover KV merged", "n_parents": 2, "merged": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1123, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 157.92}}
+{"t": 153.8362, "kind": "step_start", "step": "crossover_judger"}
+{"t": 189.4988, "kind": "step_end", "step": "crossover_judger", "duration_s": 35.6613, "error": null}
+{"t": 189.5013, "kind": "agent_done", "role": "crossover_judger", "mode": "kv_and_text", "ok": true, "duration_s": 35.665, "latent_steps": 10, "text_len": 913, "n_out_tok": 1024, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1107, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 155.67}, "parsed": "HypothesisExpr(hypothesis='<one sentence>', expression='1 1 150, 2 1 1 1 1 1 150, 1 1 1 1 1 150, 1 1 1 1 1 150, 2 1 1 1 1 1 1 1 1 150, 2\u20134 base features.\"')"}
+{"t": 189.5325, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 189.503}

@@ -1,0 +1,5 @@
+{"n": 1, "ts": "2026-06-01 11:47:24", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "573c8d26", "text_len": 165, "duration_s": 3.8764, "file": "0001_judger_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-01 11:47:36", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "0392e8e2", "text_len": 147, "duration_s": 2.7333, "file": "0002_judger_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-01 11:47:39", "role": "mutation_reflection", "mode": "kv_and_text", "step": 0, "conv_id": "aa1067bb", "text_len": 177, "duration_s": 2.493, "file": "0003_mutation_reflection_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-01 11:47:42", "role": "mutation_judger", "mode": "kv_and_text", "step": 0, "conv_id": "5221327f", "text_len": 178, "duration_s": 3.093, "file": "0004_mutation_judger_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-01 11:47:45", "role": "crossover_judger", "mode": "kv_and_text", "step": 0, "conv_id": "7f163fa5", "text_len": 151, "duration_s": 2.8059, "file": "0005_crossover_judger_kv_and_text.md", "vars": []}

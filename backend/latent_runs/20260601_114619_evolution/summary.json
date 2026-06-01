@@ -1,0 +1,67 @@
+{
+  "wall_clock_s": 85.6,
+  "summed_step_s": 25.185,
+  "steps": {
+    "proposal": {
+      "count": 2,
+      "total_s": 4.33,
+      "avg_s": 2.165,
+      "min_s": 1.353,
+      "max_s": 2.978,
+      "errors": 0
+    },
+    "construct": {
+      "count": 2,
+      "total_s": 2.96,
+      "avg_s": 1.48,
+      "min_s": 1.345,
+      "max_s": 1.615,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 2,
+      "total_s": 2.723,
+      "avg_s": 1.362,
+      "min_s": 1.36,
+      "max_s": 1.363,
+      "errors": 0
+    },
+    "judger": {
+      "count": 2,
+      "total_s": 6.684,
+      "avg_s": 3.342,
+      "min_s": 2.766,
+      "max_s": 3.918,
+      "errors": 0
+    },
+    "mutation_reflection": {
+      "count": 1,
+      "total_s": 2.525,
+      "avg_s": 2.525,
+      "min_s": 2.525,
+      "max_s": 2.525,
+      "errors": 0
+    },
+    "mutation_judger": {
+      "count": 1,
+      "total_s": 3.126,
+      "avg_s": 3.126,
+      "min_s": 3.126,
+      "max_s": 3.126,
+      "errors": 0
+    },
+    "crossover_judger": {
+      "count": 1,
+      "total_s": 2.837,
+      "avg_s": 2.837,
+      "min_s": 2.837,
+      "max_s": 2.837,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "judger",
+    "total_s": 6.684,
+    "pct": 26.5
+  }
+}

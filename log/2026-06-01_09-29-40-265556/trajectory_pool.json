@@ -1,0 +1,55 @@
+{
+  "trajectories": {
+    "30f02722e0e6": {
+      "trajectory_id": "30f02722e0e6",
+      "direction_id": 0,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "<one sentence>",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-01T09:39:32.950738",
+      "extra_info": {}
+    },
+    "b0ae8e5ec1a6": {
+      "trajectory_id": "b0ae8e5ec1a6",
+      "direction_id": 1,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-01T09:40:08.888206",
+      "extra_info": {}
+    }
+  },
+  "by_direction": {
+    "0": [
+      "30f02722e0e6"
+    ],
+    "1": [
+      "b0ae8e5ec1a6"
+    ]
+  },
+  "by_phase": {
+    "original": [
+      "30f02722e0e6",
+      "b0ae8e5ec1a6"
+    ],
+    "mutation": [],
+    "crossover": []
+  },
+  "saved_at": "2026-06-01T09:40:08.954728"
+}

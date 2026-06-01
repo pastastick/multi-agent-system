@@ -1,0 +1,8 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260601_112919_evolution pid=36580
+[    0.01s] INFO    evolution isolation test  mode=both latent_steps=0 use_realign=False knn=False
+[   53.96s] INFO    building parent-1 via front-end
+[   65.52s] INFO    building parent-2 via front-end  direction=overnight gap mean-reversion in small-caps
+[   67.21s] INFO    running mutation (reflection → judger)
+[   70.20s] INFO    running crossover (kv_concat → judger)
+[   70.21s] INFO    crossover KV merged  n_parents=2 merged={'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 1398, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 196.59}
+[   72.26s] INFO    run finished  wall_clock_s=72.239

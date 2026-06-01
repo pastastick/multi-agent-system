@@ -1,0 +1,8 @@
+{"n": 1, "ts": "2026-06-01 12:34:14", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "b1ff6326", "text_len": 0, "duration_s": 1.9904, "file": "0001_judger_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-01 12:34:16", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "5b4ca1d2", "text_len": 34, "duration_s": 1.9565, "file": "0002_repair_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-01 12:34:26", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "487b557e", "text_len": 29, "duration_s": 1.9626, "file": "0003_repair_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-01 12:34:32", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "b2fdaa47", "text_len": 0, "duration_s": 1.39, "file": "0004_judger_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-01 12:34:34", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "37acbba2", "text_len": 51, "duration_s": 2.3082, "file": "0005_repair_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-06-01 12:34:54", "role": "mutation_reflection", "mode": "kv_and_text", "step": 0, "conv_id": "d7736df4", "text_len": 510, "duration_s": 19.7215, "file": "0006_mutation_reflection_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-06-01 12:35:32", "role": "mutation_judger", "mode": "kv_and_text", "step": 0, "conv_id": "27a2949a", "text_len": 1023, "duration_s": 38.0906, "file": "0007_mutation_judger_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-06-01 12:36:10", "role": "crossover_judger", "mode": "kv_and_text", "step": 0, "conv_id": "579d8abc", "text_len": 1025, "duration_s": 38.1094, "file": "0008_crossover_judger_kv_and_text.md", "vars": []}

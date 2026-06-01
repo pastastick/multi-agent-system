@@ -1,0 +1,11 @@
+[    0.02s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260601_123306_evolution pid=51978
+[    0.02s] INFO    evolution isolation test  mode=both latent_steps=40 use_realign=True knn=True
+[   60.21s] INFO    building parent-1 via front-end
+[   68.37s] WARNING judger output unparseable  head=
+[   78.17s] INFO    forcing gate failure to test repair  bad_expr=TS_ZSCORE($volume, 20 gate_ok=False gate_err=ParseException: Unclosed parentheses  (at char 0), (line:1, col:1)
+[   80.19s] INFO    building parent-2 via front-end  direction= mean-reversion in small-caps
+[   85.75s] WARNING judger output unparseable  head=
+[   88.12s] INFO    running mutation (reflection → judger)
+[  146.06s] INFO    running crossover (kv_concat → judger)
+[  146.07s] INFO    crossover KV merged  n_parents=2 merged={'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 1300, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 182.81}
+[  184.30s] INFO    run finished  wall_clock_s=184.268

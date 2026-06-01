@@ -1,0 +1,75 @@
+{
+  "wall_clock_s": 184.268,
+  "summed_step_s": 116.047,
+  "steps": {
+    "proposal": {
+      "count": 2,
+      "total_s": 4.434,
+      "avg_s": 2.217,
+      "min_s": 1.367,
+      "max_s": 3.067,
+      "errors": 0
+    },
+    "construct": {
+      "count": 2,
+      "total_s": 3.076,
+      "avg_s": 1.538,
+      "min_s": 1.373,
+      "max_s": 1.703,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 2,
+      "total_s": 2.653,
+      "avg_s": 1.327,
+      "min_s": 1.298,
+      "max_s": 1.356,
+      "errors": 0
+    },
+    "judger": {
+      "count": 2,
+      "total_s": 3.469,
+      "avg_s": 1.734,
+      "min_s": 1.428,
+      "max_s": 2.041,
+      "errors": 0
+    },
+    "repair": {
+      "count": 3,
+      "total_s": 6.356,
+      "avg_s": 2.119,
+      "min_s": 2.001,
+      "max_s": 2.355,
+      "errors": 0
+    },
+    "mutation_reflection": {
+      "count": 1,
+      "total_s": 19.776,
+      "avg_s": 19.776,
+      "min_s": 19.776,
+      "max_s": 19.776,
+      "errors": 0
+    },
+    "mutation_judger": {
+      "count": 1,
+      "total_s": 38.132,
+      "avg_s": 38.132,
+      "min_s": 38.132,
+      "max_s": 38.132,
+      "errors": 0
+    },
+    "crossover_judger": {
+      "count": 1,
+      "total_s": 38.151,
+      "avg_s": 38.151,
+      "min_s": 38.151,
+      "max_s": 38.151,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "crossover_judger",
+    "total_s": 38.151,
+    "pct": 32.9
+  }
+}

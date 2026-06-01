@@ -1,0 +1,11 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260601_114035_mining pid=39545
+[    0.01s] INFO    new mining loop  direction=price-volume momentum forecast iterations=1 latent_steps=10 use_realign=True knn=True
+[   98.02s] WARNING backtest disabled (--no-backtest)
+[   98.03s] INFO    iteration 1/1  direction=price-volume momentum forecast
+[  102.22s] WARNING judger output unparseable  head=
+[  102.73s] WARNING repair attempt 1 unparseable
+[  103.17s] WARNING repair attempt 2 unparseable
+[  103.62s] WARNING repair attempt 3 unparseable
+[  103.62s] ERROR   repair exhausted; keeping original expression  expr=
+[  103.62s] ERROR   front-end produced no expression; skipping backtest
+[  103.64s] INFO    run finished  wall_clock_s=103.627

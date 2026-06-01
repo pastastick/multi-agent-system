@@ -1,0 +1,45 @@
+{"t": 0.0282, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260601_120635_evolution", "pid": 45758}
+{"t": 0.0422, "kind": "log", "level": "INFO", "msg": "evolution isolation test", "mode": "both", "latent_steps": 40, "use_realign": true, "knn": false}
+{"t": 56.2706, "kind": "log", "level": "INFO", "msg": "building parent-1 via front-end"}
+{"t": 56.281, "kind": "step_start", "step": "proposal"}
+{"t": 59.3078, "kind": "step_end", "step": "proposal", "duration_s": 3.0254, "error": null}
+{"t": 59.3091, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 3.028, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 155, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 21.8}, "parsed": null}
+{"t": 59.3117, "kind": "step_start", "step": "construct"}
+{"t": 60.9059, "kind": "step_end", "step": "construct", "duration_s": 1.5935, "error": null}
+{"t": 60.9078, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 1.596, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 409, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 57.52}, "parsed": null}
+{"t": 60.9112, "kind": "step_start", "step": "consistency"}
+{"t": 62.281, "kind": "step_end", "step": "consistency", "duration_s": 1.3682, "error": null}
+{"t": 62.2824, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 1.371, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 603, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 84.8}, "parsed": null}
+{"t": 62.2863, "kind": "step_start", "step": "judger"}
+{"t": 66.3252, "kind": "step_end", "step": "judger", "duration_s": 4.0384, "error": null}
+{"t": 66.3275, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 4.041, "latent_steps": 40, "text_len": 162, "n_out_tok": 55, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 856, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 120.38}, "parsed": "HypothesisExpr(hypothesis='High-volume  (volume) relative to low (volume) in the past 5 days predicts future returns.', expression='TS_ZSCORE($volume, 5) - TS_ZSCORE($volume, 5)')"}
+{"t": 71.935, "kind": "log", "level": "INFO", "msg": "forcing gate failure to test repair", "bad_expr": "TS_ZSCORE($volume, 20", "gate_ok": false, "gate_err": "ParseException: Unclosed parentheses  (at char 0), (line:1, col:1)"}
+{"t": 71.944, "kind": "step_start", "step": "repair"}
+{"t": 74.0063, "kind": "step_end", "step": "repair", "duration_s": 2.0604, "error": null}
+{"t": 74.0075, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 2.063, "latent_steps": 40, "text_len": 29, "n_out_tok": 17, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 889, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 125.02}, "parsed": "TS_ZSCORE($volume, 20)"}
+{"t": 74.0246, "kind": "log", "level": "INFO", "msg": "building parent-2 via front-end", "direction": " mean-reversion in small-caps"}
+{"t": 74.028, "kind": "step_start", "step": "proposal"}
+{"t": 75.4641, "kind": "step_end", "step": "proposal", "duration_s": 1.4354, "error": null}
+{"t": 75.4658, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.438, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 158, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 22.22}, "parsed": null}
+{"t": 75.468, "kind": "step_start", "step": "construct"}
+{"t": 76.8461, "kind": "step_end", "step": "construct", "duration_s": 1.3767, "error": null}
+{"t": 76.8489, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 1.381, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 412, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 57.94}, "parsed": null}
+{"t": 76.852, "kind": "step_start", "step": "consistency"}
+{"t": 78.2308, "kind": "step_end", "step": "consistency", "duration_s": 1.3778, "error": null}
+{"t": 78.2329, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 1.381, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 606, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 85.22}, "parsed": null}
+{"t": 78.2366, "kind": "step_start", "step": "judger"}
+{"t": 81.0981, "kind": "step_end", "step": "judger", "duration_s": 2.8605, "error": null}
+{"t": 81.0999, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.863, "latent_steps": 40, "text_len": 165, "n_out_tok": 42, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 859, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 120.8}, "parsed": "HypothesisExpr(hypothesis=\"Small-cap stocks with negative recent returns relative to their sector's mean exhibit mean-reversion potential.\", expression='TS_ZSCORE($return, 5) * $volume')"}
+{"t": 81.1059, "kind": "log", "level": "INFO", "msg": "running mutation (reflection \u2192 judger)"}
+{"t": 81.11, "kind": "step_start", "step": "mutation_reflection"}
+{"t": 83.7824, "kind": "step_end", "step": "mutation_reflection", "duration_s": 2.6709, "error": null}
+{"t": 83.7844, "kind": "agent_done", "role": "mutation_reflection", "mode": "kv_and_text", "ok": true, "duration_s": 2.674, "latent_steps": 40, "text_len": 160, "n_out_tok": 36, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1105, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 155.39}, "parsed": "MutationDiagnosis(failure_step='expression', reason='The expression is redundant (subtractscore - ts_zscore) and does not capture the intended volume relative strength mechanism.')"}
+{"t": 83.7881, "kind": "step_start", "step": "mutation_judger"}
+{"t": 86.7243, "kind": "step_end", "step": "mutation_judger", "duration_s": 2.935, "error": null}
+{"t": 86.7276, "kind": "agent_done", "role": "mutation_judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.939, "latent_steps": 40, "text_len": 136, "n_out_tok": 44, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1369, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 192.52}, "parsed": "HypothesisExpr(hypothesis='High volume relative strength (past 5 days) predicts future returns.', expression='TS_ZSCORE($volume, 5) - TS_ZSCORE($volume, 5)')"}
+{"t": 86.7311, "kind": "log", "level": "INFO", "msg": "running crossover (kv_concat \u2192 judger)"}
+{"t": 86.7427, "kind": "log", "level": "INFO", "msg": "crossover KV merged", "n_parents": 2, "merged": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1715, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 241.17}}
+{"t": 86.7466, "kind": "step_start", "step": "crossover_judger"}
+{"t": 89.6249, "kind": "step_end", "step": "crossover_judger", "duration_s": 2.8766, "error": null}
+{"t": 89.6268, "kind": "agent_done", "role": "crossover_judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.88, "latent_steps": 40, "text_len": 137, "n_out_tok": 43, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1954, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 274.78}, "parsed": "HypothesisExpr(hypothesis='Small-cap stocks with high volume-to-momentum ratio show mean-reversion in returns.', expression='TS_ZSCORE($volume, $return, 20)')"}
+{"t": 89.6511, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 89.63}

@@ -1,0 +1,51 @@
+{
+  "wall_clock_s": 186.57,
+  "summed_step_s": 73.22,
+  "steps": {
+    "proposal": {
+      "count": 1,
+      "total_s": 2.085,
+      "avg_s": 2.085,
+      "min_s": 2.085,
+      "max_s": 2.085,
+      "errors": 0
+    },
+    "construct": {
+      "count": 1,
+      "total_s": 0.818,
+      "avg_s": 0.818,
+      "min_s": 0.818,
+      "max_s": 0.818,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 1,
+      "total_s": 0.388,
+      "avg_s": 0.388,
+      "min_s": 0.388,
+      "max_s": 0.388,
+      "errors": 0
+    },
+    "judger": {
+      "count": 1,
+      "total_s": 34.877,
+      "avg_s": 34.877,
+      "min_s": 34.877,
+      "max_s": 34.877,
+      "errors": 0
+    },
+    "repair": {
+      "count": 3,
+      "total_s": 35.052,
+      "avg_s": 11.684,
+      "min_s": 0.417,
+      "max_s": 17.637,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "repair",
+    "total_s": 35.052,
+    "pct": 47.9
+  }
+}

@@ -1,0 +1,17 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260601_110353_evolution pid=30811
+[    0.01s] INFO    evolution isolation test  mode=both latent_steps=10 use_realign=True knn=True
+[   51.60s] INFO    building parent-1 via front-end
+[   55.60s] WARNING judger output unparseable  head=
+[   56.06s] WARNING repair attempt 1 unparseable
+[   56.54s] WARNING repair attempt 2 unparseable
+[   56.98s] WARNING repair attempt 3 unparseable
+[   56.98s] ERROR   repair exhausted; keeping original expression  expr=
+[   56.98s] INFO    building parent-2 via front-end  direction= mean-reversion in small-caps
+[   98.19s] WARNING repair attempt 1 unparseable
+[   98.66s] WARNING repair attempt 2 unparseable
+[  116.24s] WARNING repair attempt 3 unparseable
+[  116.24s] ERROR   repair exhausted; keeping original expression  expr=<single DSL expression>
+[  116.24s] INFO    running mutation (reflection → judger)
+[  153.81s] INFO    running crossover (kv_concat → judger)
+[  153.82s] INFO    crossover KV merged  n_parents=2 merged={'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 1123, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 157.92}
+[  189.52s] INFO    run finished  wall_clock_s=189.503
