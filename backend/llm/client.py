@@ -1017,12 +1017,14 @@ class _CoreEngine:
     def _strip_thinking(text: str) -> str:
         """Hapus blok <think>...</think> dari output Qwen3.
 
-        Menangani dua kasus:
+        Menangani tiga kasus:
         - Closed: <think>...</think> → dihapus seluruhnya
         - Unclosed: <think>... tanpa </think> (model stuck) → dihapus sampai akhir
+        - Orphan: </think> tanpa <think> pembuka → tag yatim dibuang
         """
         text = re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL)
         text = re.sub(r"<think>.*", "", text, flags=re.DOTALL)
+        text = re.sub(r"</?think>", "", text)
         return text.strip()
 
 

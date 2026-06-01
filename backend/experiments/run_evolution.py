@@ -34,6 +34,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+# Ekspresi invalid yang natural + PASTI ditolak gate. Catatan: gate
+# (factors.coder.expr_parser.parse_expression) hanya cek balance kurung,
+# operator invalid, dan grammar — TIDAK cek arity/nama fungsi. Jadi kurung
+# tak seimbang adalah kegagalan deterministik yang jelas "repairable"
+# (model tinggal menutup kurung). (Ekspresi 3-arg seperti
+# "TS_ZSCORE($volume, $return, 5)" justru LOLOS gate — arity tak dicek.)
+DEFAULT_BAD_EXPR = "TS_ZSCORE($volume, 20"
+
 
 def _show(title: str, obj) -> None:
     print(f"\n{'═'*70}\n{title}\n{'═'*70}")
@@ -59,6 +67,11 @@ def main() -> None:
     ap.add_argument("--knn", action="store_true")
     ap.add_argument("--save-parents", default=None,
                     help="dir untuk simpan kv_judger tiap parent (.pt)")
+    ap.add_argument("--test-repair", nargs="?", const=DEFAULT_BAD_EXPR, default=None,
+                    metavar="BAD_EXPR",
+                    help="paksa gate failure: jalankan _gate_and_repair pada ekspresi "
+                         "sengaja invalid (default: kurung tak seimbang yang ditolak "
+                         "gate) untuk memvalidasi agent repair secara terisolasi")
     ap.add_argument("--console", default="INFO")
     args = ap.parse_args()
 
@@ -88,6 +101,26 @@ def main() -> None:
         "repaired": p1.repaired, "gate_error": p1.gate_error,
         "kv_judger": kv_ops.kv_describe(p1.kv_judger),
     }, indent=2, default=str))
+
+    # ── 1b. (opsional) validasi repair dengan gate failure paksa ─────────────
+    # Berangkat dari kv_consist parent-1 yang pristine (sama seperti loop nyata),
+    # suntik ekspresi invalid → _gate_and_repair harus memulihkannya.
+    if args.test_repair is not None:
+        bad = args.test_repair
+        gate_ok, gate_err = front.gate(bad)
+        rl.info("forcing gate failure to test repair", bad_expr=bad,
+                gate_ok=gate_ok, gate_err=gate_err)
+        fixed, repaired, attempts, err = front._gate_and_repair(bad, p1.kv_consist)
+        _show("REPAIR VALIDATION", json.dumps({
+            "injected_bad_expr": bad,
+            "gate_rejected": not gate_ok,
+            "gate_error": gate_err,
+            "repaired": repaired,
+            "attempts": attempts,
+            "final_expression": fixed,
+            "final_gate_ok": front.gate(fixed)[0] if fixed else False,
+            "recovered": repaired and front.gate(fixed)[0],
+        }, indent=2, default=str))
 
     need_p2 = args.mode in ("crossover", "both")
     p2 = None

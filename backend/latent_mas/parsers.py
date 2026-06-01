@@ -25,23 +25,28 @@ def parse_hypothesis_expr(raw: str) -> Optional[HypothesisExpr]:
     """Ambil 'HYPOTHESIS: ...' dan 'EXPRESSION: ...' dari output judger.
 
     Toleran terhadap:
-      - label case-insensitive (HYPOTHESIS/Hypothesis/hypo, EXPRESSION/EXPR),
+      - label case-insensitive + terpotong (HYPOTHESIS/Hypothesis/hypo/HYPOTH/
+        HYPOTHS, EXPRESSION/EXPR) — model 4B sering memenggal label,
       - hypothesis multi-baris sampai ketemu baris EXPRESSION,
       - expression dibungkus backtick/quote,
-      - markdown fence.
+      - markdown fence,
+      - tag <think>/</think> yatim yang lolos dari strip.
     """
     if not raw or not raw.strip():
         return None
     text = raw.strip()
-    # buang markdown fence global
+    # buang markdown fence global + tag think yatim
     text = re.sub(r"```[a-zA-Z]*\n?", "", text).replace("```", "")
+    text = re.sub(r"</?think>", "", text)
 
+    # Label match longgar: 'hypo' diikuti word-char apa pun (hypo, hypoth,
+    # hypoths, hypothesis) lalu ':'. Idem 'expr' (expr, expression).
     hyp_m = re.search(
-        r"(?:hypothesis|hypo)\s*:\s*(.+?)(?=\n\s*(?:expression|expr)\s*:|\Z)",
+        r"hypo\w*\s*:\s*(.+?)(?=\n\s*expr\w*\s*:|\Z)",
         text, flags=re.IGNORECASE | re.DOTALL,
     )
     expr_m = re.search(
-        r"(?:expression|expr)\s*:\s*(.+?)\s*\Z",
+        r"expr\w*\s*:\s*(.+?)\s*\Z",
         text, flags=re.IGNORECASE | re.DOTALL,
     )
     if not expr_m:
@@ -74,11 +79,11 @@ def parse_repair(raw: str) -> Optional[str]:
     """
     if not raw or not raw.strip():
         return None
-    text = raw.strip()
+    text = re.sub(r"</?think>", "", raw).strip()
     first = text.splitlines()[0].strip() if text.splitlines() else ""
     if re.fullmatch(r"pass[.!]?", first, flags=re.IGNORECASE):
         return PASS_SENTINEL
-    kw = re.compile(r"^\s*(?:fixed|expr|expression|result)\s*:\s*(.+?)\s*$",
+    kw = re.compile(r"^\s*(?:fixed|expr\w*|result)\s*:\s*(.+?)\s*$",
                     flags=re.IGNORECASE)
     for line in text.splitlines():
         if not line.strip():
