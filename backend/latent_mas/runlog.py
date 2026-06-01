@@ -54,6 +54,11 @@ from typing import Any, Dict, List, Optional
 
 _LEVELS = {"DEBUG": 10, "INFO": 20, "STEP": 25, "WARNING": 30, "ERROR": 40}
 
+# Anchor default run dir ke backend/ (parent dari latent_mas/), bukan cwd —
+# supaya `python -m pipeline.factor_mining` dari root project tetap menulis
+# log di dalam backend, bukan di luar folder.
+_DEFAULT_RUN_DIR = Path(__file__).resolve().parent.parent / "latent_runs"
+
 
 @dataclass
 class _StepStat:
@@ -88,7 +93,7 @@ class RunLogger:
 
     def __init__(
         self,
-        run_dir: str | Path = "./latent_runs",
+        run_dir: str | Path = _DEFAULT_RUN_DIR,
         run_name: Optional[str] = None,
         console_level: str = "WARNING",
         tee_console_steps: bool = True,
@@ -229,7 +234,7 @@ _GLOBAL_LOCK = threading.Lock()
 
 def get_run_logger(
     run_name: Optional[str] = None,
-    run_dir: str | Path = "./latent_runs",
+    run_dir: str | Path = _DEFAULT_RUN_DIR,
     console_level: Optional[str] = None,
 ) -> RunLogger:
     """Ambil RunLogger global (buat sekali). `console_level` bisa di-override

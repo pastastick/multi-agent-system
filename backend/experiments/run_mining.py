@@ -36,6 +36,15 @@ def main() -> None:
                     help="lewati runner.develop (hanya front-end + bridge build)")
     ap.add_argument("--library", default=None, help="path factor library JSON (opsional)")
     ap.add_argument("--console", default="INFO")
+    # ── Diagnostik latent (untuk bisect collapse) ────────────────────────────
+    # Default 0/off = sama dengan run_mining yang BERHASIL. Naikkan untuk
+    # mereproduksi collapse dari factor_mining (yang pakai steps=10, realign, knn).
+    ap.add_argument("--latent-steps", type=int, default=0,
+                    help="virtual-token reasoning per call (factor_mining pakai 10)")
+    ap.add_argument("--use-realign", action="store_true",
+                    help="aktifkan realigner (factor_mining: on)")
+    ap.add_argument("--knn", action="store_true",
+                    help="aktifkan KNN KV-filter (factor_mining: on)")
     args = ap.parse_args()
 
     from llm.client import LocalLLMBackend
@@ -44,9 +53,14 @@ def main() -> None:
     from pipeline.settings import ALPHA_AGENT_FACTOR_PROP_SETTING as SETTING
 
     rl = get_run_logger(run_name="mining", console_level=args.console)
-    rl.info("new mining loop", direction=args.direction, iterations=args.iterations)
+    rl.info("new mining loop", direction=args.direction, iterations=args.iterations,
+            latent_steps=args.latent_steps, use_realign=args.use_realign, knn=args.knn)
 
-    backend = LocalLLMBackend(model_name=args.model, device=args.device)
+    backend = LocalLLMBackend(
+        model_name=args.model, device=args.device,
+        latent_steps=args.latent_steps, use_realign=args.use_realign,
+        knn_enabled=args.knn,
+    )
 
     loop = MiningLoop.from_settings(backend, SETTING, runlog=rl, use_local=True)
     loop.library_path = args.library
