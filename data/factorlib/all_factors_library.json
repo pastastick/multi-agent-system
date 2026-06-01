@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-05-26T13:40:13.332080",
-    "total_factors": 25,
+    "last_updated": "2026-06-01T04:19:17.645125",
+    "total_factors": 31,
     "version": "1.0"
   },
   "factors": {
@@ -1128,6 +1128,323 @@
         "decision": false,
         "reason": "The information coefficient (IC) is 0.0098, which is below 0.02, indicating a weak signal. The max_drawdown is -0.0618, which is not directly comparable to the fragility threshold. The factor-level diagnosis suggests that VOLATILITY_RANK may have carried some signal due to its ranking structure, while VOLUME_ZSCORE and VOL_CONDITIONAL may have contributed noise due to their complex conditional logic.",
         "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength, such as using a basic volatility rank without conditional complexity."
+      }
+    },
+    "5452752c613ddbc6": {
+      "factor_id": "5452752c613ddbc6",
+      "factor_name": "VOL_MOMENTUM_RANK",
+      "factor_expression": "RANK(TS_ZSCORE($volume, 20))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_ZSCORE($volume, 20))\" # Your output factor expression will be filled in here\n    name = \"VOL_MOMENTUM_RANK\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Rank of stocks with high volume momentum over the past 20 days.",
+      "factor_formulation": "RANK(TS_ZSCORE($volume, 20))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "00ae80f415fe49b388050c859f68b019",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/00ae80f415fe49b388050c859f68b019/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-01_03-18-44-229604",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume stocks with declining prices exhibit stronger mean-reversion in the following 10 days.\n                Concise Observation: Stocks with low volume and price declines have higher returns in the next 10 days.\n                Concise Justification: Low-volume stocks may reflect undervaluation or liquidity constraints, leading to stronger reversion to mean.\n                Concise Knowledge: When volume drops below 10% of the median and price declines, mean-reversion is more pronounced.\n                concise Specification: Use TS_MEAN(close, 10), RANK(VOLUME, 10), and TS_ZSCORE(close, 10); score = RANK(TS_ZSCORE(close, 10) - RANK(VOLUME, 10)), time horizon = 10 days.\n                ",
+        "initial_direction": "price-volume momentum factor",
+        "planning_direction": "price-volume momentum factor",
+        "created_at": "2026-06-01T04:04:14.565773"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.10090979,
+        "1day.excess_return_with_cost.information_ratio": 0.10943513,
+        "1day.excess_return_with_cost.annualized_return": 0.01215308,
+        "1day.excess_return_with_cost.std": 0.00719848,
+        "1day.excess_return_with_cost.mean": 5.106e-05,
+        "1day.excess_return_without_cost.max_drawdown": -0.09533969,
+        "1day.excess_return_without_cost.information_ratio": 0.31590464,
+        "1day.excess_return_without_cost.annualized_return": 0.03504418,
+        "1day.excess_return_without_cost.std": 0.0071907,
+        "1day.excess_return_without_cost.mean": 0.00014724,
+        "Rank ICIR": 0.19524485,
+        "Rank IC": 0.02564762,
+        "ICIR": 0.07783452,
+        "IC": 0.01029136,
+        "l2.valid": 0.99656873,
+        "l2.train": 0.99228293
+      },
+      "feedback": {
+        "observations": "The IC is 0.0103, which is lower than the SOTA result of 0.0080, indicating a weaker signal.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to a weak signal. The VOL_MOMENTUM_RANK factor may carry some signal due to its ranking structure, while the other factors may not be contributing significantly.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is 0.0103, which is below 0.02, indicating a weak signal. The max drawdown is -0.0953, which is not considered in the diagnostic framework. The hypothesis may need refinement or pivoting due to the low IC value.",
+        "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength and generalization, such as using a basic volume-based ranking mechanism."
+      }
+    },
+    "9bf0fea5eee106e8": {
+      "factor_id": "9bf0fea5eee106e8",
+      "factor_name": "VOL_PRICE_CORR",
+      "factor_expression": "TS_CORR(DELTA($close, 10), TS_MEAN($volume, 10), 10)",
+      "factor_implementation_code": "",
+      "factor_description": "Correlation between volume and price changes over the past 10 days.",
+      "factor_formulation": "TS_CORR(DELTA($close, 10), TS_MEAN($volume, 10), 10)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "101c5a70e8b84c33a98d1cb275ccf5a3"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-01_03-18-44-229604",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume stocks with declining prices exhibit stronger mean-reversion in the following 10 days.\n                Concise Observation: Stocks with low volume and price declines have higher returns in the next 10 days.\n                Concise Justification: Low-volume stocks may reflect undervaluation or liquidity constraints, leading to stronger reversion to mean.\n                Concise Knowledge: When volume drops below 10% of the median and price declines, mean-reversion is more pronounced.\n                concise Specification: Use TS_MEAN(close, 10), RANK(VOLUME, 10), and TS_ZSCORE(close, 10); score = RANK(TS_ZSCORE(close, 10) - RANK(VOLUME, 10)), time horizon = 10 days.\n                ",
+        "initial_direction": "price-volume momentum factor",
+        "planning_direction": "price-volume momentum factor",
+        "created_at": "2026-06-01T04:04:17.131297"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.10090979,
+        "1day.excess_return_with_cost.information_ratio": 0.10943513,
+        "1day.excess_return_with_cost.annualized_return": 0.01215308,
+        "1day.excess_return_with_cost.std": 0.00719848,
+        "1day.excess_return_with_cost.mean": 5.106e-05,
+        "1day.excess_return_without_cost.max_drawdown": -0.09533969,
+        "1day.excess_return_without_cost.information_ratio": 0.31590464,
+        "1day.excess_return_without_cost.annualized_return": 0.03504418,
+        "1day.excess_return_without_cost.std": 0.0071907,
+        "1day.excess_return_without_cost.mean": 0.00014724,
+        "Rank ICIR": 0.19524485,
+        "Rank IC": 0.02564762,
+        "ICIR": 0.07783452,
+        "IC": 0.01029136,
+        "l2.valid": 0.99656873,
+        "l2.train": 0.99228293
+      },
+      "feedback": {
+        "observations": "The IC is 0.0103, which is lower than the SOTA result of 0.0080, indicating a weaker signal.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to a weak signal. The VOL_MOMENTUM_RANK factor may carry some signal due to its ranking structure, while the other factors may not be contributing significantly.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is 0.0103, which is below 0.02, indicating a weak signal. The max drawdown is -0.0953, which is not considered in the diagnostic framework. The hypothesis may need refinement or pivoting due to the low IC value.",
+        "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength and generalization, such as using a basic volume-based ranking mechanism."
+      }
+    },
+    "02ad95978d38406d": {
+      "factor_id": "02ad95978d38406d",
+      "factor_name": "VOL_CONDITIONAL_ZSCORE",
+      "factor_expression": "TS_ZSCORE($volume, 30) * (COUNT($volume > TS_MEAN($volume, 10), 20) > 10 ? 1 : 0)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($volume, 30) * (COUNT($volume > TS_MEAN($volume, 10), 20) > 10 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"VOL_CONDITIONAL_ZSCORE\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Z-score of volume adjusted for low-volume days.",
+      "factor_formulation": "TS_ZSCORE($volume, 30) * (COUNT($volume > TS_MEAN($volume, 10), 20) > 10 ? 1 : 0)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "4dd7fc5a87824be0b3548801225261f7",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/4dd7fc5a87824be0b3548801225261f7/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-01_03-18-44-229604",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Low-volume stocks with declining prices exhibit stronger mean-reversion in the following 10 days.\n                Concise Observation: Stocks with low volume and price declines have higher returns in the next 10 days.\n                Concise Justification: Low-volume stocks may reflect undervaluation or liquidity constraints, leading to stronger reversion to mean.\n                Concise Knowledge: When volume drops below 10% of the median and price declines, mean-reversion is more pronounced.\n                concise Specification: Use TS_MEAN(close, 10), RANK(VOLUME, 10), and TS_ZSCORE(close, 10); score = RANK(TS_ZSCORE(close, 10) - RANK(VOLUME, 10)), time horizon = 10 days.\n                ",
+        "initial_direction": "price-volume momentum factor",
+        "planning_direction": "price-volume momentum factor",
+        "created_at": "2026-06-01T04:04:17.133647"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.10090979,
+        "1day.excess_return_with_cost.information_ratio": 0.10943513,
+        "1day.excess_return_with_cost.annualized_return": 0.01215308,
+        "1day.excess_return_with_cost.std": 0.00719848,
+        "1day.excess_return_with_cost.mean": 5.106e-05,
+        "1day.excess_return_without_cost.max_drawdown": -0.09533969,
+        "1day.excess_return_without_cost.information_ratio": 0.31590464,
+        "1day.excess_return_without_cost.annualized_return": 0.03504418,
+        "1day.excess_return_without_cost.std": 0.0071907,
+        "1day.excess_return_without_cost.mean": 0.00014724,
+        "Rank ICIR": 0.19524485,
+        "Rank IC": 0.02564762,
+        "ICIR": 0.07783452,
+        "IC": 0.01029136,
+        "l2.valid": 0.99656873,
+        "l2.train": 0.99228293
+      },
+      "feedback": {
+        "observations": "The IC is 0.0103, which is lower than the SOTA result of 0.0080, indicating a weaker signal.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to a weak signal. The VOL_MOMENTUM_RANK factor may carry some signal due to its ranking structure, while the other factors may not be contributing significantly.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is 0.0103, which is below 0.02, indicating a weak signal. The max drawdown is -0.0953, which is not considered in the diagnostic framework. The hypothesis may need refinement or pivoting due to the low IC value.",
+        "new_hypothesis": "Focus on simplifying the factor structure to enhance signal strength and generalization, such as using a basic volume-based ranking mechanism."
+      }
+    },
+    "cfe7000d131b7da0": {
+      "factor_id": "cfe7000d131b7da0",
+      "factor_name": "VOL_RANK_10",
+      "factor_expression": "RANK(TS_SUM($volume, 10))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_SUM($volume, 10))\" # Your output factor expression will be filled in here\n    name = \"VOL_RANK_10\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Rank of daily volume over the past 10 days to identify low-volume stocks.",
+      "factor_formulation": "RANK(TS_SUM($volume, 10))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "b355f74aac7448ceac137ff8a9b688be",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/b355f74aac7448ceac137ff8a9b688be/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-01_03-18-44-229604",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Stocks with declining volume and price show enhanced mean-reversion when preceded by a period of low liquidity.\n                Concise Observation: Low-volume stocks with declining prices exhibit stronger mean-reversion in the short term.\n                Concise Justification: Reduced liquidity may lead to price overshooting, creating stronger mean-reversion opportunities.\n                Concise Knowledge: When liquidity declines, mean-reversion becomes more pronounced in subsequent price movements.\n                concise Specification: Volume_rank, Price_return, 10-day lookback, mean-reversion signal\n                ",
+        "initial_direction": "price-volume momentum factor",
+        "planning_direction": "price-volume momentum factor",
+        "created_at": "2026-06-01T04:19:09.468978"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.08547572,
+        "1day.excess_return_with_cost.information_ratio": 1.07787647,
+        "1day.excess_return_with_cost.annualized_return": 0.11006243,
+        "1day.excess_return_with_cost.std": 0.00661884,
+        "1day.excess_return_with_cost.mean": 0.00046245,
+        "1day.excess_return_without_cost.max_drawdown": -0.0797049,
+        "1day.excess_return_without_cost.information_ratio": 1.350733,
+        "1day.excess_return_without_cost.annualized_return": 0.13775193,
+        "1day.excess_return_without_cost.std": 0.00661058,
+        "1day.excess_return_without_cost.mean": 0.00057879,
+        "Rank ICIR": 0.16446868,
+        "Rank IC": 0.02307865,
+        "ICIR": 0.05565764,
+        "IC": 0.00790331,
+        "l2.valid": 0.99698003,
+        "l2.train": 0.99276849
+      },
+      "feedback": {
+        "observations": "The IC is 0.0079, slightly below the SOTA result of 0.0080, indicating a very weak signal compared to the best results.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to the low IC value. The VOL_RANK_10 factor may have carried some signal, but the overall signal is too weak.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is just above 0.0079, which is below the 0.02 threshold, indicating a weak signal. The max_drawdown is -0.0797, which is less than 0.30, suggesting some robustness. However, the low IC value implies the factor may not be strong enough.",
+        "new_hypothesis": "Explore a simpler factor structure that focuses on volume and price momentum to generate a stronger and more general signal."
+      }
+    },
+    "5a89faed0eb891a8": {
+      "factor_id": "5a89faed0eb891a8",
+      "factor_name": "VOL_ZSCORE_20",
+      "factor_expression": "TS_ZSCORE($volume, 20)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($volume, 20)\" # Your output factor expression will be filled in here\n    name = \"VOL_ZSCORE_20\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Z-score of daily volume over the past 20 days to normalize low-volume stocks.",
+      "factor_formulation": "TS_ZSCORE($volume, 20)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "9be0752168254aa7b30682f09a7f2caa",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/9be0752168254aa7b30682f09a7f2caa/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-01_03-18-44-229604",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Stocks with declining volume and price show enhanced mean-reversion when preceded by a period of low liquidity.\n                Concise Observation: Low-volume stocks with declining prices exhibit stronger mean-reversion in the short term.\n                Concise Justification: Reduced liquidity may lead to price overshooting, creating stronger mean-reversion opportunities.\n                Concise Knowledge: When liquidity declines, mean-reversion becomes more pronounced in subsequent price movements.\n                concise Specification: Volume_rank, Price_return, 10-day lookback, mean-reversion signal\n                ",
+        "initial_direction": "price-volume momentum factor",
+        "planning_direction": "price-volume momentum factor",
+        "created_at": "2026-06-01T04:19:12.174518"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.08547572,
+        "1day.excess_return_with_cost.information_ratio": 1.07787647,
+        "1day.excess_return_with_cost.annualized_return": 0.11006243,
+        "1day.excess_return_with_cost.std": 0.00661884,
+        "1day.excess_return_with_cost.mean": 0.00046245,
+        "1day.excess_return_without_cost.max_drawdown": -0.0797049,
+        "1day.excess_return_without_cost.information_ratio": 1.350733,
+        "1day.excess_return_without_cost.annualized_return": 0.13775193,
+        "1day.excess_return_without_cost.std": 0.00661058,
+        "1day.excess_return_without_cost.mean": 0.00057879,
+        "Rank ICIR": 0.16446868,
+        "Rank IC": 0.02307865,
+        "ICIR": 0.05565764,
+        "IC": 0.00790331,
+        "l2.valid": 0.99698003,
+        "l2.train": 0.99276849
+      },
+      "feedback": {
+        "observations": "The IC is 0.0079, slightly below the SOTA result of 0.0080, indicating a very weak signal compared to the best results.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to the low IC value. The VOL_RANK_10 factor may have carried some signal, but the overall signal is too weak.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is just above 0.0079, which is below the 0.02 threshold, indicating a weak signal. The max_drawdown is -0.0797, which is less than 0.30, suggesting some robustness. However, the low IC value implies the factor may not be strong enough.",
+        "new_hypothesis": "Explore a simpler factor structure that focuses on volume and price momentum to generate a stronger and more general signal."
+      }
+    },
+    "cf5b8f822d95b1b1": {
+      "factor_id": "cf5b8f822d95b1b1",
+      "factor_name": "VOL_COND_30",
+      "factor_expression": "(($close < $open) && (TS_ZSCORE($volume, 30) < -1)) ? TS_ZSCORE($volume, 30) : 0",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(($close < $open) && (TS_ZSCORE($volume, 30) < -1)) ? TS_ZSCORE($volume, 30) : 0\" # Your output factor expression will be filled in here\n    name = \"VOL_COND_30\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Conditional z-score of volume, emphasizing low-volume days with high price decline.",
+      "factor_formulation": "(($close < $open) && (TS_ZSCORE($volume, 30) < -1)) ? TS_ZSCORE($volume, 30) : 0",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "b06300375e704d819c8232dc8b48d7b8",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/b06300375e704d819c8232dc8b48d7b8/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-01_03-18-44-229604",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Hypothesis: Stocks with declining volume and price show enhanced mean-reversion when preceded by a period of low liquidity.\n                Concise Observation: Low-volume stocks with declining prices exhibit stronger mean-reversion in the short term.\n                Concise Justification: Reduced liquidity may lead to price overshooting, creating stronger mean-reversion opportunities.\n                Concise Knowledge: When liquidity declines, mean-reversion becomes more pronounced in subsequent price movements.\n                concise Specification: Volume_rank, Price_return, 10-day lookback, mean-reversion signal\n                ",
+        "initial_direction": "price-volume momentum factor",
+        "planning_direction": "price-volume momentum factor",
+        "created_at": "2026-06-01T04:19:14.902540"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.08547572,
+        "1day.excess_return_with_cost.information_ratio": 1.07787647,
+        "1day.excess_return_with_cost.annualized_return": 0.11006243,
+        "1day.excess_return_with_cost.std": 0.00661884,
+        "1day.excess_return_with_cost.mean": 0.00046245,
+        "1day.excess_return_without_cost.max_drawdown": -0.0797049,
+        "1day.excess_return_without_cost.information_ratio": 1.350733,
+        "1day.excess_return_without_cost.annualized_return": 0.13775193,
+        "1day.excess_return_without_cost.std": 0.00661058,
+        "1day.excess_return_without_cost.mean": 0.00057879,
+        "Rank ICIR": 0.16446868,
+        "Rank IC": 0.02307865,
+        "ICIR": 0.05565764,
+        "IC": 0.00790331,
+        "l2.valid": 0.99698003,
+        "l2.train": 0.99276849
+      },
+      "feedback": {
+        "observations": "The IC is 0.0079, slightly below the SOTA result of 0.0080, indicating a very weak signal compared to the best results.",
+        "hypothesis_evaluation": "The results partially confirm the hypothesis due to the low IC value. The VOL_RANK_10 factor may have carried some signal, but the overall signal is too weak.",
+        "decision": false,
+        "reason": "The information coefficient (IC) is just above 0.0079, which is below the 0.02 threshold, indicating a weak signal. The max_drawdown is -0.0797, which is less than 0.30, suggesting some robustness. However, the low IC value implies the factor may not be strong enough.",
+        "new_hypothesis": "Explore a simpler factor structure that focuses on volume and price momentum to generate a stronger and more general signal."
       }
     }
   }

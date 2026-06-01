@@ -1,0 +1,39 @@
+{"t": 0.0107, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "latent_runs/20260601_025422_mining", "pid": 1777}
+{"t": 0.012, "kind": "log", "level": "INFO", "msg": "new mining loop", "direction": "overnight gap reversal", "iterations": 2}
+{"t": 129.4371, "kind": "log", "level": "INFO", "msg": "iteration 1/2", "direction": "overnight gap reversal"}
+{"t": 129.4437, "kind": "step_start", "step": "proposal"}
+{"t": 131.0369, "kind": "step_end", "step": "proposal", "duration_s": 1.5918, "error": null}
+{"t": 131.0379, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.594, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 115, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 16.17}, "parsed": null}
+{"t": 131.0406, "kind": "step_start", "step": "construct"}
+{"t": 131.3285, "kind": "step_end", "step": "construct", "duration_s": 0.2873, "error": null}
+{"t": 131.3293, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.289, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 329, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 46.27}, "parsed": null}
+{"t": 131.3308, "kind": "step_start", "step": "consistency"}
+{"t": 131.4015, "kind": "step_end", "step": "consistency", "duration_s": 0.07, "error": null}
+{"t": 131.4022, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.071, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 483, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 67.92}, "parsed": null}
+{"t": 131.42, "kind": "step_start", "step": "judger"}
+{"t": 134.0443, "kind": "step_end", "step": "judger", "duration_s": 2.6236, "error": null}
+{"t": 134.0459, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.625, "text_len": 164, "n_out_tok": 43, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 696, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 97.88}, "parsed": "HypothesisExpr(hypothesis=\"Overnight gap reversal is predicted by the relative volume of the opening trade compared to the previous day's volume.\", expression='TS_ZSCORE($volume, 1)')"}
+{"t": 134.8395, "kind": "step_start", "step": "backtest"}
+{"t": 775.9873, "kind": "step_end", "step": "backtest", "duration_s": 641.1468, "error": null}
+{"t": 776.1292, "kind": "step_start", "step": "feedback"}
+{"t": 787.2158, "kind": "step_end", "step": "feedback", "duration_s": 11.0851, "error": null}
+{"t": 787.2175, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 11.088, "text_len": 1405, "n_out_tok": 278, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1186, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 166.78}, "parsed": null}
+{"t": 787.2209, "kind": "log", "level": "INFO", "msg": "iteration 2/2", "direction": "overnight gap reversal"}
+{"t": 787.2271, "kind": "step_start", "step": "proposal"}
+{"t": 787.3001, "kind": "step_end", "step": "proposal", "duration_s": 0.0714, "error": null}
+{"t": 787.3013, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.074, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 150, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 21.09}, "parsed": null}
+{"t": 787.3041, "kind": "step_start", "step": "construct"}
+{"t": 787.3498, "kind": "step_end", "step": "construct", "duration_s": 0.0442, "error": null}
+{"t": 787.3515, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.047, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 364, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 51.19}, "parsed": null}
+{"t": 787.3539, "kind": "step_start", "step": "consistency"}
+{"t": 787.3988, "kind": "step_end", "step": "consistency", "duration_s": 0.0437, "error": null}
+{"t": 787.4004, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.046, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 518, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 72.84}, "parsed": null}
+{"t": 787.4045, "kind": "step_start", "step": "judger"}
+{"t": 789.4149, "kind": "step_end", "step": "judger", "duration_s": 2.0094, "error": null}
+{"t": 789.4164, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.012, "text_len": 184, "n_out_tok": 49, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 731, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 102.8}, "parsed": "HypothesisExpr(hypothesis=\"Overnight gap reversal is predicted by the ratio of opening trade volume to previous day's volume and the previous day's return.\", expression='TS_ZSCORE($volume, 1) / $return')"}
+{"t": 790.118, "kind": "step_start", "step": "backtest"}
+{"t": 1162.2065, "kind": "step_end", "step": "backtest", "duration_s": 372.0855, "error": null}
+{"t": 1162.348, "kind": "step_start", "step": "feedback"}
+{"t": 1175.1003, "kind": "step_end", "step": "feedback", "duration_s": 12.7484, "error": null}
+{"t": 1175.1019, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 12.754, "text_len": 1528, "n_out_tok": 325, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1582, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 222.47}, "parsed": null}
+{"t": 1175.1225, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 1175.104}

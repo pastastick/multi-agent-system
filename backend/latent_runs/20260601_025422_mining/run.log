@@ -1,0 +1,5 @@
+[    0.01s] INFO    run started  run_dir=latent_runs/20260601_025422_mining pid=1777
+[    0.01s] INFO    new mining loop  direction=overnight gap reversal iterations=2
+[  129.44s] INFO    iteration 1/2  direction=overnight gap reversal
+[  787.22s] INFO    iteration 2/2  direction=overnight gap reversal
+[ 1175.12s] INFO    run finished  wall_clock_s=1175.104
