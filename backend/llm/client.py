@@ -807,6 +807,7 @@ class _CoreEngine:
                 percentage=self.knn_percentage,
                 min_keep=self.knn_min_keep,
                 strategy=self.knn_strategy,
+                model=self.model,
             )
 
         past_len = _past_length(past_kv)
@@ -890,6 +891,7 @@ class _CoreEngine:
                 percentage=self.knn_percentage,
                 min_keep=self.knn_min_keep,
                 strategy=self.knn_strategy,
+                model=self.model,
             )
 
         past_len      = _past_length(past_kv)
