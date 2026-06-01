@@ -1,0 +1,4 @@
+[    0.03s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260601_103036_mining pid=22697
+[    0.04s] INFO    new mining loop  direction=price-volume momentum forecast iterations=1 latent_steps=20 use_realign=True knn=False
+[  101.09s] INFO    iteration 1/1  direction=price-volume momentum forecast
+[  548.35s] INFO    run finished  wall_clock_s=548.335

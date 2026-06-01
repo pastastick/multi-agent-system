@@ -1,0 +1,6 @@
+[    0.01s] INFO    run started  run_dir=latent_runs/20260601_100119_mining pid=14180
+[    0.01s] INFO    new mining loop  direction=price-volume momentum iterations=2
+[  108.23s] INFO    iteration 1/2  direction=price-volume momentum
+[  560.23s] INFO    iteration 2/2  direction=price-volume momentum
+[  811.96s] ERROR   backtest failed  err=FactorEmptyError('No valid factor data found to merge after manual execution attempt.')
+[  821.67s] INFO    run finished  wall_clock_s=821.652

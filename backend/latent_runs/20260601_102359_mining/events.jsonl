@@ -1,0 +1,22 @@
+{"t": 0.0102, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260601_102359_mining", "pid": 20829}
+{"t": 0.0118, "kind": "log", "level": "INFO", "msg": "new mining loop", "direction": "price-volume momentum forecast", "iterations": 1, "latent_steps": 10, "use_realign": true, "knn": false}
+{"t": 92.4405, "kind": "log", "level": "WARNING", "msg": "backtest disabled (--no-backtest)"}
+{"t": 92.4429, "kind": "log", "level": "INFO", "msg": "iteration 1/1", "direction": "price-volume momentum forecast"}
+{"t": 92.4479, "kind": "step_start", "step": "proposal"}
+{"t": 94.3998, "kind": "step_end", "step": "proposal", "duration_s": 1.9512, "error": null}
+{"t": 94.4009, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.953, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 125, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 17.58}, "parsed": null}
+{"t": 94.4032, "kind": "step_start", "step": "construct"}
+{"t": 94.997, "kind": "step_end", "step": "construct", "duration_s": 0.5926, "error": null}
+{"t": 94.9981, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.595, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 349, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 49.08}, "parsed": null}
+{"t": 95.0001, "kind": "step_start", "step": "consistency"}
+{"t": 95.3808, "kind": "step_end", "step": "consistency", "duration_s": 0.3796, "error": null}
+{"t": 95.3819, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.382, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 513, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 72.14}, "parsed": null}
+{"t": 95.3852, "kind": "step_start", "step": "judger"}
+{"t": 98.1721, "kind": "step_end", "step": "judger", "duration_s": 2.7793, "error": null}
+{"t": 98.1744, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.789, "latent_steps": 10, "text_len": 159, "n_out_tok": 48, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 736, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 103.5}, "parsed": "HypothesisExpr(hypothesis='Stock returns are predicted by the rank of recent volume relative to its standard deviation.', expression='TS_RANK($volume, 20) / TS_STD($volume, 20)')"}
+{"t": 98.9603, "kind": "step_start", "step": "backtest"}
+{"t": 98.9611, "kind": "step_end", "step": "backtest", "duration_s": 0.0, "error": null}
+{"t": 99.0433, "kind": "step_start", "step": "feedback"}
+{"t": 109.062, "kind": "step_end", "step": "feedback", "duration_s": 10.0176, "error": null}
+{"t": 109.0632, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 10.019, "latent_steps": 10, "text_len": 1316, "n_out_tok": 274, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 909, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 127.83}, "parsed": null}
+{"t": 109.0791, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 109.064}

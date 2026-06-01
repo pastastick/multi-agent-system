@@ -1,0 +1,59 @@
+{
+  "wall_clock_s": 548.335,
+  "summed_step_s": 446.228,
+  "steps": {
+    "proposal": {
+      "count": 1,
+      "total_s": 2.237,
+      "avg_s": 2.237,
+      "min_s": 2.237,
+      "max_s": 2.237,
+      "errors": 0
+    },
+    "construct": {
+      "count": 1,
+      "total_s": 0.866,
+      "avg_s": 0.866,
+      "min_s": 0.866,
+      "max_s": 0.866,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 1,
+      "total_s": 0.667,
+      "avg_s": 0.667,
+      "min_s": 0.667,
+      "max_s": 0.667,
+      "errors": 0
+    },
+    "judger": {
+      "count": 1,
+      "total_s": 2.726,
+      "avg_s": 2.726,
+      "min_s": 2.726,
+      "max_s": 2.726,
+      "errors": 0
+    },
+    "backtest": {
+      "count": 1,
+      "total_s": 429.007,
+      "avg_s": 429.007,
+      "min_s": 429.007,
+      "max_s": 429.007,
+      "errors": 0
+    },
+    "feedback": {
+      "count": 1,
+      "total_s": 10.725,
+      "avg_s": 10.725,
+      "min_s": 10.725,
+      "max_s": 10.725,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "backtest",
+    "total_s": 429.007,
+    "pct": 96.1
+  }
+}
