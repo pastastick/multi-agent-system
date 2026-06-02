@@ -90,8 +90,11 @@ def main() -> None:
         knn_enabled=args.knn,
     )
     front = FrontEndPipeline(backend, runlog=rl)
-    # EvolutionOps berbagi agents yang sama (seperti di loop).
-    evo = EvolutionOps(backend, runlog=rl, agents=front.agents)
+    # EvolutionOps berbagi agents yang sama (seperti di loop). debug=True supaya
+    # guidance KV (reflection/crossover, kv_only) di-decode jadi teks + disimpan
+    # ke <rl.dir>/evo_kv — inilah cara melihat "jawaban versi teks" agent kv_only.
+    evo = EvolutionOps(backend, runlog=rl, agents=front.agents,
+                       debug=True, debug_dir=rl.dir / "evo_kv")
 
     # ── 1. buat parent-1 (dan parent-2 untuk crossover) ──────────────────────
     rl.info("building parent-1 via front-end")
@@ -110,7 +113,7 @@ def main() -> None:
         gate_ok, gate_err = front.gate(bad)
         rl.info("forcing gate failure to test repair", bad_expr=bad,
                 gate_ok=gate_ok, gate_err=gate_err)
-        fixed, repaired, attempts, err = front._gate_and_repair(bad, p1.kv_consist)
+        fixed, repaired, attempts, err, _kv = front._gate_and_repair(bad, p1.kv_consist)
         _show("REPAIR VALIDATION", json.dumps({
             "injected_bad_expr": bad,
             "gate_rejected": not gate_ok,
@@ -139,35 +142,41 @@ def main() -> None:
             kv_ops.kv_save(p2.kv_judger, Path(args.save_parents) / "parent2_kv.pt")
         rl.info("saved parent KVs", dir=args.save_parents)
 
-    # ── 2. mutation ──────────────────────────────────────────────────────────
+    # ── 2. mutation: reflect (kv_only) → RE-ENTER front-end (seed=guidance KV) ─
     if args.mode in ("mutation", "both"):
-        rl.info("running mutation (reflection → judger)")
-        evo_out = evo.mutate(
-            parent_kv_feedback=p1.kv_judger,
+        rl.info("running mutation (reflect → re-enter ORIGINAL)")
+        seed = evo.reflect(
+            parent_kv=p1.kv_final,
             parent_hypothesis=p1.hypothesis,
             parent_expression=p1.expression,
             parent_feedback=args.feedback,
             backtest_summary=args.backtest_summary,
         )
+        child = front.run(direction=args.direction, seed_kv=seed.kv)
         _show("MUTATION RESULT", json.dumps({
             "parent_expr": p1.expression,
-            "mutated_hypothesis": getattr(evo_out, "hypothesis", None),
-            "mutated_expression": getattr(evo_out, "expression", None),
-            "raw_text": getattr(evo_out, "raw_text", "")[:300],
-            "ok": evo_out is not None and bool(getattr(evo_out, "expression", "")),
+            "guidance_kv": kv_ops.kv_describe(seed.kv),
+            "guidance_debug_text": (seed.debug_text or "")[:300],
+            "mutated_hypothesis": child.hypothesis,
+            "mutated_expression": child.expression,
+            "repaired": child.repaired,
+            "ok": bool(child.expression),
         }, indent=2, default=str))
 
-    # ── 3. crossover ─────────────────────────────────────────────────────────
+    # ── 3. crossover: synthesize (kv_concat→kv_only) → RE-ENTER front-end ──────
     if args.mode in ("crossover", "both") and p2 is not None:
-        rl.info("running crossover (kv_concat → judger)")
-        cross_out = evo.crossover(parent_kvs=[p1.kv_judger, p2.kv_judger])
+        rl.info("running crossover (synthesize → re-enter ORIGINAL)")
+        seed = evo.synthesize([p1.kv_final, p2.kv_final])
+        child = front.run(direction=args.direction, seed_kv=seed.kv)
         _show("CROSSOVER RESULT", json.dumps({
             "parent1_expr": p1.expression,
             "parent2_expr": p2.expression,
-            "crossover_hypothesis": getattr(cross_out, "hypothesis", None),
-            "crossover_expression": getattr(cross_out, "expression", None),
-            "raw_text": getattr(cross_out, "raw_text", "")[:300],
-            "ok": cross_out is not None and bool(getattr(cross_out, "expression", "")),
+            "guidance_kv": kv_ops.kv_describe(seed.kv),
+            "guidance_debug_text": (seed.debug_text or "")[:300],
+            "crossover_hypothesis": child.hypothesis,
+            "crossover_expression": child.expression,
+            "repaired": child.repaired,
+            "ok": bool(child.expression),
         }, indent=2, default=str))
 
     rl.finalize()
