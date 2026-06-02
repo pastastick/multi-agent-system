@@ -83,7 +83,7 @@ agents:
     role: judger
     mode: kv_and_text
     temperature: 0.6
-    parser: hypothesis_expr
+    parser: hypothesis_exprs          # multi-ekspresi: 1 hipotesis → N ekspresi (semua lolos → LightGBM combined)
     max_new_tokens: 1024
     system: |-
       You are the Judger — the only agent that produces the final answer. The
@@ -207,7 +207,7 @@ agents:
 
   mutation_reflection:
     role: mutation_reflection
-    mode: kv_and_text
+    mode: kv_only          # FLOW: diagnosa hidup di laten → guidance KV menyemai re-entry ORIGINAL
     temperature: 0.5
     parser: mutation_diagnosis
     max_new_tokens: 512
@@ -255,7 +255,7 @@ agents:
 
   crossover_judger:
     role: crossover_judger
-    mode: kv_and_text
+    mode: kv_only          # FLOW: sintesis hidup di laten → guidance KV menyemai re-entry ORIGINAL
     temperature: 0.8
     parser: hypothesis_expr
     max_new_tokens: 1024
