@@ -21,6 +21,87 @@ class HypothesisExpr:
     expression: str
 
 
+@dataclass
+class HypothesisExprs:
+    """1 hipotesis → N ekspresi (judger boleh keluarkan banyak; semua yang lolos
+    regulator masuk ke model LightGBM gabungan)."""
+    hypothesis: str
+    expressions: list
+
+
+def parse_hypothesis_exprs(raw: str) -> Optional[HypothesisExprs]:
+    """Versi multi dari parse_hypothesis_expr: kumpulkan SEMUA baris EXPRESSION.
+
+    Toleran sama seperti versi tunggal (label terpotong, backtick, fence, <think>).
+    Mengembalikan list ekspresi unik (urutan dipertahankan). Untuk output judger
+    single-expr lama, list berisi 1 — backward-compatible.
+    """
+    if not raw or not raw.strip():
+        return None
+    text = raw.strip()
+    text = re.sub(r"```[a-zA-Z]*\n?", "", text).replace("```", "")
+    text = re.sub(r"</?think>", "", text)
+
+    hyp_m = re.search(
+        r"hypo\w*\s*:\s*(.+?)(?=\n\s*expr\w*\s*\d*\s*:|\Z)",
+        text, flags=re.IGNORECASE | re.DOTALL,
+    )
+    hypothesis = hyp_m.group(1).strip() if hyp_m else ""
+
+    exprs: list = []
+    # tiap baris 'EXPR...:' / 'EXPRESSION 2:' → satu ekspresi (sampai akhir baris)
+    for m in re.finditer(r"expr\w*\s*\d*\s*:\s*(.+)", text, flags=re.IGNORECASE):
+        line = m.group(1).strip()
+        line = _balance_parens(_strip_wrappers(_extract_code_span(line)))
+        if line:
+            exprs.append(line)
+
+    uniq = _dedup_exprs(exprs)
+    if not uniq:
+        return None
+    return HypothesisExprs(hypothesis=hypothesis, expressions=uniq)
+
+
+def parse_repair_multi(raw: str) -> "tuple[bool, list]":
+    """Repair versi multi → (is_pass, expressions).
+
+    is_pass=True bila model menjawab 'PASS' (ekspresi dianggap valid apa adanya).
+    Selain itu kumpulkan semua 'FIXED: <expr>' / 'EXPR..: <expr>' → list.
+    """
+    if not raw or not raw.strip():
+        return False, []
+    text = re.sub(r"</?think>", "", raw).strip()
+    lines = text.splitlines()
+    first = lines[0].strip() if lines else ""
+    if re.fullmatch(r"pass[.!]?", first, flags=re.IGNORECASE):
+        return True, []
+    exprs: list = []
+    kw = re.compile(r"^\s*(?:fixed|expr\w*|result)\s*\d*\s*:\s*(.+?)\s*$",
+                    flags=re.IGNORECASE)
+    for line in lines:
+        m = kw.match(line)
+        if m:
+            e = _balance_parens(_strip_wrappers(_extract_code_span(m.group(1).strip())))
+            if e:
+                exprs.append(e)
+    if not exprs:  # fallback: span ber-backtick
+        for m in re.finditer(r"`([^`]+)`", text):
+            e = _balance_parens(_strip_wrappers(m.group(1).strip()))
+            if e:
+                exprs.append(e)
+    return False, _dedup_exprs(exprs)
+
+
+def _dedup_exprs(exprs: list) -> list:
+    seen, out = set(), []
+    for e in exprs:
+        k = e.replace(" ", "").lower()
+        if k and k not in seen:
+            seen.add(k)
+            out.append(e)
+    return out
+
+
 def parse_hypothesis_expr(raw: str) -> Optional[HypothesisExpr]:
     """Ambil 'HYPOTHESIS: ...' dan 'EXPRESSION: ...' dari output judger.
 
@@ -166,6 +247,7 @@ def _balance_parens(expr: str) -> str:
 # registry untuk lookup by name dari YAML
 PARSERS = {
     "hypothesis_expr": parse_hypothesis_expr,
+    "hypothesis_exprs": parse_hypothesis_exprs,
     "repair": parse_repair,
     "mutation_diagnosis": parse_mutation_diagnosis,
     "passthrough": parse_passthrough,

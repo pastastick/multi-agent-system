@@ -36,7 +36,7 @@ _EXPORTS = {
     "FrontEndPipeline": "latent_mas.pipeline",
     "FrontEndOutput": "latent_mas.pipeline",
     "EvolutionOps": "latent_mas.pipeline",
-    "EvolutionOutput": "latent_mas.pipeline",
+    "EvolutionSeed": "latent_mas.pipeline",
     "default_quality_gate": "latent_mas.pipeline",
 }
 
