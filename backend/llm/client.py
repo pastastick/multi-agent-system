@@ -16,6 +16,7 @@ import sqlite3
 import threading
 import time
 import uuid
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional, Tuple, Union
@@ -652,6 +653,24 @@ class _CoreEngine:
         self.enable_thinking = enable_thinking
 
         # KNN-based KV-cache filtering (diterapkan pada past_kv dari step sebelumnya)
+        # GUARD: KNN tidak kompatibel dengan latent virtual tokens. Saat
+        # latent_steps > 0, setiap agent kv_only menambah N virtual token ke KV.
+        # KNN lalu memfilter campuran real+virtual token; re-rotasi RoPE
+        # (commit 53f7397) memulihkan posisi token NYATA tapi TIDAK posisi
+        # relatif virtual token → distorsi terakumulasi tiap pass → collapse
+        # output (judger EOS dini, evolution agent degenerate "1 1 1..."). Lihat
+        # konteks.txt Temuan #5. Matikan otomatis agar kombinasi ini tak
+        # tersulut tanpa sengaja.
+        if latent_steps > 0 and knn_enabled:
+            warnings.warn(
+                "KNN dinonaktifkan otomatis: tidak kompatibel dengan "
+                "latent_steps > 0 (RoPE virtual-token desync, lihat "
+                "konteks.txt Temuan #5).",
+                RuntimeWarning, stacklevel=2,
+            )
+            print("[CoreEngine] KNN auto-disabled (latent_steps > 0; "
+                  "incompatible with virtual tokens)")
+            knn_enabled = False
         self.knn_enabled    = knn_enabled
         self.knn_percentage = knn_percentage
         self.knn_min_keep   = knn_min_keep
