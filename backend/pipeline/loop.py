@@ -67,6 +67,12 @@ def stop_event_check(func):
 #* Metaclass adalah class yang membuat class lain. 
 # LoopMeta otomatis mengumpulkan method publik dari sebuah class dan mendaftarkannya sebagai steps.
 
+# SOTA tracker deterministik (per-proses; reset tiap run). Dipakai
+# AlphaAgentLoop._decide_replace_sota untuk keputusan replace-best-result tanpa LLM.
+# Konsisten dengan fresh_start TrajectoryPool: SOTA mulai kosong tiap proses.
+_SOTA_BEST: dict[str, Any] = {"metric": None}
+
+
 class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
     skip_loop_error = (FactorEmptyError,)
 
@@ -87,6 +93,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         "_runlog",       # RunLogger (file handles)
         "_evo",          # EvolutionOps (holds backend + agents)
         "_parent_trajectories",  # parent KV tensors (GPU)
+        "_kv_feedback",  # terminal KV (feedback) → diwariskan ke evolution round
     )
     
     @measure_time  #log berapa lama waktu yang dibutuhkan untuk inisialisasi loop
@@ -189,9 +196,20 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     + external_context
                 )
             self._effective_direction = effective_direction or ""
+            # Direction TANPA strategy_suffix text-operator lama — dipakai evolution
+            # re-entry, yang guidance-nya datang dari seed_kv (reflect/synthesize),
+            # BUKAN teks suffix. Tanpa ini, suffix lama ("buat ortogonal") bentrok
+            # dengan guidance KV ("perbaiki node k") dan mengkontaminasi propose.
+            base_direction = potential_direction or ""
+            if external_context:
+                base_direction = (base_direction
+                                  + "\n\n[External Macro Context]\n" + external_context)
+            self._base_direction = base_direction
             # State threaded across the 5 LoopBase steps within one iteration.
             self._front_out = None       # FrontEndOutput dari step propose
-            self._prior_feedback = ""    # New Hypothesis dari feedback → propose berikutnya
+            # feedback kini murni evaluatif (tak mengarang hipotesis) → selalu "".
+            # Dipertahankan agar tanda tangan FrontEndPipeline.run tetap kompatibel.
+            self._prior_feedback = ""
             self._last_factor_name = ""  # diisi _build_experiment, dipakai feedback block
             # Parent trajectories (objek, BUKAN hanya id) untuk EvolutionOps —
             # hanya tersedia di mode sequential (KV tensor tak bisa cross-process).
@@ -212,20 +230,33 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 # FrontEndPipeline; feedback via agent. Substrat backtest/library
                 # tetap dipakai ulang (lihat _build_experiment & feedback()).
                 from latent_mas.runlog import get_run_logger
-                from latent_mas.pipeline import (
-                    FrontEndPipeline, EvolutionOps, default_quality_gate,
-                )
+                from latent_mas.pipeline import FrontEndPipeline, EvolutionOps
                 self._latent = True
                 self._runlog = get_run_logger(
                     run_name=f"loop_{evolution_phase}_{round_idx}_{direction_id}"
                 )
+                # quality_gate=None + use_regulator=True → FactorRegulator PENUH
+                # (complexity SL/PC/ER + redundansi alpha-zoo), bukan sekadar sintaks.
                 self._front = FrontEndPipeline(
-                    llm_backend, runlog=self._runlog,
-                    quality_gate=default_quality_gate, max_repair_attempts=3,
+                    llm_backend, runlog=self._runlog, max_repair_attempts=3,
                 )
+                # Terminal KV (feedback) — diisi _run_latent_feedback, diwariskan
+                # ke evolution round berikutnya via _get_trajectory_data.
+                self._kv_feedback = None
+                # Debug evolution: bila LATENTMAS_EVO_DEBUG aktif, guidance KV
+                # (reflection/crossover, keduanya kv_only) di-decode jadi teks +
+                # disimpan .pt/.txt di <runlog.dir>/evo_kv untuk inspeksi.
+                import os as _os
+                _evo_debug = _os.environ.get("LATENTMAS_EVO_DEBUG", "").lower() in (
+                    "1", "true", "yes", "on")
+                _evo_dbg_dir = None
+                if _evo_debug:
+                    _evo_dbg_dir = self._runlog.dir / "evo_kv"
+                    _evo_dbg_dir.mkdir(parents=True, exist_ok=True)
                 # EvolutionOps berbagi agents (& backend) yang sama dengan front-end.
                 self._evo = EvolutionOps(
                     llm_backend, runlog=self._runlog, agents=self._front.agents,
+                    debug=_evo_debug, debug_dir=_evo_dbg_dir,
                 )
                 # Atribut path-standar di-set None agar pickle-exclusion & getattr aman.
                 self.hypothesis_generator = None
@@ -304,8 +335,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
         # ── NEW LatentMAS path: phase menentukan generator ──────────────────
         #   original → FrontEndPipeline (proposal→construct→consistency→judger)
-        #   mutation → EvolutionOps.mutate  (reflection→judger, baca parent KV)
-        #   crossover→ EvolutionOps.crossover (kv_concat parent → judger)
+        #   mutation → reflect (kv_only) → RE-ENTER FrontEndPipeline (seed=guidance KV)
+        #   crossover→ synthesize (kv_concat→kv_only) → RE-ENTER FrontEndPipeline
         if getattr(self, "_latent", False):
             phase = getattr(self, "evolution_phase", "original")
             parents = getattr(self, "_parent_trajectories", []) or []
@@ -324,10 +355,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             self._last_hypothesis = front.hypothesis
             logger.info(
                 f"[LatentMAS] phase={phase}: hypo_len={len(front.hypothesis)}, "
-                f"expr={front.expression!r}, repaired={front.repaired}, "
-                f"gate_error={front.gate_error or 'none'}"
+                f"n_expr={len(front.expressions)}, exprs={front.expressions!r}, "
+                f"repaired={front.repaired}, gate_error={front.gate_error or 'none'}"
             )
-            if not front.expression:
+            if not front.expressions:
                 raise FactorEmptyError("Front-end produced no expression")
             return front.hypothesis
 
@@ -358,11 +389,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         """Construct multiple factors from the hypothesis."""
         _mon = _get_monitor() if _HAS_MONITOR else None
 
-        # ── NEW LatentMAS path: bridge (hypothesis, expression) → QlibFactorExperiment
+        # ── NEW LatentMAS path: bridge (hypothesis, N expressions) → QlibFactorExperiment
         if getattr(self, "_latent", False):
             with logger.tag("r"):
                 front = self._front_out
-                exp = self._build_experiment(front.hypothesis, front.expression)
+                exp = self._build_experiment(front.hypothesis, front.expressions)
             logger.log_object(exp.sub_tasks, tag="experiment generation")
             return exp
 
@@ -480,10 +511,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         self._pipeline_kv = None
         self._coder_kv = None  # reset per-iteration, set ulang di factor_calculate berikutnya
 
-        # Latent: simpan "New Hypothesis" sebagai konteks teks untuk propose berikutnya
-        # (carryover lewat teks, bukan KV chain — konsisten dengan reset di atas).
-        if getattr(self, "_latent", False) and isinstance(feedback, dict):
-            self._prior_feedback = feedback.get("New Hypothesis", "") or ""
+        # Latent: feedback kini MURNI EVALUATIF (tak mengarang New Hypothesis) —
+        # generasi arah berikutnya adalah tugas mutation/crossover. Maka tidak ada
+        # carryover hipotesis ke propose; biarkan kosong.
+        if getattr(self, "_latent", False):
+            self._prior_feedback = ""
 
         #* Auto-save factors to unified factor library
         try:
@@ -573,24 +605,26 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             "round_idx": self.round_idx,
             "hypothesis_embedding": hypothesis_embedding,
             # KV-cache untuk evolution (mutation/crossover round berikutnya).
-            # Latent: kv_judger dari front-end terakhir (membawa seluruh rantai
-            #   proposal→construct→consistency→judger). _pipeline_kv sendiri
-            #   sudah di-reset None tiap akhir feedback.
+            # Latent: kv_feedback = node TERMINAL trajectory (membawa seluruh rantai
+            #   proposal→construct→consistency→judger→[repair]→feedback). Sesuai τ
+            #   paper yang berakhir di node feedback/reward. reflection & crossover
+            #   round berikutnya mereflektsikan node terminal ini.
             # Standar: _pipeline_kv lama.
             "pipeline_kv": (
-                getattr(self._front_out, "kv_judger", None)
-                if getattr(self, "_latent", False) and self._front_out is not None
+                getattr(self, "_kv_feedback", None)
+                if getattr(self, "_latent", False)
                 else getattr(self, "_pipeline_kv", None)
             ),
         }
 
     # ── NEW LatentMAS helpers ────────────────────────────────────────────────
 
-    def _build_experiment(self, hypothesis: str, expression: str):
-        """Bridge: (hypothesis, expression) → QlibFactorExperiment siap-backtest.
+    def _build_experiment(self, hypothesis: str, expressions: list):
+        """Bridge: (hypothesis, N ekspresi) → QlibFactorExperiment siap-backtest.
 
-        Mirror persis proposal.convert_response lama: FactorTask + based_experiments
-        dari trace.hist + render template + inject_code ke FactorFBWorkspace.
+        N ekspresi lolos regulator → N FactorTask/workspace → runner menggabungkan
+        jadi SATU model LightGBM (multi-faktor), satu hasil backtest. Mirror
+        proposal._build_experiment_from_dict (dedup intra-batch + terhadap history).
         Substrat (rdagent/qlib) dipakai ulang, bukan ditulis ulang.
         """
         import re as _re
@@ -598,26 +632,51 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         from factors.experiment import QlibFactorExperiment
         from factors.coder.evolving_strategy import code_template
 
-        factor_name = _re.sub(r"[^a-zA-Z0-9]+", "_", (hypothesis or "").strip())[:40].strip("_")
-        factor_name = factor_name or f"latent_factor_{getattr(self, 'loop_idx', 0)}"
-        self._last_factor_name = factor_name
+        base = _re.sub(r"[^a-zA-Z0-9]+", "_", (hypothesis or "").strip())[:32].strip("_")
+        base = base or f"latent_factor_{getattr(self, 'loop_idx', 0)}"
 
-        task = FactorTask(
-            factor_name=factor_name,
-            factor_description=hypothesis,
-            factor_formulation=expression,
-            factor_expression=expression,
-            variables={},
-        )
-        exp = QlibFactorExperiment([task])
-        exp.based_experiments = (
+        based = (
             [QlibFactorExperiment(sub_tasks=[])]
             + [h[1] for h in self.trace.hist if h[2]]
         )
-        code = code_template.render(expression=expression, factor_name=factor_name)
-        ws = FactorFBWorkspace(target_task=task)
-        ws.inject_code(**{"factor.py": code})
-        exp.sub_workspace_list = [ws]
+        # nama faktor yang sudah ada di history → untuk dedup
+        existing = {
+            getattr(st, "factor_name", None)
+            for be in based for st in be.sub_tasks
+        }
+
+        tasks, workspaces, names, seen = [], [], [], set()
+        single = len([e for e in expressions if e and e.strip()]) == 1
+        for i, expr in enumerate(expressions):
+            if not expr or not expr.strip():
+                continue
+            key = expr.replace(" ", "").lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            fname = base if single else f"{base}_{i}"
+            while fname in existing:    # hindari tabrakan nama dengan history
+                fname = f"{fname}_x"
+            existing.add(fname)
+            task = FactorTask(
+                factor_name=fname,
+                factor_description=hypothesis,
+                factor_formulation=expr,
+                factor_expression=expr,
+                variables={},
+            )
+            code = code_template.render(expression=expr, factor_name=fname)
+            ws = FactorFBWorkspace(target_task=task)
+            ws.inject_code(**{"factor.py": code})
+            tasks.append(task)
+            workspaces.append(ws)
+            names.append(fname)
+
+        self._last_factor_names = names
+        self._last_factor_name = names[0] if names else base  # back-compat
+        exp = QlibFactorExperiment(tasks)
+        exp.based_experiments = based
+        exp.sub_workspace_list = workspaces
         return exp
 
     @staticmethod
@@ -628,23 +687,37 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             return factors[0].get("expression", "") or ""
         return ""
 
+    @staticmethod
+    def _parent_metric(parent) -> float:
+        """Metric primer parent untuk pengurutan crossover (None → -inf)."""
+        getter = getattr(parent, "get_primary_metric", None)
+        if callable(getter):
+            try:
+                m = getter()
+                return float(m) if m is not None else float("-inf")
+            except Exception:
+                return float("-inf")
+        return float("-inf")
+
     def _evolution_propose(self, parents: list, *, crossover: bool):
-        """EvolutionOps → (hypothesis, expression) → gate+repair → FrontEndOutput.
+        """Evolution → GUIDANCE KV (kv_only) → RE-ENTER ORIGINAL front-end.
 
-        Membungkus hasil mutation/crossover sebagai FrontEndOutput supaya step
-        construct & feedback berikutnya tidak peduli phase. Fallback ke
-        FrontEndPipeline bila EvolutionOps gagal — evolution tak boleh dead-end.
+        Sesuai paper: reflection (mutation) / synthesize (crossover) hanya memberi
+        sinyal arah di ruang laten; judger ORIGINAL yang menghasilkan factor —
+        instantiasi "regenerate from node k". Bila guidance KV gagal terbentuk,
+        re-entry tetap jalan dengan seed_kv=None (front-end polos) — tak dead-end.
         """
-        from latent_mas.pipeline import FrontEndOutput
-
         if crossover:
-            parent_kvs = [getattr(p, "kv_cache", None) for p in parents]
-            evo = self._evo.crossover(parent_kvs=parent_kvs)
+            # urut ASC by metric → parent terbaik di posisi TERAKHIR (bias recency
+            # menguntungkan parent terkuat saat di-concat).
+            ordered = sorted(parents, key=self._parent_metric)
+            kvs = [getattr(p, "kv_cache", None) for p in ordered]
+            seed = self._evo.synthesize(kvs)
             label = f"crossover(n={len(parents)})"
         else:
             p = parents[0]
-            evo = self._evo.mutate(
-                parent_kv_feedback=getattr(p, "kv_cache", None),
+            seed = self._evo.reflect(
+                parent_kv=getattr(p, "kv_cache", None),
                 parent_hypothesis=getattr(p, "hypothesis", "") or "",
                 parent_expression=self._parent_expr(p),
                 parent_feedback=str(getattr(p, "feedback", "") or ""),
@@ -652,48 +725,54 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             )
             label = "mutation"
 
-        if evo is None or not evo.expression:
-            logger.warning(
-                f"[LatentMAS] {label} produced no expression; fallback to front-end"
-            )
-            return self._front.run(
-                direction=self._effective_direction,
-                seed_kv=self._pipeline_kv,
-                prior_feedback=self._prior_feedback,
-            )
-
-        # Gate+repair pakai logika front-end; baseline = KV judger evolution.
-        expr, repaired, attempts, gate_err = self._front._gate_and_repair(
-            evo.expression, evo.kv,
+        seed_kv = seed.kv if seed is not None else None
+        if seed_kv is None:
+            logger.warning(f"[LatentMAS] {label} produced no guidance KV; "
+                           f"re-entering ORIGINAL with empty seed")
+        # RE-ENTER ORIGINAL: judger di sini yang menghasilkan factor mutasi/silang.
+        # Pakai _base_direction (tanpa strategy_suffix lama) — guidance dari seed_kv.
+        front = self._front.run(
+            direction=self._base_direction, seed_kv=seed_kv,
         )
-        logger.info(f"[LatentMAS] {label}: expr={evo.expression!r} → final={expr!r}")
-        return FrontEndOutput(
-            hypothesis=evo.hypothesis, expression=expr,
-            kv_consist=evo.kv, kv_judger=evo.kv,
-            judger_text=evo.raw_text, repaired=repaired,
-            repair_attempts=attempts, gate_error=gate_err,
-        )
+        logger.info(f"[LatentMAS] {label} → expr={front.expression!r} "
+                    f"repaired={front.repaired}")
+        return front
 
     def _run_latent_feedback(self, prev_out: dict[str, Any]) -> dict:
-        """Feedback via agent latent_mas. Return dict feedback (JSON parsed)."""
+        """Feedback EVALUATIF (support/refute) via agent latent_mas.
+
+        Berbeda dari QuantaAlpha asli: feedback TIDAK lagi mengarang "New
+        Hypothesis" — generasi arah berikutnya adalah tugas mutation (reflect→
+        re-entry) & crossover (synthesize→re-entry). Dua keputusan konsekuensial
+        DICABUT dari LLM menjadi deterministik dan disuntik sebagai input:
+          - complexity audit  → ComplexityChecker
+          - replace-best-result → aturan metrik (_decide_replace_sota)
+
+        Seed = kv_final (kv_repair bila repair jalan, else kv_judger) → feedback
+        koheren dengan ekspresi yang benar-benar dijalankan. KV feedback (terminal)
+        disimpan ke self._kv_feedback untuk diwariskan ke evolution round berikutnya.
+        """
         from llm._shared import robust_json_parse
         from latent_mas import kv_ops
 
         front = self._front_out
         exp = prev_out["factor_backtest"]
 
-        # sinyal kompleksitas (constraint gate QuantaAlpha) → masuk ke feedback
-        complexity = ""
-        try:
-            from factors.regulator.consistency_checker import ComplexityChecker
-            ok, msg = ComplexityChecker().check(front.expression)
-            complexity = "" if ok else f"COMPLEXITY WARNING: {msg}"
-        except Exception:
-            pass
+        # ── DETERMINISTIK (tanpa LLM): complexity audit + replace-SOTA ──────────
+        # Multi-ekspresi: audit semua, metrik dari backtest model LightGBM gabungan.
+        complexity = self._complexity_audit_multi(front.expressions)
+        metrics = self._extract_metrics_safe(exp)
+        replace_flag, sota_note = self._decide_replace_sota(metrics, bool(complexity))
 
+        # factor_block: daftar SEMUA ekspresi lolos (jadi referensi bentuk faktor
+        # yang masuk model gabungan untuk hipotesis ini).
+        names = getattr(self, "_last_factor_names", None) or [self._last_factor_name]
+        exprs = front.expressions or [front.expression]
+        factor_lines = [f"- {n}: {e}" for n, e in zip(names, exprs)]
         factor_block = (
-            f"- {self._last_factor_name}: {front.hypothesis}\n"
-            f"  Expression: {front.expression}"
+            f"Hypothesis: {front.hypothesis}\n"
+            f"Factors ({len(exprs)}) feeding the combined model:\n"
+            + "\n".join(factor_lines)
         )
         if complexity:
             factor_block += f"\n  {complexity}"
@@ -706,19 +785,112 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         else:
             backtest_results = str(res)
 
+        # Keputusan replace + audit disuntik sebagai konteks (bukan untuk diputuskan LLM).
+        decision_block = (
+            f"Replace-best-result (DETERMINISTIC): "
+            f"{'REPLACE' if replace_flag else 'KEEP'} — {sota_note}"
+        )
+
         fb_agent = self._front.agents["feedback"]
         with _get_monitor().track_step("feedback") if (_HAS_MONITOR and _get_monitor()) else _nullcontext():
             r = fb_agent.run(
-                past_kv=kv_ops.kv_deepcopy(front.kv_consist),
+                past_kv=kv_ops.kv_deepcopy(front.kv_final),
                 hypothesis_text=front.hypothesis,
                 factor_block=factor_block,
                 backtest_results=backtest_results,
-                sota_block="none yet",
+                sota_block=decision_block,
             )
+        # Simpan KV terminal untuk evolution round berikutnya (parent.kv_cache).
+        self._kv_feedback = r.kv_cache
+
         try:
-            return robust_json_parse(r.text) if r.text else {}
+            fb = robust_json_parse(r.text) if r.text else {}
         except Exception:
-            return {"Observations": r.text or ""}
+            fb = {"Observations": r.text or ""}
+        if not isinstance(fb, dict):
+            fb = {"Observations": str(fb)}
+        # Keputusan replace bersifat DETERMINISTIK → override apa pun dari LLM.
+        fb["Replace Best Result"] = "yes" if replace_flag else "no"
+        return fb
+
+    # ── Audit deterministik (dicabut dari feedback LLM) ──────────────────────
+    @staticmethod
+    def _complexity_audit(expression: str) -> str:
+        """Verdict complexity dari ComplexityChecker (deterministik). '' bila lolos."""
+        try:
+            from factors.regulator.consistency_checker import ComplexityChecker
+            ok, msg = ComplexityChecker().check(expression)
+            return "" if ok else f"COMPLEXITY WARNING: {msg}"
+        except Exception:
+            return ""
+
+    @classmethod
+    def _complexity_audit_multi(cls, expressions: list) -> str:
+        """Audit complexity untuk N ekspresi → gabung peringatan (jarang muncul
+        karena regulator-gate sudah menolak yang terlalu kompleks lebih awal)."""
+        warns = []
+        for e in (expressions or []):
+            w = cls._complexity_audit(e)
+            if w:
+                warns.append(f"{e}: {w}")
+        return " | ".join(warns)
+
+    @staticmethod
+    def _extract_metrics_safe(exp) -> dict[str, float]:
+        """Ambil annualized_return / RankIC / IC dari exp.result (Series/DataFrame)."""
+        res = getattr(exp, "result", None)
+        out: dict[str, float] = {}
+        if res is None:
+            return out
+        try:
+            import pandas as pd
+            wanted = {
+                "annualized_return": [
+                    "1day.excess_return_with_cost.annualized_return",
+                    "1day.excess_return_without_cost.annualized_return",
+                    "annualized_return",
+                ],
+                "RankIC": ["RankIC", "Rank IC", "rank_ic"],
+                "IC": ["IC", "ic"],
+            }
+            idx = getattr(res, "index", None)
+            for key, names in wanted.items():
+                for n in names:
+                    if idx is not None and n in idx:
+                        v = res.loc[n]
+                        if hasattr(v, "iloc"):
+                            v = v.iloc[0]
+                        if pd.notna(v):
+                            out[key] = float(v)
+                        break
+        except Exception:
+            pass
+        return out
+
+    def _decide_replace_sota(self, metrics: dict[str, float],
+                             complexity_warning: bool) -> "tuple[bool, str]":
+        """Keputusan deterministik 'ganti SOTA?'.
+
+        Aturan (sesuai prioritas paper): primary = annualized_return, fallback
+        RankIC. Bila ada complexity warning → JANGAN ganti (risiko overfit),
+        sesuai prompt feedback QuantaAlpha. SOTA dilacak per-proses (in-memory).
+        """
+        cur = metrics.get("annualized_return")
+        name = "annualized_return"
+        if cur is None:
+            cur = metrics.get("RankIC")
+            name = "RankIC"
+        if cur is None:
+            return False, "no comparable metric → keep SOTA"
+        if complexity_warning:
+            return False, (f"{name}={cur:.4f} but complexity warning "
+                           f"→ keep SOTA (overfit risk)")
+        best = _SOTA_BEST.get("metric")
+        if best is None or cur > best:
+            _SOTA_BEST["metric"] = cur
+            prev = "none" if best is None else f"{best:.4f}"
+            return True, f"{name}={cur:.4f} > SOTA={prev} → replace"
+        return False, f"{name}={cur:.4f} <= SOTA={best:.4f} → keep"
 
 
 
