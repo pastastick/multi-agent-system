@@ -1,0 +1,36 @@
+{"t": 0.0127, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260603_063327_mining", "pid": 21716}
+{"t": 0.0176, "kind": "log", "level": "INFO", "msg": "new mining loop", "direction": "overnight gap reversal on high-volume stocks", "iterations": 2, "latent_steps": 40, "use_realign": true, "knn": false}
+{"t": 110.9091, "kind": "log", "level": "INFO", "msg": "iteration 1/2", "direction": "overnight gap reversal on high-volume stocks"}
+{"t": 110.9155, "kind": "step_start", "step": "proposal"}
+{"t": 114.0477, "kind": "step_end", "step": "proposal", "duration_s": 3.131, "error": null}
+{"t": 114.0495, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 3.134, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 482, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 67.78}, "parsed": null}
+{"t": 114.0517, "kind": "step_start", "step": "construct"}
+{"t": 115.6257, "kind": "step_end", "step": "construct", "duration_s": 1.5633, "error": null}
+{"t": 115.6269, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 1.575, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1675, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 235.55}, "parsed": null}
+{"t": 115.6292, "kind": "step_start", "step": "consistency"}
+{"t": 116.9878, "kind": "step_end", "step": "consistency", "duration_s": 1.3572, "error": null}
+{"t": 116.9888, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 1.36, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1956, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 275.06}, "parsed": null}
+{"t": 116.9926, "kind": "step_start", "step": "judger"}
+{"t": 158.4189, "kind": "step_end", "step": "judger", "duration_s": 41.4247, "error": null}
+{"t": 158.4218, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 41.429, "latent_steps": 40, "text_len": 494, "n_out_tok": 1081, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2592, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 364.5}, "parsed": "HypothesisExprs(hypothesis='', expressions=['TS_ZSCORE($volume,1)*RANK($TS_STD($return,1),1)'])"}
+{"t": 159.382, "kind": "step_start", "step": "backtest"}
+{"t": 459.8379, "kind": "log", "level": "ERROR", "msg": "backtest failed", "err": "FactorEmptyError('No valid factor data found to merge after manual execution attempt.')"}
+{"t": 459.8402, "kind": "step_end", "step": "backtest", "duration_s": 300.4566, "error": null}
+{"t": 460.0428, "kind": "step_start", "step": "feedback"}
+{"t": 465.6025, "kind": "step_end", "step": "feedback", "duration_s": 5.5578, "error": null}
+{"t": 465.6042, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 5.561, "latent_steps": 40, "text_len": 456, "n_out_tok": 97, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2558, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 359.72}, "parsed": null}
+{"t": 465.6066, "kind": "log", "level": "INFO", "msg": "iteration 2/2", "direction": "overnight gap reversal on high-volume stocks"}
+{"t": 465.6101, "kind": "step_start", "step": "proposal"}
+{"t": 467.0317, "kind": "step_end", "step": "proposal", "duration_s": 1.4205, "error": null}
+{"t": 467.0338, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.424, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 482, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 67.78}, "parsed": null}
+{"t": 467.0368, "kind": "step_start", "step": "construct"}
+{"t": 468.5414, "kind": "step_end", "step": "construct", "duration_s": 1.5027, "error": null}
+{"t": 468.5438, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 1.507, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1675, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 235.55}, "parsed": null}
+{"t": 468.5457, "kind": "step_start", "step": "consistency"}
+{"t": 470.001, "kind": "step_end", "step": "consistency", "duration_s": 1.4539, "error": null}
+{"t": 470.004, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 1.458, "latent_steps": 40, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1956, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 275.06}, "parsed": null}
+{"t": 470.008, "kind": "step_start", "step": "judger"}
+{"t": 496.9245, "kind": "step_end", "step": "judger", "duration_s": 26.9156, "error": null}
+{"t": 496.927, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 26.919, "latent_steps": 40, "text_len": 892, "n_out_tok": 757, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2592, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 364.5}, "parsed": "HypothesisExprs(hypothesis='High-volume stocks with overnight gap-up see a reversal the next day due to liquidity-driven price discovery  \\n EXRESSION 1: TS_RANK($close - DELAY($close, 1), 10)', expressions=['FILTER($return, $return > DELAY($close, 1))'])"}
+{"t": 498.0357, "kind": "step_start", "step": "backtest"}
+{"t": 583.3467, "kind": "step_end", "step": "backtest", "duration_s": 85.3097, "error": "KeyboardInterrupt()"}

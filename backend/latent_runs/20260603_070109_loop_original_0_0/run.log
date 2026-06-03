@@ -1,0 +1,32 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260603_070109_loop_original_0_0 pid=28550
+[ 1951.87s] INFO    crossover KV merged  n_parents=2 merged={'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 13760, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 1935.0}
+[ 2798.78s] INFO    crossover KV merged  n_parents=2 merged={'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 13623, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 1915.73}
+[ 3895.97s] WARNING judger output unparseable  head=:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ the complete hypothesis and the 1-3 factor expression(s) now, in the required labeled block.
+
+
+
+:
+
+
+
+
+
+[ 3906.00s] WARNING repair attempt 1 produced no expression
+[ 3926.27s] WARNING repair attempt 3 produced no expression
+[ 3926.28s] ERROR   multi-repair exhausted; keeping original candidates  n=0

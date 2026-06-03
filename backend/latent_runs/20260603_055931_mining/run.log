@@ -1,0 +1,7 @@
+[    0.02s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260603_055931_mining pid=12553
+[    0.02s] INFO    new mining loop  direction=overnight gap reversal on high-volume stocks iterations=1 latent_steps=40 use_realign=True knn=False
+[  117.75s] WARNING backtest disabled (--no-backtest)
+[  117.75s] INFO    iteration 1/1  direction=overnight gap reversal on high-volume stocks
+[  133.09s] WARNING judger output unparseable  head=KNOWLEDGE: Overnight gap reversal on high-volume stocks is a predictive signal for mean-reversion in the next trading da
+[  135.21s] WARNING repair attempt 1 produced no expression
+[  143.18s] INFO    run finished  wall_clock_s=143.158

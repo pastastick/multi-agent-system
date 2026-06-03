@@ -39,7 +39,7 @@ def main() -> None:
     # ── Diagnostik latent (untuk bisect collapse) ────────────────────────────
     # Default 0/off = sama dengan run_mining yang BERHASIL. Naikkan untuk
     # mereproduksi collapse dari factor_mining (yang pakai steps=10, realign, knn).
-    ap.add_argument("--latent-steps", type=int, default=0,
+    ap.add_argument("--latent-steps", type=int, default=20,
                     help="virtual-token reasoning per call (factor_mining pakai 10)")
     ap.add_argument("--use-realign", action="store_true",
                     help="aktifkan realigner (factor_mining: on)")

@@ -1,0 +1,22 @@
+{"t": 0.0124, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260603_054610_mining", "pid": 8888}
+{"t": 0.0147, "kind": "log", "level": "INFO", "msg": "new mining loop", "direction": "overnight gap reversal on high-volume stocks", "iterations": 1, "latent_steps": 0, "use_realign": false, "knn": false}
+{"t": 115.5879, "kind": "log", "level": "WARNING", "msg": "backtest disabled (--no-backtest)"}
+{"t": 115.5916, "kind": "log", "level": "INFO", "msg": "iteration 1/1", "direction": "overnight gap reversal on high-volume stocks"}
+{"t": 115.5965, "kind": "step_start", "step": "proposal"}
+{"t": 117.3272, "kind": "step_end", "step": "proposal", "duration_s": 1.7295, "error": null}
+{"t": 117.3293, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.733, "latent_steps": 0, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 442, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 62.16}, "parsed": null}
+{"t": 117.3314, "kind": "step_start", "step": "construct"}
+{"t": 117.7678, "kind": "step_end", "step": "construct", "duration_s": 0.4348, "error": null}
+{"t": 117.7689, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.437, "latent_steps": 0, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1595, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 224.3}, "parsed": null}
+{"t": 117.7707, "kind": "step_start", "step": "consistency"}
+{"t": 117.8171, "kind": "step_end", "step": "consistency", "duration_s": 0.0451, "error": null}
+{"t": 117.8182, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.047, "latent_steps": 0, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1836, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 258.19}, "parsed": null}
+{"t": 117.8217, "kind": "step_start", "step": "judger"}
+{"t": 127.5134, "kind": "step_end", "step": "judger", "duration_s": 9.6896, "error": null}
+{"t": 127.5153, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 9.693, "latent_steps": 0, "text_len": 952, "n_out_tok": 250, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2432, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 342.0}, "parsed": "HypothesisExprs(hypothesis='High-volume stocks that close below their overnight open are more likely to reverse the gap in the next trading day.', expressions=['( $close < $open ) && ( $volume > TS_MEDIAN( $volume, 20 ) ) ? RANK( $return ) : 0', 'TS_ZSCORE( $open - $close, 20 ) * FILTER( $volume, $volume > TS_MEDIAN( $volume, 20 ) )'])"}
+{"t": 128.6094, "kind": "step_start", "step": "backtest"}
+{"t": 128.6107, "kind": "step_end", "step": "backtest", "duration_s": 0.0, "error": null}
+{"t": 128.7712, "kind": "step_start", "step": "feedback"}
+{"t": 132.1876, "kind": "step_end", "step": "feedback", "duration_s": 3.4152, "error": null}
+{"t": 132.1898, "kind": "agent_done", "role": "feedback", "mode": "kv_and_text", "ok": true, "duration_s": 3.419, "latent_steps": 0, "text_len": 489, "n_out_tok": 100, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2464, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 346.5}, "parsed": null}
+{"t": 132.2103, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 132.191}

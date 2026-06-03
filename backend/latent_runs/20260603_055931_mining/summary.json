@@ -1,0 +1,67 @@
+{
+  "wall_clock_s": 143.158,
+  "summed_step_s": 24.205,
+  "steps": {
+    "proposal": {
+      "count": 1,
+      "total_s": 3.095,
+      "avg_s": 3.095,
+      "min_s": 3.095,
+      "max_s": 3.095,
+      "errors": 0
+    },
+    "construct": {
+      "count": 1,
+      "total_s": 1.669,
+      "avg_s": 1.669,
+      "min_s": 1.669,
+      "max_s": 1.669,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 1,
+      "total_s": 1.346,
+      "avg_s": 1.346,
+      "min_s": 1.346,
+      "max_s": 1.346,
+      "errors": 0
+    },
+    "judger": {
+      "count": 1,
+      "total_s": 9.179,
+      "avg_s": 9.179,
+      "min_s": 9.179,
+      "max_s": 9.179,
+      "errors": 0
+    },
+    "repair": {
+      "count": 2,
+      "total_s": 4.427,
+      "avg_s": 2.213,
+      "min_s": 2.098,
+      "max_s": 2.329,
+      "errors": 0
+    },
+    "backtest": {
+      "count": 1,
+      "total_s": 0.0,
+      "avg_s": 0.0,
+      "min_s": 0.0,
+      "max_s": 0.0,
+      "errors": 0
+    },
+    "feedback": {
+      "count": 1,
+      "total_s": 4.489,
+      "avg_s": 4.489,
+      "min_s": 4.489,
+      "max_s": 4.489,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "judger",
+    "total_s": 9.179,
+    "pct": 37.9
+  }
+}
