@@ -3,6 +3,7 @@ mendefinisikan SEMUA FUNGSI yang dipanggil di 'expression'
 """
 
 
+import functools
 import numpy as np
 import pandas as pd
 import operator
@@ -10,6 +11,12 @@ from joblib import Parallel, delayed
 
 #* convert ke dataframe
 def datatype_adapter(func):
+    # functools.wraps mempertahankan __wrapped__ + signature fungsi asli,
+    # sehingga inspect.signature(FUNC) bisa membaca arity sebenarnya
+    # (mis. RANK(df) -> 1 arg). Tanpa ini wrapper(*args) menyembunyikan
+    # arity dan validator signature tidak bisa bekerja. functools.wraps
+    # hanya menyalin metadata, tidak mengubah perilaku runtime wrapper.
+    @functools.wraps(func)
     def wrapper(*args):
         if len(args) == 1 and isinstance(args[0], np.ndarray):
             new_args = (pd.DataFrame(args[0]),)
@@ -64,16 +71,6 @@ def KURT(df:pd.DataFrame):
         k = kurtosis(group.dropna(), fisher=True, nan_policy='omit')
         return pd.Series(k, index=group.index)
     return df.groupby('datetime').transform(lambda x: kurtosis(x.dropna(), fisher=True, nan_policy='omit') if len(x.dropna()) >= 4 else np.nan)
-
-@datatype_adapter
-def MAX(df:pd.DataFrame):
-    """Cross-sectional max."""
-    return df.groupby('datetime').max()
-
-@datatype_adapter
-def MIN(df:pd.DataFrame):
-    """Cross-sectional min."""
-    return df.groupby('datetime').min()
 
 @datatype_adapter
 def MEDIAN(df:pd.DataFrame):
@@ -164,23 +161,31 @@ def TS_ARGMIN(df: pd.DataFrame, p: int = 5):
 
 
 
-def MAX(x:pd.DataFrame, y:pd.DataFrame, z:pd.DataFrame=None):
-    """Element-wise max of DataFrames."""
-    if z is None:
-        return np.maximum(x, y)
-    else:
-        return np.maximum(np.maximum(x, y), z)
+@datatype_adapter
+def MAX(*args):
+    """MAX(A): cross-sectional max per datetime. MAX(A, B[, C]): element-wise max.
+
+    Menggabungkan dua makna yang sebelumnya bertabrakan (definisi cross-sectional
+    1-arg dulu ditimpa diam-diam oleh versi element-wise). Sekarang dispatch
+    berdasarkan jumlah argumen, sehingga MAX(A) (1 arg) dan MAX(A, B) (2-3 arg)
+    sama-sama valid sesuai dokumentasi.
+    """
+    if len(args) == 1:
+        return args[0].groupby('datetime').max()
+    if len(args) == 2:
+        return np.maximum(args[0], args[1])
+    return np.maximum(np.maximum(args[0], args[1]), args[2])
 
 
+@datatype_adapter
+def MIN(*args):
+    """MIN(A): cross-sectional min per datetime. MIN(A, B[, C]): element-wise min."""
+    if len(args) == 1:
+        return args[0].groupby('datetime').min()
+    if len(args) == 2:
+        return np.minimum(args[0], args[1])
+    return np.minimum(np.minimum(args[0], args[1]), args[2])
 
-
-def MIN(x:pd.DataFrame, y:pd.DataFrame, z:pd.DataFrame=None):
-    """Element-wise min of DataFrames.""" 
-    if z is None:
-        return np.minimum(x, y)
-    else:
-        return np.minimum(np.minimum(x, y), z)
-    
 
 
 @datatype_adapter

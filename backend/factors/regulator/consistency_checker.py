@@ -363,26 +363,56 @@ class RedundancyChecker:
             return True, f"Redundancy check skipped due to error: {e}", {}
 
 
+class SignatureChecker:
+    """Signature checker: validates that each DSL function call has the correct arity.
+
+    Catches expressions that parse fine but explode at backtest time, e.g.
+    `RANK($volume, 7)` — RANK is cross-sectional (1 arg); the windowed version
+    is TS_RANK. Reuses validate_function_arity from the regulator.
+    """
+
+    def __init__(self, enabled: bool = True):
+        self.enabled = enabled
+
+    def check(self, expression: str) -> Tuple[bool, str]:
+        """Check expression function arity. Returns (passed, feedback)."""
+        if not self.enabled:
+            return True, "Signature check disabled"
+        try:
+            from factors.regulator.factor_regulator import validate_function_arity
+            ok, errors = validate_function_arity(expression)
+            if ok:
+                return True, "Signature check passed"
+            return False, "Signature (arity) Check Failed: " + " ".join(errors)
+        except Exception as e:
+            logger.warning(f"Signature check failed with error: {e}")
+            return True, f"Signature check skipped due to error: {e}"
+
+
 class FactorQualityGate:
-    """Factor quality gate: integrates consistency/complexity/redundancy checks to decide if factor can proceed to backtest."""
+    """Factor quality gate: integrates signature/consistency/complexity/redundancy checks to decide if factor can proceed to backtest."""
 
     def __init__(
         self,
         consistency_checker: FactorConsistencyChecker = None,
         complexity_checker: ComplexityChecker = None,
         redundancy_checker: RedundancyChecker = None,
+        signature_checker: "SignatureChecker" = None,
         consistency_enabled: bool = False,  # Default: disabled per experiment.yaml
         complexity_enabled: bool = True,
-        redundancy_enabled: bool = True
+        redundancy_enabled: bool = True,
+        signature_enabled: bool = True
     ):
-        """Args: consistency_checker, complexity_checker, redundancy_checker, *_enabled flags."""
+        """Args: consistency_checker, complexity_checker, redundancy_checker, signature_checker, *_enabled flags."""
         self.consistency_checker = consistency_checker or FactorConsistencyChecker(enabled=consistency_enabled)
         self.complexity_checker = complexity_checker or ComplexityChecker(enabled=complexity_enabled)
         self.redundancy_checker = redundancy_checker or RedundancyChecker(enabled=redundancy_enabled)
-        
+        self.signature_checker = signature_checker or SignatureChecker(enabled=signature_enabled)
+
         self.consistency_checker.enabled = consistency_enabled
         self.complexity_checker.enabled = complexity_enabled
         self.redundancy_checker.enabled = redundancy_enabled
+        self.signature_checker.enabled = signature_enabled
     
     def evaluate(
         self,
@@ -395,6 +425,7 @@ class FactorQualityGate:
     ) -> Tuple[bool, str, Dict[str, Any]]:
         """Evaluate if factor passes quality gate. Returns (passed, overall_feedback, results)."""
         results = {
+            "signature": None,
             "consistency": None,
             "complexity": None,
             "redundancy": None,
@@ -403,7 +434,17 @@ class FactorQualityGate:
         }
         feedbacks = []
         all_passed = True
-        
+
+        if self.signature_checker.enabled:
+            signature_passed, signature_feedback = self.signature_checker.check(factor_expression)
+            results["signature"] = {
+                "passed": signature_passed,
+                "feedback": signature_feedback
+            }
+            if not signature_passed:
+                all_passed = False
+                feedbacks.append(f"[Signature] {signature_feedback}")
+
         if self.consistency_checker.enabled:
             consistency_result, corrected_expr, corrected_desc = self.consistency_checker.check_and_correct(
                 hypothesis=hypothesis,

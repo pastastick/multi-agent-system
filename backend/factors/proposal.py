@@ -916,6 +916,59 @@ class AlphaAgentHypothesis2FactorExpression(FactorHypothesis2Experiment):
                     )
                     break
 
+                #* Validasi arity fungsi DSL terhadap function_lib.
+                # Ekspresi bisa lolos is_parsable tapi tetap meledak saat
+                # backtest kalau jumlah argumen fungsi salah, mis.
+                # `RANK($volume, 7)` — RANK cross-sectional hanya 1 argumen
+                # (yang berperiode adalah TS_RANK). Tangkap di sini supaya
+                # di-repair LLM, bukan baru ketahuan saat eksekusi factor.py.
+                sig_ok, sig_errors = self.factor_regulator.validate_signatures(expr)
+                if not sig_ok:
+                    #* Auto-repair deterministik untuk kasus cross-sectional→TS
+                    # yang tak ambigu (mis. RANK($volume, 7) → TS_RANK($volume, 7)),
+                    # supaya tidak buang satu putaran LLM untuk kesalahan mekanis.
+                    repaired_expr, applied_fixes = self.factor_regulator.auto_repair_signatures(expr)
+                    if repaired_expr is not None:
+                        logger.info(
+                            f"[Construct] auto-repaired arity: {expr!r} -> {repaired_expr!r} "
+                            f"({', '.join(applied_fixes)})"
+                        )
+                        expr = repaired_expr
+                        factor_data["expression"] = expr
+                        response_dict[factor_name] = factor_data
+                        sig_ok, sig_errors = self.factor_regulator.validate_signatures(expr)
+
+                if not sig_ok:
+                    logger.warning(
+                        f"[Construct] retry {_construct_retries}/{_MAX_CONSTRUCT_RETRIES}: "
+                        f"bad function arity: {expr!r} | {sig_errors}"
+                    )
+                    error_log.append(f"bad arity: {expr[:60]!r} — {sig_errors[0]}")
+                    arity_fb = (
+                        "- Function Arity Error: the expression calls a function with the "
+                        "wrong number of arguments. Fix these:\n  "
+                        + "\n  ".join(sig_errors)
+                        + "\n  Reminder: CROSS-SECTIONAL functions (RANK, ZSCORE, MEAN, STD, "
+                        "SKEW, KURT, MEDIAN) take exactly ONE argument and have NO period. "
+                        "Use the TS_ prefixed version (e.g. TS_RANK(A, n), TS_MEAN(A, n)) "
+                        "whenever you need a rolling/windowed computation over n days."
+                    )
+                    expression_duplication_prompt = (
+                        '\n\n'.join([expression_duplication_prompt, arity_fb])
+                        if expression_duplication_prompt else arity_fb
+                    )
+                    user_prompt = (
+                        Environment(undefined=StrictUndefined)
+                        .from_string(qa_prompt_dict["hypothesis2experiment"]["user_prompt"])
+                        .render(
+                            targets=_mv("targets", self.targets),
+                            target_hypothesis_oneline=_mv("target_hypothesis_oneline", hypothesis_oneline),
+                            function_lib_description=_mv("function_lib_description", context["function_lib_description"]),
+                            expression_duplication=_mv("expression_duplication", expression_duplication_prompt),
+                        )
+                    )
+                    break
+
                 #   evaluate() melakukan:
                 #      1. parse AST dari ekspresi
                 #      2. match_alphazoo: cek subtree mana yang sudah ada di alpha zoo
