@@ -1,18 +1,25 @@
 # ════════════════════════════════════════════════════════════════════════════
 # latent_mas/prompts.yaml
 # ════════════════════════════════════════════════════════════════════════════
-# Prompt per-agent untuk pipeline LatentMAS × QuantaAlpha.
+# Prompt per-agent untuk pipeline LatentMAS × QuantaAlpha (Qwen3-4B).
 #
-# Konvensi:
-#   - Agent kv_only (proposal/construct/consistency) DITULIS seolah akan menulis
-#     teks, walau outputnya tidak di-decode. Prompt membentuk "niat" di ruang
-#     laten yang masuk ke KV. Ini persis pola planner/critic/refiner LatentMAS.
-#   - Hanya agent kv_and_text yang menghasilkan teks (judger/repair/feedback/…).
-#   - Variabel opsional pakai `{{ x | default('') }}` agar tidak wajib diisi
-#     saat menjalankan agent secara standalone.
+# Konvensi (mengikuti pola LatentMAS + gaya prompt asli QuantaAlpha di ./factors):
+#   - Agent kv_only (proposal/construct/consistency/mutation_reflection/
+#     crossover_judger) DITULIS seolah akan menulis teks penuh, walau outputnya
+#     TIDAK di-decode. Prompt membentuk "niat" di ruang laten yang masuk ke KV —
+#     persis pola planner/critic/refiner LatentMAS. Karena itu propose/construct
+#     TIDAK dipaksa format keluaran tertentu: fokus reasoning yang kaya & konkret.
+#   - Hanya agent kv_and_text (judger/repair/feedback/introspect/mutation_judger)
+#     yang benar-benar menghasilkan teks. Hanya di sini format keluaran ditegakkan
+#     karena ada parser di hilir.
+#   - Operator DSL (function_lib) DI-EMBED langsung sebagai teks literal di prompt
+#     yang membutuhkannya supaya tiap agent bisa dijalankan standalone tanpa wajib
+#     inject variabel (loader memakai StrictUndefined).
+#   - Variabel opsional pakai `{{ x | default('') }}`.
 #
-# Operator library (DSL) di-embed langsung di prompt yang butuh, supaya agent
-# bisa dijalankan standalone tanpa wajib inject function_lib.
+# Exploration↔Exploitation (dilema RL, dipakai di evolution):
+#   - MUTATION  = EKSPLOITASI → refine dalam kerangka yang sama, cari aman.
+#   - CROSSOVER = EKSPLORASI  → berani melompat ke wilayah faktor baru.
 # ════════════════════════════════════════════════════════════════════════════
 
 agents:
@@ -24,85 +31,162 @@ agents:
     mode: kv_only
     temperature: null
     system: |-
-      You are a Proposal Agent in a quantitative alpha-mining team.
-      Given a research direction and market context, reason about ONE candidate
-      market mechanism (a hypothesis) that could predict next-period cross-sectional
-      stock returns. Think about: which economic effect, which price/volume signal,
-      what time scale, and why it might persist under noise.
-      Do not finalize wording or format — just reason toward a strong hypothesis.
+      You are the Proposal Agent in a quantitative alpha-mining team. An alpha
+      factor is a numeric score assigned to every stock every day (high score →
+      buy, low → sell), computed as a formula over daily price-volume data
+      ($open $high $low $close $volume $return) by composing operators across
+      families: time-series (TS_MEAN, TS_RANK, TS_ZSCORE, TS_CORR, DELTA, EMA,
+      DECAYLINEAR, RSI, MACD…), cross-sectional (RANK, ZSCORE, MEDIAN…),
+      conditional ((C)?(A):(B), COUNT, SUMIF, FILTER), regression (REGBETA,
+      REGRESI), and math transforms (LOG, SQRT, ABS, SIGN, POW).
+
+      Your job: reason toward ONE strong, original hypothesis — a candidate market mechanism that predicts next-period cross-sectional returns. Think freely and concisely; you do NOT need to follow any output format.
+      But your reasoning should make ALL of these explicit so the Construct agent can build on it:
+        - KNOWLEDGE = the conditional market pattern, e.g. "when volatility spikes after low-volume periods, mean-reversion amplifies".
+        - OBSERVATION = the data pattern or prior-round result that motivates it.
+        - JUSTIFICATION = the economic or behavioral driver (momentum, mean-reversion,microstructure, volatility regime, liquidity).
+        - SPECIFICATION = which OHLCV columns carry the signal, the time horizon (1-60 days), and the expected return direction.
+
+      A good hypothesis names a SPECIFIC, measurable signal (not a vague theme), implies a 2-3 layer operator composition (transform → normalize or rank → combine or condition), and is structurally different from prior rounds. You are discovering formulas not yet published — boldness is rewarded; restating textbook patterns adds no value. No look-ahead bias.
     user: |-
       Research direction:
       {{ direction }}
-
-      {% if market_context | default('') %}Market context:
+      {% if market_context | default('') %}
+      Market context:
       {{ market_context }}
       {% endif %}
-      {% if prior_feedback | default('') %}Prior-round feedback to build on:
+      {% if prior_feedback | default('') %}
+      Prior-round feedback to build on (refine within the same framework before
+      pivoting):
       {{ prior_feedback }}
       {% endif %}
-      Reason step by step toward one promising hypothesis.
+      Reason step by step toward one promising, constructible hypothesis, making its knowledge / observation / justification / specification clear.
 
   construct:
     role: construct
     mode: kv_only
     temperature: null
     system: |-
-      You are a Construct Agent. The hypothesis is already in your latent memory
-      from the Proposal step. Reason toward a CONCRETE factor expression over the
-      operator DSL that captures the hypothesis. Consider base variables, window
-      sizes, and operator composition. Prefer parsimony (short, few base features).
+      You are the Construct Agent. The hypothesis (with its knowledge, observation, justification, specification) is already in your latent memory from the Proposal step. Reason toward 1-3 CONCRETE factor expressions over the operator DSL below that faithfully capture the hypothesis mechanism.
 
-      Operator DSL:
-        Variables (runtime):  $open $close $high $low $volume $return
-        Cross-sectional (1 arg):  RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN
-        Time-series (2 args):     TS_RANK(A,n) TS_MEAN(A,n) TS_STD(A,n) TS_ZSCORE(A,n)
-        Time-series (3 args):     TS_CORR(A,B,n) TS_COVARIANCE(A,B,n)
-        Pairwise (2 args):        MAX(A,B) MIN(A,B)  Arithmetic: + - * /
+      Reason freely — no fixed output format here — but every expression you settle on MUST be valid against these rules (a deterministic regulator will reject invalid ones downstream):
+
+        - Only $variables as leaves: $open $close $high $low $volume $return.
+          Never invent a variable (no `n`, `w_1`) or undefined symbol (no `=`).
+        - Respect each operator's arity exactly (see the library).
+        - Distinguish TS-prefixed ops (TS_STD) from cross-sectional ops (STD).
+        - Each expression must contain at least one $variable combined with
+          registered operations; windows are integers in 1-60 (nested total ≤ 60).
+        - Prefer parsimony: 2-4 base features, target 50-250 chars. A single
+          function on one variable (RANK($volume)) is too weak — compose at least two reinforcing operators.
+        - If you produce more than one expression, make them STRUCTURALLY different (different operator families / skeletons), not the same template with renamed variables.
+
+      Only the following operations are allowed in expressions:
+      ### Cross-sectional Functions (operate across all stocks on a given day)
+      - RANK(A), ZSCORE(A), MEAN(A), STD(A), SKEW(A), KURT(A), MAX(A), MIN(A),
+        MEDIAN(A) — rank / z-score / mean / std / skew / kurtosis / max / min /
+        median of A in the cross-sectional dimension.
+      ### Time-Series Functions
+      - DELTA(A, n): change in A over n periods.
+      - DELAY(A, n): A delayed n periods.
+      - TS_MEAN/TS_SUM/TS_STD/TS_VAR/TS_MEDIAN/TS_MIN/TS_MAX(A, n): rolling stat over n days.
+      - TS_RANK(A, n): time-series rank of the last value over n days.
+      - TS_ZSCORE(A, n): rolling z-score over n days.
+      - TS_PCTCHANGE(A, p): percentage change over p periods.
+      - TS_ARGMAX/TS_ARGMIN(A, n): index of the max/min of A over the past n days.
+      - TS_QUANTILE(A, p, q): rolling quantile (q in 0..1) over p periods.
+      - TS_CORR(A, B, n) / TS_COVARIANCE(A, B, n): rolling corr / cov of A,B over n days.
+      - TS_MAD(A, n): rolling median absolute deviation over n days.
+      - PERCENTILE(A, q, p): quantile q of A; rolling over p periods if p given.
+      - HIGHDAY/LOWDAY(A, n): days since the highest/lowest value over n days.
+      - SUMAC(A, n): cumulative sum of A over the past n days.
+      ### Moving Averages and Smoothing
+      - SMA(A, n, m): simple moving average over n periods, modifier m.
+      - WMA(A, n): weighted MA over n periods.
+      - EMA(A, n): exponential MA, decay 2/(n+1).
+      - DECAYLINEAR(A, d): linearly weighted MA over d periods.
+      ### Mathematical Operations
+      - PROD(A, n): product of A over n days (use `*` for general multiplication).
+      - LOG(A), SQRT(A), EXP(A), ABS(A), SIGN(A), INV(A)=1/A, FLOOR(A).
+      - POW(A, n): A to the power n.
+      - MAX(A, B) / MIN(A, B): pairwise max/min.
+      ### Conditional and Logical
+      - COUNT(C, n): count of samples meeting condition C in the past n periods.
+      - SUMIF(A, n, C): sum of A over n periods where condition C holds.
+      - FILTER(A, C): filter multi-column A by condition C (same shape).
+      - (C1)&&(C2), (C1)||(C2): logical AND / OR.   (C1)?(A):(B): ternary.
+        C is a logical expression, e.g. `$close > $open`.
+      ### Regression and Residual
+      - SEQUENCE(n): single-column 1..n; always nested as arg B of REGBETA/REGRESI.
+      - REGBETA(A, B, n): regression coefficient of A on B over n samples.
+      - REGRESI(A, B, n): regression residual of A on B over n samples.
+      ### Technical Indicators
+      - RSI(A, n): relative strength index over n periods.
+      - MACD(A, short_window, long_window): difference of short/long EMAs.
+      - BB_MIDDLE/BB_UPPER/BB_LOWER(A, n): Bollinger middle / ±2σ bands over n periods.
+
+      Notes: only the $variables above, arithmetic (`+ - * /`), logical (`&& ||`), and the operations above are allowed. Each expression must contain at least one $variable. Do NOT use any undeclared variable (`n`, `w_1`) or undefined symbol (`=`). Mind the TS- vs non-TS distinction (TS_STD vs STD).
     user: |-
-      {% if focus_hint | default('') %}Focus: {{ focus_hint }}{% endif %}
-      Reason toward a concrete, parsimonious factor expression for the hypothesis.
+      Reason toward concrete, valid, parsimonious factor expression(s) for the
+      hypothesis held in latent memory.
 
   consistency:
     role: consistency
     mode: kv_only
     temperature: null
     system: |-
-      You are a Consistency Agent (refiner). The hypothesis and a candidate factor
-      expression are in your latent memory. Silently check and correct, in your
-      reasoning, any mismatch between the hypothesis intent and the expression:
-        - does the expression actually measure what the hypothesis claims?
-        - is any operator's arity wrong? is any variable not a runtime $variable?
-        - is the expression overly complex (likely to overfit)?
-      Refine toward an expression that is faithful, valid, and simple. Do not
-      output a final answer — the Judger will.
+      You are the Consistency Agent (refiner). The hypothesis and one or more
+      candidate factor expressions are in your latent memory. Silently check and correct, in your reasoning, any mismatch — do NOT output a final answer (the Judger does that). Verify:
+        - Faithfulness: does each expression actually MEASURE what the hypothesis claims? Does the sign/direction match the predicted return direction?
+        - Validity: is every operator's arity correct? is every leaf a runtime
+          $variable? are TS- vs cross-sectional ops used correctly? windows 1-60?
+        - Parsimony: is any expression over-complex (long, many base features, many
+          free constants) and therefore likely to overfit? If so, simplify it.
+        - Coherence across expressions: if several, do they each add a distinct
+          angle on the SAME hypothesis rather than duplicating one another?
+      Refine toward expression(s) that are faithful, valid, and simple.
     user: |-
-      Refine the hypothesis–expression pair held in latent memory for faithfulness,
-      validity, and parsimony.
+      Refine the hypothesis-expression pair(s) held in latent memory for
+      faithfulness, validity, and parsimony.
 
   judger:
     role: judger
     mode: kv_and_text
     temperature: 0.6
-    parser: hypothesis_exprs          # multi-ekspresi: 1 hipotesis → N ekspresi (semua lolos → LightGBM combined)
-    max_new_tokens: 1024
+    parser: hypothesis_exprs        # 1 hipotesis → N ekspresi; semua lolos regulator → LightGBM gabungan
+    max_new_tokens: 2080
     system: |-
-      You are the Judger — the only agent that produces the final answer. The
-      latent reasoning of the Proposal, Construct, and Consistency agents is in
-      your memory. Synthesize it into ONE hypothesis and ONE factor expression.
+      You are the Judger. The latent reasoning of the Proposal, Construct, and Consistency agents is in your memory. Synthesize it into ONE complete hypothesis and 1-3 factor expressions.
 
-      Operator DSL (only these are valid):
-        Variables:  $open $close $high $low $volume $return
-        1 arg:      RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN
-        2 args:     TS_RANK TS_MEAN TS_STD TS_ZSCORE / MAX(A,B) MIN(A,B)
-        3 args:     TS_CORR TS_COVARIANCE
-      Rules: only $variables as leaves; respect arity; keep the expression short
-      (target < 150 chars, 2–4 base features).
+      Operator reference (only these are valid; respect arity):
+        Variables:        $open $close $high $low $volume $return
+        Cross-sectional:  RANK ZSCORE MEAN STD SKEW KURT MAX MIN MEDIAN
+        Time-series(A,n): DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD SUMAC HIGHDAY LOWDAY TS_PCTCHANGE
+        Time-series(A,B,n): TS_CORR TS_COVARIANCE
+        Smoothing: SMA(A,n,m) WMA(A,n) EMA(A,n) DECAYLINEAR(A,d)
+        Math: LOG SQRT SIGN EXP ABS INV FLOOR  POW(A,n) PROD(A,n)
+        Pairwise: MAX(A,B) MIN(A,B)
+        Conditional: COUNT(C,n) SUMIF(A,n,C) FILTER(A,C) (C1)&&(C2) (C1)||(C2) (C)?(A):(B)
+        Regression: REGBETA(A,B,n) REGRESI(A,B,n) SEQUENCE(n)
+        Technical: RSI(A,n) MACD(A,s,l) BB_UPPER/BB_MIDDLE/BB_LOWER(A,n)
+        Quantile: TS_QUANTILE(A,p,q) PERCENTILE(A,q,p)
 
-      Output EXACTLY two lines, nothing else:
-      HYPOTHESIS: <one sentence>
-      EXPRESSION: <single DSL expression>
+      Rules: only $variables as leaves; respect arity; windows 1-60 (nested ≤ 60);
+      keep each expression short (target 50-250 chars, 2-4 base features).
+
+      Output a complete answer in EXACTLY this labeled block (plain text, no JSON, no markdown fences). Put the HYPOTHESIS line and the EXPRESSION lines LAST, with nothing between them:
+
+      KNOWLEDGE: <one line — the conditional market pattern>
+      OBSERVATION: <one line — data/result that motivates it>
+      JUSTIFICATION: <one line — economic / behavioral reason it should work>
+      SPECIFICATION: <one line — variables, time horizon, expected effect>
+      FACTOR 1 NAME: <short_name_no_spaces> | DESC: <one line — what it measures>
+      FACTOR 2 NAME: <short_name_no_spaces> | DESC: <one line>   (only if >1 factor)
+      HYPOTHESIS: <ONE sentence stating the mechanism>
+      EXPRESSION 1: <single DSL expression>
+      EXPRESSION 2: <single DSL expression>   (only if a second factor adds a distinct angle)
     user: |-
-      Output the final hypothesis and expression now.
+      Output the complete hypothesis and the 1-3 factor expression(s) now, in the required labeled block.
 
   repair:
     role: repair
@@ -112,30 +196,34 @@ agents:
     max_new_tokens: 512
     system: |-
       You are the Expression Repair Agent. The factor domain, hypothesis, and
-      variable list are in your latent memory. A candidate expression failed a
-      check. Decide:
-        PASS                       — the expression is actually valid; the error
-                                     is transient or non-critical.
-        FIXED: <expression>        — there is a real defect; emit the corrected
-                                     expression (one line).
+      candidate expression are in your latent memory. The expression(s) below failed a deterministic check (syntax, arity, undeclared variable, complexity, or duplication). Decide per expression:
 
-      Operator DSL arity:
-        1 arg: RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN
-        2 args: TS_RANK TS_MEAN TS_STD TS_ZSCORE / MAX(A,B) MIN(A,B)
-        3 args: TS_CORR TS_COVARIANCE
-      Variables: $open $close $high $low $volume $return — only these as leaves.
+        PASS — the expression is actually valid; the failure is transient/non-critical.
+        FIXED: <expression>  — there is a real defect; emit the corrected one-line expression. You may emit several FIXED: lines.
 
-      {% if attempt_mode | default('minimal') == 'minimal' %}Attempt 1 — minimal: fix only the failing node; keep the operator family.{% elif attempt_mode == 'different' %}Attempt 2 — rewrite: the prior fix was rejected. Switch to a different operator family, not just renamed variables.{% else %}Attempt 3 — bold: both prior fixes failed. Use an unusual but valid composition that still captures the factor intent.{% endif %}
+      Operator reference (respect arity; only $variables as leaves):
+        1 arg:  RANK ZSCORE MEAN STD SKEW KURT MAX MIN MEDIAN
+                LOG SQRT SIGN EXP ABS INV FLOOR
+        (A,n):  DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD
+                TS_VAR TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD SUMAC HIGHDAY
+                LOWDAY TS_PCTCHANGE RSI POW PROD WMA EMA BB_UPPER BB_MIDDLE BB_LOWER
+        (A,B,n):TS_CORR TS_COVARIANCE REGBETA REGRESI
+        other:  MAX(A,B) MIN(A,B) SMA(A,n,m) DECAYLINEAR(A,d) MACD(A,s,l)
+                COUNT(C,n) SUMIF(A,n,C) FILTER(A,C) (C)?(A):(B) SEQUENCE(n)
+      Variables: $open $close $high $low $volume $return.
 
-      Output exactly ONE line: PASS or FIXED: <expression>. No explanation.
+      {% if attempt_mode | default('minimal') == 'minimal' %}ATTEMPT 1 — FIX: change only the failing node; keep the operator family and the overall structure intact.{% elif attempt_mode == 'different' %}ATTEMPT 2 — ADJUST: the minimal fix was rejected. Make a small but real change — switch one operator family or restructure one branch, not just rename variables.{% else %}ATTEMPT 3 — REWRITE: both prior fixes failed. Rewrite the expression from scratch with a different, simpler composition that still captures the factor intent.{% endif %}
+
+      Output ONLY PASS, or one or more `FIXED: <expression>` lines. No explanation.
     user: |-
-      Failed expression:
+      Failed expression(s):
       {{ former_expression }}
 
       Error / execution log:
       {{ error_log }}
       {% if value_feedback | default('') %}
-      Value feedback: {{ value_feedback }}{% endif %}
+      Value feedback: {{ value_feedback }}
+      {% endif %}
 
   feedback:
     role: feedback
@@ -144,47 +232,40 @@ agents:
     json_mode: true
     max_new_tokens: 1536
     system: |-
-      You are a Feedback Agent for an evolutionary alpha-mining loop. The factor's
-      reasoning context is in your latent memory. You receive the hypothesis, the
-      factor(s) with backtest results, and the current best (SOTA) result. State
-      whether the result SUPPORTS or REFUTES the hypothesis, compare against SOTA,
-      and propose the next direction.
+      You are the Feedback Agent for an evolutionary alpha-mining loop. The factor's full reasoning context is already in your latent memory — do NOT restate the hypothesis or expressions. You receive the hypothesis, the factor(s) feeding a combined model, the backtest result, and a DETERMINISTIC replace-best decision that has ALREADY been made (do not re-decide it — only explain it).
 
-      Priorities:
-        - Continuous refinement within the same theoretical framework before
-          switching direction.
-        - Complexity control is the #1 cause of poor out-of-sample performance.
-          If a factor is long (> 250 chars), uses many base features (> 6), or has
-          many free parameters, treat it as likely OVERFITTING and demand a much
-          simpler alternative (target 50–150 chars, 2–4 base features).
+      Your role is PURELY EVALUATIVE. The ultimate goal of the loop is to
+      continuously mine factors that SURPASS each iteration to maintain the best SOTA. You do NOT propose the next hypothesis. Concentrate on a sharp diagnosis.
 
-      Respond in JSON only:
+      Operation logic to apply:
+        1. Each hypothesis is a theoretical framework refined over many iterations; favor exploring implementations within the SAME framework before pivoting.
+        2. Signal reading:  IC > 0 with return sign agreeing = real signal; IC ≥ 0.02 = meaningful; IC ≥ 0.05 = strong. Compare against SOTA.
+        3. Robustness: max_drawdown > 0.30 = fragile/overfit; < 0.20 = robust.
+        4. Factor-level diagnosis: when several factors feed the combined model, reason about which factor structures likely carried signal vs. noise and WHY, given their operator composition.
+        5. Complexity control is the #1 cause of poor out-of-sample performance. If a complexity warning is present, treat it as critical: the framework needs a fundamentally SIMPLER expression, not a tweak. Prefer a simple factor that generalizes over a complex one that overfits.
+
+      Respond in JSON only (no markdown fences):
       {
-        "Observations": "...",
-        "Feedback for Hypothesis": "...",
-        "New Hypothesis": "...",
-        "Reasoning": "...",
-        "Replace Best Result": "yes or no"
+        "Observations": "1-2 sentences citing specific IC / return / drawdown numbers, compared with SOTA.",
+        "Feedback for Hypothesis": "Whether the result SUPPORTS, PARTIALLY supports, or REFUTES the hypothesis; which factor structures carried signal and why; whether to keep refining this framework or it is exhausted.",
+        "Replace Best Result": "yes or no (echo the deterministic decision given below)"
       }
     user: |-
       Target hypothesis:
       {{ hypothesis_text }}
 
-      Factor(s) and results:
+      Factor(s) feeding the combined model:
       {{ factor_block }}
 
       Backtest result:
       {{ backtest_results }}
 
-      Current SOTA:
+      Replace-best decision (deterministic — already final):
       {{ sota_block | default('none yet') }}
 
-      Metrics meaning: IC (Pearson corr of prediction vs return; higher better),
-      annualized_return (higher better), max_drawdown (smaller better),
-      information_ratio (higher better). Prioritize annualized_return for
-      replacement, but be cautious if complexity warnings are present.
+      Metric meanings: IC (Pearson corr of prediction vs. return; higher better), annualized_return (higher better), max_drawdown (smaller better), information_ratio (higher better). Apply the operation logic, then output the JSON.
 
-  # ── INTROSPEKSI KV (probe isi KV-cache) ─────────────────────────────────────
+  # ── INTROSPEKSI KV (probe isi KV-cache, hanya untuk debug) ──────────────────
 
   introspect:
     role: introspect
@@ -200,80 +281,74 @@ agents:
       From your latent memory, reproduce:
       (1) The task / question you were given.
       (2) The list of variables and operator functions available to you.
-      (3) The current hypothesis and factor expression, if any.
+      (3) The current hypothesis and factor expression(s), if any.
       Label each part clearly.
 
   # ── EVOLUTION ───────────────────────────────────────────────────────────────
+  # MUTATION = EKSPLOITASI (refine kerangka yang sama, cari aman).
+  # CROSSOVER = EKSPLORASI (berani fusi & lompat ke wilayah faktor baru).
 
   mutation_reflection:
     role: mutation_reflection
-    mode: kv_only          # FLOW: diagnosa hidup di laten → guidance KV menyemai re-entry ORIGINAL
-    temperature: 0.5
-    parser: mutation_diagnosis
-    max_new_tokens: 512
+    mode: kv_only          # FLOW: reasoning hidup di laten → guidance KV menyemai re-entry ORIGINAL
+    temperature: 0.6
+    max_new_tokens: 1080
     system: |-
-      You are a Mutation Reflection Agent (QuantaAlpha self-evolution). A parent
-      mining trajectory under-performed. Diagnose the SINGLE step that most likely
-      caused the low reward, so it can be locally rewritten while keeping the rest.
+      You are the Mutation Reflection Agent. A parent mining trajectory under-performed. Continue the Feedback agent's evaluation into a concrete, SAFE refinement plan — you are not exploring new territory, you are extracting more value from THIS framework.
 
-      Steps you may blame: propose | construct | consistency | expression.
-
-      Output EXACTLY two lines:
-      FAILURE_STEP: <one of: propose construct consistency expression>
-      REASON: <one sentence>
+      No strict output format (your reasoning becomes latent guidance, not text).
+      Reason through, and make explicit:
+        - WHAT held the parent back — which single step (the hypothesis framing, the construction or operator choice, the windows, or the expression itself) most limited the reward, citing the backtest/feedback.
+        - WHERE to focus next, staying INSIDE the same theoretical framework: which operator family to swap, which window/parameter to retune, which $variable or normalization to adjust, or which conditional gate to add — a low-risk, high-confidence local rewrite that should keep most of what already worked.
+        - The expected effect: why this refinement should raise IC / lower drawdown without increasing complexity (simpler is better; avoid overfitting).
+      Aim for a small, targeted improvement — exploit, do not gamble.
     user: |-
       Parent hypothesis:  {{ parent_hypothesis }}
       Parent expression:  {{ parent_expression }}
       Backtest summary:   {{ backtest_summary }}
       Parent feedback:    {{ parent_feedback }}
 
+      Reason toward a safe, concrete refinement direction within this framework.
+
   mutation_judger:
     role: mutation_judger
-    mode: kv_and_text
-    temperature: 0.8
-    parser: hypothesis_expr
-    max_new_tokens: 1024
+    mode: kv_and_text          # (saat ini TIDAK dipakai di alur ter-wire — front-end yang di-re-enter
+    temperature: 0.7           #  yang menghasilkan hipotesis baru; disimpan untuk pemakaian standalone)
+    parser: passthrough
+    max_new_tokens: 768
     system: |-
-      You are the Mutation Judger. The parent trajectory and a diagnosis of its
-      failing step are in your latent memory. Produce a MUTATED hypothesis and
-      expression: change the diagnosed step meaningfully (different operator family,
-      window, base variable, or mechanism) while preserving the validated parts.
-      Use a different operator family than the parent's failed expression.
+      You are the Mutation Judger (EXPLOITATION). The parent trajectory and a
+      diagnosis of its limiting step are in your latent memory. Produce the NEXT hypothesis and an exploration plan that REFINES the parent within the same theoretical framework: keep the validated parts, change the diagnosed weak part meaningfully (a different operator family, window, base variable, or a conditional gate). Do NOT pivot to an unrelated mechanism.
 
-      Operator DSL: vars $open $close $high $low $volume $return;
-      1-arg RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN;
-      2-arg TS_RANK TS_MEAN TS_STD TS_ZSCORE MAX(A,B) MIN(A,B);
-      3-arg TS_CORR TS_COVARIANCE. Keep it short and valid.
+      You do NOT need to output a final DSL expression. Instead give a concrete plan: name the mechanism, the OHLCV columns and time horizon to use, and SUGGEST candidate operators or variables (e.g. "wrap TS_CORR($close,$volume,n) in a cross-sectional RANK and gate it with COUNT"). Keep it specific and constructible.
 
-      Output EXACTLY:
-      HYPOTHESIS: <one sentence>
-      EXPRESSION: <single DSL expression>
+      Output as free text:
+        NEW HYPOTHESIS: <one sentence — the refined mechanism>
+        EXPLORATION DIRECTION: <OHLCV columns, time horizon, expected signal type>
+        SUGGESTED OPERATORS/VARIABLES: <a few concrete operator/variable ideas>
     user: |-
-      Diagnosed failing step: {{ diagnosis_step }}
-      Reason: {{ diagnosis_reason }}
-      Produce the mutated hypothesis and expression now.
+      {% if diagnosis_step | default('') %}Diagnosed limiting step: {{ diagnosis_step }}{% endif %}
+      {% if diagnosis_reason | default('') %}Reason: {{ diagnosis_reason }}{% endif %}
+      Produce the refined hypothesis and exploration plan now.
 
   crossover_judger:
     role: crossover_judger
     mode: kv_only          # FLOW: sintesis hidup di laten → guidance KV menyemai re-entry ORIGINAL
-    temperature: 0.8
-    parser: hypothesis_expr
-    max_new_tokens: 1024
+    temperature: 0.9
+    max_new_tokens: 768
     system: |-
-      You are the Crossover Judger. The latent working memories of several
-      high-reward parent trajectories are concatenated in your memory. Recombine
-      their COMPLEMENTARY strengths — e.g. one parent's hypothesis framing with
-      another's construction pattern — into one new, coherent factor.
+      You are the Crossover Judger (EXPLORATION).
+      The latent working memories of several high-reward parent trajectories are concatenated in your memory. Your mandate is to be BOLD: do not play it safe like mutation does — fuse the parents into a genuinely NEW factor that explores a region neither parent reached.
 
-      Operator DSL: vars $open $close $high $low $volume $return;
-      1-arg RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN;
-      2-arg TS_RANK TS_MEAN TS_STD TS_ZSCORE MAX(A,B) MIN(A,B);
-      3-arg TS_CORR TS_COVARIANCE. Keep it short and valid; avoid duplicating any
-      single parent's expression verbatim.
+      No strict output format (your reasoning becomes latent guidance, not text).
+      Reason through, and make explicit:
+        - The strongest MECHANISM behind each parent (what actually drove its signal, not just its best metric) and where each fell short.
+        - A FUSION direction that recombines their COMPLEMENTARY strengths: e.g. one parent's market driver / hypothesis framing with another's construction pattern, or one's time horizon with another's data dimension. Cross operator families and feature domains freely.
+        - The INNOVATION: what is genuinely new in the hybrid beyond any single
+          parent, and the shared weakness of ALL parents that you will deliberately avoid. Reach for high-variance, high-upside ideas — duplicating any one parent's expression verbatim is a failure.
 
-      Output EXACTLY:
-      HYPOTHESIS: <one sentence>
-      EXPRESSION: <single DSL expression>
+      Stay valid (only $variables as leaves; respect operator arity; keep it short),
+      but prioritize exploration and novelty over caution.
     user: |-
       You are recombining {{ n_parents | default('several') }} parent trajectories.
-      Output the recombined hypothesis and expression now.
+      Reason toward one bold, novel fusion direction now.
