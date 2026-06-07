@@ -91,9 +91,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         "_front",        # FrontEndPipeline (holds backend + agents)
         "_front_out",    # last FrontEndOutput (GPU KV tensors)
         "_runlog",       # RunLogger (file handles)
-        "_evo",          # EvolutionOps (holds backend + agents)
-        "_parent_trajectories",  # parent KV tensors (GPU)
-        "_kv_feedback",  # terminal KV (feedback) → diwariskan ke evolution round
+        "_parent_trajectories",  # parent StrategyTrajectory objects (dibaca sbg teks)
     )
     
     @measure_time  #log berapa lama waktu yang dibutuhkan untuk inisialisasi loop
@@ -196,10 +194,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     + external_context
                 )
             self._effective_direction = effective_direction or ""
-            # Direction TANPA strategy_suffix text-operator lama — dipakai evolution
-            # re-entry, yang guidance-nya datang dari seed_kv (reflect/synthesize),
-            # BUKAN teks suffix. Tanpa ini, suffix lama ("buat ortogonal") bentrok
-            # dengan guidance KV ("perbaiki node k") dan mengkontaminasi propose.
+            # Direction TANPA strategy_suffix text-operator lama. Dipakai sebagai
+            # konteks `direction` untuk run_evolution (mutation/crossover judger);
+            # arah revisi/fusi sebenarnya datang dari TEKS parent, bukan suffix lama.
             base_direction = potential_direction or ""
             if external_context:
                 base_direction = (base_direction
@@ -211,8 +208,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             # Dipertahankan agar tanda tangan FrontEndPipeline.run tetap kompatibel.
             self._prior_feedback = ""
             self._last_factor_name = ""  # diisi _build_experiment, dipakai feedback block
-            # Parent trajectories (objek, BUKAN hanya id) untuk EvolutionOps —
-            # hanya tersedia di mode sequential (KV tensor tak bisa cross-process).
+            # Parent trajectories (objek StrategyTrajectory, BUKAN hanya id) untuk
+            # _evolution_propose → _format_parents_text (dibaca sebagai TEKS:
+            # hypothesis/expr/metrics/feedback; KV parent tidak dipakai lagi).
             self._parent_trajectories = parent_trajectories or []
 
             # ── KV-cache config dari settings ────────────────────────────
@@ -230,7 +228,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 # FrontEndPipeline; feedback via agent. Substrat backtest/library
                 # tetap dipakai ulang (lihat _build_experiment & feedback()).
                 from latent_mas.runlog import get_run_logger
-                from latent_mas.pipeline import FrontEndPipeline, EvolutionOps
+                from latent_mas.pipeline import FrontEndPipeline
                 self._latent = True
                 self._runlog = get_run_logger(
                     run_name=f"loop_{evolution_phase}_{round_idx}_{direction_id}"
@@ -239,24 +237,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 # (complexity SL/PC/ER + redundansi alpha-zoo), bukan sekadar sintaks.
                 self._front = FrontEndPipeline(
                     llm_backend, runlog=self._runlog, max_repair_attempts=3,
-                )
-                # Terminal KV (feedback) — diisi _run_latent_feedback, diwariskan
-                # ke evolution round berikutnya via _get_trajectory_data.
-                self._kv_feedback = None
-                # Debug evolution: bila LATENTMAS_EVO_DEBUG aktif, guidance KV
-                # (reflection/crossover, keduanya kv_only) di-decode jadi teks +
-                # disimpan .pt/.txt di <runlog.dir>/evo_kv untuk inspeksi.
-                import os as _os
-                _evo_debug = _os.environ.get("LATENTMAS_EVO_DEBUG", "").lower() in (
-                    "1", "true", "yes", "on")
-                _evo_dbg_dir = None
-                if _evo_debug:
-                    _evo_dbg_dir = self._runlog.dir / "evo_kv"
-                    _evo_dbg_dir.mkdir(parents=True, exist_ok=True)
-                # EvolutionOps berbagi agents (& backend) yang sama dengan front-end.
-                self._evo = EvolutionOps(
-                    llm_backend, runlog=self._runlog, agents=self._front.agents,
-                    debug=_evo_debug, debug_dir=_evo_dbg_dir,
                 )
                 # Atribut path-standar di-set None agar pickle-exclusion & getattr aman.
                 self.hypothesis_generator = None
@@ -334,9 +314,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         _mon = _get_monitor() if _HAS_MONITOR else None
 
         # ── NEW LatentMAS path: phase menentukan generator ──────────────────
-        #   original → FrontEndPipeline (proposal→construct→consistency→judger)
-        #   mutation → reflect (kv_only) → RE-ENTER FrontEndPipeline (seed=guidance KV)
-        #   crossover→ synthesize (kv_concat→kv_only) → RE-ENTER FrontEndPipeline
+        #   original → FrontEndPipeline.run (proposal→construct→consistency→judger)
+        #   mutation → run_evolution("mutation")  — judger revisi 1 target (seed None)
+        #   crossover→ run_evolution("crossover") — judger recombine k parent (seed None)
         if getattr(self, "_latent", False):
             phase = getattr(self, "evolution_phase", "original")
             parents = getattr(self, "_parent_trajectories", []) or []
@@ -604,14 +584,15 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             "loop_idx": self.loop_idx,
             "round_idx": self.round_idx,
             "hypothesis_embedding": hypothesis_embedding,
-            # KV-cache untuk evolution (mutation/crossover round berikutnya).
-            # Latent: kv_feedback = node TERMINAL trajectory (membawa seluruh rantai
-            #   proposal→construct→consistency→judger→[repair]→feedback). Sesuai τ
-            #   paper yang berakhir di node feedback/reward. reflection & crossover
-            #   round berikutnya mereflektsikan node terminal ini.
-            # Standar: _pipeline_kv lama.
+            # KV-cache untuk trajectory.kv_cache.
+            # Latent: None — evolution (mutation/crossover) sekarang JUDGER-ONLY dan
+            #   membaca parent sebagai TEKS (lihat _format_parents_text), jadi KV
+            #   parent tak lagi dibutuhkan. Mewariskannya hanya akan mem-pin KV
+            #   GPU (ratusan MB) per trajectory di pool → buang. Ini sekaligus
+            #   memutus carry-over KV antar-generasi (akar over-KV & salin-loop).
+            # Standar (non-latent): _pipeline_kv lama tetap diteruskan.
             "pipeline_kv": (
-                getattr(self, "_kv_feedback", None)
+                None
                 if getattr(self, "_latent", False)
                 else getattr(self, "_pipeline_kv", None)
             ),
@@ -700,57 +681,90 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         return float("-inf")
 
     def _evolution_propose(self, parents: list, *, crossover: bool):
-        """Evolution → GUIDANCE KV (kv_only) → RE-ENTER ORIGINAL front-end.
+        """Evolution JUDGER-ONLY → FrontEndPipeline.run_evolution (seed_kv=None).
 
-        Sesuai paper: reflection (mutation) / synthesize (crossover) hanya memberi
-        sinyal arah di ruang laten; judger ORIGINAL yang menghasilkan factor —
-        instantiasi "regenerate from node k". Bila guidance KV gagal terbentuk,
-        re-entry tetap jalan dengan seed_kv=None (front-end polos) — tak dead-end.
+        mutation  : revisi 1 target (eksploitasi).
+        crossover : recombination k parent (eksplorasi).
+        Materi parent dikirim sebagai TEKS (lihat _format_parents_text); KV parent
+        TIDAK diwariskan → KV per ronde terbatas, tak ada salin-loop. Tidak ada lagi
+        reflection / kv_concat / re-entry front-end.
         """
         if crossover:
-            # urut ASC by metric → parent terbaik di posisi TERAKHIR (bias recency
-            # menguntungkan parent terkuat saat di-concat).
+            # urut ASC by metric → parent terbaik di posisi TERAKHIR (recency dalam teks)
             ordered = sorted(parents, key=self._parent_metric)
-            kvs = [getattr(p, "kv_cache", None) for p in ordered]
-            seed = self._evo.synthesize(kvs)
-            label = f"crossover(n={len(parents)})"
+            front = self._front.run_evolution(
+                kind="crossover",
+                parent_text=self._format_parents_text(ordered),
+                n_parents=len(ordered),
+                direction=self._base_direction,
+            )
+            label = f"crossover(n={len(ordered)})"
         else:
-            p = parents[0]
-            seed = self._evo.reflect(
-                parent_kv=getattr(p, "kv_cache", None),
-                parent_hypothesis=getattr(p, "hypothesis", "") or "",
-                parent_expression=self._parent_expr(p),
-                parent_feedback=str(getattr(p, "feedback", "") or ""),
-                backtest_summary=str(getattr(p, "backtest_metrics", "") or ""),
+            front = self._front.run_evolution(
+                kind="mutation",
+                parent_text=self._format_parents_text([parents[0]]),
+                n_parents=1,
+                direction=self._base_direction,
             )
             label = "mutation"
-
-        seed_kv = seed.kv if seed is not None else None
-        if seed_kv is None:
-            logger.warning(f"[LatentMAS] {label} produced no guidance KV; "
-                           f"re-entering ORIGINAL with empty seed")
-        # RE-ENTER ORIGINAL: judger di sini yang menghasilkan factor mutasi/silang.
-        # Pakai _base_direction (tanpa strategy_suffix lama) — guidance dari seed_kv.
-        front = self._front.run(
-            direction=self._base_direction, seed_kv=seed_kv,
-        )
-        logger.info(f"[LatentMAS] {label} → expr={front.expression!r} "
-                    f"repaired={front.repaired}")
+        logger.info(f"[LatentMAS] {label} → n_expr={len(front.expressions)} "
+                    f"exprs={front.expressions!r} repaired={front.repaired} "
+                    f"gate_error={front.gate_error or 'none'}")
         return front
+
+    def _format_parents_text(self, parents: list) -> str:
+        """Rangkai parent StrategyTrajectory → TEKS untuk mutation/crossover judger.
+
+        Menyertakan hipotesis, ekspresi PENUH (tak dipangkas seperti
+        to_summary_text yang memotong di 100 char), metrik backtest, dan feedback.
+        Diberi label [Parent i] saat >1 agar crossover bisa membedakan sumber.
+        Inilah SATU-SATUNYA jalur transfer parent→evolution sekarang (KV parent
+        tidak lagi dipakai)."""
+        blocks: list[str] = []
+        single = len(parents) == 1
+        for i, p in enumerate(parents, 1):
+            hypo = (getattr(p, "hypothesis", "") or "").strip()
+            expr_lines: list[str] = []
+            for f in (getattr(p, "factors", None) or [])[:5]:
+                if isinstance(f, dict) and (f.get("expression") or "").strip():
+                    nm = (f.get("name") or "").strip()
+                    ex = f["expression"].strip()
+                    expr_lines.append(f"  - {nm}: {ex}" if nm else f"  - {ex}")
+            if not expr_lines:
+                ex = self._parent_expr(p)
+                if ex:
+                    expr_lines.append(f"  - {ex}")
+            metrics = getattr(p, "backtest_metrics", None) or {}
+            metric_str = ", ".join(
+                f"{k}={v:.4f}" for k, v in metrics.items()
+                if isinstance(v, (int, float))
+            )
+            fb = str(getattr(p, "feedback", "") or "").strip()
+            if len(fb) > 400:
+                fb = fb[:400] + "…"
+            parts: list[str] = []
+            if hypo:        parts.append(f"Hypothesis: {hypo}")
+            if expr_lines:  parts.append("Expression(s):\n" + "\n".join(expr_lines))
+            if metric_str:  parts.append(f"Backtest: {metric_str}")
+            if fb:          parts.append(f"Feedback: {fb}")
+            block = "\n".join(parts) or "(empty parent)"
+            blocks.append(block if single else f"[Parent {i}]\n{block}")
+        return "\n\n".join(blocks)
 
     def _run_latent_feedback(self, prev_out: dict[str, Any]) -> dict:
         """Feedback EVALUATIF (support/refute) via agent latent_mas.
 
         Berbeda dari QuantaAlpha asli: feedback TIDAK lagi mengarang "New
-        Hypothesis" — generasi arah berikutnya adalah tugas mutation (reflect→
-        re-entry) & crossover (synthesize→re-entry). Dua keputusan konsekuensial
-        DICABUT dari LLM menjadi deterministik dan disuntik sebagai input:
+        Hypothesis" — generasi arah berikutnya adalah tugas mutation (revisi 1
+        target) & crossover (recombination), keduanya JUDGER-ONLY membaca parent
+        sebagai teks. Dua keputusan konsekuensial DICABUT dari LLM menjadi
+        deterministik dan disuntik sebagai input:
           - complexity audit  → ComplexityChecker
           - replace-best-result → aturan metrik (_decide_replace_sota)
 
         Seed = kv_final (kv_repair bila repair jalan, else kv_judger) → feedback
         koheren dengan ekspresi yang benar-benar dijalankan. KV feedback (terminal)
-        disimpan ke self._kv_feedback untuk diwariskan ke evolution round berikutnya.
+        TIDAK diwariskan ke ronde evolution (evolution baca teks parent, bukan KV).
         """
         from llm._shared import robust_json_parse
         from latent_mas import kv_ops
@@ -800,8 +814,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 backtest_results=backtest_results,
                 sota_block=decision_block,
             )
-        # Simpan KV terminal untuk evolution round berikutnya (parent.kv_cache).
-        self._kv_feedback = r.kv_cache
+        # KV feedback (terminal) sengaja TIDAK disimpan/diwariskan: evolution kini
+        # judger-only membaca parent sebagai teks, jadi membiarkan r.kv_cache di-GC
+        # menghindari pin KV GPU yang sia-sia. _get_trajectory_data → pipeline_kv=None.
 
         try:
             fb = robust_json_parse(r.text) if r.text else {}

@@ -25,23 +25,24 @@ Aliran KV (sesuai desain):
     repair(kv_and_text) ×N     ← deepcopy(kv_consist)   per attempt (baseline sama)
     feedback(kv_and_text)      ← deepcopy(kv_consist)   ← bukan kv_judger (anti-bias)
 
-  EVOLUTION:
-    mutation_reflection ← deepcopy(kv_feedback)         → diagnosis
-    mutation_judger     ← (lanjut dari kv_reflect)      → mutated hypo+expr
-    crossover_judger    ← kv_concat([deepcopy(p_i)...]) → recombined hypo+expr
+  EVOLUTION (JUDGER-ONLY, seed_kv=None — lihat run_evolution):
+    mutation_judger   ← past_kv=None + TEKS 1 parent  → revised hypo+expr
+    crossover_judger  ← past_kv=None + TEKS k parent  → recombined hypo+expr
+  Tidak ada reflection, tidak ada kv_concat, tidak ada re-entry front-end, dan
+  TIDAK ada warisan KV parent. Materi parent masuk sebagai teks → KV per ronde
+  terbatas (~prompt judger + teks parent + latent) → tak ada over-KV / salin-loop.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from pathlib import Path
+from dataclasses import dataclass
 from typing import Any, Callable, List, Optional
 
 from llm.client import LocalLLMBackend, KVCache
 from latent_mas import kv_ops
 from latent_mas.agent import LatentAgent, AgentResult, load_all_agents
 from latent_mas.parsers import (
-    HypothesisExpr, HypothesisExprs, PASS_SENTINEL, MutationDiagnosis,
+    HypothesisExprs, PASS_SENTINEL,
     parse_repair_multi,
 )
 
@@ -222,6 +223,59 @@ class FrontEndPipeline:
             repaired=repaired, repair_attempts=attempts, gate_error=gate_err,
         )
 
+    def run_evolution(
+        self,
+        *,
+        kind: str,                       # "mutation" | "crossover"
+        parent_text: str,
+        n_parents: int = 1,
+        direction: str = "",
+    ) -> FrontEndOutput:
+        """Evolution JUDGER-ONLY — tanpa reflection, tanpa re-entry front-end.
+
+          mutation  : revisi SATU target (eksploitasi).
+          crossover : recombination k parent (eksplorasi).
+
+        Di-seed dari **None**; materi parent masuk sebagai **TEKS** (`parent_text`).
+        Agent bernalar laten lalu emit hipotesis + N ekspresi (parser
+        `hypothesis_exprs`, sama seperti judger ORIGINAL). Hasilnya melewati
+        `_gate_and_repair_multi` yang SAMA, lalu downstream (backtest/feedback)
+        tak berubah. Karena seed=None & parent=teks, KV per ronde terbatas
+        (~prompt judger + teks parent + latent) — tak ada warisan/akumulasi KV
+        parent, jadi tak ada over-KV maupun penyalinan jawaban loop sebelumnya.
+        """
+        rl = self.runlog
+        if kind == "mutation":
+            agent_name = "mutation_judger"
+            kw = dict(target_text=parent_text, direction=direction)
+        elif kind == "crossover":
+            agent_name = "crossover_judger"
+            kw = dict(parents_text=parent_text, n_parents=n_parents, direction=direction)
+        else:
+            raise ValueError(f"unknown evolution kind: {kind!r}")
+
+        # seed_kv=None → RESET. Bedakan dari front-end ORIGINAL yang sequential.
+        r_judge = self._a(agent_name).run(past_kv=None, **kw)
+        he: Optional[HypothesisExprs] = r_judge.parsed
+        if he is None:
+            if rl: rl.warn(f"{kind} judger output unparseable",
+                           head=(r_judge.text or "")[:120])
+            hypothesis, candidates = "", []
+        else:
+            hypothesis, candidates = he.hypothesis, list(he.expressions)
+
+        # Tak ada kv_consist di jalur ini → baseline repair = KV judger evolution
+        # itu sendiri (deepcopy per attempt di dalam _gate_and_repair_multi).
+        passing, kv_final, repaired, attempts, gate_err = self._gate_and_repair_multi(
+            candidates, r_judge.kv_cache, r_judge.kv_cache,
+        )
+        return FrontEndOutput(
+            hypothesis=hypothesis, expressions=passing,
+            kv_consist=r_judge.kv_cache, kv_judger=r_judge.kv_cache,
+            judger_text=r_judge.text or "", kv_final=kv_final,
+            repaired=repaired, repair_attempts=attempts, gate_error=gate_err,
+        )
+
     def _gate_and_repair_multi(
         self,
         candidates: List[str],
@@ -328,115 +382,3 @@ class FrontEndPipeline:
 
         if rl: rl.error("repair exhausted; keeping original expression", expr=expression)
         return expression, False, self.max_repair_attempts, gate_error, None
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Evolution operators
-# ─────────────────────────────────────────────────────────────────────────────
-
-@dataclass
-class EvolutionSeed:
-    """Guidance KV dari evolution (kv_only) untuk MENYEMAI re-entry ORIGINAL.
-
-    Tidak membawa (hypo, expr): di desain ini evolution hanya memberi *sinyal arah*
-    di ruang laten; judger ORIGINAL (yang di-reentry dengan `kv` sebagai seed) yang
-    menghasilkan factor — ini instantiasi "regenerate from node k" (paper Eq. 6/7).
-
-      kv         : KV untuk dijadikan seed_kv FrontEndPipeline.run.
-      debug_text : rekonstruksi teks isi KV (hanya terisi bila debug aktif).
-    """
-    kv: Optional[KVCache]
-    debug_text: str = ""
-
-
-class EvolutionOps:
-    """Evolution = hasilkan GUIDANCE KV (kv_only), bukan factor.
-
-    Mutation  : mutation_reflection(kv_only) mendiagnosa node gagal → guidance KV.
-    Crossover : kv_concat(parent KV) → crossover_judger(kv_only) → guidance KV.
-    Re-entry ORIGINAL dilakukan oleh caller (loop) via FrontEndPipeline.run(seed_kv=...).
-
-    Debug: karena kedua agent kv_only (tak emit teks), set `debug=True` untuk men-
-    decode guidance KV jadi teks (probe `introspect`) + menyimpannya ke `.pt`/`.txt`
-    di `debug_dir`. Produksi (debug=False) tetap murni-laten & tanpa pass ekstra.
-    """
-
-    def __init__(self, backend: LocalLLMBackend, *, runlog: Any = None,
-                 agents: Optional[dict] = None,
-                 debug: bool = False, debug_dir: Optional[Path] = None) -> None:
-        self.backend = backend
-        self.runlog = runlog
-        self.agents: dict = agents or load_all_agents(backend, runlog=runlog)
-        self.debug = debug
-        self.debug_dir = Path(debug_dir) if debug_dir else None
-        self._dbg_idx = 0
-
-    def _a(self, name: str) -> LatentAgent:
-        return self.agents[name]
-
-    # ── Mutation step-1: reflection (kv_only) → guidance KV ───────────────────
-    def reflect(
-        self,
-        *,
-        parent_kv: Optional[KVCache],
-        parent_hypothesis: str,
-        parent_expression: str,
-        parent_feedback: str,
-        backtest_summary: str,
-    ) -> EvolutionSeed:
-        r_ref = self._a("mutation_reflection").run(
-            past_kv=kv_ops.kv_deepcopy(parent_kv),
-            parent_hypothesis=parent_hypothesis,
-            parent_expression=parent_expression,
-            parent_feedback=parent_feedback,
-            backtest_summary=backtest_summary,
-        )
-        dbg = self._debug_decode(r_ref.kv_cache, "mutation_reflection")
-        return EvolutionSeed(kv=r_ref.kv_cache, debug_text=dbg)
-
-    # ── Crossover: concat k parent KV (hierarchical) → crossover_judger (kv_only)
-    def synthesize(
-        self,
-        parent_kvs: List[Optional[KVCache]],
-    ) -> EvolutionSeed:
-        """`parent_kvs` diasumsikan SUDAH diurut (parent terbaik di posisi TERAKHIR
-        agar mendapat bias recency saat di-concat)."""
-        clones = [kv_ops.kv_deepcopy(kv) for kv in parent_kvs]
-        merged = kv_ops.kv_concat(clones)
-        if merged is None:
-            return EvolutionSeed(kv=None)
-        if self.runlog:
-            self.runlog.info("crossover KV merged",
-                             n_parents=len([k for k in clones if k is not None]),
-                             merged=kv_ops.kv_describe(merged))
-        r_cross = self._a("crossover_judger").run(
-            past_kv=merged, n_parents=len([k for k in parent_kvs if k is not None]),
-        )
-        dbg = self._debug_decode(r_cross.kv_cache, "crossover_judger")
-        return EvolutionSeed(kv=r_cross.kv_cache, debug_text=dbg)
-
-    # ── Debug-only: decode guidance KV → teks (probe) + simpan .pt/.txt ───────
-    def _debug_decode(self, kv: Optional[KVCache], label: str) -> str:
-        if not self.debug or kv is None:
-            return ""
-        text = ""
-        try:
-            probe = self._a("introspect").run(past_kv=kv_ops.kv_deepcopy(kv))
-            text = probe.text or ""
-        except Exception as e:  # noqa: BLE001
-            if self.runlog:
-                self.runlog.warn(f"debug-decode {label} failed", err=repr(e))
-        if self.debug_dir is not None:
-            try:
-                self._dbg_idx += 1
-                stem = f"{self._dbg_idx:03d}_{label}"
-                kv_ops.kv_save(kv, self.debug_dir / f"{stem}.pt",
-                               metadata={"label": label, "decoded_text": text})
-                (self.debug_dir / f"{stem}.txt").write_text(text)
-                if self.runlog:
-                    self.runlog.info("debug-decode saved",
-                                     path=str(self.debug_dir / f"{stem}.pt"))
-            except Exception as e:  # noqa: BLE001
-                if self.runlog:
-                    self.runlog.warn(f"debug-save {label} failed", err=repr(e))
-        return text

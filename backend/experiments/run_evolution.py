@@ -4,16 +4,17 @@ experiments/run_evolution.py
 ====================
 Uji kemampuan 3 agent evolution SECARA TERISOLASI — tanpa factor_mining/backtest.
 
-Alur:
-  1. Jalankan FrontEndPipeline untuk membuat 1-2 "parent" (hypothesis+expression
-     + kv_judger asli, persis konteks yang dipakai loop nyata).
-  2. Mutation : EvolutionOps.mutate pada parent-1 (reflection → judger).
-  3. Crossover: EvolutionOps.crossover([parent-1, parent-2]) (kv_concat → judger).
-  4. Cetak diagnosis + hypothesis/expression hasil, plus KV describe.
+Alur (JUDGER-ONLY, sesuai produksi):
+  1. Jalankan FrontEndPipeline untuk membuat 1-2 "parent" (hypothesis+expression).
+  2. Mutation : front.run_evolution(kind="mutation") — judger merevisi 1 target,
+     di-seed None, materi parent sebagai TEKS.
+  3. Crossover: front.run_evolution(kind="crossover") — judger me-recombine 2
+     parent (teks), di-seed None.
+  4. Cetak hypothesis/expression hasil + KV describe (per ronde harus terbatas).
 
 Feedback parent & ringkasan backtest disuntik manual (--feedback / --backtest-
-summary) supaya kamu bisa stress-test reflection: ubah feedback → lihat apakah
-mutation_reflection mendiagnosa step yang tepat.
+summary) — keduanya masuk ke TEKS parent: ubah feedback → lihat apakah mutation
+judger merevisi ke arah yang tepat.
 
 Contoh
 ------
@@ -48,6 +49,23 @@ def _show(title: str, obj) -> None:
     print(obj)
 
 
+def _parent_block(out, *, feedback: str = "", backtest: str = "", label: str = "") -> str:
+    """Format FrontEndOutput jadi TEKS parent untuk run_evolution (mirror
+    loop._format_parents_text, tapi dari FrontEndOutput bukan StrategyTrajectory)."""
+    exprs = out.expressions or ([out.expression] if out.expression else [])
+    parts = []
+    if out.hypothesis:
+        parts.append(f"Hypothesis: {out.hypothesis}")
+    if exprs:
+        parts.append("Expression(s):\n" + "\n".join(f"  - {e}" for e in exprs))
+    if backtest:
+        parts.append(f"Backtest: {backtest}")
+    if feedback:
+        parts.append(f"Feedback: {feedback}")
+    block = "\n".join(parts) or "(empty)"
+    return f"[{label}]\n{block}" if label else block
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Isolated test of evolution agents")
     ap.add_argument("--direction", required=True, help="parent-1 direction")
@@ -56,7 +74,7 @@ def main() -> None:
     ap.add_argument("--mode", choices=["mutation", "crossover", "both"], default="both")
     ap.add_argument("--feedback", default="Low IC. The factor mechanism is weak and "
                     "too correlated with raw volume; needs a different signal family.",
-                    help="synthetic parent feedback (untuk mutation_reflection)")
+                    help="synthetic parent feedback (masuk ke teks parent mutation)")
     ap.add_argument("--backtest-summary",
                     default="IC=0.010 RankIC=0.024 annualized_return=3.5% max_drawdown=-9.5%",
                     help="synthetic parent backtest metrics")
@@ -77,7 +95,7 @@ def main() -> None:
 
     from llm.client import LocalLLMBackend
     from latent_mas.runlog import get_run_logger
-    from latent_mas.pipeline import FrontEndPipeline, EvolutionOps
+    from latent_mas.pipeline import FrontEndPipeline
     from latent_mas import kv_ops
 
     rl = get_run_logger(run_name="evolution", console_level=args.console)
@@ -90,11 +108,6 @@ def main() -> None:
         knn_enabled=args.knn,
     )
     front = FrontEndPipeline(backend, runlog=rl)
-    # EvolutionOps berbagi agents yang sama (seperti di loop). debug=True supaya
-    # guidance KV (reflection/crossover, kv_only) di-decode jadi teks + disimpan
-    # ke <rl.dir>/evo_kv — inilah cara melihat "jawaban versi teks" agent kv_only.
-    evo = EvolutionOps(backend, runlog=rl, agents=front.agents,
-                       debug=True, debug_dir=rl.dir / "evo_kv")
 
     # ── 1. buat parent-1 (dan parent-2 untuk crossover) ──────────────────────
     rl.info("building parent-1 via front-end")
@@ -142,41 +155,41 @@ def main() -> None:
             kv_ops.kv_save(p2.kv_judger, Path(args.save_parents) / "parent2_kv.pt")
         rl.info("saved parent KVs", dir=args.save_parents)
 
-    # ── 2. mutation: reflect (kv_only) → RE-ENTER front-end (seed=guidance KV) ─
+    # ── 2. mutation: JUDGER-ONLY, seed=None, parent sebagai teks ─────────────
     if args.mode in ("mutation", "both"):
-        rl.info("running mutation (reflect → re-enter ORIGINAL)")
-        seed = evo.reflect(
-            parent_kv=p1.kv_final,
-            parent_hypothesis=p1.hypothesis,
-            parent_expression=p1.expression,
-            parent_feedback=args.feedback,
-            backtest_summary=args.backtest_summary,
-        )
-        child = front.run(direction=args.direction, seed_kv=seed.kv)
+        rl.info("running mutation (judger-only: revise target)")
+        parent_text = _parent_block(p1, feedback=args.feedback,
+                                    backtest=args.backtest_summary)
+        child = front.run_evolution(kind="mutation", parent_text=parent_text,
+                                    n_parents=1, direction=args.direction)
         _show("MUTATION RESULT", json.dumps({
             "parent_expr": p1.expression,
-            "guidance_kv": kv_ops.kv_describe(seed.kv),
-            "guidance_debug_text": (seed.debug_text or "")[:300],
             "mutated_hypothesis": child.hypothesis,
-            "mutated_expression": child.expression,
+            "mutated_expressions": child.expressions,
             "repaired": child.repaired,
-            "ok": bool(child.expression),
+            "gate_error": child.gate_error,
+            "kv_judger": kv_ops.kv_describe(child.kv_judger),
+            "ok": bool(child.expressions),
         }, indent=2, default=str))
 
-    # ── 3. crossover: synthesize (kv_concat→kv_only) → RE-ENTER front-end ──────
+    # ── 3. crossover: JUDGER-ONLY recombination, seed=None, parents sebagai teks
     if args.mode in ("crossover", "both") and p2 is not None:
-        rl.info("running crossover (synthesize → re-enter ORIGINAL)")
-        seed = evo.synthesize([p1.kv_final, p2.kv_final])
-        child = front.run(direction=args.direction, seed_kv=seed.kv)
+        rl.info("running crossover (judger-only: recombination)")
+        parent_text = "\n\n".join([
+            _parent_block(p1, backtest=args.backtest_summary, label="Parent 1"),
+            _parent_block(p2, backtest=args.backtest_summary, label="Parent 2"),
+        ])
+        child = front.run_evolution(kind="crossover", parent_text=parent_text,
+                                    n_parents=2, direction=args.direction)
         _show("CROSSOVER RESULT", json.dumps({
             "parent1_expr": p1.expression,
             "parent2_expr": p2.expression,
-            "guidance_kv": kv_ops.kv_describe(seed.kv),
-            "guidance_debug_text": (seed.debug_text or "")[:300],
             "crossover_hypothesis": child.hypothesis,
-            "crossover_expression": child.expression,
+            "crossover_expressions": child.expressions,
             "repaired": child.repaired,
-            "ok": bool(child.expression),
+            "gate_error": child.gate_error,
+            "kv_judger": kv_ops.kv_describe(child.kv_judger),
+            "ok": bool(child.expressions),
         }, indent=2, default=str))
 
     rl.finalize()

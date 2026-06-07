@@ -104,6 +104,14 @@ class EvolutionController:
         """
         self.config = config
         self._llm_backend = llm_backend
+        # Mode laten = backend di-share (loop memakai sinyal yang sama: llm_backend
+        # ada → factor_propose lewat run_evolution judger-only yang membaca TEKS
+        # parent dan MENGABAIKAN strategy_suffix/parent_kv dari task). Maka operator
+        # teks-suffix LAMA (mutation_op/crossover_op.generate_*) — masing-masing 1
+        # generasi LLM kv_and_text — tak perlu dipanggil karena hasilnya dibuang.
+        # Gate-nya terpusat di _mutation_suffix/_crossover_suffix. select_crossover_pairs
+        # (pure-Python, tanpa LLM) TETAP dipakai untuk memilih pasangan parent.
+        self.latent_mode = llm_backend is not None
 
         # Initialize trajectory pool with fresh_start option
         pool_path = Path(config.pool_save_path) if config.pool_save_path else None
@@ -133,6 +141,7 @@ class EvolutionController:
     def set_llm_backend(self, backend: Optional[LocalLLMBackend]) -> None:
         """Propagate llm_backend ke mutation/crossover operators."""
         self._llm_backend = backend
+        self.latent_mode = backend is not None  # jaga sinkron dgn __init__
         self.mutation_op.set_llm_backend(backend)
         self.crossover_op.set_llm_backend(backend)
 
@@ -250,7 +259,7 @@ class EvolutionController:
                 if existing:
                     continue
                 
-                suffix = self.mutation_op.generate_mutation_prompt_suffix(parent)
+                suffix = self._mutation_suffix(parent)
                 # Jangan pass mutation/feedback KV ke propose — akan prime model ke
                 # feedback-format. factor_mining fallback ke _planning_kv (netral).
                 tasks.append({
@@ -288,7 +297,7 @@ class EvolutionController:
             
             for idx in range(self._crossover_idx, len(self._crossover_groups)):
                 parents = self._crossover_groups[idx]
-                suffix = self.crossover_op.generate_crossover_prompt_suffix(parents)
+                suffix = self._crossover_suffix(parents)
                 # parent_kv = None: sama dengan mutation, parent feedback KV
                 # mem-prime propose ke format feedback. Crossover guidance sudah
                 # lengkap di text suffix.
@@ -381,6 +390,22 @@ class EvolutionController:
                 self._current_phase = RoundPhase.CROSSOVER
                 logger.info(f"All crossover rounds complete, continuing with crossover (round {self._current_round})")
     
+    # ── Gate operator teks-suffix LAMA (hemat GPU di mode laten) ──────────────
+    def _mutation_suffix(self, parent: StrategyTrajectory) -> str:
+        """strategy_suffix mutation via operator LAMA (1 generasi LLM kv_and_text).
+        Di mode laten DILEWATI: loop memakai run_evolution(kind='mutation') yang
+        membaca teks parent langsung & mengabaikan suffix → panggilannya mubazir."""
+        if self.latent_mode:
+            return ""
+        return self.mutation_op.generate_mutation_prompt_suffix(parent)
+
+    def _crossover_suffix(self, parents: list) -> str:
+        """strategy_suffix crossover via operator LAMA (1 generasi LLM kv_and_text).
+        Di mode laten DILEWATI (run_evolution(kind='crossover') baca teks parent)."""
+        if self.latent_mode:
+            return ""
+        return self.crossover_op.generate_crossover_prompt_suffix(parents)
+
     def _get_original_task(self) -> Optional[dict[str, Any]]:
         """Get next original round task."""
         # Find a direction that hasn't completed original
@@ -462,7 +487,7 @@ class EvolutionController:
                 continue #* skip jika sudah ada
 
             # Generate mutation guidance
-            suffix = self.mutation_op.generate_mutation_prompt_suffix(parent)
+            suffix = self._mutation_suffix(parent)
             #* generate prompt suffix berisi info parent trajectory
             #* yang akan disisipkan ke prompt LLM supaya tahu harus "memutasi" apa
 
@@ -708,29 +733,28 @@ class EvolutionController:
         # Get next crossover group
         parents = self._crossover_groups[self._crossover_idx]
 
-        # Generate crossover guidance
-        # generate_crossover_prompt_suffix memanggil crossover LLM (mode kv_and_text)
-        # dengan best parent's kv_cache sebagai input, menghasilkan crossover_kv.
-        suffix = self.crossover_op.generate_crossover_prompt_suffix(parents)
+        # Crossover guidance (teks-suffix + seed KV) lewat operator LAMA HANYA untuk
+        # mode standar. _crossover_suffix sudah melewati panggilan LLM di mode laten.
+        suffix = self._crossover_suffix(parents)
 
-        # Gunakan KV output dari crossover LLM (crossover_kv) sebagai seed propose,
-        # bukan best_parent_kv (feedback_kv parent). Alasan sama dengan mutation:
-        # feedback_kv mem-prime model ke format output feedback ("Observations",
-        # "New Hypothesis") bukan format hypothesis standar — propose jadi salah
-        # format. crossover_kv lebih netral: model baru selesai synthesize
-        # hybrid direction, bukan generate feedback.
-        # Fallback ke best_parent_kv jika crossover LLM tidak produce KV
-        # (mis. collapse ke text_only).
-        crossover_kv = self.crossover_op.last_kv
-        best_parent_kv = None
-        best_metric = -float("inf")
-        for p in parents:
-            if p.kv_cache is not None:
-                m = p.get_primary_metric() or 0.0
-                if m > best_metric:
-                    best_metric = m
-                    best_parent_kv = p.kv_cache
-        seed_kv = crossover_kv if crossover_kv is not None else best_parent_kv
+        if self.latent_mode:
+            # run_evolution membaca TEKS parent → loop mengabaikan parent_kv. Skip
+            # total seleksi KV (tak ada last_kv karena generate tak dipanggil).
+            seed_kv = None
+        else:
+            # Gunakan KV output crossover LLM (crossover_kv) sebagai seed propose,
+            # bukan best_parent_kv (feedback_kv mem-prime format feedback). Fallback
+            # ke best_parent_kv bila crossover LLM tak produce KV (collapse text_only).
+            crossover_kv = self.crossover_op.last_kv
+            best_parent_kv = None
+            best_metric = -float("inf")
+            for p in parents:
+                if p.kv_cache is not None:
+                    m = p.get_primary_metric() or 0.0
+                    if m > best_metric:
+                        best_metric = m
+                        best_parent_kv = p.kv_cache
+            seed_kv = crossover_kv if crossover_kv is not None else best_parent_kv
 
         task = {
             "phase": RoundPhase.CROSSOVER,
