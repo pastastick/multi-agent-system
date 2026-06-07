@@ -860,7 +860,16 @@ class EvolutionController:
         backtest_result = getattr(experiment, "result", None) if experiment else None
         if backtest_result is not None:
             backtest_metrics = self._extract_metrics(backtest_result)
-        
+
+        # HYBRID: per-factor RankIC (reward `L` paper) dari runner.develop → agregat
+        # ke metrics. FactorIC_mean dipakai get_primary_metric (seleksi evolution);
+        # dict mentah disimpan di extra_info untuk inspeksi.
+        factor_ic = getattr(experiment, "factor_ic", None) or {}
+        ic_vals = [v for v in factor_ic.values() if isinstance(v, (int, float))]
+        if ic_vals:
+            backtest_metrics["FactorIC_mean"] = float(sum(ic_vals) / len(ic_vals))
+            backtest_metrics["FactorIC_max"] = float(max(ic_vals))
+
         # Extract feedback info
         feedback_text = str(feedback) if feedback else ""
         feedback_details = {}
@@ -888,6 +897,7 @@ class EvolutionController:
             parent_ids=parent_ids,
             hypothesis_embedding=hypothesis_embedding,
             kv_cache=kv_cache,
+            extra_info={"factor_ic": factor_ic},
         )
     
     def _extract_metrics(self, result: Any) -> dict[str, Optional[float]]:

@@ -779,10 +779,18 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         replace_flag, sota_note = self._decide_replace_sota(metrics, bool(complexity))
 
         # factor_block: daftar SEMUA ekspresi lolos (jadi referensi bentuk faktor
-        # yang masuk model gabungan untuk hipotesis ini).
+        # yang masuk model gabungan untuk hipotesis ini). HYBRID: tiap factor diberi
+        # standalone RankIC (OOS, reward `L` paper) dari runner → sinyal kualitas
+        # per-factor untuk feedback (selain RankIC gabungan di backtest_results).
         names = getattr(self, "_last_factor_names", None) or [self._last_factor_name]
         exprs = front.expressions or [front.expression]
-        factor_lines = [f"- {n}: {e}" for n, e in zip(names, exprs)]
+        factor_ic = getattr(exp, "factor_ic", None) or {}
+
+        def _ic_tag(name: str) -> str:
+            v = factor_ic.get(name)
+            return f"  [standalone RankIC={v:.4f}]" if isinstance(v, (int, float)) else ""
+
+        factor_lines = [f"- {n}: {e}{_ic_tag(n)}" for n, e in zip(names, exprs)]
         factor_block = (
             f"Hypothesis: {front.hypothesis}\n"
             f"Factors ({len(exprs)}) feeding the combined model:\n"

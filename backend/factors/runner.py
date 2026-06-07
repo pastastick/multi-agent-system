@@ -141,6 +141,74 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         return new_feature.iloc[:, IC_max[IC_max < 0.99].index]
 
     
+    # ── HYBRID: standalone per-factor RankIC (reward `L` paper) ───────────────
+    # Pelengkap LightGBM combined (metrik portofolio). Per-factor RankIC = sinyal
+    # fitness/seleksi evolution + evaluatif feedback. Dihitung dari sumber yang
+    # SAMA dengan factor (daily_pv.h5) → index otomatis align, tanpa qlib.init.
+    @staticmethod
+    def _oos_window() -> tuple:
+        """(start, end) Timestamp segmen TEST dari template config combined-factors,
+        agar RankIC standalone out-of-sample & sebanding dgn RankIC LightGBM.
+        Fallback (None, None) bila gagal parse → IC dihitung full-range."""
+        try:
+            import yaml as _yaml
+            cfg = Path(__file__).resolve().parent / "factor_template" / "conf_combined_factors.yaml"
+            seg = _yaml.safe_load(cfg.read_text())["task"]["dataset"]["kwargs"]["segments"]["test"]
+            return pd.Timestamp(seg[0]), pd.Timestamp(seg[1])
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"[FactorIC] gagal baca segmen test dari config: {e}; pakai full-range")
+            return None, None
+
+    def _factor_label(self) -> "pd.Series | None":
+        """Label = Ref($close,-2)/Ref($close,-1)-1 (= LABEL0 config), dihitung dari
+        daily_pv.h5 (sumber yang sama dgn factor). Series ber-index (datetime,
+        instrument). None bila sumber/kolom tak tersedia."""
+        data_source = Path(FACTOR_COSTEER_SETTINGS.data_folder)
+        if not data_source.is_absolute():
+            data_source = Path(__file__).resolve().parent.parent / FACTOR_COSTEER_SETTINGS.data_folder
+        pv_path = data_source / "daily_pv.h5"
+        if not pv_path.exists():
+            return None
+        pv = pd.read_hdf(pv_path, key="data")
+        if "$close" not in getattr(pv, "columns", []):
+            return None
+        close = pv["$close"].sort_index()
+        g = close.groupby(level="instrument")          # cegah bocor antar simbol
+        label = g.shift(-2) / g.shift(-1) - 1.0        # = Ref($close,-2)/Ref($close,-1)-1
+        label.name = "label"
+        return label
+
+    def _compute_factor_ic(self, new_factors: pd.DataFrame) -> dict:
+        """RankIC cross-sectional per factor pada segmen TEST (OOS):
+        mean_t spearman(factor_t, label_t). Return {factor_name: rank_ic|None}."""
+        label = self._factor_label()
+        if label is None:
+            logger.warning("[FactorIC] daily_pv.h5/$close tak tersedia → lewati per-factor RankIC")
+            return {}
+        # samakan urutan level index dgn new_factors (alignment by tuple)
+        names = list(new_factors.index.names)
+        if set(label.index.names) == set(names) and list(label.index.names) != names:
+            label = label.reorder_levels(names)
+        start, end = self._oos_window()
+        ic_out: dict = {}
+        for col in dict.fromkeys(new_factors.columns):   # unik, jaga urutan
+            s = new_factors[col]
+            if isinstance(s, pd.DataFrame):              # nama kolom dobel → ambil pertama
+                s = s.iloc[:, 0]
+            df = pd.DataFrame({"f": s, "y": label}).dropna()
+            if start is not None and not df.empty:
+                dts = df.index.get_level_values("datetime")
+                df = df[(dts >= start) & (dts <= end)]
+            if df.empty:
+                ic_out[str(col)] = None
+                continue
+            per_day = df.groupby(level="datetime").apply(
+                lambda x: x["f"].corr(x["y"], method="spearman") if len(x) > 2 else float("nan")
+            )
+            ic = per_day.mean()
+            ic_out[str(col)] = float(ic) if pd.notna(ic) else None
+        return ic_out
+
     #* dipanggil di AlphaAgentLoop -> factor_backtest
     # gabung semua faktor value
     # jalankan backtest (Qlib)
@@ -222,7 +290,18 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
             #* langsung pakai new faktor tanpa SOTA
             else:
                 combined_factors = new_factors
-                
+
+            # ── HYBRID: per-factor RankIC (OOS) selagi kolom MASIH = nama factor ──
+            # (sebelum di-nest ke MultiIndex "feature"). Defensif: kegagalan IC tak
+            # boleh menggagalkan backtest. Disimpan di exp.factor_ic (di-pickle &
+            # ikut di-restore via assign_cached_result).
+            try:
+                exp.factor_ic = self._compute_factor_ic(new_factors)
+                logger.info(f"Per-factor RankIC (OOS): {exp.factor_ic}")
+            except Exception as e:  # noqa: BLE001
+                logger.warning(f"Per-factor RankIC computation failed: {e}")
+                exp.factor_ic = {}
+
             if len(combined_factors.columns) >= 2:
                 pd.set_option('display.width', 1000)
                 logger.info(f"Factor correlation: \n\n{combined_factors.corr()}\n")
