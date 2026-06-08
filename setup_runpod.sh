@@ -95,11 +95,12 @@ TORCH_VER=$(python -c "import torch; print(torch.__version__)" 2>/dev/null || ec
 echo "  torch: $TORCH_VER | cuda available: $CUDA_OK"
 
 if [ "$CUDA_OK" != "True" ]; then
-    echo "  WARNING: CUDA tidak tersedia! Reinstalling torch dengan cu128..."
-    # Driver 580 supports CUDA 13.0 — cu128 wheels bekerja dengan driver >=525
+    echo "  WARNING: CUDA tidak tersedia! Reinstalling torch dengan cu126..."
+    # README 3a: cu126 diverifikasi pada A40 driver 565. Pod ini A40 driver 570
+    # (max CUDA 12.8) → cu126 (butuh driver >=525) adalah pilihan terverifikasi.
     uv pip install --reinstall \
         torch torchvision torchaudio \
-        --index-url https://download.pytorch.org/whl/cu128
+        --index-url https://download.pytorch.org/whl/cu126
 
     CUDA_OK=$(python -c "import torch; print(torch.cuda.is_available())" 2>/dev/null || echo "False")
     TORCH_VER=$(python -c "import torch; print(torch.__version__)" 2>/dev/null || echo "not installed")

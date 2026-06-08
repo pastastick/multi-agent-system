@@ -1,5 +1,0 @@
-[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260603_063327_mining pid=21716
-[    0.02s] INFO    new mining loop  direction=overnight gap reversal on high-volume stocks iterations=2 latent_steps=40 use_realign=True knn=False
-[  110.91s] INFO    iteration 1/2  direction=overnight gap reversal on high-volume stocks
-[  459.84s] ERROR   backtest failed  err=FactorEmptyError('No valid factor data found to merge after manual execution attempt.')
-[  465.61s] INFO    iteration 2/2  direction=overnight gap reversal on high-volume stocks

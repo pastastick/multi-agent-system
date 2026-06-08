@@ -939,6 +939,18 @@ def main(
     """
     try:
         from core.conf import RD_AGENT_SETTINGS
+
+        # Anchor base log trace path ke backend/log (cwd-independent), konsisten
+        # dengan output_log_dir / workspace_path yang juga di-anchor ke _BACKEND_DIR.
+        # Tanpa ini, default rdagent ./log/<ts> relatif terhadap CWD, sehingga log
+        # nyasar ke project root saat launcher dijalankan dari sana (sesuai README).
+        # Di-set sebelum logger.info pertama agar tidak ada folder log kosong di CWD.
+        import datetime as _dt
+        _backend_dir = Path(__file__).resolve().parent.parent
+        _base_log = _backend_dir / "log" / _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+        _base_log.mkdir(parents=True, exist_ok=True)
+        logger.set_trace_path(_base_log)
+
         logger.info("="*60)
         logger.info("Experiment config")
         logger.info(f"  Workspace: {RD_AGENT_SETTINGS.workspace_path}")
@@ -1078,6 +1090,10 @@ def main(
                 directions = [direction] if direction else [None]
 
             log_root = exec_cfg.get("branch_log_root") or "log"
+            # Anchor branch_log_root relatif ke backend/ agar log tidak nyasar ke CWD
+            # (project root) saat launcher dijalankan dari sana. Konsisten dgn main().
+            if not Path(log_root).is_absolute():
+                log_root = str(Path(__file__).resolve().parent.parent / log_root)
             log_prefix = exec_cfg.get("branch_log_prefix") or "branch"
             use_branch_logs = planning_enabled and len(directions) > 1
             parallel_execution = bool(exec_cfg.get("parallel_execution", False))

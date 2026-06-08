@@ -1,5 +1,0 @@
-[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260603_055309_mining pid=10857
-[    0.01s] INFO    new mining loop  direction=overnight gap reversal on high-volume stocks iterations=1 latent_steps=40 use_realign=False knn=False
-[  109.38s] WARNING backtest disabled (--no-backtest)
-[  109.38s] INFO    iteration 1/1  direction=overnight gap reversal on high-volume stocks
-[  131.99s] INFO    run finished  wall_clock_s=131.976

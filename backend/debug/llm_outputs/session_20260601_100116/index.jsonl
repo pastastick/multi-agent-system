@@ -1,4 +1,0 @@
-{"n": 1, "ts": "2026-06-01 10:03:13", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "a65b1bf4", "text_len": 150, "duration_s": 2.8566, "file": "0001_judger_kv_and_text.md", "vars": []}
-{"n": 2, "ts": "2026-06-01 10:10:40", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "c7196e4b", "text_len": 1400, "duration_s": 10.3436, "file": "0002_feedback_kv_and_text.md", "vars": []}
-{"n": 3, "ts": "2026-06-01 10:10:41", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "fcafdccd", "text_len": 136, "duration_s": 1.3513, "file": "0003_judger_kv_and_text.md", "vars": []}
-{"n": 4, "ts": "2026-06-01 10:15:01", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "c886f182", "text_len": 1346, "duration_s": 9.4964, "file": "0004_feedback_kv_and_text.md", "vars": []}

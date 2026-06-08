@@ -1,2 +1,0 @@
-{"n": 1, "ts": "2026-06-01 11:37:27", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "c91c4f3f", "text_len": 164, "duration_s": 2.6932, "file": "0001_judger_kv_and_text.md", "vars": []}
-{"n": 2, "ts": "2026-06-01 11:37:37", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "038fa99e", "text_len": 1273, "duration_s": 8.9249, "file": "0002_feedback_kv_and_text.md", "vars": []}
