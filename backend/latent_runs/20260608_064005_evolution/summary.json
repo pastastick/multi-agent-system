@@ -1,0 +1,67 @@
+{
+  "wall_clock_s": 169.541,
+  "summed_step_s": 110.505,
+  "steps": {
+    "proposal": {
+      "count": 4,
+      "total_s": 3.417,
+      "avg_s": 0.854,
+      "min_s": 0.409,
+      "max_s": 2.043,
+      "errors": 0
+    },
+    "construct": {
+      "count": 4,
+      "total_s": 2.547,
+      "avg_s": 0.637,
+      "min_s": 0.54,
+      "max_s": 0.813,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 4,
+      "total_s": 1.77,
+      "avg_s": 0.443,
+      "min_s": 0.399,
+      "max_s": 0.469,
+      "errors": 0
+    },
+    "judger": {
+      "count": 4,
+      "total_s": 38.895,
+      "avg_s": 9.724,
+      "min_s": 7.81,
+      "max_s": 10.603,
+      "errors": 0
+    },
+    "repair": {
+      "count": 6,
+      "total_s": 63.063,
+      "avg_s": 10.51,
+      "min_s": 1.399,
+      "max_s": 20.454,
+      "errors": 0
+    },
+    "mutation": {
+      "count": 1,
+      "total_s": 0.408,
+      "avg_s": 0.408,
+      "min_s": 0.408,
+      "max_s": 0.408,
+      "errors": 0
+    },
+    "crossover": {
+      "count": 1,
+      "total_s": 0.405,
+      "avg_s": 0.405,
+      "min_s": 0.405,
+      "max_s": 0.405,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "repair",
+    "total_s": 63.063,
+    "pct": 57.1
+  }
+}

@@ -25,16 +25,19 @@ Aliran KV (sesuai desain):
     repair(kv_and_text) ×N     ← deepcopy(kv_consist)   per attempt (baseline sama)
     feedback(kv_and_text)      ← deepcopy(kv_consist)   ← bukan kv_judger (anti-bias)
 
-  EVOLUTION (JUDGER-ONLY, seed_kv=None — lihat run_evolution):
-    mutation_judger   ← past_kv=None + TEKS 1 parent  → revised hypo+expr
-    crossover_judger  ← past_kv=None + TEKS k parent  → recombined hypo+expr
-  Tidak ada reflection, tidak ada kv_concat, tidak ada re-entry front-end, dan
-  TIDAK ada warisan KV parent. Materi parent masuk sebagai teks → KV per ronde
-  terbatas (~prompt judger + teks parent + latent) → tak ada over-KV / salin-loop.
+  EVOLUTION (GUIDANCE kv_only → re-entry front-end, bounded per-generasi):
+    mutation   (kv_only) ← past_kv=None + TEKS 1 parent → guidance_kv (arah refine)
+    crossover  (kv_only) ← past_kv=None + TEKS k parent → guidance_kv (arah fusi)
+  guidance_kv lalu MENYEMAI front-end: run(seed_kv=guidance_kv) →
+    proposal → construct → consistency → judger → gate/repair (lihat run_evolution).
+  Materi parent masuk sebagai TEKS & KV TIDAK diwariskan antar-generasi (trajectory
+  .kv_cache tetap None) → KV per ronde terbatas (~guidance + front-end ≈ 3k) → tak
+  ada over-KV / collapse lintas-generasi (akar regresi 2026-06-02).
 """
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional
 
@@ -231,50 +234,56 @@ class FrontEndPipeline:
         n_parents: int = 1,
         direction: str = "",
     ) -> FrontEndOutput:
-        """Evolution JUDGER-ONLY — tanpa reflection, tanpa re-entry front-end.
+        """Evolution GUIDANCE → re-entry front-end (bounded per-generasi).
 
-          mutation  : revisi SATU target (eksploitasi).
-          crossover : recombination k parent (eksplorasi).
+          mutation  : arahkan refine SATU target (eksploitasi).
+          crossover : arahkan fusi k parent (eksplorasi).
 
-        Di-seed dari **None**; materi parent masuk sebagai **TEKS** (`parent_text`).
-        Agent bernalar laten lalu emit hipotesis + N ekspresi (parser
-        `hypothesis_exprs`, sama seperti judger ORIGINAL). Hasilnya melewati
-        `_gate_and_repair_multi` yang SAMA, lalu downstream (backtest/feedback)
-        tak berubah. Karena seed=None & parent=teks, KV per ronde terbatas
-        (~prompt judger + teks parent + latent) — tak ada warisan/akumulasi KV
-        parent, jadi tak ada over-KV maupun penyalinan jawaban loop sebelumnya.
+        Agent guidance (`mutation`/`crossover`, mode **kv_only**) di-seed dari
+        **None** dan membaca materi parent sebagai **TEKS** (`parent_text`); ia
+        bernalar laten untuk menetapkan ARAH (diagnosis + direction) TANPA menulis
+        ekspresi. KV-nya (`guidance_kv`) lalu MENYEMAI front-end via
+        `run(seed_kv=guidance_kv)` → proposal→construct→consistency→judger→
+        gate/repair yang menyusun ekspresinya. Downstream (backtest/feedback) tak
+        berubah; output tetap `FrontEndOutput`.
+
+        Karena guidance di-seed None + parent=teks, dan `trajectory.kv_cache` tetap
+        None (transfer antar-generasi via teks `_format_parents_text`), KV per ronde
+        terbatas (~guidance + front-end ≈ 3k) — tak ada warisan/akumulasi KV parent,
+        jadi tak ada over-KV maupun collapse lintas-generasi (akar regresi 2026-06-02).
         """
         rl = self.runlog
         if kind == "mutation":
-            agent_name = "mutation_judger"
+            agent_name = "mutation"
             kw = dict(target_text=parent_text, direction=direction)
         elif kind == "crossover":
-            agent_name = "crossover_judger"
+            agent_name = "crossover"
             kw = dict(parents_text=parent_text, n_parents=n_parents, direction=direction)
         else:
             raise ValueError(f"unknown evolution kind: {kind!r}")
 
-        # seed_kv=None → RESET. Bedakan dari front-end ORIGINAL yang sequential.
-        r_judge = self._a(agent_name).run(past_kv=None, **kw)
-        he: Optional[HypothesisExprs] = r_judge.parsed
-        if he is None:
-            if rl: rl.warn(f"{kind} judger output unparseable",
-                           head=(r_judge.text or "")[:120])
-            hypothesis, candidates = "", []
-        else:
-            hypothesis, candidates = he.hypothesis, list(he.expressions)
+        # ── 1. GUIDANCE (kv_only, seed=None): parent sebagai TEKS → arah laten ──
+        # past_kv=None → tak warisi KV parent (RESET tiap generasi). Output tak
+        # di-decode (kv_only); yang dipakai HANYA KV-nya sebagai seed proposal.
+        r_guide = self._a(agent_name).run(past_kv=None, **kw)
+        guidance_kv = r_guide.kv_cache
+        if guidance_kv is None and rl:
+            rl.warn(f"{kind} guidance produced no KV; front-end runs unseeded")
 
-        # Tak ada kv_consist di jalur ini → baseline repair = KV judger evolution
-        # itu sendiri (deepcopy per attempt di dalam _gate_and_repair_multi).
-        passing, kv_final, repaired, attempts, gate_err = self._gate_and_repair_multi(
-            candidates, r_judge.kv_cache, r_judge.kv_cache,
-        )
-        return FrontEndOutput(
-            hypothesis=hypothesis, expressions=passing,
-            kv_consist=r_judge.kv_cache, kv_judger=r_judge.kv_cache,
-            judger_text=r_judge.text or "", kv_final=kv_final,
-            repaired=repaired, repair_attempts=attempts, gate_error=gate_err,
-        )
+        # ── 1b. (opsional) decode guidance KV untuk inspeksi arah yang dipilih ──
+        # deepcopy: introspect meng-extend KV in-place → jaga guidance_kv pristine
+        # untuk konsumen sebenarnya (proposal).
+        if guidance_kv is not None and os.environ.get("LATENTMAS_EVO_DEBUG"):
+            try:
+                probe = self._a("introspect").run(past_kv=kv_ops.kv_deepcopy(guidance_kv))
+                if rl: rl.info(f"{kind} guidance (probe)", head=(probe.text or "")[:400])
+            except Exception as e:  # noqa: BLE001
+                if rl: rl.warn("evo guidance probe failed", err=repr(e))
+
+        # ── 2. RE-ENTER front-end di-seed guidance_kv (1 konsumen → no deepcopy) ─
+        # proposal(past_kv=guidance_kv) → construct → consistency → judger →
+        # _gate_and_repair_multi. FrontEndOutput sama seperti jalur original.
+        return self.run(direction=direction, seed_kv=guidance_kv)
 
     def _gate_and_repair_multi(
         self,

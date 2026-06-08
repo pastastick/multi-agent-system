@@ -1,0 +1,66 @@
+{
+  "total_events": 110,
+  "event_type_counts": {
+    "pipeline.loop.start": 7,
+    "llm.call.start": 20,
+    "llm.call.end": 20,
+    "llm.output.quality": 21,
+    "pipeline.step.start": 14,
+    "pipeline.step.end": 14,
+    "pipeline.loop.end": 7,
+    "evolution.round": 7
+  },
+  "pipeline": {
+    "steps": {
+      "factor_backtest": {
+        "call_count": 7,
+        "total_s": 2751.008,
+        "avg_s": 393.001,
+        "min_s": 232.527,
+        "max_s": 964.743,
+        "errors": 0
+      },
+      "feedback": {
+        "call_count": 7,
+        "total_s": 58.055,
+        "avg_s": 8.294,
+        "min_s": 7.218,
+        "max_s": 10.014,
+        "errors": 0
+      }
+    },
+    "total_pipeline_time_s": 2809.064,
+    "bottleneck": {
+      "step": "factor_backtest",
+      "total_s": 2751.008,
+      "percentage": 97.9
+    }
+  },
+  "llm": {
+    "total_calls": 20,
+    "total_output_tokens": 2675,
+    "callers": {
+      "proposal": 2,
+      "construct": 2,
+      "consistency": 2,
+      "judger": 2,
+      "feedback": 7,
+      "mutation_judger": 3,
+      "crossover_judger": 2
+    },
+    "avg_duration_s": 7.2,
+    "total_duration_s": 144.006,
+    "avg_quality_score": 0.6408,
+    "min_quality_score": 0.3038
+  },
+  "anomalies": {
+    "total": 0,
+    "by_severity": {},
+    "by_type": {},
+    "details": []
+  },
+  "session_duration_s": 2980.5,
+  "session_name": "evolution_2026-06-08_04-45-37-493118",
+  "total_events_written": 110,
+  "generated_at": "2026-06-08T05:35:59.273851"
+}

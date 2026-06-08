@@ -4,12 +4,12 @@ experiments/run_evolution.py
 ====================
 Uji kemampuan 3 agent evolution SECARA TERISOLASI — tanpa factor_mining/backtest.
 
-Alur (JUDGER-ONLY, sesuai produksi):
+Alur (GUIDANCE → re-entry front-end, sesuai produksi):
   1. Jalankan FrontEndPipeline untuk membuat 1-2 "parent" (hypothesis+expression).
-  2. Mutation : front.run_evolution(kind="mutation") — judger merevisi 1 target,
-     di-seed None, materi parent sebagai TEKS.
-  3. Crossover: front.run_evolution(kind="crossover") — judger me-recombine 2
-     parent (teks), di-seed None.
+  2. Mutation : front.run_evolution(kind="mutation") — agent guidance kv_only
+     menetapkan arah refine (seed None, parent sbg TEKS) → menyemai propose→judger.
+  3. Crossover: front.run_evolution(kind="crossover") — agent guidance kv_only
+     menetapkan arah fusi 2 parent (teks, seed None) → menyemai propose→judger.
   4. Cetak hypothesis/expression hasil + KV describe (per ronde harus terbatas).
 
 Feedback parent & ringkasan backtest disuntik manual (--feedback / --backtest-

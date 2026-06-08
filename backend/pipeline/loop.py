@@ -315,8 +315,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
         # ── NEW LatentMAS path: phase menentukan generator ──────────────────
         #   original → FrontEndPipeline.run (proposal→construct→consistency→judger)
-        #   mutation → run_evolution("mutation")  — judger revisi 1 target (seed None)
-        #   crossover→ run_evolution("crossover") — judger recombine k parent (seed None)
+        #   mutation → run_evolution("mutation")  — guidance(arah refine) → re-enter front-end
+        #   crossover→ run_evolution("crossover") — guidance(arah fusi)   → re-enter front-end
         if getattr(self, "_latent", False):
             phase = getattr(self, "evolution_phase", "original")
             parents = getattr(self, "_parent_trajectories", []) or []
@@ -585,7 +585,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             "round_idx": self.round_idx,
             "hypothesis_embedding": hypothesis_embedding,
             # KV-cache untuk trajectory.kv_cache.
-            # Latent: None — evolution (mutation/crossover) sekarang JUDGER-ONLY dan
+            # Latent: None — evolution (mutation/crossover) GUIDANCE-based dan
             #   membaca parent sebagai TEKS (lihat _format_parents_text), jadi KV
             #   parent tak lagi dibutuhkan. Mewariskannya hanya akan mem-pin KV
             #   GPU (ratusan MB) per trajectory di pool → buang. Ini sekaligus
@@ -681,13 +681,14 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         return float("-inf")
 
     def _evolution_propose(self, parents: list, *, crossover: bool):
-        """Evolution JUDGER-ONLY → FrontEndPipeline.run_evolution (seed_kv=None).
+        """Evolution GUIDANCE → FrontEndPipeline.run_evolution.
 
-        mutation  : revisi 1 target (eksploitasi).
-        crossover : recombination k parent (eksplorasi).
-        Materi parent dikirim sebagai TEKS (lihat _format_parents_text); KV parent
-        TIDAK diwariskan → KV per ronde terbatas, tak ada salin-loop. Tidak ada lagi
-        reflection / kv_concat / re-entry front-end.
+        mutation  : arahkan refine 1 target (eksploitasi).
+        crossover : arahkan fusi k parent (eksplorasi).
+        Materi parent dikirim sebagai TEKS (lihat _format_parents_text); agent
+        guidance (kv_only) menetapkan arah lalu KV-nya menyemai propose→judger DI
+        DALAM run_evolution. KV parent TIDAK diwariskan antar-generasi → KV per
+        ronde terbatas, tak ada salin-loop.
         """
         if crossover:
             # urut ASC by metric → parent terbaik di posisi TERAKHIR (recency dalam teks)
@@ -756,8 +757,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
         Berbeda dari QuantaAlpha asli: feedback TIDAK lagi mengarang "New
         Hypothesis" — generasi arah berikutnya adalah tugas mutation (revisi 1
-        target) & crossover (recombination), keduanya JUDGER-ONLY membaca parent
-        sebagai teks. Dua keputusan konsekuensial DICABUT dari LLM menjadi
+        target) & crossover (fusi), keduanya GUIDANCE membaca parent sebagai teks
+        lalu menyemai propose→judger. Dua keputusan konsekuensial DICABUT dari LLM menjadi
         deterministik dan disuntik sebagai input:
           - complexity audit  → ComplexityChecker
           - replace-best-result → aturan metrik (_decide_replace_sota)
@@ -823,7 +824,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 sota_block=decision_block,
             )
         # KV feedback (terminal) sengaja TIDAK disimpan/diwariskan: evolution kini
-        # judger-only membaca parent sebagai teks, jadi membiarkan r.kv_cache di-GC
+        # guidance-based membaca parent sebagai teks, jadi membiarkan r.kv_cache di-GC
         # menghindari pin KV GPU yang sia-sia. _get_trajectory_data → pipeline_kv=None.
 
         try:

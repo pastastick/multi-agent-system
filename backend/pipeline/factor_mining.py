@@ -644,6 +644,9 @@ def run_evolution_loop(
         
     fresh_start = bool(evolution_cfg.get("fresh_start", True))
     cleanup_on_finish = bool(evolution_cfg.get("cleanup_on_finish", False))
+    # Resume: path ke run dir sebelumnya (berisi trajectory_pool.json +
+    # evolution_state.json). None → mulai baru. Di-handle di blok seed di bawah.
+    resume_from = evolution_cfg.get("resume_from")
 
     # Generate initial directions (with external KV-cache context if available)
     planning_enabled = bool(planning_cfg.get("enabled", False))
@@ -673,7 +676,33 @@ def run_evolution_loop(
 
     pool_save_path = Path(log_root) / "trajectory_pool.json"
     mutation_prompt_path = Path(__file__).parent / "prompts" / "evolution_prompts.yaml"
-    
+
+    # ── RESUME: seed pool dari run sebelumnya ────────────────────────────────
+    # Salin trajectory_pool.json lama ke log_root baru (run lama tetap utuh) lalu
+    # set fresh_start=False → pool ter-load saat EvolutionController init. Cursor
+    # (round/phase/mutation_targets) di-restore via load_state() setelah controller
+    # dibuat. Trajectory yang SUDAH selesai tak di-backtest ulang (metrik sudah ada
+    # di pool); .pkl cache rdagent run lama tak perlu disalin.
+    _resume_state_path = None
+    if resume_from:
+        _prev = Path(resume_from)
+        if not _prev.is_absolute():
+            _prev = Path(__file__).resolve().parent.parent / _prev
+        _prev_pool = _prev / "trajectory_pool.json"
+        _prev_state = _prev / "evolution_state.json"
+        if _prev_pool.exists():
+            import shutil
+            pool_save_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(_prev_pool, pool_save_path)   # ke run baru; run lama utuh
+            fresh_start = False                          # → pool load saat init
+            _resume_state_path = _prev_state if _prev_state.exists() else None
+            logger.info(f"[Resume] Seeded trajectory pool from {_prev_pool}")
+            if _resume_state_path is None:
+                logger.warning(f"[Resume] {_prev_state} tidak ada — pool ter-load "
+                               f"tapi cursor evolution mulai dari round 0")
+        else:
+            logger.warning(f"[Resume] {_prev_pool} tidak ada — mulai baru (fresh)")
+
     logger.info(f"Trajectory pool path: {pool_save_path} (fresh_start={fresh_start})")
 
 
@@ -698,6 +727,19 @@ def run_evolution_loop(
     #*  llm_backend diteruskan agar mutation/crossover operators bisa pakai
     #*  latent path (parent KV-cache → build_messages_and_run → kv_and_text)
     controller = EvolutionController(config, llm_backend=llm_backend)
+
+    # ── RESUME: restore cursor (round/phase/mutation targets) dari state lama ──
+    if _resume_state_path is not None:
+        controller.load_state(_resume_state_path)
+        _st = controller.get_current_state()
+        logger.info(f"[Resume] Cursor dipulihkan: round={_st['round']}, "
+                    f"phase={_st['phase']}, "
+                    f"pool={_st['pool_stats']['total_trajectories']} trajectory")
+        if controller.is_complete():
+            logger.warning(
+                f"[Resume] current_round ({_st['round']}) >= max_rounds "
+                f"({max_rounds}) → evolution langsung selesai tanpa task baru. "
+                f"Naikkan evolution.max_rounds di config untuk melanjutkan.")
 
     logger.info("="*40)
     logger.info("Starting evolution loop")
@@ -908,6 +950,7 @@ def main(
     direction=None,
     stop_event=None,
     config_path=None,
+    resume_from=None,
     evolution_mode=None,
     external_agents: Optional[List["ExternalAgentBase"]] = None,
     llm_backend: Optional[Any] = None,
@@ -923,6 +966,9 @@ def main(
         direction: Initial direction
         stop_event: Stop event
         config_path: Run config file path
+        resume_from: Prior evolution run dir (berisi trajectory_pool.json +
+                     evolution_state.json) untuk dilanjutkan. Override
+                     config.evolution.resume_from; set fresh_start→False.
         evolution_mode: Enable evolution (None=from config, True/False=override)
         insight_orchestrator: InsightOrchestrator instance (sequential/hierarchical).
                               Takes precedence over external_agents if provided.
@@ -966,6 +1012,9 @@ def main(
         planning_cfg = (run_cfg.get("planning") or {}) if isinstance(run_cfg, dict) else {}
         exec_cfg = (run_cfg.get("execution") or {}) if isinstance(run_cfg, dict) else {}
         evolution_cfg = (run_cfg.get("evolution") or {}) if isinstance(run_cfg, dict) else {}
+        # CLI --resume_from <prev_run_dir> menimpa evolution.resume_from dari YAML.
+        if resume_from is not None:
+            evolution_cfg["resume_from"] = resume_from
         quality_gate_cfg = (run_cfg.get("quality_gate") or {}) if isinstance(run_cfg, dict) else {}
         external_cfg = (run_cfg.get("external") or {}) if isinstance(run_cfg, dict) else {}
 

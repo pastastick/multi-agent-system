@@ -1,0 +1,10 @@
+{"n": 1, "ts": "2026-06-08 06:41:16", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "a07b5351", "text_len": 937, "duration_s": 10.2528, "file": "0001_judger_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-08 06:41:18", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "d3108a66", "text_len": 0, "duration_s": 1.4831, "file": "0002_repair_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-08 06:41:19", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "9dcc98cf", "text_len": 41, "duration_s": 1.3861, "file": "0003_repair_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-08 06:41:39", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "2af4e540", "text_len": 1024, "duration_s": 18.9397, "file": "0004_repair_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-08 06:41:51", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "9cf1851f", "text_len": 1075, "duration_s": 10.2006, "file": "0005_judger_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-06-08 06:41:52", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "07e25abf", "text_len": 0, "duration_s": 1.3884, "file": "0006_repair_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-06-08 06:42:12", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "4f9232b3", "text_len": 525, "duration_s": 19.3193, "file": "0007_repair_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-06-08 06:42:32", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "c8e5e6fd", "text_len": 510, "duration_s": 20.4417, "file": "0008_repair_kv_and_text.md", "vars": []}
+{"n": 9, "ts": "2026-06-08 06:42:45", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "fc57fe30", "text_len": 1040, "duration_s": 10.5905, "file": "0009_judger_kv_and_text.md", "vars": []}
+{"n": 10, "ts": "2026-06-08 06:42:55", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "674f11cb", "text_len": 839, "duration_s": 7.798, "file": "0010_judger_kv_and_text.md", "vars": []}
