@@ -18,10 +18,35 @@ echo "============================================================"
 echo " QuantaLatent — RunPod Setup Script"
 echo "============================================================"
 
-# ── 0. Source env vars ──────────────────────────────────────────
+# ── 0. Deploy + source runpod_env.sh ────────────────────────────
 echo ""
-echo "[0/7] Loading runpod env vars..."
-source /workspace/runpod_env.sh
+echo "[0/7] Deploying runpod_env.sh ke /workspace/ ..."
+
+RUNPOD_ENV_TEMPLATE="$PROJECT_ROOT/runpod_env.sh"
+RUNPOD_ENV_DEST="/workspace/runpod_env.sh"
+
+if [ ! -f "$RUNPOD_ENV_TEMPLATE" ]; then
+    echo "  ERROR: $RUNPOD_ENV_TEMPLATE tidak ditemukan di repo."
+    exit 1
+fi
+
+cp "$RUNPOD_ENV_TEMPLATE" "$RUNPOD_ENV_DEST"
+chmod +x "$RUNPOD_ENV_DEST"
+echo "  OK: $RUNPOD_ENV_DEST"
+
+source "$RUNPOD_ENV_DEST"
+echo "  HF_TOKEN: ${HF_TOKEN:0:8}... (${#HF_TOKEN} chars)"
+
+# Pastikan ~/.bashrc selalu source runpod_env.sh agar persisten di shell baru
+BASHRC_LINE="[ -f /workspace/runpod_env.sh ] && source /workspace/runpod_env.sh"
+if ! grep -qF "$BASHRC_LINE" ~/.bashrc 2>/dev/null; then
+    echo "" >> ~/.bashrc
+    echo "# QuantaLatent RunPod env" >> ~/.bashrc
+    echo "$BASHRC_LINE" >> ~/.bashrc
+    echo "  Ditambahkan ke ~/.bashrc: auto-source runpod_env.sh"
+else
+    echo "  ~/.bashrc sudah berisi auto-source, skip."
+fi
 
 # ── 1. Install uv ke /workspace/.local/bin ──────────────────────
 echo ""
