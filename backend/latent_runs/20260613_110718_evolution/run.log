@@ -1,0 +1,2 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260613_110718_evolution pid=37370
+[    0.01s] INFO    evolution isolation test  mode=both latent_steps=10 use_realign=False knn=False

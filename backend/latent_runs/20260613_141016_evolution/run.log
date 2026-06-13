@@ -1,0 +1,10 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260613_141016_evolution pid=71253
+[    0.00s] INFO    evolution isolation test  mode=both latent_steps=10 use_realign=False knn=False
+[   38.71s] INFO    building parent-1 via front-end
+[   43.54s] WARNING judger output unparseable (attempt 1/2)  head=
+[   44.23s] WARNING judger output unparseable (attempt 2/2)  head=
+[   44.23s] ERROR   no expression from judger; skipping repair
+[   44.24s] INFO    building parent-2 via front-end  direction=overnight gap reversal under liquidity stress
+[   53.49s] INFO    running mutation (judger-only: revise target)
+[   59.75s] INFO    running crossover (judger-only: recombination)
+[   65.86s] INFO    run finished  wall_clock_s=65.852

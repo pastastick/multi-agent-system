@@ -1,0 +1,36 @@
+{
+  "trajectories": {
+    "fbb2f613d118": {
+      "trajectory_id": "fbb2f613d118",
+      "direction_id": 0,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-13T14:40:23.038213",
+      "extra_info": {
+        "factor_ic": {}
+      }
+    }
+  },
+  "by_direction": {
+    "0": [
+      "fbb2f613d118"
+    ]
+  },
+  "by_phase": {
+    "original": [
+      "fbb2f613d118"
+    ],
+    "mutation": [],
+    "crossover": []
+  },
+  "saved_at": "2026-06-13T14:40:23.054944"
+}

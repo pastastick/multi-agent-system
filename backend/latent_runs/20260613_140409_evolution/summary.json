@@ -1,0 +1,67 @@
+{
+  "wall_clock_s": 125.86,
+  "summed_step_s": 82.546,
+  "steps": {
+    "proposal": {
+      "count": 4,
+      "total_s": 3.001,
+      "avg_s": 0.75,
+      "min_s": 0.415,
+      "max_s": 1.679,
+      "errors": 0
+    },
+    "construct": {
+      "count": 4,
+      "total_s": 2.522,
+      "avg_s": 0.631,
+      "min_s": 0.564,
+      "max_s": 0.76,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 4,
+      "total_s": 1.81,
+      "avg_s": 0.453,
+      "min_s": 0.404,
+      "max_s": 0.474,
+      "errors": 0
+    },
+    "judger": {
+      "count": 5,
+      "total_s": 40.391,
+      "avg_s": 8.078,
+      "min_s": 3.529,
+      "max_s": 20.122,
+      "errors": 0
+    },
+    "repair": {
+      "count": 7,
+      "total_s": 33.905,
+      "avg_s": 4.844,
+      "min_s": 1.306,
+      "max_s": 19.114,
+      "errors": 0
+    },
+    "mutation": {
+      "count": 1,
+      "total_s": 0.445,
+      "avg_s": 0.445,
+      "min_s": 0.445,
+      "max_s": 0.445,
+      "errors": 0
+    },
+    "crossover": {
+      "count": 1,
+      "total_s": 0.472,
+      "avg_s": 0.472,
+      "min_s": 0.472,
+      "max_s": 0.472,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "judger",
+    "total_s": 40.391,
+    "pct": 48.9
+  }
+}

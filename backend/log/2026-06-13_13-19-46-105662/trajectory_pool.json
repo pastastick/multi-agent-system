@@ -1,0 +1,106 @@
+{
+  "trajectories": {
+    "511131545ea8": {
+      "trajectory_id": "511131545ea8",
+      "direction_id": 0,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-13T13:35:25.154566",
+      "extra_info": {
+        "factor_ic": {}
+      }
+    },
+    "f75265fc3ee7": {
+      "trajectory_id": "f75265fc3ee7",
+      "direction_id": 1,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "the volume-weighted price trend is a better indicator of future returns in declining markets.\n\n the volume-weighted price_t is a better indicator of future returns in declining markets.\n\n the volume-weighted price_t is a better indicator of futurereturns in declining markets.\n\n the volume-weighted_price_t is a better indicator of future returns in declining markets.\n\n the volume-weighted price trend is a better indicator of_future_returns_in_declining_markets.",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-13T13:40:40.846983",
+      "extra_info": {
+        "factor_ic": {}
+      }
+    },
+    "3172a405c3ef": {
+      "trajectory_id": "3172a405c3ef",
+      "direction_id": 0,
+      "round_idx": 1,
+      "phase": "mutation",
+      "hypothesis": "",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [
+        "511131545ea8"
+      ],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-13T13:46:35.687994",
+      "extra_info": {
+        "factor_ic": {}
+      }
+    },
+    "a75f2a012824": {
+      "trajectory_id": "a75f2a012824",
+      "direction_id": 1,
+      "round_idx": 1,
+      "phase": "mutation",
+      "hypothesis": "In declining market regimes, small-cap stocks exhibit mean-reversion in volume-based signals, particularly when volume-weighted price trends diverge from recent momentum patterns.",
+      "hypothesis_details": {},
+      "factors": [],
+      "backtest_result": null,
+      "backtest_metrics": {},
+      "feedback": "",
+      "feedback_details": {},
+      "parent_ids": [
+        "f75265fc3ee7"
+      ],
+      "hypothesis_embedding": null,
+      "created_at": "2026-06-13T13:57:27.753744",
+      "extra_info": {
+        "factor_ic": {}
+      }
+    }
+  },
+  "by_direction": {
+    "0": [
+      "511131545ea8",
+      "3172a405c3ef"
+    ],
+    "1": [
+      "f75265fc3ee7",
+      "a75f2a012824"
+    ]
+  },
+  "by_phase": {
+    "original": [
+      "511131545ea8",
+      "f75265fc3ee7"
+    ],
+    "mutation": [
+      "3172a405c3ef",
+      "a75f2a012824"
+    ],
+    "crossover": []
+  },
+  "saved_at": "2026-06-13T13:57:27.787881"
+}

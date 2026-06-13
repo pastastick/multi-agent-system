@@ -1,70 +1,386 @@
-# Memory Index
-
-- [Evolution guidance redesign](evolution-guidance-redesign.md) — 2026-06-08 mutation/crossover jadi GUIDANCE kv_only (arah) → re-enter front-end, bounded per-generasi; + diagnosa run pra-rework & follow-up (resume, GPU mem).
-
-
----
-name: evolution-guidance-redesign
-description: 2026-06-08 evolution rework — mutation/crossover jadi GUIDANCE kv_only (arah) → re-enter front-end; bounded per-generasi (anti-collapse)
-metadata:
-  node_type: memory
-  type: project
-  originSessionId: 7931c90c-b2a5-48f8-b9f2-336edadc7358
----
-
-2026-06-08 (lanjutan [[latentmas-rework]], submodule `newEvol`; kode di
-`/workspace/project/multi-agent-system/backend`): mengubah alur evolution dari
-**JUDGER-ONLY** (mutation/crossover langsung emit hypothesis+expression) menjadi
-**GUIDANCE → re-entry front-end**, atas permintaan user.
-
-**Maunya user:** mutation/crossover hanya menetapkan ARAH (knowledge/observation/
-diagnosis/direction) sebagai konteks laten; lalu propose→judger yang menyusun
-ekspresi. Alur: guidance(kv_only) → proposal → construct → consistency → judger →
-gate/repair → backtest → feedback → [generasi berikut] guidance baru → ...
-
-**Keputusan KV (user): BOUNDED PER-GENERASI.** guidance di-seed `past_kv=None`,
-baca parent sebagai TEKS; KV-nya menyemai proposal HANYA dalam 1 generasi;
-`trajectory.kv_cache` tetap None → transfer antar-generasi via teks
-(`_format_parents_text`). KV per ronde ≈ guidance + front-end ≈ 3k → TIDAK
-mengulang collapse 2026-06-02 (dulu karena warisan KV parent lintas generasi,
-3.5k→21k). Opsi "kontinu lintas-generasi" sengaja DITOLAK.
-
-**Perubahan kode (implemented + static-verified, BELUM GPU-tested):**
-- `latent_mas/prompts.yaml`: rename `mutation_judger`→`mutation`,
-  `crossover_judger`→`crossover`; `kv_and_text`→`kv_only`; hapus parser/
-  max_new_tokens; prompt ditulis ulang jadi DIAGNOSIS+DIRECTION (tanpa ekspresi,
-  tanpa embed operator-lib). Tetap 9 agent.
-- `latent_mas/pipeline.py` `run_evolution`: guidance agent (kv_only, seed None) →
-  `guidance_kv` → `return self.run(direction=, seed_kv=guidance_kv)`. Debug opsional
-  `LATENTMAS_EVO_DEBUG=1` → decode guidance_kv via agent `introspect`. + `import os`.
-- `pipeline/loop.py`: `_evolution_propose`/`_format_parents_text`/
-  `_get_trajectory_data` TAK berubah logikanya (FrontEndOutput kompatibel,
-  pipeline_kv tetap None); hanya komentar di-update. controller.py tak disentuh.
-
-**Verifikasi:** statik PASSED (py_compile pipeline/loop/run_evolution; yaml 9 agent;
-render StrictUndefined-safe). load_all_agents + GPU run BELUM (box dev tanpa
-torch/transformers → jalan di runpod). Rencana GPU: `experiments/run_evolution.py
---mode both` (cek urutan caller guidance→propose→…→judger, KV ≈3k tak naik antar
-ronde), lalu factor_mining max_rounds=3.
-
-**Diagnosa run `log/2026-06-08_04-45-37-493118` (PRA-rework):** berjalan benar,
-berhenti normal via max_rounds=3 (O→M→C→M); crossover = 1 fase = 2 trajectory
-(BUKAN bug). Round terakhir asimetris (1 direction) = quirk: cek max_rounds di
-puncak `get_next_task` tapi `_get_crossover_task` naikkan round lalu langsung
-`_get_mutation_task`. KV TIDAK collapse (fix judger-only bekerja). GPU mem naik
-monoton ~600MB/loop (8.4→12.7GB) → risiko OOM run panjang.
-
-**Resume: SUDAH di-wire (2026-06-08, static-verified, BELUM dites e2e).** Set
-`evolution.resume_from: <prev_run_dir>` di config (atau CLI `--resume_from`). Di
-`run_evolution_loop`: salin trajectory_pool.json lama → log_root baru + fresh_start
-=False (pool load saat controller init) + `controller.load_state(evolution_state.json)`
-(restore cursor round/phase/mutation_targets). Trajectory selesai TAK di-backtest
-ulang. CATATAN: bila run lama sudah mentok max_rounds, NAIKKAN `evolution.max_rounds`
-atau resume langsung selesai tanpa task baru (ada warning). `main()` punya param baru
-`resume_from`; contoh ter-komentar di `configs/experiment.yaml`.
-
-**Sisa follow-up (out-of-scope):** GPU mem leak ~600MB/loop (risiko OOM run panjang);
-latent_steps 10→40-80. Lihat [[quantaalpha-paper-code-divergences]].
+Rangkuman temuan: prompt & workflow saat ini
+Alur lengkap (branch newEvol, commit b817b70 + fix uncommitted hari ini):
 
 
+[per generasi]
+  guidance(mutation/crossover, kv_only, seed=None, parent sebagai TEKS)
+    → proposal(kv_only) → construct(kv_only) → consistency(kv_only)
+    → judger(kv_and_text)  → regulator gate → repair(≤3) → LightGBM backtest + per-factor RankIC
+    → feedback(kv_and_text, evaluatif)
+[controller] original → mutation (eksploitasi) → crossover (eksplorasi), round-based, max_rounds
+Temuan prompt (dari sesi debug 2026-06-08, baru saja saya perbaiki):
 
+Anchoring contoh = mode collapse. Satu kalimat contoh di system prompt proposal membuat ~18 hipotesis lintas-sesi semuanya jadi varian "low-volume + volatility → mean-reversion". Ini bukan masalah kapasitas model — ini masalah prompt. Sudah diganti dengan 10 mechanism family + larangan eksplisit.
+Repair-on-empty membuang 57% waktu run menghasilkan sampah. Sudah di-guard.
+Soft /no_think + temp 0.4 + tanpa repetition_penalty = sumber collapse token. Sudah diganti hard switch + penalti.
+Temuan workflow struktural (dari kode + memory): keputusan KV bounded-per-generasi sengaja memutus warisan KV antar-generasi (anti-collapse) — transfer antar-generasi murni lewat teks _format_parents_text. Ini benar untuk stabilitas, tapi berarti "pembelajaran" laten LatentMAS hanya hidup dalam 1 generasi.
+
+Apakah ini benar-benar "Reinforcement Learning"? — Tidak, dan di situ ruang upgrade terbesar
+Yang Anda sebut "RL" saat ini sebenarnya evolutionary search (GA) + in-context feedback, bukan RL dalam arti pembaruan kebijakan. Bobot Qwen3 tak pernah berubah; "belajar" hanya terjadi sebagai teks yang dioper ke generasi berikut. Itu sah, tapi ada gap konkret terhadap formalisme paper (Eq.2 R(τ)=L(fτ)−λ·R(fτ)):
+
+Gap	Kondisi sekarang	Ruang upgrade
+Reward tidak pernah jadi skalar	L = per-factor RankIC; −λR = gate biner; λ tak ada di mana pun → efektif λ=0	Hitung R(τ) skalar tunggal (IC − λ·complexity_cont) sebagai fitness eksplisit; ekspos λ di config. Ini membuat trade-off kualitas↔kompleksitas bisa di-tune, bukan hard cutoff.
+Seleksi parent greedy	select_crossover_pairs pakai "best" / diversity-weighted, tanpa eksplorasi terukur	Tambah eksplorasi terstruktur: softmax(reward/τ), UCB, atau ε-greedy pada pemilihan parent. Greedy murni → terjebak optimum lokal (persis yang terlihat: semua anak satu spesies).
+Tidak ada credit assignment	"diagnosis" mutation = judgment LLM, tak ter-grounding	Per-factor IC sudah ada → bisa attribute reward ke ekspresi mana yang menyumbang, lalu feed angka itu (bukan prosa) ke mutation director.
+is_successful terlalu lemah	IC > 0 apa pun lolos	Ambang bermakna (mis. IC ≥ 0.02 + ICIR ≥ 0.5), kalau tidak pool penuh noise yang dianggap "sukses".
+Tidak ada memori kegagalan lintas-generasi	Tiap generasi mulai dari teks parent saja	Simpan negative list hipotesis/struktur yang sudah gagal, inject ke prompt proposal → memutus pengulangan (sinergis dengan fix anchoring hari ini).
+Objektif terbelah	Seleksi pakai FactorIC_mean, replace-SOTA pakai annualized_return	Dua keputusan, dua metrik berbeda, bisa saling tarik. Pertimbangkan satu reward multi-objektif atau Pareto frontier eksplisit.
+Catatan penting: RL "sejati" (update bobot via PPO/GRPO terhadap reward IC) adalah lompatan besar dan kemungkinan di luar cakupan (butuh training loop + GPU jauh lebih besar). Yang realistis & berdampak adalah memperkuat lapisan bandit/evolutionary di atas: reward skalar + eksplorasi terukur + negative memory. Itu memberi 80% manfaat "RL" tanpa fine-tuning.
+
+Quality-check faktor: ada fondasi bagus, tapi cek statistik masih tipis
+Yang sudah ada (kuat): FactorRegulator penuh — validasi arity/signature, complexity (SL/PC/ER), redundansi via match_alphazoo (subtree duplikat ≤ 8). ComplexityChecker deterministik. Per-factor RankIC OOS (2021+). Gate dipasang per-ekspresi sebelum backtest.
+
+Gap & ruang upgrade:
+
+Redundansi hanya sintaktik, bukan statistik. match_alphazoo mendeteksi subtree mirip, tapi dua formula yang strukturnya beda bisa berkorelasi ~0.95 pada nilainya → alpha redundan lolos. runner.py:307 sudah meng-log combined_factors.corr() tapi tidak dijadikan gate. Upgrade berdampak tinggi & murah: tolak/penalti faktor baru jika |corr| dengan faktor library > ambang (mis. 0.7).
+
+Per-factor IC hanya rata-rata, tanpa stabilitas. Belum ada ICIR (IC/std(IC) → reliabilitas), t-stat, atau analisis decay. Faktor IC=0.05 tapi tak stabil sama buruknya dengan noise. ICIR murah dihitung dari deret IC harian yang sudah ada di _compute_factor_ic.
+
+Tidak ada deteksi overfit IS↔OOS. Satu-satunya proxy overfit = complexity warning. Tambah cek gap IC in-sample vs out-of-sample; gap besar = overfit, terlepas dari kompleksitas.
+
+Tidak ada koreksi multiple-testing. Mining banyak faktor → false positive pasti muncul. Tak ada deflated Sharpe / Bonferroni. Untuk skripsi ini poin metodologis yang kuat untuk disebut.
+
+Complexity = char-count (SL = len(expr), ambang 300), dengan transform -log(1-ratio)<0.693 yang secara aljabar cuma ratio<0.5 (vacuous — sudah dicatat di [[quantaalpha-paper-code-divergences]]). AST depth/node-count akan jauh lebih bermakna daripada hitung karakter.
+
+replace-SOTA = skalar in-memory tunggal, bukan frontier. Tak menyimpan riwayat untuk anti-regresi.
+
+Rekomendasi prioritas
+Tier 1 (murah, dampak tinggi, sejalan dengan masalah hari ini):
+
+Negative list hipotesis gagal → prompt proposal (lawan anchoring/pengulangan di akar).
+Correlation gate statistik terhadap library (corr() sudah dihitung, tinggal dijadikan gate).
+ICIR sebagai metrik kualitas + komponen seleksi.
+Tier 2 (sedang, mengubah "evolusi" jadi lebih "RL"):
+4. Reward skalar R(τ)=IC − λ·complexity + ekspos λ.
+5. Seleksi parent dengan eksplorasi terukur (softmax/UCB) menggantikan greedy.
+6. Ambang is_successful bermakna.
+
+Tier 3 (besar, opsional untuk skripsi):
+7. RL sejati (GRPO/PPO terhadap reward IC) — lompatan signifikan, butuh infra training.
+8. Multiple-testing correction (deflated Sharpe).
+
+Catatan: semua di atas adalah analisis — saya belum mengubah kode untuk item-item ini, hanya memetakannya. Yang sudah saya ubah hanyalah 5 fix kualitas judger dari percakapan sebelumnya. Kalau Anda mau, saya bisa mulai dari Tier 1 (negative list + correlation gate + ICIR) yang paling cepat memberi hasil dan paling nyambung dengan akar masalah inkonsistensi judger.
+
+
+═══════════════════════════════════════════════════════════════════════════
+INSIGHT SESI 2026-06-13 — two-pass judger + gate deterministik + diversity
+═══════════════════════════════════════════════════════════════════════════
+(Semua di bawah SUDAH diimplementasikan & diuji, kecuali bertanda PENDING.)
+
+A. AKAR KEGAGALAN BACKTEST (debug session 20260613_091804)
+- `RANK($return, 7)`: RANK cross-sectional (1 arg) dipanggil 2 arg → TypeError saat
+  eksekusi factor.py (exit 1) → "No valid factor data". Maksudnya TS_RANK.
+- Lolos gate karena gate latent TIDAK cek arity — padahal infra
+  validate_function_arity SUDAH ADA di factor_regulator, hanya tak ter-wire.
+- Cacat semantik menyertai: `$volume > TS_MAX($volume,7)` SELALU False (TS_MAX
+  rolling min_periods=1 menyertakan bar kini); RANK/TS_RANK pct(0-1) → "<50" selalu True.
+- Judger dipanggil 3× karena retry mengulang kesalahan RANK arity yang sama.
+
+B. MONOKULTUR OPERATOR (diagnosis 8 panggilan judger)
+- Collapse ke ~8 operator (RANK/TS_ZSCORE/TS_PCTCHANGE/TS_CORR/TS_MEAN/…); NOL
+  smoothing/regression/technical/math.
+- Penyebab: (1) prior frekuensi model 4B; (2) menu 60-op datar tanpa tekanan
+  diversitas; (3) penghindaran arity tak-biasa; (4) feedback mendorong
+  "simpler/same framework"; (5) penyalinan autoregresif loop judger↔feedback;
+  (6) front-end proposal/construct/consistency kv_only TAK PERNAH di-decode/verifikasi.
+- KEPUTUSAN PENTING: melonggarkan kesetiaan-hipotesis = SALAH (monokultur itu celah
+  PRIOR+PENGETAHUAN, bukan constraint). Obat = REQUIREMENT (gate diversitas) +
+  KNOWLEDGE (anotasi afordans). Faithfulness DIPERTAHANKAN (penting utk OOS +
+  credit-assignment feedback). Looseness hanya sah sbg knob eksplorasi crossover.
+
+C. TWO-PASS JUDGER (done) — prompts.yaml + latent_mas/pipeline.py
+- judger_reason (bebas format) → judger (formatter ekstrak blok berlabel). Anti
+  format-tax (KEY 2). Hasil test: 3/4 run bersih tanpa repair. TAPI formatter
+  MERUSAK ekspresi panjang (crossover: window hilang, kurung tak tutup → repair →
+  faktor over-complex SL=194); HYPOTHESIS hilang di mutation/crossover. Two-pass
+  SENDIRI tak menambah variasi operator.
+
+D. GATE ARITY (done & verified) — pipeline._build_regulator_gate + _auto_fix_arity
+- validate_function_arity di gate + auto_repair_function_arity pra-repair (auto
+  RANK(A,n)→TS_RANK(A,n) TANPA LLM). Terbukti pada ekspresi sesi 091804.
+
+E. DIVERSITY PART-1 SOFT (done) — latent_mas/operator_families.py
+- diversity_hint (family rich jarang-dipakai + afordans + klausa kesetiaan)
+  disuntik ke construct + judger_reason; proposal SENGAJA tidak (jaga hipotesis di
+  altitude mekanisme).
+- HASIL BESAR: monokultur PECAH — DECAYLINEAR/REGRESI/TS_QUANTILE/RSI/BB_LOWER/LOG
+  muncul (sebelumnya 0%), tetap setia (momentum×volume). MEMVALIDASI tesis
+  knowledge+requirement, bukan looseness.
+- BOTTLENECK BARU TERSINGKAP: 4B memakai operator asing SALAH — REGRESI(x,x)
+  degenerate, halusinasi TS_WIDTH / $return_1d / BB-sebagai-var. 2/4 run
+  repair-thrash. Template-collapse baru (skeleton RICHOP(DELTA($close,10),10) *
+  TS_PCTCHANGE($volume,10)).
+
+F. DIVERSITY PART-2 SELECTION PENALTY (done, OPT-IN) — controller + crossover
+- effective = primary_metric − λ·family_penalty (min-rarity); EvolutionConfig.
+  diversity_lambda (default 0.0 = OFF); wired get_best_trajectories +
+  _select_candidates_by_strategy (pool parent crossover).
+- INSIGHT (sweep λ sintetis): λ≈0.02-0.03 PAKAI (novel naik, IC-tinggi selamat);
+  λ≥0.05 BERBAHAYA (ranking terbalik — IC 0.03 kalahkan IC 0.05). Dorman sampai
+  backtest hasilkan trajectory ber-metric.
+
+G. CAKUPAN GATE SAAT INI & PENDING
+- Arity gate menangkap fungsi halusinasi (TS_WIDTH) tapi LOLOS: variabel halusinasi
+  ($return_1d) & degenerate-args (REGRESI(x,x)). Multi-ekspresi ";"-joined →
+  "Invalid operator ';'" repair-thrash.
+- DONE #1-3 deterministik (unit-tested pada kegagalan persis + 1 integration run):
+  (1) validate_known_variables → tolak $return_1d; (2) validate_no_degenerate_args
+  → tolak REGRESI(x,x)/TS_CORR(x,x); (3) split ";" di parsers. Keduanya #1/#2
+  ter-wire ke pipeline gate setelah arity.
+  Integration run (run_evolution, no backtest): repair-thrash 0 (dari 2/4),
+  error ";" 0; faktor bersih+beragam dgn pemakaian BENAR — REGBETA(DELTA($close),
+  DELTA($volume),15) dua deret beda (bukan x,x lagi), DECAYLINEAR/BB_UPPER/
+  TS_QUANTILE/FILTER/ABS. Catatan: #1/#2 tak sempat fire run itu (model tak bikin
+  $return_1d/REGRESI(x,x)) — terbukti via unit test. Qwen3 repetition-collapse
+  ("2 1 1…") masih sesekali → ditangkap is_parsable→repair (properti model).
+- PENDING #4: afordans micro-example (ajari pemakaian BENAR — serang bottleneck E).
+  Catatan: run terakhir sudah menunjukkan pemakaian membaik (REGBETA benar), jadi
+  #4 kini lebih ke konsistensi ketimbang darurat.
+- PENDING: validasi part-2 (diversity_lambda≈0.02) via run backtest nyata multi-ronde.
+
+═══════════════════════════════════════════════════════════════════════════
+INSIGHT SESI 2026-06-13 (lanjutan) — template-collapse, paradoks diversity↔stability,
+                                      prompt simplifikasi, fail-closed, & backlog tugas
+═══════════════════════════════════════════════════════════════════════════
+
+H. PROMPT SIMPLIFIKASI — peran tegas, tidak tumpang-tindih (DONE)
+- Sebelum: tiap agent prompt panjang & overlap (proposal ikut menyebut operator,
+  construct ikut mengevaluasi kualitas, judger ikut reasoning ulang).
+- Sesudah: setiap agent SOLE JOB satu kalimat:
+    proposal   → hypothesis saja (NO operator, NO expression)
+    construct  → expression + operator library + diversity_hint
+    consistency → cek & perbaiki senyap di latent, TANPA output teks
+    judger     → OUTPUT format saja dari memori KV, TANPA reasoning ulang
+- Judger prompt menyertakan daftar nama operator exact-case (≈70 token) untuk
+  mencegah garble ($SMA, $ts_median) yang muncul di test pertama.
+- diversity_hint disuntik ke construct DAN judger (bukan proposal — hipotesis harus
+  di altitude mekanisme, bukan di altitude operator).
+- Test 2 hasil bersih: garble 0, repair-thrash 0, fail-closed drop 0.
+
+I. FAIL-CLOSED (DONE) — pipeline.py _build_regulator_gate exhaustion path
+- Sebelum: setelah max_repair_attempts habis, candidates gate-failing TETAP dikembalikan
+  ke backtest → factor.py crash → "No valid factor data" 3× berulang.
+- Sesudah: setelah max_repair habis, hanya survivors (lolos gate) yang dikembalikan.
+  Jika survivors kosong → return [] → skip generasi ini (tidak crash backtest).
+- Verified: faktor yang lolos sekarang EKSEKUSI di data nyata dengan varian wajar:
+    RANK($close - $open) * TS_ZSCORE($volume, 10)  → valid=13.76M  std=0.665
+    REGBETA(TS_MEAN($return, 5), $volume, 10)       → valid=14.16M  std=0.0023
+  Ini konfirmasi bahwa blokir utama "backtest selalu crash" TERATASI.
+
+J. TEMPLATE-COLLAPSE: MASALAH BARU SETELAH OPERATOR MONOKULTUR DIPERBAIKI
+- Setelah diversity_hint berhasil memecah monokultur OPERATOR, muncul masalah baru:
+  model masih collapse ke TEMPLATE (struktur/skeleton yang sama).
+- Contoh nyata dari Test 2 (3 faktor diterima):
+    RANK($close - $open) * TS_ZSCORE($volume, 10)   ← skeleton sama
+    RANK($return)        * TS_ZSCORE($volume, 20)   ← hanya beda inner & window
+    REGBETA(TS_MEAN($return, 5), $volume, 10)        ← berbeda
+- Template-collapse BERBEDA dari monokultur operator:
+    monokultur operator  → set operator yang dipakai sempit (mis. hanya RANK/TS_ZSCORE)
+    template-collapse    → operator bervariasi tapi STRUKTUR berulang (A*B, A/B, A-B)
+  Dua faktor bisa memakai operator berbeda tapi berkorelasi 0.95 di data nyata.
+- Penyebab utama:
+  (1) Model 4B "bermain aman" — template yang pernah lolos gate cenderung diulang.
+  (2) Feedback dalam satu generasi memperkuat skeleton yang berhasil.
+  (3) Gate saat ini hanya cek sintaks/arity — tidak cek korelasi nilai aktual.
+  (4) AST redundancy gate (match_alphazoo subtree ≤8) buta terhadap kemiripan
+      struktural di level pola (A*B vs A/B dengan leaf berbeda).
+
+K. PARADOKS DIVERSITY ↔ STABILITY — KONTRADIKSI MENDASAR
+MASALAH: upaya meningkatkan diversity BISA merusak stability, dan sebaliknya.
+
+  Dimensi 1 — Operator diversity vs Expression stability:
+  - diversity_hint mendorong operator asing (REGRESI, BB, TS_QUANTILE).
+  - Operator asing → model 4B sering memakainya SALAH (arity salah, argumen
+    degenerate, halusinasi variabel) → repair-thrash / fail-closed drop.
+  - Lebih banyak diversity_hint = lebih banyak ekspresi rusak.
+  - TRADE-OFF: diversity_hint terlalu kuat → more drops → lebih sedikit faktor
+    valid per ronde → IC pool mengecil → evolusi melambat.
+
+  Dimensi 2 — Selection diversity (diversity_lambda) vs IC-based selection:
+  - λ > 0 menghukum faktor yang memakai family umum, meski IC-nya tinggi.
+  - λ ≥ 0.05 membalik ranking (IC 0.03 mengalahkan IC 0.05) → BERBAHAYA.
+  - Safe zone λ = 0.02–0.03 tapi belum divalidasi pada backtest nyata.
+  - TRADE-OFF: meningkatkan diversity pool → belum tentu meningkatkan combined IC
+    karena faktor beragam bisa tetap bernilai rendah.
+
+  Dimensi 3 — Structural diversity (template-collapse) vs Gate stability:
+  - Template-collapse (RANK*TS_ZSCORE berulang) = faktanya LULUS GATE karena
+    sintaks valid & operator dikenal.
+  - Menambah gate korelasi akan menolak template-collapse, tapi:
+    → Gate korelasi butuh data nyata (tidak bisa pre-gate sebelum backtest).
+    → Threshold korelasi terlalu ketat → hampir semua faktor ditolak.
+    → Threshold terlalu longgar → template-collapse lolos lagi.
+  - TRADE-OFF: correlation gate yang agresif = lebih sedikit faktor → lebih
+    sedikit data untuk seleksi evolusi.
+
+  KESIMPULAN PARADOKS:
+  Diversity dan stability saling menarik di setiap lapisan (operator, selection,
+  struktur). Tidak ada setting tunggal yang optimal untuk ketiganya bersamaan.
+  Pendekatan yang realistis: SEKUENSIAL — stabilkan satu lapisan dulu, baru
+  naikkan tekanan di lapisan berikutnya.
+  Urutan yang masuk akal:
+    1. Structural stability dulu (fail-closed + gate deterministik) — DONE.
+    2. Operator diversity berikutnya (diversity_hint + gate degenerate) — DONE.
+    3. Value-level diversity (correlation gate) — PENDING.
+    4. Selection diversity (diversity_lambda) — PENDING (butuh backtest nyata).
+  Mencoba keempatnya sekaligus = tidak bisa debug mana yang menyebabkan masalah.
+
+L. TIER-1 PENDING — TUGAS PRIORITAS UNTUK SESI BERIKUTNYA
+
+  [L-1] CORRELATION GATE (dampak tertinggi, implementasi murah)
+  - Masalah: template-collapse menghasilkan faktor berkorelasi tinggi di nilai
+    aktual meski berbeda sintaks. Gate sintaktik (match_alphazoo) buta terhadap ini.
+  - Solusi: setelah backtest menghasilkan faktor values, tolak/penalti faktor baru
+    jika |corr| dengan faktor MANAPUN di library saat ini > threshold (mis. 0.7).
+  - Kode anchor: runner.py:307 sudah meng-log combined_factors.corr() — tinggal
+    jadikan gate, bukan sekedar log.
+  - Detail implementasi:
+    · Hitung corr matrix SETELAH factor values terkumpul (sebelum LightGBM fit).
+    · Faktor baru yang |corr| > 0.7 dengan faktor mana pun → drop dari round ini.
+    · Log: "factor X dropped: corr=0.83 with factor Y".
+    · Threshold 0.7 sebagai default, ekspos di experiment.yaml.
+  - Catatan: ini gate POST-backtest (hanya bisa cek nilai setelah ekspresi dieksekusi),
+    berbeda dari gate PRE-backtest (arity, variable, degenerate).
+
+  [L-2] NEGATIVE-HYPOTHESIS MEMORY (medium, lawan mechanism-level monoculture)
+  - Masalah: proposal agent tidak tahu hipotesis mana yang sudah gagal lintas-generasi.
+    Tiap generasi mulai "bersih" → bisa mengusulkan hipotesis yang strukturnya sama.
+  - Solusi: simpan daftar hipotesis yang gagal (IC < threshold atau drop gate) ke
+    file/memory lintas-generasi, inject ke proposal prompt sebagai "AVOID these
+    mechanism frameworks".
+  - Implementasi: tambah atribut di EvolutionController untuk track failed_hypotheses,
+    serialize ke JSON, inject ke template proposal via dhint/negative_hint parameter.
+  - Catatan: berbeda dari diversity_hint yang tentang OPERATOR — ini tentang MEKANISME.
+
+  [L-3] ICIR SEBAGAI METRIK KUALITAS (medium, stabilitas IC)
+  - Masalah: faktor IC=0.05 tidak stabil sama buruknya dengan noise. Saat ini
+    is_successful hanya cek IC > 0, tidak cek reliabilitas.
+  - Solusi: hitung ICIR = mean(IC_daily) / std(IC_daily) dari deret IC harian
+    yang SUDAH ADA di _compute_factor_ic (kode sudah ada, tinggal agregasi).
+  - Tambah ICIR ke:
+    · factor_block feedback (label [A] individual signals)
+    · is_successful threshold (IC ≥ 0.01 AND ICIR ≥ 0.3 atau serupa)
+    · trajectory.get_primary_metric() sebagai tie-breaker atau komponen weighted
+  - Catatan: ICIR murah (tidak butuh data tambahan, hanya agregasi berbeda dari
+    IC series yang sudah dihitung).
+
+  [L-4] VALIDASI diversity_lambda=0.02 via BACKTEST NYATA (verifikasi, bukan implementasi)
+  - diversity_lambda=0.02 di experiment.yaml sudah di-set tapi belum pernah aktif
+    karena belum ada trajectory ber-metric nyata.
+  - Setelah L-1 (correlation gate) dan pipeline stabil: jalankan factor_mining
+    multi-ronde (≥3 ronde, ≥2 generasi/ronde) dan bandingkan:
+    · diversity_lambda=0.00 (baseline) vs diversity_lambda=0.02
+    · Metrik yang dilihat: combined RankIC + distribusi operator family yang terpilih.
+  - Warning: jangan naikkan λ > 0.03 sebelum data nyata ini.
+
+M. BACKLOG TUGAS UNTUK SESI BERIKUTNYA (prioritas urut)
+
+  SESI BERIKUTNYA — Implementasi:
+  1. [L-1] Correlation gate di runner.py (Tier-1, ~30-50 baris kode, dampak langsung).
+  2. [L-3] ICIR agregasi dari IC series yang sudah ada (Tier-1, ~20 baris).
+  3. [L-2] Negative-hypothesis memory di proposal prompt (Tier-1, ~40 baris + yaml).
+  4. Run factor_mining backtest nyata untuk validasi:
+     - fail-closed + gate deterministik (pipeline sehat)
+     - diversity_lambda=0.02 efek nyata
+     - correlation gate efektif memblokir template-collapse
+  5. [L-4] Validasi λ sweep dari data backtest nyata.
+
+  SESI BERIKUTNYA — Evaluasi/tuning (setelah backtest valid):
+  6. is_successful threshold bermakna (IC ≥ 0.01 + ICIR ≥ 0.3, bukan IC > 0).
+  7. Ambang correlation gate (0.7 default — apakah terlalu ketat/longgar di data nyata).
+  8. Micro-example affordances di construct prompt (#4 pending dari sesi gate).
+
+  SESI LEBIH JAUH (Tier-2, setelah Tier-1 stabil):
+  9.  Reward skalar R(τ) = IC − λ·complexity eksplisit + ekspos λ di config.
+  10. Seleksi parent dengan eksplorasi terukur (softmax/UCB) menggantikan greedy.
+  11. Deteksi overfit IS↔OOS (gap IC in-sample vs out-of-sample).
+
+  CATATAN STATUS PIPELINE SAAT INI (per 2026-06-13):
+  - fail-closed: DONE ✓
+  - gate arity + known_variables + degenerate_args: DONE ✓
+  - semicolon split parser: DONE ✓
+  - diversity_hint (operator family): DONE ✓
+  - diversity_lambda selection penalty: DONE (dorman, belum divalidasi)
+  - prompt simplifikasi (peran tegas): DONE ✓
+  - backtest new-only (runner.py): DONE ✓
+  - metrik primer tunggal (RankIC): DONE ✓
+  - correlation gate: PENDING
+  - ICIR: PENDING
+  - negative-hypothesis memory: PENDING
+  - validasi diversity_lambda backtest nyata: PENDING
+
+═══════════════════════════════════════════════════════════════════════════
+PERBAIKAN SESI 2026-06-13 — backtest new-only + kejelasan metrik + metrik primer tunggal
+═══════════════════════════════════════════════════════════════════════════
+
+A. AKAR MASALAH YANG DIPERBAIKI
+Tiga sumber "IC antar-iterasi tidak jauh berbeda / terasa duplikat":
+
+  (1) runner.py menggabungkan faktor SOTA lama + faktor baru ke satu model LightGBM
+      sebelum backtest. Akibatnya RankIC gabungan didominasi faktor lama → nilai hampir
+      sama tiap iterasi meski ekspresiny sangat berbeda.
+
+  (2) factor_block dan backtest_results keduanya mengandung angka bernama "RankIC"
+      tapi dari dua sumber berbeda (standalone per-faktor vs model gabungan) tanpa
+      label pembeda → feedback agent dan pengguna bingung angka mana yang relevan.
+
+  (3) Dua keputusan (evolution selection dan replace-SOTA) masing-masing pakai metrik
+      berbeda: FactorIC_mean vs annualized_return → kadang saling kontradiksi.
+
+B. PERUBAHAN KODE (SUDAH DIIMPLEMENTASIKAN)
+
+  factors/runner.py — develop():
+  - Hapus recursive develop based_experiments[-1] (re-run SOTA lama; buang ~3-5 menit/iterasi).
+  - Hapus blok process_factor_data(based_experiments) yang komputasinya jalan meski ada
+    `if False:` yang membuang hasilnya.
+  - Hapus `if False:` dead code dan wrapper `if exp.based_experiments:`.
+  - Setiap ronde sekarang hanya membacktest faktor baru saja (combined_factors = new_factors).
+  - Config selalu `conf_combined_factors.yaml` (tidak lagi bergantung based_experiments).
+
+  pipeline/loop.py — _build_experiment():
+  - Set exp.based_experiments = [] (runner tidak butuh list SOTA untuk faktor processing).
+  - Dedup nama faktor masih berjalan via local history_exps (tidak hilang).
+
+  pipeline/loop.py — _run_latent_feedback():
+  - factor_block berlabel eksplisit "[A] Individual factor signals (standalone RankIC)" —
+    RankIC per faktor secara individu, diformat tiap baris.
+  - backtest_results sekarang menggunakan _format_key_metrics() bukan res.to_string():
+    hanya 7 metrik kunci (RankIC, RankICIR, IC, ICIR, Ann.Return, InfoRatio, MaxDrawdown).
+    Berlabel "[B] Combined LightGBM model — OOS".
+  - sota_block baru menampilkan tiga baris: "Previous best RankIC", "This round RankIC",
+    "Decision REPLACE/KEEP — reason". Nilai SOTA sebelumnya dicapture SEBELUM
+    _decide_replace_sota mengupdate _SOTA_BEST.
+  - hypothesis_text dihapus dari call fb_agent.run() (sudah embed di factor_block).
+
+  pipeline/loop.py — _decide_replace_sota():
+  - Primary metric berubah dari annualized_return → RankIC (Spearman rank correlation OOS).
+  - RankIC dipilih karena: (a) lebih robust terhadap outlier/leverage; (b) kini konsisten
+    dengan evolution selection; (c) sebanding antar-iterasi karena backtest new-only.
+
+  pipeline/loop.py — tambah _format_key_metrics() static method:
+  - Extract 7 metrik kunci dari exp.result (Series Qlib) tanpa noise.
+
+  pipeline/evolution/trajectory.py — get_primary_metric():
+  - Primary berubah dari FactorIC_mean → RankIC (combined).
+  - Fallback ke FactorIC_mean bila RankIC combined tidak tersedia (backward compat run lama).
+  - Sekarang evolution selection dan replace-SOTA keduanya pakai angka yang sama.
+
+  latent_mas/prompts.yaml — feedback agent:
+  - System prompt menjelaskan perbedaan [A] standalone vs [B] combined RankIC beserta
+    interpretasinya (mis. "jika faktor A standalone IC 0.04 tapi B 0.00, signal mayoritas
+    dari A").
+  - User template dipersingkat: hapus instruksi redudant, label [A]/[B]/[C] konsisten
+    dengan input yang diterima.
+
+C. SATU CATATAN TENTANG MiningLoop (latent_mas/mining_loop.py)
+  MiningLoop masih set based_experiments dengan history, tapi runner.py sekarang
+  mengabaikannya. Tidak ada perubahan fungsional di MiningLoop; jalur utama adalah
+  AlphaAgentLoop di pipeline/loop.py.
+
+D. KONSISTENSI METRIK SETELAH PERBAIKAN
+  Satu metrik primer: RankIC (combined LightGBM, OOS test segment)
+    - evolution parent selection  → trajectory.get_primary_metric() → RankIC combined
+    - replace-SOTA decision       → _decide_replace_sota() → RankIC combined
+    - individual factor quality   → exp.factor_ic[name] → standalone RankIC (hanya untuk
+      diagnosis feedback, bukan untuk keputusan structural loop)
+    - backtest_metrics di trajectory → backtest_metrics["RankIC"] (combined) = primary

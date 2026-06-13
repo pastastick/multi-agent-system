@@ -1,0 +1,75 @@
+{
+  "wall_clock_s": 240.665,
+  "summed_step_s": 185.973,
+  "steps": {
+    "proposal": {
+      "count": 4,
+      "total_s": 3.705,
+      "avg_s": 0.926,
+      "min_s": 0.455,
+      "max_s": 2.274,
+      "errors": 0
+    },
+    "construct": {
+      "count": 4,
+      "total_s": 2.467,
+      "avg_s": 0.617,
+      "min_s": 0.545,
+      "max_s": 0.737,
+      "errors": 0
+    },
+    "consistency": {
+      "count": 4,
+      "total_s": 1.71,
+      "avg_s": 0.428,
+      "min_s": 0.384,
+      "max_s": 0.45,
+      "errors": 0
+    },
+    "judger_reason": {
+      "count": 4,
+      "total_s": 109.654,
+      "avg_s": 27.414,
+      "min_s": 21.668,
+      "max_s": 32.772,
+      "errors": 0
+    },
+    "judger": {
+      "count": 4,
+      "total_s": 58.746,
+      "avg_s": 14.687,
+      "min_s": 12.84,
+      "max_s": 17.122,
+      "errors": 0
+    },
+    "mutation": {
+      "count": 1,
+      "total_s": 0.502,
+      "avg_s": 0.502,
+      "min_s": 0.502,
+      "max_s": 0.502,
+      "errors": 0
+    },
+    "crossover": {
+      "count": 1,
+      "total_s": 0.504,
+      "avg_s": 0.504,
+      "min_s": 0.504,
+      "max_s": 0.504,
+      "errors": 0
+    },
+    "repair": {
+      "count": 1,
+      "total_s": 8.685,
+      "avg_s": 8.685,
+      "min_s": 8.685,
+      "max_s": 8.685,
+      "errors": 0
+    }
+  },
+  "bottleneck": {
+    "step": "judger_reason",
+    "total_s": 109.654,
+    "pct": 59.0
+  }
+}

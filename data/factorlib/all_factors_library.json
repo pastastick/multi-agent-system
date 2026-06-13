@@ -1,8 +1,8 @@
 {
   "metadata": {
     "created_at": "2026-05-01T13:55:51.963384",
-    "last_updated": "2026-06-01T04:19:17.645125",
-    "total_factors": 31,
+    "last_updated": "2026-06-13T10:02:07.893096",
+    "total_factors": 42,
     "version": "1.0"
   },
   "factors": {
@@ -1445,6 +1445,582 @@
         "decision": false,
         "reason": "The information coefficient (IC) is just above 0.0079, which is below the 0.02 threshold, indicating a weak signal. The max_drawdown is -0.0797, which is less than 0.30, suggesting some robustness. However, the low IC value implies the factor may not be strong enough.",
         "new_hypothesis": "Explore a simpler factor structure that focuses on volume and price momentum to generate a stronger and more general signal."
+      }
+    },
+    "bba6fb566fc21fd1": {
+      "factor_id": "bba6fb566fc21fd1",
+      "factor_name": "In_high_volatility_sectors_durin_0",
+      "factor_expression": "(TS_ZSCORE($close, 7) < -1) && ($volume > TS_MAX($volume, 7)) && (RANK($return, 7) < 50)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_ZSCORE($close, 7) < -1) && ($volume > TS_MAX($volume, 7)) && (RANK($return, 7) < 50)\" # Your output factor expression will be filled in here\n    name = \"In_high_volatility_sectors_durin_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "In high-volatility sectors during bear markets, stocks that show a volume spike after a recent price decline are more likely to rebound upward.",
+      "factor_formulation": "(TS_ZSCORE($close, 7) < -1) && ($volume > TS_MAX($volume, 7)) && (RANK($return, 7) < 50)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "627d493290c941a39277135b428706aa"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "f0d81b3ff0d3",
+        "parent_trajectory_ids": [],
+        "hypothesis": "In high-volatility sectors during bear markets, stocks that show a volume spike after a recent price decline are more likely to rebound upward.",
+        "initial_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "planning_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "created_at": "2026-06-13T09:28:21.900029"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.11356303,
+        "1day.excess_return_with_cost.information_ratio": 0.83537663,
+        "1day.excess_return_with_cost.annualized_return": 0.1254207,
+        "1day.excess_return_with_cost.std": 0.00973192,
+        "1day.excess_return_with_cost.mean": 0.00052698,
+        "1day.excess_return_without_cost.max_drawdown": -0.10788303,
+        "1day.excess_return_without_cost.information_ratio": 0.98887126,
+        "1day.excess_return_without_cost.annualized_return": 0.14843146,
+        "1day.excess_return_without_cost.std": 0.00972966,
+        "1day.excess_return_without_cost.mean": 0.00062366,
+        "Rank ICIR": 0.17887179,
+        "Rank IC": 0.02537658,
+        "ICIR": 0.04823037,
+        "IC": 0.00697559,
+        "l2.valid": 0.99699721,
+        "l2.train": 0.99379318
+      },
+      "feedback": {
+        "Observations": "The hypothesis shows a strong annualized return of 0.1254, outperforming the SOTA of none. The information ratio of 0.8354 is above average, and the IC of 0.006976 suggests some predictive power, though weak. The max drawdown of -0.1136 is relatively shallow, indicating resilience.",
+        "Feedback for Hypothesis": "The result SUPPORTS the hypothesis, but only marginally. Factor 1 (In_high_volatility_sectors_durin_0) carries the signal, as it uses a combination of price decline (TS_ZSCORE < -1), volume spike (volume > TS_MAX), and rank (RANK < 50), which aligns with the hypothesis. Factor 2 (In_high_volatility_sectors_durin_1) is noisy, with a negative Rank IC, suggesting it adds noise rather than signal. The framework is not exhausted, but it needs simplification to improve IC and reduce complexity.",
+        "Replace Best Result": "yes"
+      }
+    },
+    "4cff514ff95831c7": {
+      "factor_id": "4cff514ff95831c7",
+      "factor_name": "In_high_volatility_sectors_durin_1",
+      "factor_expression": "TS_MEAN($return, 3) > 0.02 && TS_RANK($volume, 7) < 20 && TS_CORR($close, $volume, 7) > 0.6",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_MEAN($return, 3) > 0.02 && TS_RANK($volume, 7) < 20 && TS_CORR($close, $volume, 7) > 0.6\" # Your output factor expression will be filled in here\n    name = \"In_high_volatility_sectors_durin_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "In high-volatility sectors during bear markets, stocks that show a volume spike after a recent price decline are more likely to rebound upward.",
+      "factor_formulation": "TS_MEAN($return, 3) > 0.02 && TS_RANK($volume, 7) < 20 && TS_CORR($close, $volume, 7) > 0.6",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "042ac24f242f43b38af11cd314e77832",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/042ac24f242f43b38af11cd314e77832/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "f0d81b3ff0d3",
+        "parent_trajectory_ids": [],
+        "hypothesis": "In high-volatility sectors during bear markets, stocks that show a volume spike after a recent price decline are more likely to rebound upward.",
+        "initial_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "planning_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "created_at": "2026-06-13T09:28:21.906279"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.11356303,
+        "1day.excess_return_with_cost.information_ratio": 0.83537663,
+        "1day.excess_return_with_cost.annualized_return": 0.1254207,
+        "1day.excess_return_with_cost.std": 0.00973192,
+        "1day.excess_return_with_cost.mean": 0.00052698,
+        "1day.excess_return_without_cost.max_drawdown": -0.10788303,
+        "1day.excess_return_without_cost.information_ratio": 0.98887126,
+        "1day.excess_return_without_cost.annualized_return": 0.14843146,
+        "1day.excess_return_without_cost.std": 0.00972966,
+        "1day.excess_return_without_cost.mean": 0.00062366,
+        "Rank ICIR": 0.17887179,
+        "Rank IC": 0.02537658,
+        "ICIR": 0.04823037,
+        "IC": 0.00697559,
+        "l2.valid": 0.99699721,
+        "l2.train": 0.99379318
+      },
+      "feedback": {
+        "Observations": "The hypothesis shows a strong annualized return of 0.1254, outperforming the SOTA of none. The information ratio of 0.8354 is above average, and the IC of 0.006976 suggests some predictive power, though weak. The max drawdown of -0.1136 is relatively shallow, indicating resilience.",
+        "Feedback for Hypothesis": "The result SUPPORTS the hypothesis, but only marginally. Factor 1 (In_high_volatility_sectors_durin_0) carries the signal, as it uses a combination of price decline (TS_ZSCORE < -1), volume spike (volume > TS_MAX), and rank (RANK < 50), which aligns with the hypothesis. Factor 2 (In_high_volatility_sectors_durin_1) is noisy, with a negative Rank IC, suggesting it adds noise rather than signal. The framework is not exhausted, but it needs simplification to improve IC and reduce complexity.",
+        "Replace Best Result": "yes"
+      }
+    },
+    "a62e3a0f69f049b2": {
+      "factor_id": "a62e3a0f69f049b2",
+      "factor_name": "Low_volume_stocks_show_stronger_0",
+      "factor_expression": "TS_ZSCORE($return, 2) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($return, 2) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50)\" # Your output factor expression will be filled in here\n    name = \"Low_volume_stocks_show_stronger_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Low-volume stocks show stronger mean-reversion in the 1-2 days following earnings announcements due to overreaction and liquidity constraints.",
+      "factor_formulation": "TS_ZSCORE($return, 2) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "aad94c6532744046a6ade951df0e338f",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/aad94c6532744046a6ade951df0e338f/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "4b140a28fa19",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Low-volume stocks show stronger mean-reversion in the 1-2 days following earnings announcements due to overreaction and liquidity constraints.",
+        "initial_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "planning_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "created_at": "2026-06-13T09:33:49.127687"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.1058278,
+        "1day.excess_return_with_cost.information_ratio": 0.59683484,
+        "1day.excess_return_with_cost.annualized_return": 0.08358463,
+        "1day.excess_return_with_cost.std": 0.00907787,
+        "1day.excess_return_with_cost.mean": 0.0003512,
+        "1day.excess_return_without_cost.max_drawdown": -0.09304674,
+        "1day.excess_return_without_cost.information_ratio": 0.76293802,
+        "1day.excess_return_without_cost.annualized_return": 0.10677072,
+        "1day.excess_return_without_cost.std": 0.0090714,
+        "1day.excess_return_without_cost.mean": 0.00044862,
+        "Rank ICIR": 0.19123355,
+        "Rank IC": 0.02546223,
+        "ICIR": 0.05434434,
+        "IC": 0.00757131,
+        "l2.valid": 0.99700228,
+        "l2.train": 0.99466441
+      },
+      "feedback": {
+        "Observations": "The factor shows a moderate information ratio of 0.7629, with an annualized return of 10.68% without costs. However, the IC is only 0.0076, indicating weak predictive power relative to returns. The max drawdown of -9.30% suggests some fragility, though not extreme.",
+        "Feedback for Hypothesis": "The result partially supports the hypothesis, as the factor shows some mean-reversion in low-volume stocks after earnings. However, the low IC and moderate return suggest the signal is weak or noisy. The second factor (Low_volume_stocks_show_stronger_1) appears more signal-rich, but both factors are complex and may overfit. The framework should be simplified.",
+        "Replace Best Result": "no"
+      }
+    },
+    "19c6024f4f98bdd7": {
+      "factor_id": "19c6024f4f98bdd7",
+      "factor_name": "Low_volume_stocks_show_stronger_1",
+      "factor_expression": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1)\" # Your output factor expression will be filled in here\n    name = \"Low_volume_stocks_show_stronger_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Low-volume stocks show stronger mean-reversion in the 1-2 days following earnings announcements due to overreaction and liquidity constraints.",
+      "factor_formulation": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "2363610b5c43426eb2cf94bbd722bd6d",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/2363610b5c43426eb2cf94bbd722bd6d/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 0,
+        "evolution_phase": "original",
+        "trajectory_id": "4b140a28fa19",
+        "parent_trajectory_ids": [],
+        "hypothesis": "Low-volume stocks show stronger mean-reversion in the 1-2 days following earnings announcements due to overreaction and liquidity constraints.",
+        "initial_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "planning_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "created_at": "2026-06-13T09:33:50.120999"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.1058278,
+        "1day.excess_return_with_cost.information_ratio": 0.59683484,
+        "1day.excess_return_with_cost.annualized_return": 0.08358463,
+        "1day.excess_return_with_cost.std": 0.00907787,
+        "1day.excess_return_with_cost.mean": 0.0003512,
+        "1day.excess_return_without_cost.max_drawdown": -0.09304674,
+        "1day.excess_return_without_cost.information_ratio": 0.76293802,
+        "1day.excess_return_without_cost.annualized_return": 0.10677072,
+        "1day.excess_return_without_cost.std": 0.0090714,
+        "1day.excess_return_without_cost.mean": 0.00044862,
+        "Rank ICIR": 0.19123355,
+        "Rank IC": 0.02546223,
+        "ICIR": 0.05434434,
+        "IC": 0.00757131,
+        "l2.valid": 0.99700228,
+        "l2.train": 0.99466441
+      },
+      "feedback": {
+        "Observations": "The factor shows a moderate information ratio of 0.7629, with an annualized return of 10.68% without costs. However, the IC is only 0.0076, indicating weak predictive power relative to returns. The max drawdown of -9.30% suggests some fragility, though not extreme.",
+        "Feedback for Hypothesis": "The result partially supports the hypothesis, as the factor shows some mean-reversion in low-volume stocks after earnings. However, the low IC and moderate return suggest the signal is weak or noisy. The second factor (Low_volume_stocks_show_stronger_1) appears more signal-rich, but both factors are complex and may overfit. The framework should be simplified.",
+        "Replace Best Result": "no"
+      }
+    },
+    "35c1a42a137afc36": {
+      "factor_id": "35c1a42a137afc36",
+      "factor_name": "Low_volume_stocks_with_large_pri_0",
+      "factor_expression": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1)\" # Your output factor expression will be filled in here\n    name = \"Low_volume_stocks_with_large_pri_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+      "factor_formulation": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "1f8642fa2a0d4003a682172c9cb041c6",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/1f8642fa2a0d4003a682172c9cb041c6/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 1,
+        "evolution_phase": "mutation",
+        "trajectory_id": "899658b6e4d6",
+        "parent_trajectory_ids": [
+          "c4a42c665f2e"
+        ],
+        "hypothesis": "Low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+        "initial_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "planning_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "created_at": "2026-06-13T09:43:29.508433"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.1058278,
+        "1day.excess_return_with_cost.information_ratio": 0.59683484,
+        "1day.excess_return_with_cost.annualized_return": 0.08358463,
+        "1day.excess_return_with_cost.std": 0.00907787,
+        "1day.excess_return_with_cost.mean": 0.0003512,
+        "1day.excess_return_without_cost.max_drawdown": -0.09304674,
+        "1day.excess_return_without_cost.information_ratio": 0.76293802,
+        "1day.excess_return_without_cost.annualized_return": 0.10677072,
+        "1day.excess_return_without_cost.std": 0.0090714,
+        "1day.excess_return_without_cost.mean": 0.00044862,
+        "Rank ICIR": 0.19123355,
+        "Rank IC": 0.02546223,
+        "ICIR": 0.05434434,
+        "IC": 0.00757131,
+        "l2.valid": 0.99700228,
+        "l2.train": 0.99466441
+      },
+      "feedback": {
+        "Observations": "The factor_shows_a_mod information_ratio_of_0076_with an_annualized_return_of10666 without costs. themax_drawdown_of -93047 suggests some_fragilitythough not_extreme.",
+        "Feedback for Hypothesis": "the result_partially_supports thefactor_showssome_mean_reversion_in_low_volume_stocks_following_____but_the_signal_is_to_volume_heav_and_decays_under_noise_the_ic_is_to_to_low_the_factor_is_overfit_and_needs_refinement.",
+        "Replace Best Result": "no"
+      }
+    },
+    "9c713a9497353787": {
+      "factor_id": "9c713a9497353787",
+      "factor_name": "Low_volume_stocks_with_large_pri_1",
+      "factor_expression": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50)\" # Your output factor expression will be filled in here\n    name = \"Low_volume_stocks_with_large_pri_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+      "factor_formulation": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "47a86aaf7efc410c891c0f9f83c57def",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/47a86aaf7efc410c891c0f9f83c57def/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 1,
+        "evolution_phase": "mutation",
+        "trajectory_id": "899658b6e4d6",
+        "parent_trajectory_ids": [
+          "c4a42c665f2e"
+        ],
+        "hypothesis": "Low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+        "initial_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "planning_direction": "mean-reversion in low-volume trades following earnings announcements",
+        "created_at": "2026-06-13T09:43:29.512627"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.1058278,
+        "1day.excess_return_with_cost.information_ratio": 0.59683484,
+        "1day.excess_return_with_cost.annualized_return": 0.08358463,
+        "1day.excess_return_with_cost.std": 0.00907787,
+        "1day.excess_return_with_cost.mean": 0.0003512,
+        "1day.excess_return_without_cost.max_drawdown": -0.09304674,
+        "1day.excess_return_without_cost.information_ratio": 0.76293802,
+        "1day.excess_return_without_cost.annualized_return": 0.10677072,
+        "1day.excess_return_without_cost.std": 0.0090714,
+        "1day.excess_return_without_cost.mean": 0.00044862,
+        "Rank ICIR": 0.19123355,
+        "Rank IC": 0.02546223,
+        "ICIR": 0.05434434,
+        "IC": 0.00757131,
+        "l2.valid": 0.99700228,
+        "l2.train": 0.99466441
+      },
+      "feedback": {
+        "Observations": "The factor_shows_a_mod information_ratio_of_0076_with an_annualized_return_of10666 without costs. themax_drawdown_of -93047 suggests some_fragilitythough not_extreme.",
+        "Feedback for Hypothesis": "the result_partially_supports thefactor_showssome_mean_reversion_in_low_volume_stocks_following_____but_the_signal_is_to_volume_heav_and_decays_under_noise_the_ic_is_to_to_low_the_factor_is_overfit_and_needs_refinement.",
+        "Replace Best Result": "no"
+      }
+    },
+    "c5e87575cabd0514": {
+      "factor_id": "c5e87575cabd0514",
+      "factor_name": "Low_volume_stocks_with_a_volume",
+      "factor_expression": "(RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50) * (TS_PCTCHANGE($close, 1) > 0.05) * (TS_ZSCORE($return, 2) < -1)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50) * (TS_PCTCHANGE($close, 1) > 0.05) * (TS_ZSCORE($return, 2) < -1)\" # Your output factor expression will be filled in here\n    name = \"Low_volume_stocks_with_a_volume\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Low-volume stocks with a volume spike relative to their 7-day maximum after a price decline show stronger mean-reversion in the 1-2 days following earnings announcements.",
+      "factor_formulation": "(RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50) * (TS_PCTCHANGE($close, 1) > 0.05) * (TS_ZSCORE($return, 2) < -1)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "84d242ff976c45719bc2b5d8c4a6309e",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/84d242ff976c45719bc2b5d8c4a6309e/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 2,
+        "evolution_phase": "crossover",
+        "trajectory_id": "412e2d7e9892",
+        "parent_trajectory_ids": [
+          "c4a42c665f2e",
+          "15ac933bfce6"
+        ],
+        "hypothesis": "Low-volume stocks with a volume spike relative to their 7-day maximum after a price decline show stronger mean-reversion in the 1-2 days following earnings announcements.",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-06-13T09:47:56.456178"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.10069833,
+        "1day.excess_return_with_cost.information_ratio": 0.41913755,
+        "1day.excess_return_with_cost.annualized_return": 0.05661595,
+        "1day.excess_return_with_cost.std": 0.00875576,
+        "1day.excess_return_with_cost.mean": 0.00023788,
+        "1day.excess_return_without_cost.max_drawdown": -0.08862128,
+        "1day.excess_return_without_cost.information_ratio": 0.59236675,
+        "1day.excess_return_without_cost.annualized_return": 0.07996435,
+        "1day.excess_return_without_cost.std": 0.00875018,
+        "1day.excess_return_without_cost.mean": 0.00033598,
+        "Rank ICIR": 0.18651493,
+        "Rank IC": 0.02550397,
+        "ICIR": 0.05532457,
+        "IC": 0.00783492,
+        "l2.valid": 0.99693852,
+        "l2.train": 0.99464455
+      },
+      "feedback": {
+        "Observations": "The factor shows a low IC of 0.0078, indicating weak predictive power relative to returns. The annualized return of 5.66% is below SOTA, and the max drawdown of -10.07% suggests fragility.\",\n  Feedback for Hypothesis\": \"The result partially supports the hypothesis, but the factor's low IC and below-SOTA return suggest the framework is exhausted. The complex expression likely overfits, as it combines multiple conditions without clear signal strength.",
+        "Replace Best Result": "no"
+      }
+    },
+    "822809b74cd9e33e": {
+      "factor_id": "822809b74cd9e33e",
+      "factor_name": "In_high_volatility_sectors_low_v_0",
+      "factor_expression": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1) * (TS_MEAN($volume, 7) > TS_MEDIAN($volume, 7))",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1) * (TS_MEAN($volume, 7) > TS_MEDIAN($volume, 7))\" # Your output factor expression will be filled in here\n    name = \"In_high_volatility_sectors_low_v_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "In high-volatility sectors, low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+      "factor_formulation": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_ZSCORE($return, 2) < -1) * (TS_MEAN($volume, 7) > TS_MEDIAN($volume, 7))",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "88adafee86ae47a289abf7d455ee2426",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/88adafee86ae47a289abf7d455ee2426/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 2,
+        "evolution_phase": "crossover",
+        "trajectory_id": "1162328d328d",
+        "parent_trajectory_ids": [
+          "196911d31068",
+          "ef1bd81dffa4"
+        ],
+        "hypothesis": "In high-volatility sectors, low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-06-13T09:55:28.238998"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.1058278,
+        "1day.excess_return_with_cost.information_ratio": 0.59683484,
+        "1day.excess_return_with_cost.annualized_return": 0.08358463,
+        "1day.excess_return_with_cost.std": 0.00907787,
+        "1day.excess_return_with_cost.mean": 0.0003512,
+        "1day.excess_return_without_cost.max_drawdown": -0.09304674,
+        "1day.excess_return_without_cost.information_ratio": 0.76293802,
+        "1day.excess_return_without_cost.annualized_return": 0.10677072,
+        "1day.excess_return_without_cost.std": 0.0090714,
+        "1day.excess_return_without_cost.mean": 0.00044862,
+        "Rank ICIR": 0.19123355,
+        "Rank IC": 0.02546223,
+        "ICIR": 0.05434434,
+        "IC": 0.00757131,
+        "l2.valid": 0.99700228,
+        "l2.train": 0.99466441
+      },
+      "feedback": {
+        "Observations": "The factor shows an annualized return of 0.0836, which is lower than the SOTA of 0.1254. The information ratio of 0.5968 is below average, and the max drawdown of -0.0930 suggests some fragility. The IC of 0.0076 is low, indicating weak predictive power.",
+        "Feedback for Hypothesis": "The result PARTIALLY supports the hypothesis, but the signal is too weak and decays under noise. Factor 1 (In_high_volatility_sectors_low_v_0) carries more signal due to its use of TS_ZSCORE($return, 2) < -1, which directly measures mean-reversion in the next 2 days. However, the overall performance is insufficient to surpass the SOTA.",
+        "Replace Best Result": "no"
+      }
+    },
+    "8b344d9ddf823f2e": {
+      "factor_id": "8b344d9ddf823f2e",
+      "factor_name": "In_high_volatility_sectors_low_v_1",
+      "factor_expression": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50) * (TS_CORR($close, $volume, 7) > 0.6)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50) * (TS_CORR($close, $volume, 7) > 0.6)\" # Your output factor expression will be filled in here\n    name = \"In_high_volatility_sectors_low_v_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "In high-volatility sectors, low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+      "factor_formulation": "(TS_PCTCHANGE($close, 1) > 0.05) * (RANK($volume) < 20) * (TS_RANK($high - $low, 2) > 50) * (TS_CORR($close, $volume, 7) > 0.6)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "39f6d6798d1a423dbbedca54cf08e2c6",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/39f6d6798d1a423dbbedca54cf08e2c6/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 2,
+        "evolution_phase": "crossover",
+        "trajectory_id": "1162328d328d",
+        "parent_trajectory_ids": [
+          "196911d31068",
+          "ef1bd81dffa4"
+        ],
+        "hypothesis": "In high-volatility sectors, low-volume stocks with large price gaps after earnings announcements exhibit stronger mean-reversion in the following 2 days due to liquidity constraints and overreaction.",
+        "initial_direction": "",
+        "planning_direction": "",
+        "created_at": "2026-06-13T09:55:29.163957"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.1058278,
+        "1day.excess_return_with_cost.information_ratio": 0.59683484,
+        "1day.excess_return_with_cost.annualized_return": 0.08358463,
+        "1day.excess_return_with_cost.std": 0.00907787,
+        "1day.excess_return_with_cost.mean": 0.0003512,
+        "1day.excess_return_without_cost.max_drawdown": -0.09304674,
+        "1day.excess_return_without_cost.information_ratio": 0.76293802,
+        "1day.excess_return_without_cost.annualized_return": 0.10677072,
+        "1day.excess_return_without_cost.std": 0.0090714,
+        "1day.excess_return_without_cost.mean": 0.00044862,
+        "Rank ICIR": 0.19123355,
+        "Rank IC": 0.02546223,
+        "ICIR": 0.05434434,
+        "IC": 0.00757131,
+        "l2.valid": 0.99700228,
+        "l2.train": 0.99466441
+      },
+      "feedback": {
+        "Observations": "The factor shows an annualized return of 0.0836, which is lower than the SOTA of 0.1254. The information ratio of 0.5968 is below average, and the max drawdown of -0.0930 suggests some fragility. The IC of 0.0076 is low, indicating weak predictive power.",
+        "Feedback for Hypothesis": "The result PARTIALLY supports the hypothesis, but the signal is too weak and decays under noise. Factor 1 (In_high_volatility_sectors_low_v_0) carries more signal due to its use of TS_ZSCORE($return, 2) < -1, which directly measures mean-reversion in the next 2 days. However, the overall performance is insufficient to surpass the SOTA.",
+        "Replace Best Result": "no"
+      }
+    },
+    "25f21b53a26c8419": {
+      "factor_id": "25f21b53a26c8419",
+      "factor_name": "Stocks_with_a_volume_spike_relat_0",
+      "factor_expression": "(TS_RANK($high - $low, 7) < 50) * (TS_PCTCHANGE($close, 1) < -0.05) * (TS_ZSCORE($volume, 7) > 2)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_RANK($high - $low, 7) < 50) * (TS_PCTCHANGE($close, 1) < -0.05) * (TS_ZSCORE($volume, 7) > 2)\" # Your output factor expression will be filled in here\n    name = \"Stocks_with_a_volume_spike_relat_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Stocks with a volume spike relative to their 7-day high-low range after a price decline show stronger momentum in the 1-2 days following earnings announcements.",
+      "factor_formulation": "(TS_RANK($high - $low, 7) < 50) * (TS_PCTCHANGE($close, 1) < -0.05) * (TS_ZSCORE($volume, 7) > 2)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "740d90b51c64487cacd95cf47a88435f",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/740d90b51c64487cacd95cf47a88435f/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 3,
+        "evolution_phase": "mutation",
+        "trajectory_id": "1f194beac853",
+        "parent_trajectory_ids": [
+          "b692c3ed1895"
+        ],
+        "hypothesis": "Stocks with a volume spike relative to their 7-day high-low range after a price decline show stronger momentum in the 1-2 days following earnings announcements.",
+        "initial_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "planning_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "created_at": "2026-06-13T10:02:05.933511"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.10501893,
+        "1day.excess_return_with_cost.information_ratio": 0.34605103,
+        "1day.excess_return_with_cost.annualized_return": 0.04895627,
+        "1day.excess_return_with_cost.std": 0.00917022,
+        "1day.excess_return_with_cost.mean": 0.0002057,
+        "1day.excess_return_without_cost.max_drawdown": -0.10114416,
+        "1day.excess_return_without_cost.information_ratio": 0.5111478,
+        "1day.excess_return_without_cost.annualized_return": 0.07226175,
+        "1day.excess_return_without_cost.std": 0.00916376,
+        "1day.excess_return_without_cost.mean": 0.00030362,
+        "Rank ICIR": 0.20135615,
+        "Rank IC": 0.02669817,
+        "ICIR": 0.0561545,
+        "IC": 0.0079337,
+        "l2.valid": 0.99684412,
+        "l2.train": 0.99399997
+      },
+      "feedback": {
+        "Observations": "The factor shows a low IC of 0.0079, indicating weak predictive power relative to returns. The annualized return of 4.90% is well below SOTA, and the max drawdown of -10.50% suggests fragility.",
+        "Feedback for Hypothesis": "The result partially supports the hypothesis, but the factor's low IC and below-SOTA return suggest the framework is exhausted. The complex expression likely overfits, and the two factors both underperform. The hypothesis should be abandoned in favor of simpler, more robust signal extraction.",
+        "Replace Best Result": "no"
+      }
+    },
+    "c0bc1a4c3b0b2859": {
+      "factor_id": "c0bc1a4c3b0b2859",
+      "factor_name": "Stocks_with_a_volume_spike_relat_1",
+      "factor_expression": "(TS_PCTCHANGE($close, 1) < -0.05) * (TS_ZSCORE($volume, 7) > 2) * (TS_PCTCHANGE($return, 1) > 0.03)",
+      "factor_implementation_code": "File: factor.py\n\nimport pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_PCTCHANGE($close, 1) < -0.05) * (TS_ZSCORE($volume, 7) > 2) * (TS_PCTCHANGE($return, 1) > 0.03)\" # Your output factor expression will be filled in here\n    name = \"Stocks_with_a_volume_spike_relat_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)",
+      "factor_description": "Stocks with a volume spike relative to their 7-day high-low range after a price decline show stronger momentum in the 1-2 days following earnings announcements.",
+      "factor_formulation": "(TS_PCTCHANGE($close, 1) < -0.05) * (TS_ZSCORE($volume, 7) > 2) * (TS_PCTCHANGE($return, 1) > 0.03)",
+      "cache_location": {
+        "workspace_suffix": "",
+        "workspace_path": "/workspace/project/multi-agent-system/backend/data/results/workspace",
+        "factor_dir": "f8f20f426130416fb8a1854a13dd3076",
+        "result_h5_path": "/workspace/project/multi-agent-system/backend/data/results/workspace/f8f20f426130416fb8a1854a13dd3076/result.h5"
+      },
+      "metadata": {
+        "experiment_id": "2026-06-13_09-18-07-739995",
+        "round_number": 3,
+        "evolution_phase": "mutation",
+        "trajectory_id": "1f194beac853",
+        "parent_trajectory_ids": [
+          "b692c3ed1895"
+        ],
+        "hypothesis": "Stocks with a volume spike relative to their 7-day high-low range after a price decline show stronger momentum in the 1-2 days following earnings announcements.",
+        "initial_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "planning_direction": "price-volume momentum in high-volatility sectors during bear markets",
+        "created_at": "2026-06-13T10:02:07.032289"
+      },
+      "backtest_results": {
+        "1day.pos": 0.0,
+        "1day.pa": 0.0,
+        "1day.ffr": 1.0,
+        "1day.excess_return_with_cost.max_drawdown": -0.10501893,
+        "1day.excess_return_with_cost.information_ratio": 0.34605103,
+        "1day.excess_return_with_cost.annualized_return": 0.04895627,
+        "1day.excess_return_with_cost.std": 0.00917022,
+        "1day.excess_return_with_cost.mean": 0.0002057,
+        "1day.excess_return_without_cost.max_drawdown": -0.10114416,
+        "1day.excess_return_without_cost.information_ratio": 0.5111478,
+        "1day.excess_return_without_cost.annualized_return": 0.07226175,
+        "1day.excess_return_without_cost.std": 0.00916376,
+        "1day.excess_return_without_cost.mean": 0.00030362,
+        "Rank ICIR": 0.20135615,
+        "Rank IC": 0.02669817,
+        "ICIR": 0.0561545,
+        "IC": 0.0079337,
+        "l2.valid": 0.99684412,
+        "l2.train": 0.99399997
+      },
+      "feedback": {
+        "Observations": "The factor shows a low IC of 0.0079, indicating weak predictive power relative to returns. The annualized return of 4.90% is well below SOTA, and the max drawdown of -10.50% suggests fragility.",
+        "Feedback for Hypothesis": "The result partially supports the hypothesis, but the factor's low IC and below-SOTA return suggest the framework is exhausted. The complex expression likely overfits, and the two factors both underperform. The hypothesis should be abandoned in favor of simpler, more robust signal extraction.",
+        "Replace Best Result": "no"
       }
     }
   }

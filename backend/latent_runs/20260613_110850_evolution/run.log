@@ -1,0 +1,7 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260613_110850_evolution pid=37856
+[    0.00s] INFO    evolution isolation test  mode=both latent_steps=10 use_realign=False knn=False
+[   46.26s] INFO    building parent-1 via front-end
+[   97.95s] INFO    building parent-2 via front-end  direction=overnight gap reversal under liquidity stress
+[  137.26s] INFO    running mutation (judger-only: revise target)
+[  176.75s] INFO    running crossover (judger-only: recombination)
+[  240.67s] INFO    run finished  wall_clock_s=240.665

@@ -1,0 +1,70 @@
+{"t": 0.0044, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260613_141016_evolution", "pid": 71253}
+{"t": 0.006, "kind": "log", "level": "INFO", "msg": "evolution isolation test", "mode": "both", "latent_steps": 10, "use_realign": false, "knn": false}
+{"t": 38.7079, "kind": "log", "level": "INFO", "msg": "building parent-1 via front-end"}
+{"t": 38.7129, "kind": "step_start", "step": "proposal"}
+{"t": 40.7014, "kind": "step_end", "step": "proposal", "duration_s": 1.9874, "error": null}
+{"t": 40.7027, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.99, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 272, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 38.25}, "parsed": null}
+{"t": 40.706, "kind": "step_start", "step": "construct"}
+{"t": 41.5948, "kind": "step_end", "step": "construct", "duration_s": 0.8878, "error": null}
+{"t": 41.5966, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.89, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1538, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 216.28}, "parsed": null}
+{"t": 41.5989, "kind": "step_start", "step": "consistency"}
+{"t": 42.1754, "kind": "step_end", "step": "consistency", "duration_s": 0.5753, "error": null}
+{"t": 42.1766, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.578, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1758, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 247.22}, "parsed": null}
+{"t": 42.1826, "kind": "step_start", "step": "judger"}
+{"t": 43.5347, "kind": "step_end", "step": "judger", "duration_s": 1.3509, "error": null}
+{"t": 43.5369, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": false, "duration_s": 1.353, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2231, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 313.73}, "parsed": null}
+{"t": 43.5409, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": ""}
+{"t": 43.5481, "kind": "step_start", "step": "judger"}
+{"t": 44.2301, "kind": "step_end", "step": "judger", "duration_s": 0.681, "error": null}
+{"t": 44.2314, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": false, "duration_s": 0.683, "latent_steps": 10, "text_len": 0, "n_out_tok": 1, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2231, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 313.73}, "parsed": null}
+{"t": 44.2332, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 2/2)", "head": ""}
+{"t": 44.2349, "kind": "log", "level": "ERROR", "msg": "no expression from judger; skipping repair"}
+{"t": 44.2373, "kind": "log", "level": "INFO", "msg": "building parent-2 via front-end", "direction": "overnight gap reversal under liquidity stress"}
+{"t": 44.2409, "kind": "step_start", "step": "proposal"}
+{"t": 44.8055, "kind": "step_end", "step": "proposal", "duration_s": 0.5636, "error": null}
+{"t": 44.8068, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.566, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 267, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 37.55}, "parsed": null}
+{"t": 44.8102, "kind": "step_start", "step": "construct"}
+{"t": 45.5264, "kind": "step_end", "step": "construct", "duration_s": 0.715, "error": null}
+{"t": 45.5275, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.717, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1533, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 215.58}, "parsed": null}
+{"t": 45.5305, "kind": "step_start", "step": "consistency"}
+{"t": 45.9952, "kind": "step_end", "step": "consistency", "duration_s": 0.464, "error": null}
+{"t": 45.9964, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.466, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1753, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 246.52}, "parsed": null}
+{"t": 46.0019, "kind": "step_start", "step": "judger"}
+{"t": 49.6, "kind": "step_end", "step": "judger", "duration_s": 3.5973, "error": null}
+{"t": 49.6019, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 3.599, "latent_steps": 10, "text_len": 181, "n_out_tok": 69, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2220, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 312.19}, "parsed": "HypothesisExprs(hypothesis='overnight gap reversal under liquidity stress', expressions=['RANK($close - $open) * TS_ZSCORE($volume, 10) >'])"}
+{"t": 51.4502, "kind": "step_start", "step": "repair"}
+{"t": 53.3315, "kind": "step_end", "step": "repair", "duration_s": 1.8802, "error": null}
+{"t": 53.3337, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 1.882, "latent_steps": 10, "text_len": 52, "n_out_tok": 23, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2158, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 303.47}, "parsed": "RANK($close - $open) * TS_ZSCORE($volume, 10)"}
+{"t": 53.4872, "kind": "log", "level": "INFO", "msg": "running mutation (judger-only: revise target)"}
+{"t": 53.4923, "kind": "step_start", "step": "mutation"}
+{"t": 54.1464, "kind": "step_end", "step": "mutation", "duration_s": 0.6528, "error": null}
+{"t": 54.1477, "kind": "agent_done", "role": "mutation", "mode": "kv_only", "ok": true, "duration_s": 0.655, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 441, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 62.02}, "parsed": null}
+{"t": 54.1522, "kind": "step_start", "step": "proposal"}
+{"t": 54.7607, "kind": "step_end", "step": "proposal", "duration_s": 0.6075, "error": null}
+{"t": 54.7618, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.609, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 713, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 100.27}, "parsed": null}
+{"t": 54.7656, "kind": "step_start", "step": "construct"}
+{"t": 55.4197, "kind": "step_end", "step": "construct", "duration_s": 0.6529, "error": null}
+{"t": 55.4212, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.655, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1968, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 276.75}, "parsed": null}
+{"t": 55.4231, "kind": "step_start", "step": "consistency"}
+{"t": 55.8892, "kind": "step_end", "step": "consistency", "duration_s": 0.4652, "error": null}
+{"t": 55.8912, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.468, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2188, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 307.69}, "parsed": null}
+{"t": 55.8964, "kind": "step_start", "step": "judger"}
+{"t": 59.5826, "kind": "step_end", "step": "judger", "duration_s": 3.6821, "error": null}
+{"t": 59.5835, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 3.687, "latent_steps": 10, "text_len": 226, "n_out_tok": 76, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2650, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 372.66}, "parsed": "HypothesisExprs(hypothesis='high-volume stocks with declining prices show stronger momentum reversal in bear markets.', expressions=['RANK($return) * TS_ZSCORE($volume, 20)', 'REGBETA(TS_MEAN($close, 20), TS_MEAN($volume, 20), 2 20)'])"}
+{"t": 59.7516, "kind": "log", "level": "INFO", "msg": "running crossover (judger-only: recombination)"}
+{"t": 59.7559, "kind": "step_start", "step": "crossover"}
+{"t": 60.2334, "kind": "step_end", "step": "crossover", "duration_s": 0.4721, "error": null}
+{"t": 60.2343, "kind": "agent_done", "role": "crossover", "mode": "kv_only", "ok": true, "duration_s": 0.478, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 474, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 66.66}, "parsed": null}
+{"t": 60.238, "kind": "step_start", "step": "proposal"}
+{"t": 60.6989, "kind": "step_end", "step": "proposal", "duration_s": 0.4601, "error": null}
+{"t": 60.7, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.462, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 746, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 104.91}, "parsed": null}
+{"t": 60.7029, "kind": "step_start", "step": "construct"}
+{"t": 61.3306, "kind": "step_end", "step": "construct", "duration_s": 0.6273, "error": null}
+{"t": 61.3327, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.629, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2001, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 281.39}, "parsed": null}
+{"t": 61.3362, "kind": "step_start", "step": "consistency"}
+{"t": 61.7986, "kind": "step_end", "step": "consistency", "duration_s": 0.4618, "error": null}
+{"t": 61.7994, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.463, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2221, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 312.33}, "parsed": null}
+{"t": 61.8042, "kind": "step_start", "step": "judger"}
+{"t": 65.6036, "kind": "step_end", "step": "judger", "duration_s": 3.7989, "error": null}
+{"t": 65.6046, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 3.8, "latent_steps": 10, "text_len": 274, "n_out_tok": 80, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2683, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 377.3}, "parsed": "HypothesisExprs(hypothesis='high-volatility sectors show price-volume momentum in bear markets, with price momentum amplified by volume concentration and liquidity stress.', expressions=['RANK($close - $open) * TS_ZSCORE($volume, 10)', 'REGBETA(TS_MEAN($return, 5), $volume, 10)'])"}
+{"t": 65.8642, "kind": "log", "level": "INFO", "msg": "run finished", "wall_clock_s": 65.852}
