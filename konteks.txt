@@ -1,301 +1,70 @@
-=======================================================================
-KONTEKS SESI DEBUGGING — LatentMAS / QuantaAlpha
-Terakhir diperbarui: 2026-06-01
-Branch: feat/latentmas-rework
-=======================================================================
+# Memory Index
+
+- [Evolution guidance redesign](evolution-guidance-redesign.md) — 2026-06-08 mutation/crossover jadi GUIDANCE kv_only (arah) → re-enter front-end, bounded per-generasi; + diagnosa run pra-rework & follow-up (resume, GPU mem).
+
+
+---
+name: evolution-guidance-redesign
+description: 2026-06-08 evolution rework — mutation/crossover jadi GUIDANCE kv_only (arah) → re-enter front-end; bounded per-generasi (anti-collapse)
+metadata:
+  node_type: memory
+  type: project
+  originSessionId: 7931c90c-b2a5-48f8-b9f2-336edadc7358
+---
+
+2026-06-08 (lanjutan [[latentmas-rework]], submodule `newEvol`; kode di
+`/workspace/project/multi-agent-system/backend`): mengubah alur evolution dari
+**JUDGER-ONLY** (mutation/crossover langsung emit hypothesis+expression) menjadi
+**GUIDANCE → re-entry front-end**, atas permintaan user.
+
+**Maunya user:** mutation/crossover hanya menetapkan ARAH (knowledge/observation/
+diagnosis/direction) sebagai konteks laten; lalu propose→judger yang menyusun
+ekspresi. Alur: guidance(kv_only) → proposal → construct → consistency → judger →
+gate/repair → backtest → feedback → [generasi berikut] guidance baru → ...
+
+**Keputusan KV (user): BOUNDED PER-GENERASI.** guidance di-seed `past_kv=None`,
+baca parent sebagai TEKS; KV-nya menyemai proposal HANYA dalam 1 generasi;
+`trajectory.kv_cache` tetap None → transfer antar-generasi via teks
+(`_format_parents_text`). KV per ronde ≈ guidance + front-end ≈ 3k → TIDAK
+mengulang collapse 2026-06-02 (dulu karena warisan KV parent lintas generasi,
+3.5k→21k). Opsi "kontinu lintas-generasi" sengaja DITOLAK.
+
+**Perubahan kode (implemented + static-verified, BELUM GPU-tested):**
+- `latent_mas/prompts.yaml`: rename `mutation_judger`→`mutation`,
+  `crossover_judger`→`crossover`; `kv_and_text`→`kv_only`; hapus parser/
+  max_new_tokens; prompt ditulis ulang jadi DIAGNOSIS+DIRECTION (tanpa ekspresi,
+  tanpa embed operator-lib). Tetap 9 agent.
+- `latent_mas/pipeline.py` `run_evolution`: guidance agent (kv_only, seed None) →
+  `guidance_kv` → `return self.run(direction=, seed_kv=guidance_kv)`. Debug opsional
+  `LATENTMAS_EVO_DEBUG=1` → decode guidance_kv via agent `introspect`. + `import os`.
+- `pipeline/loop.py`: `_evolution_propose`/`_format_parents_text`/
+  `_get_trajectory_data` TAK berubah logikanya (FrontEndOutput kompatibel,
+  pipeline_kv tetap None); hanya komentar di-update. controller.py tak disentuh.
+
+**Verifikasi:** statik PASSED (py_compile pipeline/loop/run_evolution; yaml 9 agent;
+render StrictUndefined-safe). load_all_agents + GPU run BELUM (box dev tanpa
+torch/transformers → jalan di runpod). Rencana GPU: `experiments/run_evolution.py
+--mode both` (cek urutan caller guidance→propose→…→judger, KV ≈3k tak naik antar
+ronde), lalu factor_mining max_rounds=3.
+
+**Diagnosa run `log/2026-06-08_04-45-37-493118` (PRA-rework):** berjalan benar,
+berhenti normal via max_rounds=3 (O→M→C→M); crossover = 1 fase = 2 trajectory
+(BUKAN bug). Round terakhir asimetris (1 direction) = quirk: cek max_rounds di
+puncak `get_next_task` tapi `_get_crossover_task` naikkan round lalu langsung
+`_get_mutation_task`. KV TIDAK collapse (fix judger-only bekerja). GPU mem naik
+monoton ~600MB/loop (8.4→12.7GB) → risiko OOM run panjang.
+
+**Resume: SUDAH di-wire (2026-06-08, static-verified, BELUM dites e2e).** Set
+`evolution.resume_from: <prev_run_dir>` di config (atau CLI `--resume_from`). Di
+`run_evolution_loop`: salin trajectory_pool.json lama → log_root baru + fresh_start
+=False (pool load saat controller init) + `controller.load_state(evolution_state.json)`
+(restore cursor round/phase/mutation_targets). Trajectory selesai TAK di-backtest
+ulang. CATATAN: bila run lama sudah mentok max_rounds, NAIKKAN `evolution.max_rounds`
+atau resume langsung selesai tanpa task baru (ada warning). `main()` punya param baru
+`resume_from`; contoh ter-komentar di `configs/experiment.yaml`.
+
+**Sisa follow-up (out-of-scope):** GPU mem leak ~600MB/loop (risiko OOM run panjang);
+latent_steps 10→40-80. Lihat [[quantaalpha-paper-code-divergences]].
 
-## STATUS TERKINI
 
-Sistem pipeline berjalan bersih dengan latent_steps=40, use_realign=True,
-TANPA KNN. Dengan KNN aktif, collapse MASIH terjadi setelah fix RoPE
-re-rotasi (commit 53f7397) — masalahnya lebih dalam dari sekadar RoPE
-offset (lihat Temuan #5). KNN harus dinonaktifkan saat latent_steps > 0.
 
-Repair sudah terbukti sehat secara terisolasi (run 20260601_123306):
-  repair parsed: "TS_ZSCORE($volume, 20)" dan "TS_ZSCORE($return, 20) /
-  TS_STD($volume, 20)" — valid, gate pass.
-
-
-=======================================================================
-## TEMUAN UTAMA
-=======================================================================
-
-### 1. KNN (--knn) adalah penyebab tunggal collapse output
-
-Gejala awal: output judger/mutation_judger/crossover_judger berupa teks
-degenerate panjang ("1 1 1 1...", echo template), repair gagal 3x.
-
-Mekanisme awal (RoPE offset): kv_knn_filter membuang token berlubang via
-torch.gather. Key tersisa membawa fase RoPE posisi ASLI sementara panjang
-fisik cache menyusut → token baru diposisikan dari panjang yang menyusut
-→ RoPE desync → output degenerate.
-
-Setelah fix RoPE re-rotasi (commit 53f7397), perilaku BERUBAH tapi masih
-gagal — lihat Temuan #5 untuk analisis penuh.
-
-Bukti: run tanpa --knn (latent_steps=40, use_realign=True) menghasilkan
-parent dan mutation/crossover yang valid. Run dengan --knn collapse.
-
-Catatan kritis: latent_steps + use_realign TIDAK menyebabkan collapse
-(bertentangan dengan hipotesis sesi sebelumnya). Bisection lama yang
-menyalahkan "akumulasi ~40 latent tokens" perlu direvisi.
-
-
-### 2. Repair gagal bukan karena bug repair sendiri
-
-Repair selalu gagal di run dengan KNN karena kv_consist (baseline
-pristine untuk repair) dibangun lewat chain yang sudah korup oleh KNN.
-Plus KNN diterapkan ulang di setiap attempt repair → makin korup.
-Di kondisi bersih (tanpa KNN), judger langsung parseable → gate pass →
-_gate_and_repair balikin lebih awal, repair tidak pernah dipanggil.
-Repair BELUM divalidasi secara terisolasi; lihat item TODO.
-
-
-### 3. Gate tidak cek arity/nama fungsi
-
-factors/coder/expr_parser.parse_expression hanya:
-  - cek balance kurung
-  - cek operator invalid (karakter)
-  - parse grammar infix
-
-TIDAK cek arity atau validitas nama fungsi. Konsekuensi: ekspresi
-crossover "TS_ZSCORE($volume, $return, 20)" (3 argumen, 2 field) LOLOS
-gate walau DSL-nya salah secara semantik. Ini bukan crash — hanya
-kualitas factor tidak optimal.
-
-
-### 5. KNN + latent virtual tokens: inkompatibilitas struktural (TEMUAN BARU)
-
-Run: session_20260601_123306 (latent_steps=40, use_realign=True, knn=True)
-Sumber data: events.jsonl + llm_outputs session 20260601_123306
-
-Hasil setelah fix RoPE re-rotasi (commit 53f7397):
-  - judger:              output_tokens=1, text_len=0 — EOS dini, bukan
-                         echo panjang. Perubahan dari sebelum fix (echo
-                         template "1 1 1..."), tapi masih gagal.
-  - repair:              output_tokens=17-28, parsed valid ("TS_ZSCORE(
-                         $volume, 20)", "TS_ZSCORE($return, 20) / TS_STD(
-                         $volume, 20)"). BERHASIL — repair terbukti sehat.
-  - mutation_reflection: output_tokens=512 full "1. 1. 1..." degenerate.
-  - mutation_judger:     output_tokens=1024 "的 1 1 1..." degenerate.
-  - crossover_judger:    output_tokens=1024 "和 3 3..." degenerate.
-
-Pola seq_len di events.jsonl (parent-1):
-  proposal    : 155 tokens  (kv_only)
-  construct   : 378 tokens  (kv_only, menerima proposal KV)
-  consistency : 496 tokens  (kv_only, menerima construct KV)
-  judger      : 649 tokens  (kv_and_text, deepcopy kv_consist 496 → +153)
-  repair      : 653 tokens  (berangkat dari kv_consist 496 — BUKAN kv_judger)
-  mutation_reflection: 736 tokens (menerima kv_judger 649)
-  mutation_judger: 1338 tokens (menerima kv_reflect 736)
-  crossover_judger: merged 1300 tokens (kv_p1=650 + kv_p2=650 cat)
-
-Mengapa repair berhasil tapi judger gagal (keduanya mulai dari kv_consist):
-  Repair: prompt singkat, format sederhana "FIXED: <expr>" → lebih robust
-  terhadap KV yang terdistorsi.
-  Judger: prompt lebih panjang + complex, dua-baris output → lebih sensitif.
-
-Akar masalah SEBENARNYA — inkompatibilitas struktural KNN + virtual tokens:
-  Setiap agent kv_only menambahkan 40 latent VIRTUAL TOKENS ke KV cache.
-  Virtual token ini tidak punya representasi teks; posisinya di-inject
-  langsung ke hidden state tanpa teks/position_id yang jelas.
-
-  Ketika agent BERIKUTNYA menerapkan KNN pada cache sebelumnya, ia
-  memfilter campuran dari:
-    a) Real text tokens  (posisi 0..n, makna semantis jelas)
-    b) Virtual latent tokens (posisi n+1..n+40, makna implisit)
-
-  Setelah filter + re-rotasi ke posisi kontigu, virtual token yang
-  tersisa berada di posisi baru yang TIDAK SESUAI dengan bagaimana
-  model mengharapkan virtual token diposisikan relatif terhadap real
-  tokens. Re-rotasi benar untuk token nyata (RoPE additif terbukti),
-  tapi tidak memulihkan relasi posisi yang benar untuk virtual tokens
-  yang embedding-nya dihitung dalam konteks posisi asli mereka.
-
-  Akibatnya setiap pass KNN menambah distorsi sedikit, dan setelah 4-5
-  agent (proposal→construct→consistency→judger→mutation_reflection),
-  distorsi terakumulasi cukup besar untuk menyebabkan collapse total.
-
-Bukti: repair (1 level KNN, berangkat dari kv_consist fresh) berhasil;
-judger (1 level KNN dari kv_consist, tapi lebih kompleks) gagal; evolution
-agents (2-3 level KNN terakumulasi dari kv_judger) collapse penuh.
-
-Kesimpulan: KNN dan latent_steps > 0 TIDAK KOMPATIBEL dalam desain ini.
-KNN harus dinonaktifkan saat latent_steps > 0. Fix yang benar untuk
-kombinasi keduanya memerlukan rancangan ulang lebih dalam (misalnya:
-terapkan KNN HANYA pada real tokens sebelum virtual tokens ditambahkan,
-dengan tracking posisi virtual vs real secara eksplisit).
-
-
-### 4. Bocoran tag <think> dari Qwen3
-
-Qwen3-4B kadang menutup </think> tanpa <think> pembuka (orphan tag),
-atau memendekkan label output:
-  - HYPOTHESIS: → HYPOTH: / HYPOTHS:
-  - EXPRESSION: → EXPR:
-Akibatnya parse_hypothesis_expr mengembalikan hypothesis="" walau
-ekspresi berhasil di-parse.
-
-
-=======================================================================
-## PERUBAHAN YANG DILAKUKAN
-=======================================================================
-
-### Commit f991968 — Parser + harness validasi repair
-File: backend/latent_mas/parsers.py
-  - Regex label hypothesis dilonggarkan: (?:hypothesis|hypo) → hypo\w*
-  - Regex label expression dilonggarkan: (?:expression|expr) → expr\w*
-  - Strip orphan </think> di parse_hypothesis_expr dan parse_repair.
-
-File: backend/llm/client.py
-  - _strip_thinking: tambah pass ke-3 `re.sub(r"</?think>", "", text)`
-    untuk membuang tag yatim yang lolos dua pass sebelumnya.
-
-File: backend/experiments/run_evolution.py
-  - Flag baru: --test-repair [BAD_EXPR]
-    Paksa gate failure pada ekspresi sengaja invalid, jalankan
-    _gate_and_repair dari kv_consist pristine parent-1, lapor
-    recovered: true/false.
-  - DEFAULT_BAD_EXPR = "TS_ZSCORE($volume, 20"  ← kurung tidak seimbang
-    (dipilih karena gate PASTI menolaknya; ekspresi 3-arg seperti
-    "TS_ZSCORE($volume,$return,5)" justru LOLOS gate — arity tak dicek).
-
-
-### Commit 53f7397 — Perbaikan RoPE desync pada kv_knn_filter
-File: backend/llm/_shared.py
-
-Fungsi baru: _rotate_half(x)
-  Rotasi separuh dimensi terakhir (konvensi RoPE HuggingFace).
-
-Fungsi baru: _get_rotary_emb(model)
-  Ambil modul rotary_emb dari model (Qwen3 & sejenis). None bila
-  tidak ditemukan.
-
-Fungsi baru: _rerotate_keys_contiguous(kv, orig_positions, model)
-  Setelah filter, terapkan R(new−old) per token untuk me-rotasi key
-  dari posisi asli (berlubang) ke posisi kontigu [0..k-1].
-  - RoPE additif: R(a)·R(b) = R(a+b) → terbukti eksak numerik
-    (max abs err ~2e-7, diverifikasi tanpa GPU).
-  - Hanya KEY yang dirotasi (value bebas RoPE).
-  - Fail-open: bila rotary_emb tidak ada, kembalikan kv apa adanya.
-  - Asumsi: attention_scaling == 1 (Qwen3-4B default). Untuk varian
-    YaRN/linear scaling, ini hanya hampiran.
-
-Perubahan kv_knn_filter:
-  - Tambah parameter: model=None, rerotate=True.
-  - Panggil _rerotate_keys_contiguous setelah _kv_select_indices.
-
-File: backend/llm/client.py
-  - Dua call-site kv_knn_filter (di latent_pass & generate_text)
-    diteruskan model=self.model.
-
-
-=======================================================================
-## YANG PERLU DIKONFIRMASI (BELUM DIJALANKAN)
-=======================================================================
-
-1. Bisection KNN setelah fix:
-   cd backend
-   # front-end dengan KNN — dulu collapse, seharusnya bersih kini:
-   python experiments/run_mining.py \
-     --direction "price-volume momentum forecast" \
-     --iterations 1 --no-backtest \
-     --latent-steps 10 --use-realign --knn
-
-   # evolution end-to-end dengan KNN + validasi repair:
-   python experiments/run_evolution.py \
-     --direction  "price-volume momentum forecast" \
-     --direction2 " mean-reversion in small-caps" \
-     --latent-steps 40 --use-realign --knn --test-repair \
-     --feedback "Low IC (0.01). Expression too volume-heavy; mechanism weak under noise." \
-     --backtest-summary "IC=0.010 RankIC=0.024 annualized_return=3.5% MDD=-9.5%"
-
-   Yang diamati:
-   - Cari log "[KNN] rotary_emb tak ditemukan" → jika muncul, path
-     rotary_emb perlu disesuaikan untuk versi transformers yang dipakai.
-   - Parent tidak lagi kosong/placeholder dengan --knn aktif.
-   - REPAIR VALIDATION → recovered: true.
-
-2. Validasi repair terisolasi:
-   Jalankan run_evolution.py --test-repair (tanpa --knn).
-   Harapan: recovered: true. Jika false, agent repair punya bug sendiri
-   yang belum pernah terekspos (karena judger selalu parseable di kondisi
-   bersih saat ini).
-
-
-=======================================================================
-## ITEM TERBUKA / PEKERJAAN BERIKUTNYA
-=======================================================================
-
-A. [SELESAI — DITUTUP] Konfirmasi KNN: run 20260601_123306 mengkonfirmasi
-   re-rotasi membantu sebagian tapi KNN + latent_steps tidak kompatibel.
-   Kesimpulan: NONAKTIFKAN KNN saat latent_steps > 0.
-
-B. [PRIORITAS TINGGI] Tegaskan di LocalLLMBackend atau FrontEndPipeline:
-   jika latent_steps > 0 dan knn_enabled=True, raise warning atau
-   otomatis matikan KNN. Cegah pengguna menyalakan kombinasi ini secara
-   tidak sengaja. Contoh di LocalLLMBackend.__init__:
-     if latent_steps > 0 and knn_enabled:
-         warnings.warn("KNN dinonaktifkan otomatis: tidak kompatibel "
-                       "dengan latent_steps > 0 (RoPE virtual token desync)")
-         knn_enabled = False
-
-C. [JIKA KNN DIPERLUKAN DI MASA DEPAN — rancangan ulang]:
-   Untuk membuat KNN + latent bekerja, perlu:
-   1. Track posisi mana yang real vs virtual di setiap cache.
-   2. KNN hanya filter real tokens; virtual tokens selalu ikut atau dibuang
-      seluruhnya (jangan filter sebagian).
-   3. Re-rotasi hanya pada real tokens yang tersisa.
-   Ini perubahan arsitektur non-trivial.
-
-D. kv_truncate punya bug RoPE serupa: memotong tail tanpa re-rotasi.
-   Jika dipakai di jalur aktif (kv_max_seq_len di LocalLLMBackend),
-   perlu perlakuan yang sama. Tapi karena kv_truncate hanya potong TAIL
-   (token terbaru), efeknya berbeda: token yang dibuang adalah yg terbaru
-   (bukan berlubang tengah), sehingga RoPE desync-nya lebih kecil. Tetap
-   perlu dicek.
-
-E. Gate arity: pertimbangkan menambahkan pengecekan arity/nama fungsi
-   ke parse_expression agar ekspresi DSL semantis yang salah (seperti
-   TS_ZSCORE tiga argumen) bisa ditolak lebih awal.
-
-F. factor_mining collapse (terpisah): sesi sebelumnya menduga collapse
-   di factor_mining disebabkan planning seed-KV dan effective_direction
-   membengkak — bukan KNN/latent murni. Belum diinvestigasi.
-
-G. Mutation timid: mutasi dari run ini hanya mengubah operator penghubung
-   (* → +), operator family dan window sama. Jika eksplorasi lebih agresif
-   diinginkan, prompt mutation_judger perlu didorong untuk mengganti
-   operator family dan/atau window.
-
-
-=======================================================================
-## GAMBARAN ARSITEKTUR RINGKAS (UNTUK ORIENTASI)
-=======================================================================
-
-FrontEndPipeline.run():
-  proposal(kv_only) → construct(kv_only) → consistency(kv_only)
-  → kv_consist [baseline pristine]
-  → judger(kv_and_text, deepcopy kv_consist)
-  → _gate_and_repair(expression, kv_consist)
-  → FrontEndOutput{hypothesis, expression, kv_consist, kv_judger}
-
-EvolutionOps.mutate(parent_kv_judger):
-  mutation_reflection(kv_and_text, parent_kv_judger)
-  → mutation_judger(kv_and_text, kv_reflect)
-  → EvolutionOutput{hypothesis, expression}
-
-EvolutionOps.crossover([kv_p1, kv_p2]):
-  kv_concat([kv_p1, kv_p2]) → layer-wise concat
-  → crossover_judger(kv_and_text, kv_merged)
-  → EvolutionOutput{hypothesis, expression}
-
-KV chain: setiap agent menerima past_kv dari agent sebelumnya.
-  Mode kv_only  : hanya bangun konteks, tidak generate teks.
-  Mode kv_and_text : latent_pass dulu (tanpa assistant prefix),
-                     lalu generate_from_kv (kirim prefix token saja
-                     sebagai trigger, hindari double-encoding).
-
-LocalLLMBackend._engine = _CoreEngine (Qwen3-4B, bfloat16, CUDA).
-KNN filter: kv_knn_filter dipanggil di awal latent_pass & generate_text
-            jika knn_enabled=True — SETELAH fix, key dire-rotasi ulang.

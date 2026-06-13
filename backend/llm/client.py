@@ -720,9 +720,16 @@ class _CoreEngine:
             msgs = messages
 
         if getattr(self.tokenizer, "chat_template", None):
+            # Hard switch resmi Qwen3: enable_thinking=False membuat template
+            # menyisipkan blok <think></think> KOSONG di assistant prefix, jadi
+            # model langsung menulis jawaban. Soft switch '/no_think' saja masih
+            # membiarkan model memutuskan sendiri — kadang ia emit blok think
+            # kosong lalu EOS (n_out_tok~30, text_len=0 di snapshot repair).
+            # Template non-Qwen mengabaikan kwarg ini.
             return self.tokenizer.apply_chat_template(
                 msgs, tokenize=False,
                 add_generation_prompt=add_generation_prompt,
+                enable_thinking=self.enable_thinking,
             )
 
         # Fallback (tidak diharapkan untuk Qwen3)
@@ -882,6 +889,8 @@ class _CoreEngine:
         max_new_tokens : int   = 2048,
         temperature    : float = 0.6,
         top_p          : float = 0.95,
+        top_k          : int   = 20,
+        repetition_penalty: float = 1.05,
         return_kv      : bool  = False,
         prefix_allowed_tokens_fn: Optional[Any] = None,
     ) -> Tuple[str, torch.Tensor, torch.Tensor, Optional[KVCache]]:
@@ -922,6 +931,8 @@ class _CoreEngine:
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
+            top_k=top_k,
+            repetition_penalty=repetition_penalty,
             do_sample=True,
             pad_token_id=self.tokenizer.pad_token_id,
             return_dict_in_generate=True,
@@ -981,6 +992,8 @@ class _CoreEngine:
         max_new_tokens : int   = 2048,
         temperature    : float = 0.6,
         top_p          : float = 0.95,
+        top_k          : int   = 20,
+        repetition_penalty: float = 1.05,
         return_kv      : bool  = True,
         prefix_allowed_tokens_fn: Optional[Any] = None,
     ) -> Tuple[str, torch.Tensor, torch.Tensor, Optional[KVCache]]:
@@ -1017,6 +1030,8 @@ class _CoreEngine:
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             top_p=top_p,
+            top_k=top_k,
+            repetition_penalty=repetition_penalty,
             do_sample=True,
             pad_token_id=self.tokenizer.pad_token_id,
             return_dict_in_generate=True,

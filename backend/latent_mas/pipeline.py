@@ -207,10 +207,22 @@ class FrontEndPipeline:
         kv_consist = r_cons.kv_cache          # BASELINE — jaga tetap pristine
 
         # ── judger membaca CLONE dari baseline; boleh keluarkan N ekspresi ────
-        r_judge = self._a("judger").run(past_kv=kv_ops.kv_deepcopy(kv_consist))
-        he: Optional[HypothesisExprs] = r_judge.parsed
+        # Output judger kadang degenerate (sampling dari KV berisi virtual token
+        # itu borderline-stabil). Retry sekali dari baseline pristine jauh lebih
+        # murah (~10s) daripada membiarkan kandidat kosong jatuh ke repair.
+        he: Optional[HypothesisExprs] = None
+        for attempt in range(2):
+            r_judge = self._a("judger").run(
+                past_kv=kv_ops.kv_deepcopy(kv_consist), direction=direction,
+            )
+            he = r_judge.parsed
+            if he is not None:
+                break
+            if rl: rl.warn(
+                f"judger output unparseable (attempt {attempt + 1}/2)",
+                head=(r_judge.text or "")[:120],
+            )
         if he is None:
-            if rl: rl.warn("judger output unparseable", head=(r_judge.text or "")[:120])
             hypothesis, candidates = "", []
         else:
             hypothesis, candidates = he.hypothesis, list(he.expressions)
@@ -306,7 +318,14 @@ class FrontEndPipeline:
             self._register_factors(passing)
             return passing, kv_judger, False, 0, ""
 
-        gate_err = self.gate(candidates[0])[1] if candidates else "no expression from judger"
+        # Tanpa kandidat tak ada yang bisa diperbaiki: repair dengan
+        # former_expression kosong terbukti menghasilkan sampah (run
+        # 20260608_064005) dan membuang ~60s per ronde.
+        if not candidates:
+            if rl: rl.error("no expression from judger; skipping repair")
+            return [], kv_judger, False, 0, "no expression from judger"
+
+        gate_err = self.gate(candidates[0])[1]
         former = candidates
         err = gate_err
         for attempt in range(self.max_repair_attempts):
