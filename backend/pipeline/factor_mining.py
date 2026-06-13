@@ -717,6 +717,7 @@ def run_evolution_loop(
         prefer_diverse_crossover=bool(evolution_cfg.get("prefer_diverse_crossover", True)),
         parent_selection_strategy=parent_selection_strategy,
         top_percent_threshold=top_percent_threshold,
+        diversity_lambda=float(evolution_cfg.get("diversity_lambda", 0.0)),
         parallel_enabled=parallel_enabled,
         pool_save_path=str(pool_save_path),
         mutation_prompt_path=str(mutation_prompt_path) if mutation_prompt_path.exists() else None,

@@ -98,16 +98,18 @@ class StrategyTrajectory:
         return hashlib.md5(content.encode()).hexdigest()[:12] #* ID unik berdasarkan direction, round, phase, dan timestamp (12 karakter pertama dari hash)
     
     def get_primary_metric(self) -> Optional[float]:
-        """Primary metric seleksi evolution = reward `L` paper: per-factor RankIC
-        (FactorIC_mean, dihitung runner._compute_factor_ic). Fallback ke RankIC
-        gabungan LightGBM bila per-factor IC tak ada (mis. daily_pv tak tersedia).
-        Dipakai _parent_metric (crossover), select_crossover_pairs, is_successful,
-        get_best_trajectories. Catatan: replace-SOTA tetap pakai RankIC gabungan
-        (keputusan portofolio) — lihat loop._decide_replace_sota."""
-        ic = self.backtest_metrics.get("FactorIC_mean")
+        """Primary metric = RankIC combined LightGBM model (OOS test segment).
+
+        Satu metrik konsisten untuk evolution selection DAN replace-SOTA decision
+        (lihat loop._decide_replace_sota). RankIC combined dipilih karena:
+          - Mencerminkan kualitas sinyal model yang sebenarnya di-deploy.
+          - Sebanding antar-iterasi (tiap ronde hanya faktor baru, tanpa dilusi SOTA).
+        Fallback ke FactorIC_mean bila RankIC combined tak tersedia (mis. Qlib belum
+        jalan / run lama sebelum migrasi ke new-factors-only backtest)."""
+        ic = self.backtest_metrics.get("RankIC")
         if ic is not None:
             return ic
-        return self.backtest_metrics.get("RankIC")
+        return self.backtest_metrics.get("FactorIC_mean")
     
     def is_successful(self) -> bool:
         """Check if this trajectory produced valid results."""

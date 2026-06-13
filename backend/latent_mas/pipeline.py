@@ -38,6 +38,7 @@ Aliran KV (sesuai desain):
 from __future__ import annotations
 
 import os
+from collections import deque
 from dataclasses import dataclass
 from typing import Any, Callable, List, Optional
 
@@ -46,8 +47,9 @@ from latent_mas import kv_ops
 from latent_mas.agent import LatentAgent, AgentResult, load_all_agents
 from latent_mas.parsers import (
     HypothesisExprs, PASS_SENTINEL,
-    parse_repair_multi,
+    parse_repair_multi, parse_hypothesis_exprs,
 )
+from latent_mas.operator_families import families_of, diversity_hint
 
 # Type alias untuk gate: (expression) -> (ok, error_message)
 QualityGate = Callable[[str], "tuple[bool, str]"]
@@ -119,6 +121,10 @@ class FrontEndPipeline:
         self.runlog = runlog
         self.max_repair_attempts = max_repair_attempts
         self.agents: dict = agents or load_all_agents(backend, runlog=runlog)
+        # Riwayat family operator faktor yang BARU diterima → diversity hint
+        # (soft, hybrid). Lintas-run dalam satu instance pipeline (mis. original →
+        # mutation → crossover) → tekanan anti-monokultur antar-faktor.
+        self._recent_families: deque = deque(maxlen=12)
         self._regulator = None
         if quality_gate is not None:
             self.gate = quality_gate
@@ -141,7 +147,10 @@ class FrontEndPipeline:
             # FrontEndPipeline dibangun SEBELUM coder di-instansiasi, jadi tanpa ini
             # gate diam-diam fallback ke sintaks (regulator tak aktif).
             import factors.coder.factor_ast  # noqa: F401
-            from factors.regulator.factor_regulator import FactorRegulator
+            from factors.regulator.factor_regulator import (
+                FactorRegulator, validate_function_arity,
+                validate_known_variables, validate_no_degenerate_args,
+            )
             from factors.coder.config import FACTOR_COSTEER_SETTINGS as S
             reg = FactorRegulator(
                 factor_zoo_path=getattr(S, "factor_zoo_path", None),
@@ -161,6 +170,20 @@ class FrontEndPipeline:
             try:
                 if not reg.is_parsable(expr):
                     return False, "unparsable expression"
+                # arity DETERMINISTIK: tangkap RANK($x, 7) dkk SEBELUM eksekusi
+                # (kelas bug yang dulu lolos gate lalu crash di factor.py). Pesan
+                # error ramah-LLM (termasuk hint cross-sectional→TS_) → repair.
+                ar_ok, ar_errs = validate_function_arity(expr)
+                if not ar_ok:
+                    return False, "arity: " + " ".join(ar_errs[:2])
+                # #1 variabel halusinasi ($return_1d) — parser/arity tak menangkap.
+                kv_ok, kv_errs = validate_known_variables(expr)
+                if not kv_ok:
+                    return False, "variable: " + " ".join(kv_errs[:2])
+                # #2 degenerate-args (REGRESI(x,x)) — arity valid tapi faktor mati.
+                dg_ok, dg_errs = validate_no_degenerate_args(expr)
+                if not dg_ok:
+                    return False, "degenerate: " + dg_errs[0]
                 ok, ev = reg.evaluate(expr)
                 if not ok or ev is None:
                     return False, "regulator evaluate failed"
@@ -196,24 +219,35 @@ class FrontEndPipeline:
     ) -> FrontEndOutput:
         rl = self.runlog
 
+        # Diversity hint (soft) dari family faktor yang sudah diterima sebelumnya —
+        # mengarahkan ke family rich yang jarang dipakai + afordansnya, TANPA
+        # mengorbankan kesetiaan ke hipotesis. Disuntik ke construct (membentuk
+        # latent) & judger_reason (decoder yang menulis ekspresi); proposal SENGAJA
+        # tidak (jaga hipotesis tetap di altitude mekanisme, bukan operator).
+        dhint = diversity_hint(list(self._recent_families))
+
         # ── sequential latent chain (in-place extension OK: linear) ──────────
         r_prop = self._a("proposal").run(
             past_kv=seed_kv, direction=direction,
             market_context=market_context, prior_feedback=prior_feedback,
         )
-        r_con = self._a("construct").run(past_kv=r_prop.kv_cache)
+        r_con = self._a("construct").run(past_kv=r_prop.kv_cache, diversity_hint=dhint)
         r_cons = self._a("consistency").run(past_kv=r_con.kv_cache)
 
         kv_consist = r_cons.kv_cache          # BASELINE — jaga tetap pristine
 
-        # ── judger membaca CLONE dari baseline; boleh keluarkan N ekspresi ────
-        # Output judger kadang degenerate (sampling dari KV berisi virtual token
-        # itu borderline-stabil). Retry sekali dari baseline pristine jauh lebih
-        # murah (~10s) daripada membiarkan kandidat kosong jatuh ke repair.
+        # ── JUDGER: agen OUTPUT tunggal ───────────────────────────────────────
+        # Reasoning proposal→construct→consistency sudah hidup di KV; judger TIDAK
+        # menalar ulang & TIDAK menyalin teks — ia men-decode KV jadi baris
+        # HYPOTHESIS + EXPRESSION. Ekspresi diekstrak DETERMINISTIK oleh parser
+        # (hypothesis_exprs, sudah split ';'), lalu di-gate fail-closed. Retry
+        # sekali dari baseline pristine bila output degenerate/tak terparse.
         he: Optional[HypothesisExprs] = None
+        r_judge: Optional[AgentResult] = None
         for attempt in range(2):
             r_judge = self._a("judger").run(
                 past_kv=kv_ops.kv_deepcopy(kv_consist), direction=direction,
+                diversity_hint=dhint,
             )
             he = r_judge.parsed
             if he is not None:
@@ -231,6 +265,9 @@ class FrontEndPipeline:
         passing, kv_final, repaired, attempts, gate_err = self._gate_and_repair_multi(
             candidates, kv_consist, r_judge.kv_cache,
         )
+        # Catat family faktor yang diterima → diversity hint run berikutnya.
+        for e in passing:
+            self._recent_families.append(families_of(e))
         return FrontEndOutput(
             hypothesis=hypothesis, expressions=passing,
             kv_consist=kv_consist, kv_judger=r_judge.kv_cache,
@@ -297,6 +334,35 @@ class FrontEndPipeline:
         # _gate_and_repair_multi. FrontEndOutput sama seperti jalur original.
         return self.run(direction=direction, seed_kv=guidance_kv)
 
+    @staticmethod
+    def _auto_fix_arity(candidates: List[str], rl: Any = None) -> List[str]:
+        """Pra-perbaikan arity DETERMINISTIK (tanpa LLM) sebelum gate: menulis
+        ulang kasus cross-sectional→time-series yang TAK AMBIGU — RANK(A,n)→
+        TS_RANK(A,n), ZSCORE(A,n)→TS_ZSCORE(A,n), dst. (argumen ke-2 numerik).
+        Kandidat yang tak bisa diperbaiki aman dibiarkan apa adanya (gate/LLM-
+        repair yang menangani). Inilah penambal kelas bug arity yang dulu lolos
+        gate lalu crash saat eksekusi (mis. RANK($return, 7))."""
+        try:
+            # Pre-import factor_ast memutus circular import bila dipanggil COLD
+            # (sama seperti _build_regulator_gate). Di alur produksi gate sudah
+            # dibangun lebih dulu → no-op; ini insurance bila urutan berubah.
+            import factors.coder.factor_ast  # noqa: F401
+            from factors.regulator.factor_regulator import auto_repair_function_arity
+        except Exception:
+            return candidates
+        out: List[str] = []
+        for e in candidates:
+            try:
+                rep, applied = auto_repair_function_arity(e)
+            except Exception:
+                rep, applied = None, []
+            if rep and rep != e:
+                if rl: rl.info("deterministic arity fix", before=e, after=rep, applied=applied)
+                out.append(rep)
+            else:
+                out.append(e)
+        return out
+
     def _gate_and_repair_multi(
         self,
         candidates: List[str],
@@ -313,6 +379,9 @@ class FrontEndPipeline:
         Returns: (passing_exprs, kv_final, repaired, attempts, gate_error).
         """
         rl = self.runlog
+        # Pra-perbaikan arity DETERMINISTIK (no-LLM) → RANK(A,n)→TS_RANK(A,n) dkk
+        # lolos langsung tanpa membakar attempt repair.
+        candidates = self._auto_fix_arity(candidates, rl)
         passing = [e for e in candidates if self.gate(e)[0]]
         if passing:
             self._register_factors(passing)
@@ -354,9 +423,16 @@ class FrontEndPipeline:
             former = rep_exprs
             err = self.gate(rep_exprs[0])[1]
 
-        if rl: rl.error("multi-repair exhausted; keeping original candidates",
-                        n=len(candidates))
-        return candidates, kv_judger, False, self.max_repair_attempts, gate_err
+        # FAIL-CLOSED: repair mentok → JANGAN teruskan faktor gagal-gate ke
+        # backtest (ekspresi rusak → factor.py crash → "No valid factor data" +
+        # ~3 menit terbuang per faktor). Kembalikan hanya yang lolos gate (boleh
+        # kosong → loop di-skip bersih). Backtest hanya menerima ekspresi valid.
+        survivors = [e for e in candidates if self.gate(e)[0]]
+        if rl: rl.error("multi-repair exhausted; dropping gate-failing factors (fail-closed)",
+                        n_dropped=len(candidates) - len(survivors), n_kept=len(survivors))
+        if survivors:
+            self._register_factors(survivors)
+        return survivors, kv_judger, False, self.max_repair_attempts, gate_err
 
     def _gate_and_repair(
         self,

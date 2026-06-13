@@ -223,6 +223,58 @@ def auto_repair_function_arity(expression: str) -> Tuple[Optional[str], List[str
 
     return repaired, applied
 
+
+# ── Validasi variabel & degenerate-args (gate deterministik #1-#2) ────────────
+# Faktor bisa lolos parser + arity tapi tetap rusak saat eksekusi karena:
+#   (1) leaf $var yang TAK ADA di data (mis. $return_1d) → KeyError/NaN; dan
+#   (2) fungsi 2-deret dengan dua argumen IDENTIK (mis. REGRESI(x, x)) → residual
+#       ≈ 0 / korelasi ≡ 1 (faktor mati). Keduanya sering muncul saat model 4B
+#       dipaksa memakai operator regresi/teknikal yang tak ia pahami.
+
+# Kolom runtime yang sah (daily_pv.h5: OHLCV + $return turunan). Leaf $xxx di luar
+# set ini = halusinasi → tolak deterministik (parser/arity tak menangkapnya).
+_KNOWN_VARS = {"open", "high", "low", "close", "volume", "return"}
+
+
+def validate_known_variables(expression: str) -> Tuple[bool, List[str]]:
+    """Cek tiap leaf `$var` terhadap kolom data yang tersedia. Deterministik (regex,
+    tak perlu AST). Returns (ok, errors) ramah-LLM."""
+    errors: List[str] = []
+    seen = set()
+    for m in re.finditer(r"\$([A-Za-z_][A-Za-z0-9_]*)", expression or ""):
+        v = m.group(1)
+        if v not in _KNOWN_VARS and v not in seen:
+            seen.add(v)
+            errors.append(
+                f"`${v}` is not a known variable. Use only: "
+                f"$open $high $low $close $volume $return."
+            )
+    return (len(errors) == 0), errors
+
+
+# Fungsi 2-deret yang degenerate bila kedua deret identik.
+_PAIRWISE_SERIES_FUNCS = {"REGBETA", "REGRESI", "TS_CORR", "TS_COVARIANCE"}
+
+
+def validate_no_degenerate_args(expression: str) -> Tuple[bool, List[str]]:
+    """Tolak REGBETA/REGRESI/TS_CORR/TS_COVARIANCE dengan dua deret IDENTIK
+    (arg0≡arg1) → faktor mati (residual≈0 / corr≡1). Pakai AST agar tahan nesting."""
+    try:
+        tree = parse_ast(expression)
+    except Exception:
+        return True, []  # serahkan ke is_parsable
+    errors: List[str] = []
+    for fn in _iter_function_nodes(tree):
+        name = _node_name(fn)
+        if name in _PAIRWISE_SERIES_FUNCS and len(fn.args) >= 2:
+            if str(fn.args[0]) == str(fn.args[1]):
+                errors.append(
+                    f"`{name}` got two identical series (`{fn.args[0]}`) → "
+                    f"degenerate (residual≈0 / corr≡1). Use two DIFFERENT series."
+                )
+    return (len(errors) == 0), errors
+
+
 # TODO harusnya bisa dioptimalkan dalam penentuan parameter dianggap "berlebihan" atau tidak
 class FactorRegulator(Evaluator):
     """

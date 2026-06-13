@@ -216,112 +216,74 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
     #* kalau experiment yang persis sama pernah dijalankan, load dari pickle cache
     @cache_with_pickle(CachedRunner.get_cache_key, CachedRunner.assign_cached_result)
     def develop(self, exp: QlibFactorExperiment, use_local: bool = True) -> QlibFactorExperiment:
-        
-        """
-        Generate the experiment by processing and combining factor data,
-        then passing the combined data to Docker or local environment for backtest results.
-        """
-        
-        #* based_experiments = list experiment yang menjadi "baseline" -> gabungan faktor sebelumnya(SOTA) dan new faktor
-        if exp.based_experiments and exp.based_experiments[-1].result is None:
-            exp.based_experiments[-1] = self.develop(exp.based_experiments[-1], use_local=use_local)
+        """Process new factors and run backtest. Each round uses ONLY the new factors
+        so metrics are strictly comparable across iterations (no SOTA dilution)."""
 
-        if exp.based_experiments:
-            SOTA_factor = None
-            if len(exp.based_experiments) > 1:
-                try:
-                    # kumpulkan semua faktor dari experiment sebelumnya
-                    SOTA_factor = self.process_factor_data(exp.based_experiments)
-                except FactorEmptyError:
-                    logger.warning("SOTA factors processing failed, continuing with new factors only.")
-                    SOTA_factor = None
+        #* Process the new factors data
+        try:
+            new_factors = self.process_factor_data(exp)
+        except FactorEmptyError as e:
+            logger.error(f"Failed to process new factors: {e}")
 
-            #* Process the new factors data
+            #* Try manual factor execution
+            logger.info("Attempting to manually execute factors...")
+            for ws in exp.sub_workspace_list:
+                if not (ws.workspace_path / "result.h5").exists():
+                    try:
+                        data_source = Path(FACTOR_COSTEER_SETTINGS.data_folder).absolute()
+                        if not data_source.is_absolute():
+                            data_source = Path(__file__).resolve().parent.parent / FACTOR_COSTEER_SETTINGS.data_folder
+                        daily_pv_link = ws.workspace_path / "daily_pv.h5"
+                        if not daily_pv_link.exists() and (data_source / "daily_pv.h5").exists():
+                            os.symlink(str(data_source / "daily_pv.h5"), str(daily_pv_link))
+                        import subprocess
+                        env = os.environ.copy()
+                        project_root = Path(__file__).resolve().parent.parent
+                        env['PYTHONPATH'] = str(project_root) + os.pathsep + env.get('PYTHONPATH', '')
+                        subprocess.check_output(
+                            [sys.executable, str(ws.workspace_path / 'factor.py')],
+                            cwd=str(ws.workspace_path),
+                            stderr=subprocess.STDOUT,
+                            env=env,
+                            timeout=1200,
+                        )
+                    except Exception as exec_e:
+                        logger.warning(f"Failed to manually execute factor {ws.workspace_path}: {exec_e}")
+
             try:
                 new_factors = self.process_factor_data(exp)
-            except FactorEmptyError as e:
-                logger.error(f"Failed to process new factors: {e}")
-                
-                #* Try manual factor execution
-                logger.info("Attempting to manually execute factors...")
-                
-                # iterasi setiap workspace(1 workspace = 1 faktor)
-                for ws in exp.sub_workspace_list:
-                    if not (ws.workspace_path / "result.h5").exists():
-                        try:
-                            # Ensure symlink exists
-                            data_source = Path(FACTOR_COSTEER_SETTINGS.data_folder).absolute()
-                            if not data_source.is_absolute():
-                                data_source = Path(__file__).resolve().parent.parent / FACTOR_COSTEER_SETTINGS.data_folder
-                            daily_pv_link = ws.workspace_path / "daily_pv.h5"
-                            if not daily_pv_link.exists() and (data_source / "daily_pv.h5").exists():
-                                os.symlink(str(data_source / "daily_pv.h5"), str(daily_pv_link))
-                            
-                            # Execute factor (funning faktor.py manual)
-                            import subprocess
-                            env = os.environ.copy()
-                            project_root = Path(__file__).resolve().parent.parent
-                            env['PYTHONPATH'] = str(project_root) + os.pathsep + env.get('PYTHONPATH', '')
-                            subprocess.check_output(
-                                [sys.executable, str(ws.workspace_path / 'factor.py')],
-                                cwd=str(ws.workspace_path),
-                                stderr=subprocess.STDOUT,
-                                env=env,
-                                timeout=1200,
-                            )
-                        except Exception as exec_e:
-                            logger.warning(f"Failed to manually execute factor {ws.workspace_path}: {exec_e}")
-                
-                # Retry processing factor data
-                try:
-                    new_factors = self.process_factor_data(exp)
-                except FactorEmptyError:
-                    raise FactorEmptyError("No valid factor data found to merge after manual execution attempt.")
-            
-            if new_factors.empty:
-                raise FactorEmptyError("No valid factor data found to merge.")
+            except FactorEmptyError:
+                raise FactorEmptyError("No valid factor data found to merge after manual execution attempt.")
 
-            # Combine the SOTA factor and new factors if SOTA factor exists
-            if False: # SOTA_factor is not None and not SOTA_factor.empty:
-                new_factors = self.deduplicate_new_factors(SOTA_factor, new_factors)
-                if new_factors.empty:
-                    raise FactorEmptyError("No valid factor data found to merge.")
-                combined_factors = pd.concat([SOTA_factor, new_factors], axis=1).dropna()
-            #* langsung pakai new faktor tanpa SOTA
-            else:
-                combined_factors = new_factors
+        if new_factors.empty:
+            raise FactorEmptyError("No valid factor data found to merge.")
 
-            # ── HYBRID: per-factor RankIC (OOS) selagi kolom MASIH = nama factor ──
-            # (sebelum di-nest ke MultiIndex "feature"). Defensif: kegagalan IC tak
-            # boleh menggagalkan backtest. Disimpan di exp.factor_ic (di-pickle &
-            # ikut di-restore via assign_cached_result).
-            try:
-                exp.factor_ic = self._compute_factor_ic(new_factors)
-                logger.info(f"Per-factor RankIC (OOS): {exp.factor_ic}")
-            except Exception as e:  # noqa: BLE001
-                logger.warning(f"Per-factor RankIC computation failed: {e}")
-                exp.factor_ic = {}
+        # ── per-factor RankIC (OOS, standalone) ──────────────────────────────
+        # Hitung sebelum di-nest ke MultiIndex "feature" (nama kolom masih = factor name).
+        try:
+            exp.factor_ic = self._compute_factor_ic(new_factors)
+            logger.info(f"Per-factor RankIC (OOS): {exp.factor_ic}")
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Per-factor RankIC computation failed: {e}")
+            exp.factor_ic = {}
 
-            if len(combined_factors.columns) >= 2:
-                pd.set_option('display.width', 1000)
-                logger.info(f"Factor correlation: \n\n{combined_factors.corr()}\n")
+        if len(new_factors.columns) >= 2:
+            pd.set_option('display.width', 1000)
+            logger.info(f"Factor correlation: \n\n{new_factors.corr()}\n")
 
-            # Sort and nest the combined factors under 'feature'
-            combined_factors = combined_factors.sort_index()
-            combined_factors = combined_factors.loc[:, ~combined_factors.columns.duplicated(keep="last")]
-            new_columns = pd.MultiIndex.from_product([["feature"], combined_factors.columns])
-            combined_factors.columns = new_columns
-            
-            logger.info(f"Factor values this round: \n\n{combined_factors.tail()}\n\n")
+        # Sort, deduplicate, and nest under 'feature' for Qlib compatibility
+        combined_factors = new_factors.sort_index()
+        combined_factors = combined_factors.loc[:, ~combined_factors.columns.duplicated(keep="last")]
+        combined_factors.columns = pd.MultiIndex.from_product([["feature"], combined_factors.columns])
 
-            # Save the combined factors to the workspace (parquet format for qlib compatibility)
-            parquet_path = exp.experiment_workspace.workspace_path / "combined_factors_df.parquet"
-            combined_factors.to_parquet(parquet_path, engine="pyarrow")
-            logger.info(f"Saved combined factors to {parquet_path}")
+        logger.info(f"Factor values this round: \n\n{combined_factors.tail()}\n\n")
 
+        parquet_path = exp.experiment_workspace.workspace_path / "combined_factors_df.parquet"
+        combined_factors.to_parquet(parquet_path, engine="pyarrow")
+        logger.info(f"Saved combined factors to {parquet_path}")
 
-        # Run backtest (local or Docker). Config name must match factor_template files (e.g. conf_baseline.yaml).
-        config_name = "conf_baseline.yaml" if len(exp.based_experiments) == 0 else "conf_combined_factors.yaml"
+        # Always use conf_combined_factors.yaml (new-factors-only mode)
+        config_name = "conf_combined_factors.yaml"
         logger.info(f"Execute factor backtest (Use {'Local' if use_local else 'Docker container'}): {config_name}")
         
         # Ensure workspace and config are ready (execute() does not call before_execute()).

@@ -66,6 +66,13 @@ class EvolutionConfig:
     # Start with empty trajectory pool (ignore existing data)
     fresh_start: bool = True
 
+    # HYBRID part-2: penalti diversitas family-operator pada SKOR SELEKSI.
+    # effective_metric = primary_metric − diversity_lambda · family_penalty.
+    # 0.0 = OFF (tanpa perubahan perilaku). ~0.01-0.03 mendemosikan faktor yang
+    # family operatornya redundan terhadap populasi → seleksi parent/best lebih
+    # beragam, tanpa hard-reject. Skala: metric (RankIC) ~0.01-0.05, penalty ∈[0,1].
+    diversity_lambda: float = 0.0
+
 
 class EvolutionController:
     """
@@ -601,7 +608,8 @@ class EvolutionController:
             crossover_n=self.config.crossover_n,
             prefer_diverse=self.config.prefer_diverse_crossover,
             selection_strategy=self.config.parent_selection_strategy,
-            top_percent_threshold=self.config.top_percent_threshold
+            top_percent_threshold=self.config.top_percent_threshold,
+            diversity_lambda=self.config.diversity_lambda,
         )
         
         self._crossover_idx = 0
@@ -971,16 +979,26 @@ class EvolutionController:
         return self._current_round >= self.config.max_rounds
     
     def get_best_trajectories(self, top_n: int = 5) -> list[StrategyTrajectory]:
-        """Get the best performing trajectories."""
+        """Get the best performing trajectories.
+
+        Seleksi pakai effective = primary_metric − λ·family_penalty (HYBRID part-2):
+        faktor yang family operatornya redundan terhadap populasi didemosikan agar
+        'best' lebih beragam. λ=0 (default) → murni primary_metric (perilaku lama)."""
+        from latent_mas.operator_families import trajectory_families, diversity_penalized
         all_trajs = self.pool.get_all()
-        
+
         # Filter to successful trajectories
         valid = [t for t in all_trajs if t.is_successful()]
-        
-        # Sort by primary metric
-        valid.sort(key=lambda t: t.get_primary_metric() or 0, reverse=True)
-        
-        return valid[:top_n]
+
+        lam = getattr(self.config, "diversity_lambda", 0.0)
+        scored = diversity_penalized(
+            valid,
+            lambda t: trajectory_families(t.factors),
+            lambda t: t.get_primary_metric(),
+            lam,
+        )
+        scored.sort(key=lambda x: x[1], reverse=True)
+        return [t for t, _ in scored[:top_n]]
     
     def save_state(self, path: Path):
         """Save controller state to disk."""

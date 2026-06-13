@@ -616,14 +616,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         base = _re.sub(r"[^a-zA-Z0-9]+", "_", (hypothesis or "").strip())[:32].strip("_")
         base = base or f"latent_factor_{getattr(self, 'loop_idx', 0)}"
 
-        based = (
-            [QlibFactorExperiment(sub_tasks=[])]
-            + [h[1] for h in self.trace.hist if h[2]]
-        )
-        # nama faktor yang sudah ada di history → untuk dedup
+        # history hanya untuk dedup nama faktor — runner tidak butuh based_experiments lagi
+        history_exps = [h[1] for h in self.trace.hist if h[2]]
         existing = {
             getattr(st, "factor_name", None)
-            for be in based for st in be.sub_tasks
+            for be in history_exps for st in (be.sub_tasks if be else [])
         }
 
         tasks, workspaces, names, seen = [], [], [], set()
@@ -656,7 +653,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         self._last_factor_names = names
         self._last_factor_name = names[0] if names else base  # back-compat
         exp = QlibFactorExperiment(tasks)
-        exp.based_experiments = based
+        exp.based_experiments = []  # runner evaluates new factors only; no SOTA concatenation
         exp.sub_workspace_list = workspaces
         return exp
 
@@ -773,55 +770,57 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         front = self._front_out
         exp = prev_out["factor_backtest"]
 
-        # ── DETERMINISTIK (tanpa LLM): complexity audit + replace-SOTA ──────────
-        # Multi-ekspresi: audit semua, metrik dari backtest model LightGBM gabungan.
+        # ── DETERMINISTIK ─────────────────────────────────────────────────────
         complexity = self._complexity_audit_multi(front.expressions)
         metrics = self._extract_metrics_safe(exp)
+        prev_sota = _SOTA_BEST.get("metric")  # capture sebelum _decide_replace_sota mengubahnya
         replace_flag, sota_note = self._decide_replace_sota(metrics, bool(complexity))
 
-        # factor_block: daftar SEMUA ekspresi lolos (jadi referensi bentuk faktor
-        # yang masuk model gabungan untuk hipotesis ini). HYBRID: tiap factor diberi
-        # standalone RankIC (OOS, reward `L` paper) dari runner → sinyal kualitas
-        # per-factor untuk feedback (selain RankIC gabungan di backtest_results).
+        # ── [A] Individual factor signals (per-factor standalone RankIC) ──────
+        # Standalone RankIC = sinyal kualitas tiap faktor secara individu (OOS).
+        # Ini BERBEDA dari RankIC gabungan model LightGBM di blok B.
         names = getattr(self, "_last_factor_names", None) or [self._last_factor_name]
         exprs = front.expressions or [front.expression]
         factor_ic = getattr(exp, "factor_ic", None) or {}
 
-        def _ic_tag(name: str) -> str:
-            v = factor_ic.get(name)
-            return f"  [standalone RankIC={v:.4f}]" if isinstance(v, (int, float)) else ""
+        individual_lines: list[str] = []
+        for n, e in zip(names, exprs):
+            ic_val = factor_ic.get(n)
+            ic_str = f"{ic_val:.4f}" if isinstance(ic_val, (int, float)) else "n/a"
+            individual_lines.append(f"  {n}: {e}\n    standalone RankIC={ic_str}")
 
-        factor_lines = [f"- {n}: {e}{_ic_tag(n)}" for n, e in zip(names, exprs)]
         factor_block = (
-            f"Hypothesis: {front.hypothesis}\n"
-            f"Factors ({len(exprs)}) feeding the combined model:\n"
-            + "\n".join(factor_lines)
+            f"Hypothesis: {front.hypothesis}\n\n"
+            f"[A] Individual factor signals (standalone RankIC vs label, OOS — "
+            f"measures each factor's own predictive signal):\n"
+            + "\n".join(individual_lines)
         )
         if complexity:
-            factor_block += f"\n  {complexity}"
+            factor_block += f"\nCOMPLEXITY WARNING: {complexity}"
 
-        res = getattr(exp, "result", None)
-        if res is None:
-            backtest_results = "backtest produced no result (factor may have failed)"
-        elif hasattr(res, "to_string"):
-            backtest_results = res.to_string()
-        else:
-            backtest_results = str(res)
+        # ── [B] Combined LightGBM model result (key metrics only) ─────────────
+        # RankIC di sini = model gabungan setelah LightGBM dilatih pada semua faktor.
+        # Angkanya BERBEDA dari standalone RankIC karena model dapat memanfaatkan
+        # interaksi antar-faktor dan membuang noise.
+        backtest_results = self._format_key_metrics(exp)
 
-        # Keputusan replace + audit disuntik sebagai konteks (bukan untuk diputuskan LLM).
-        decision_block = (
-            f"Replace-best-result (DETERMINISTIC): "
-            f"{'REPLACE' if replace_flag else 'KEEP'} — {sota_note}"
+        # ── [C] SOTA comparison ────────────────────────────────────────────────
+        prev_str = f"{prev_sota:.4f}" if prev_sota is not None else "none yet"
+        cur_rankic = metrics.get("RankIC")
+        cur_str = f"{cur_rankic:.4f}" if cur_rankic is not None else "n/a"
+        sota_block = (
+            f"Previous best RankIC (SOTA): {prev_str}\n"
+            f"This round RankIC: {cur_str}\n"
+            f"Decision: {'REPLACE' if replace_flag else 'KEEP'} — {sota_note}"
         )
 
         fb_agent = self._front.agents["feedback"]
         with _get_monitor().track_step("feedback") if (_HAS_MONITOR and _get_monitor()) else _nullcontext():
             r = fb_agent.run(
                 past_kv=kv_ops.kv_deepcopy(front.kv_final),
-                hypothesis_text=front.hypothesis,
                 factor_block=factor_block,
                 backtest_results=backtest_results,
-                sota_block=decision_block,
+                sota_block=sota_block,
             )
         # KV feedback (terminal) sengaja TIDAK disimpan/diwariskan: evolution kini
         # guidance-based membaca parent sebagai teks, jadi membiarkan r.kv_cache di-GC
@@ -893,28 +892,69 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
     def _decide_replace_sota(self, metrics: dict[str, float],
                              complexity_warning: bool) -> "tuple[bool, str]":
-        """Keputusan deterministik 'ganti SOTA?'.
+        """Keputusan deterministik 'ganti SOTA?' — satu metrik primer: RankIC.
 
-        Aturan (sesuai prioritas paper): primary = annualized_return, fallback
-        RankIC. Bila ada complexity warning → JANGAN ganti (risiko overfit),
-        sesuai prompt feedback QuantaAlpha. SOTA dilacak per-proses (in-memory).
+        RankIC (Spearman rank correlation, OOS) dipakai tunggal untuk konsistensi
+        dengan evolution selection (trajectory.get_primary_metric). annualized_return
+        lebih rentan terhadap leverage/risk transient; RankIC mengukur kualitas
+        sinyal ranking murni. Bila ada complexity warning → JANGAN ganti.
         """
-        cur = metrics.get("annualized_return")
-        name = "annualized_return"
+        cur = metrics.get("RankIC")
         if cur is None:
-            cur = metrics.get("RankIC")
-            name = "RankIC"
-        if cur is None:
-            return False, "no comparable metric → keep SOTA"
+            return False, "no RankIC → keep SOTA"
         if complexity_warning:
-            return False, (f"{name}={cur:.4f} but complexity warning "
-                           f"→ keep SOTA (overfit risk)")
+            return False, f"RankIC={cur:.4f} but complexity warning → keep SOTA (overfit risk)"
         best = _SOTA_BEST.get("metric")
         if best is None or cur > best:
             _SOTA_BEST["metric"] = cur
             prev = "none" if best is None else f"{best:.4f}"
-            return True, f"{name}={cur:.4f} > SOTA={prev} → replace"
-        return False, f"{name}={cur:.4f} <= SOTA={best:.4f} → keep"
+            return True, f"RankIC {cur:.4f} > SOTA {prev} → replace"
+        return False, f"RankIC {cur:.4f} ≤ SOTA {best:.4f} → keep"
+
+    @staticmethod
+    def _format_key_metrics(exp) -> str:
+        """Format metrik kunci dari backtest result (combined LightGBM).
+        Hanya tampilkan metrik yang paling informatif; skip baris noise."""
+        res = getattr(exp, "result", None)
+        if res is None:
+            return "backtest produced no result (factor may have failed)"
+        wanted = {
+            "RankIC":      ["RankIC", "Rank IC", "rank_ic"],
+            "RankICIR":    ["RankICIR", "Rank ICIR", "rankicir"],
+            "IC":          ["IC", "ic"],
+            "ICIR":        ["ICIR", "IC IR", "icir"],
+            "Ann.Return":  [
+                "1day.excess_return_with_cost.annualized_return",
+                "1day.excess_return_without_cost.annualized_return",
+                "annualized_return",
+            ],
+            "InfoRatio":   [
+                "1day.excess_return_with_cost.information_ratio",
+                "information_ratio",
+            ],
+            "MaxDrawdown": [
+                "1day.excess_return_with_cost.max_drawdown",
+                "max_drawdown",
+            ],
+        }
+        try:
+            import pandas as pd
+            idx = getattr(res, "index", None)
+            lines: list[str] = []
+            for label, names in wanted.items():
+                for n in names:
+                    if idx is not None and n in idx:
+                        v = res.loc[n]
+                        if hasattr(v, "iloc"):
+                            v = v.iloc[0]
+                        if pd.notna(v):
+                            lines.append(f"  {label}: {float(v):.4f}")
+                        break
+            if not lines:
+                return str(res)[:600]
+            return "[Combined LightGBM model — OOS]\n" + "\n".join(lines)
+        except Exception:
+            return str(res)[:600]
 
 
 

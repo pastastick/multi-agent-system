@@ -91,6 +91,11 @@ evolution:
   # Top percent threshold (only when parent_selection_strategy = "top_percent_plus_random")
   top_percent_threshold: 0.3
 
+  # HYBRID part-2: operator-family diversity penalty on SELECTION score
+  # (effective = primary_metric − diversity_lambda · family_penalty). 0.0 = OFF.
+  # Validation run: 0.02 (insight: 0.02-0.03 usable, >=0.05 inverts ranking).
+  diversity_lambda: 0.02
+
   # Fresh start: true=each experiment starts with empty trajectory pool; false=load existing if available
   fresh_start: true
 

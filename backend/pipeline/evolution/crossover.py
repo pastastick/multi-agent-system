@@ -428,7 +428,8 @@ Please propose your fusion hypothesis based on the above crossover guidance.
         crossover_n: int = 3,
         prefer_diverse: bool = True,
         selection_strategy: str = "best",
-        top_percent_threshold: float = 0.3
+        top_percent_threshold: float = 0.3,
+        diversity_lambda: float = 0.0,
     ) -> list[list[StrategyTrajectory]]:
         """
         Select parent groups for crossover.
@@ -475,7 +476,8 @@ Please propose your fusion hypothesis based on the above crossover guidance.
             candidates,
             selection_strategy,
             top_percent_threshold,
-            crossover_n * crossover_size  # Need enough for all groups
+            crossover_n * crossover_size,  # Need enough for all groups
+            diversity_lambda=diversity_lambda,
         )
 
         # Generate all possible combinations from selected candidates
@@ -531,7 +533,8 @@ Please propose your fusion hypothesis based on the above crossover guidance.
         candidates: list[StrategyTrajectory],
         strategy: str,
         top_percent_threshold: float,
-        num_needed: int
+        num_needed: int,
+        diversity_lambda: float = 0.0,
     ) -> list[StrategyTrajectory]:
         """
         Pre-select candidates based on selection strategy.
@@ -550,12 +553,18 @@ Please propose your fusion hypothesis based on the above crossover guidance.
         if len(candidates) <= num_needed:
             return candidates
         
-        # Sort by primary metric (descending)
-        sorted_candidates = sorted(
-            candidates, 
-            key=lambda t: t.get_primary_metric() or 0, 
-            reverse=True
+        # Sort by EFFECTIVE metric (primary − λ·family_penalty) descending —
+        # HYBRID part-2: faktor dengan family operator redundan terhadap populasi
+        # didemosikan dari pool parent. λ=0 → murni primary_metric (perilaku lama).
+        from latent_mas.operator_families import trajectory_families, diversity_penalized
+        _scored = diversity_penalized(
+            candidates,
+            lambda t: trajectory_families(t.factors),
+            lambda t: t.get_primary_metric(),
+            diversity_lambda,
         )
+        _scored.sort(key=lambda x: x[1], reverse=True)
+        sorted_candidates = [t for t, _ in _scored]
         
         if strategy == "best" or strategy == "embedding_diverse":
             # Return top performers (embedding_diverse does its own scoring

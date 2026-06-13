@@ -49,12 +49,15 @@ def parse_hypothesis_exprs(raw: str) -> Optional[HypothesisExprs]:
     hypothesis = hyp_m.group(1).strip() if hyp_m else ""
 
     exprs: list = []
-    # tiap baris 'EXPR...:' / 'EXPRESSION 2:' → satu ekspresi (sampai akhir baris)
+    # tiap baris 'EXPR...:' / 'EXPRESSION 2:' → satu/lebih ekspresi. Model 4B kadang
+    # menaruh beberapa ekspresi dalam satu baris dipisah ';' → pecah (';' bukan
+    # operator DSL valid, jadi aman & wajib di-split agar tak jadi 1 kandidat rusak).
     for m in re.finditer(r"expr\w*\s*\d*\s*:\s*(.+)", text, flags=re.IGNORECASE):
-        line = m.group(1).strip()
-        line = _balance_parens(_strip_wrappers(_extract_code_span(line)))
-        if line:
-            exprs.append(line)
+        raw = _extract_code_span(m.group(1).strip())
+        for piece in raw.split(";"):
+            line = _balance_parens(_strip_wrappers(piece.strip()))
+            if line:
+                exprs.append(line)
 
     uniq = _dedup_exprs(exprs)
     if not uniq:
@@ -81,9 +84,11 @@ def parse_repair_multi(raw: str) -> "tuple[bool, list]":
     for line in lines:
         m = kw.match(line)
         if m:
-            e = _balance_parens(_strip_wrappers(_extract_code_span(m.group(1).strip())))
-            if e:
-                exprs.append(e)
+            raw = _extract_code_span(m.group(1).strip())
+            for piece in raw.split(";"):   # pecah multi-ekspresi ';'-joined
+                e = _balance_parens(_strip_wrappers(piece.strip()))
+                if e:
+                    exprs.append(e)
     if not exprs:  # fallback: span ber-backtick
         for m in re.finditer(r"`([^`]+)`", text):
             e = _balance_parens(_strip_wrappers(m.group(1).strip()))
