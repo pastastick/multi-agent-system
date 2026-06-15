@@ -50,8 +50,12 @@ class CachedRunner(Developer[ASpecificExp]):
         if exp.based_experiments and exp.based_experiments[-1].result is None:
             exp.based_experiments[-1].result = cached_res.based_experiments[-1].result
         exp.result = cached_res.result
-        # HYBRID: per-factor RankIC (di-set runner.develop) ikut di-restore dari cache,
-        # kalau tidak akan hilang saat cache-hit (assign hanya menyalin .result).
+        # HYBRID: per-factor RankIC/ICIR + correlation gate info (di-set runner.develop)
+        # ikut di-restore dari cache — assign biasa hanya menyalin .result.
         if hasattr(cached_res, "factor_ic"):
             exp.factor_ic = cached_res.factor_ic
+        if hasattr(cached_res, "factor_icir"):
+            exp.factor_icir = cached_res.factor_icir
+        if hasattr(cached_res, "correlation_dropped"):
+            exp.correlation_dropped = cached_res.correlation_dropped
         return exp

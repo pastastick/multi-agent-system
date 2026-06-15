@@ -141,6 +141,133 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         return new_feature.iloc[:, IC_max[IC_max < 0.99].index]
 
     
+    # ── Correlation gate ───────────────────────────────────────────────────────
+    # Dua level: (1) within-round — drop faktor yg |corr| > thr dengan faktor lain
+    # di ronde yang sama; (2) cross-round — drop faktor yg |corr| > thr dengan faktor
+    # di persistent store (daily cross-sectional mean, OOS window).
+    # Store hanya menyimpan daily cs-mean → kompak (~250 baris × N faktor, 2KB/faktor).
+
+    @staticmethod
+    def _corr_store_path() -> Path:
+        return Path(__file__).resolve().parent.parent / "data" / "factorlib" / "factor_corr_store.parquet"
+
+    @classmethod
+    def _load_corr_store(cls) -> "pd.DataFrame | None":
+        p = cls._corr_store_path()
+        if not p.exists():
+            return None
+        try:
+            return pd.read_parquet(p)
+        except Exception as e:
+            logger.warning(f"[CorrGate] load store gagal: {e}")
+            return None
+
+    @classmethod
+    def _update_corr_store(cls, new_factors: pd.DataFrame, factor_ic: dict,
+                           start: "pd.Timestamp | None", end: "pd.Timestamp | None"):
+        """Simpan daily cross-sectional mean faktor (hanya IC>0) ke persistent store."""
+        if new_factors.empty:
+            return
+        # filter OOS window
+        oos = new_factors
+        if start is not None and end is not None:
+            dts = new_factors.index.get_level_values("datetime")
+            oos = new_factors[(dts >= start) & (dts <= end)]
+        if oos.empty:
+            return
+        # daily cross-sectional mean per faktor
+        daily_mean = oos.groupby(level="datetime").mean()
+        # hanya tambah faktor baru dg IC > 0 (tidak simpan yg sudah gagal)
+        new_cols = {
+            c: daily_mean[c]
+            for c in daily_mean.columns
+            if str(c) not in (factor_ic or {}) or (factor_ic.get(str(c)) or 0) > 0
+        }
+        if not new_cols:
+            return
+        existing = cls._load_corr_store()
+        if existing is not None:
+            add_cols = {c: s for c, s in new_cols.items() if c not in existing.columns}
+            if not add_cols:
+                return
+            merged = existing.join(pd.DataFrame(add_cols), how="outer")
+        else:
+            merged = pd.DataFrame(new_cols)
+        p = cls._corr_store_path()
+        p.parent.mkdir(parents=True, exist_ok=True)
+        merged.to_parquet(p, engine="pyarrow")
+        logger.info(f"[CorrGate] Store diperbarui: {merged.shape[1]} faktor ({list(add_cols.keys()) if existing is not None else list(new_cols.keys())} ditambah)")
+
+    @staticmethod
+    def _correlation_gate(
+        new_factors: pd.DataFrame,
+        factor_ic: dict,
+        threshold: float,
+        start: "pd.Timestamp | None",
+        end: "pd.Timestamp | None",
+    ) -> "tuple[pd.DataFrame, list[str]]":
+        """Drop faktor yang terlalu berkorelasi (within-round + cross-round).
+        Return (filtered_df, dropped_names_with_reason)."""
+        dropped: list[str] = []
+        if threshold <= 0.0:
+            return new_factors, dropped  # gate dinonaktifkan
+
+        # ── 1. Within-round ────────────────────────────────────────────────────
+        if len(new_factors.columns) >= 2:
+            corr_mat = new_factors.corr()          # Pearson lintas semua (date×instr)
+            to_drop: set = set()
+            cols = list(new_factors.columns)
+            for i, a in enumerate(cols):
+                if a in to_drop:
+                    continue
+                for b in cols[i + 1:]:
+                    if b in to_drop:
+                        continue
+                    c = corr_mat.loc[a, b]
+                    if pd.isna(c) or abs(c) <= threshold:
+                        continue
+                    # jaga faktor dg IC lebih tinggi; seri jika tak tersedia
+                    ic_a = factor_ic.get(str(a))
+                    ic_b = factor_ic.get(str(b))
+                    if ic_b is not None and (ic_a is None or ic_b > ic_a):
+                        victim, survivor = a, b
+                    else:
+                        victim, survivor = b, a
+                    to_drop.add(victim)
+                    reason = f"within-round |corr|={abs(c):.3f} with {survivor}"
+                    dropped.append(f"{victim} [{reason}]")
+                    logger.info(f"[CorrGate] drop {victim}: {reason}")
+            if to_drop:
+                new_factors = new_factors.drop(columns=list(to_drop))
+
+        # ── 2. Cross-round: cek terhadap store ────────────────────────────────
+        store = QlibFactorRunner._load_corr_store()
+        if store is not None and not new_factors.empty and start is not None:
+            dts = new_factors.index.get_level_values("datetime")
+            new_oos = new_factors[(dts >= start) & (dts <= end)]
+            if not new_oos.empty:
+                daily_new = new_oos.groupby(level="datetime").mean()
+                common_dates = daily_new.index.intersection(store.index)
+                if len(common_dates) >= 20:           # minimal overlap
+                    s_aligned = store.loc[common_dates]
+                    n_aligned = daily_new.loc[common_dates]
+                    to_drop_cross: set = set()
+                    for col in list(n_aligned.columns):
+                        if col in to_drop_cross:
+                            continue
+                        for lib_col in s_aligned.columns:
+                            c = n_aligned[col].corr(s_aligned[lib_col])
+                            if pd.notna(c) and abs(c) > threshold:
+                                reason = f"cross-round |corr|={abs(c):.3f} with {lib_col} in store"
+                                dropped.append(f"{col} [{reason}]")
+                                logger.info(f"[CorrGate] drop {col}: {reason}")
+                                to_drop_cross.add(col)
+                                break
+                    if to_drop_cross:
+                        new_factors = new_factors.drop(columns=list(to_drop_cross))
+
+        return new_factors, dropped
+
     # ── HYBRID: standalone per-factor RankIC (reward `L` paper) ───────────────
     # Pelengkap LightGBM combined (metrik portofolio). Per-factor RankIC = sinyal
     # fitness/seleksi evolution + evaluatif feedback. Dihitung dari sumber yang
@@ -178,19 +305,24 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         label.name = "label"
         return label
 
-    def _compute_factor_ic(self, new_factors: pd.DataFrame) -> dict:
-        """RankIC cross-sectional per factor pada segmen TEST (OOS):
-        mean_t spearman(factor_t, label_t). Return {factor_name: rank_ic|None}."""
+    def _compute_factor_ic(self, new_factors: pd.DataFrame) -> "tuple[dict, dict]":
+        """RankIC + RankICIR cross-sectional per factor pada segmen TEST (OOS).
+        IC   = mean_t spearman(factor_t, label_t)   → kekuatan sinyal
+        ICIR = mean_t / std_t (deret IC harian)     → stabilitas sinyal
+        Return (ic_out, icir_out), masing-masing {factor_name: value|None}.
+        Deret `per_day` (IC harian) dipakai untuk KEDUA agregasi — tidak ada
+        komputasi tambahan, hanya agregasi berbeda dari series yang sama."""
         label = self._factor_label()
         if label is None:
             logger.warning("[FactorIC] daily_pv.h5/$close tak tersedia → lewati per-factor RankIC")
-            return {}
+            return {}, {}
         # samakan urutan level index dgn new_factors (alignment by tuple)
         names = list(new_factors.index.names)
         if set(label.index.names) == set(names) and list(label.index.names) != names:
             label = label.reorder_levels(names)
         start, end = self._oos_window()
         ic_out: dict = {}
+        icir_out: dict = {}
         for col in dict.fromkeys(new_factors.columns):   # unik, jaga urutan
             s = new_factors[col]
             if isinstance(s, pd.DataFrame):              # nama kolom dobel → ambil pertama
@@ -201,13 +333,19 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
                 df = df[(dts >= start) & (dts <= end)]
             if df.empty:
                 ic_out[str(col)] = None
+                icir_out[str(col)] = None
                 continue
             per_day = df.groupby(level="datetime").apply(
                 lambda x: x["f"].corr(x["y"], method="spearman") if len(x) > 2 else float("nan")
             )
             ic = per_day.mean()
+            std = per_day.std()
             ic_out[str(col)] = float(ic) if pd.notna(ic) else None
-        return ic_out
+            # ICIR None bila std 0/NaN (sinyal konstan) → jangan paksa nilai semu
+            icir_out[str(col)] = (
+                float(ic / std) if pd.notna(ic) and pd.notna(std) and std > 0 else None
+            )
+        return ic_out, icir_out
 
     #* dipanggil di AlphaAgentLoop -> factor_backtest
     # gabung semua faktor value
@@ -258,18 +396,43 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         if new_factors.empty:
             raise FactorEmptyError("No valid factor data found to merge.")
 
-        # ── per-factor RankIC (OOS, standalone) ──────────────────────────────
+        # ── per-factor RankIC + RankICIR (OOS, standalone) ───────────────────
         # Hitung sebelum di-nest ke MultiIndex "feature" (nama kolom masih = factor name).
         try:
-            exp.factor_ic = self._compute_factor_ic(new_factors)
+            exp.factor_ic, exp.factor_icir = self._compute_factor_ic(new_factors)
             logger.info(f"Per-factor RankIC (OOS): {exp.factor_ic}")
+            logger.info(f"Per-factor RankICIR (OOS): {exp.factor_icir}")
         except Exception as e:  # noqa: BLE001
-            logger.warning(f"Per-factor RankIC computation failed: {e}")
+            logger.warning(f"Per-factor RankIC/ICIR computation failed: {e}")
             exp.factor_ic = {}
+            exp.factor_icir = {}
+
+        # ── Correlation gate (within-round + cross-round) ─────────────────────
+        # Drop faktor yg terlalu berkorelasi sebelum LightGBM backtest.
+        # Threshold dari FACTOR_COSTEER_SETTINGS (default 0.7, override via env var
+        # FACTOR_CoSTEER_CORR_GATE_THRESHOLD atau experiment.yaml corr_gate_threshold).
+        try:
+            _corr_thr = FACTOR_COSTEER_SETTINGS.corr_gate_threshold
+            _oos_start, _oos_end = self._oos_window()
+            new_factors, _dropped = self._correlation_gate(
+                new_factors, exp.factor_ic, _corr_thr, _oos_start, _oos_end
+            )
+            exp.correlation_dropped = _dropped
+            if _dropped:
+                logger.info(f"[CorrGate] {len(_dropped)} faktor di-drop: {_dropped}")
+                # hapus faktor yg di-drop dari exp.factor_ic/icir agar metrik konsisten
+                dropped_names = {d.split(" [")[0] for d in _dropped}
+                exp.factor_ic = {k: v for k, v in exp.factor_ic.items() if k not in dropped_names}
+                exp.factor_icir = {k: v for k, v in exp.factor_icir.items() if k not in dropped_names}
+            # simpan faktor yg lolos ke corr store (sebelum backtest, bukan setelah)
+            self._update_corr_store(new_factors, exp.factor_ic, _oos_start, _oos_end)
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"[CorrGate] correlation gate gagal: {e}")
+            exp.correlation_dropped = []
 
         if len(new_factors.columns) >= 2:
             pd.set_option('display.width', 1000)
-            logger.info(f"Factor correlation: \n\n{new_factors.corr()}\n")
+            logger.info(f"Factor correlation (setelah gate): \n\n{new_factors.corr()}\n")
 
         # Sort, deduplicate, and nest under 'feature' for Qlib compatibility
         combined_factors = new_factors.sort_index()

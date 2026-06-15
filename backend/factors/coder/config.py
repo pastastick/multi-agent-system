@@ -34,8 +34,14 @@ class FactorCoSTEERSettings(CoSTEERSettings):
     Novelty check (duplication detection) requires a factor zoo file."""
     
     duplication_threshold: int = 8
-    """Threshold for duplication detection. If duplicated subtree size exceeds this value, 
+    """Threshold for duplication detection. If duplicated subtree size exceeds this value,
     the factor will be rejected."""
+
+    corr_gate_threshold: float = 0.7
+    """Correlation gate threshold. New factor values correlated above this with any factor
+    already in the round or the persistent store are dropped before LightGBM backtest.
+    Override via env var FACTOR_CoSTEER_CORR_GATE_THRESHOLD or experiment.yaml
+    evolution.corr_gate_threshold."""
 
     symbol_length_threshold: int = 300
     """Maximum allowed symbol length (SL) for factor expressions. 
