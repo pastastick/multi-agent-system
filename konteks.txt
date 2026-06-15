@@ -303,10 +303,10 @@ M. BACKLOG TUGAS UNTUK SESI BERIKUTNYA (prioritas urut)
   - diversity_lambda selection penalty: DONE (dorman, belum divalidasi)
   - prompt simplifikasi (peran tegas): DONE ✓
   - backtest new-only (runner.py): DONE ✓
-  - metrik primer tunggal (RankIC): DONE ✓
-  - correlation gate: PENDING
-  - ICIR: PENDING
-  - negative-hypothesis memory: PENDING
+  - metrik primer tunggal (FactorIC_mean model-free): DONE ✓ (2026-06-14: migrasi dari RankIC combined)
+  - ICIR (gate is_successful dua-syarat IC+ICIR): DONE ✓ (2026-06-14)
+  - correlation gate (within-round + cross-round store): DONE ✓ (2026-06-14)
+  - negative-hypothesis memory (AVOID mekanisme gagal → proposal): DONE ✓ (2026-06-14)
   - validasi diversity_lambda backtest nyata: PENDING
 
 ═══════════════════════════════════════════════════════════════════════════
@@ -361,9 +361,12 @@ B. PERUBAHAN KODE (SUDAH DIIMPLEMENTASIKAN)
   - Extract 7 metrik kunci dari exp.result (Series Qlib) tanpa noise.
 
   pipeline/evolution/trajectory.py — get_primary_metric():
-  - Primary berubah dari FactorIC_mean → RankIC (combined).
+  - Primary berubah dari FactorIC_mean → RankIC (combined) [sesi 2026-06-13].
   - Fallback ke FactorIC_mean bila RankIC combined tidak tersedia (backward compat run lama).
-  - Sekarang evolution selection dan replace-SOTA keduanya pakai angka yang sama.
+  - [DIBALIK 2026-06-14]: Primary kembali ke FactorIC_mean (model-free).
+    Alasan: empiris — combined RankIC = 95-103% baseline floor (4 fitur hardcoded
+    NestedDataLoader), tidak bisa membedakan faktor baik/buruk. FactorIC_mean bisa negatif
+    → gate is_successful() kini bermakna.
 
   latent_mas/prompts.yaml — feedback agent:
   - System prompt menjelaskan perbedaan [A] standalone vs [B] combined RankIC beserta
@@ -377,10 +380,237 @@ C. SATU CATATAN TENTANG MiningLoop (latent_mas/mining_loop.py)
   mengabaikannya. Tidak ada perubahan fungsional di MiningLoop; jalur utama adalah
   AlphaAgentLoop di pipeline/loop.py.
 
-D. KONSISTENSI METRIK SETELAH PERBAIKAN
-  Satu metrik primer: RankIC (combined LightGBM, OOS test segment)
-    - evolution parent selection  → trajectory.get_primary_metric() → RankIC combined
-    - replace-SOTA decision       → _decide_replace_sota() → RankIC combined
-    - individual factor quality   → exp.factor_ic[name] → standalone RankIC (hanya untuk
-      diagnosis feedback, bukan untuk keputusan structural loop)
-    - backtest_metrics di trajectory → backtest_metrics["RankIC"] (combined) = primary
+D. KONSISTENSI METRIK SETELAH PERBAIKAN (terakhir diupdate 2026-06-14)
+  Satu metrik primer: FactorIC_mean (model-free, Spearman, OOS test segment = 2021)
+    - evolution parent selection  → trajectory.get_primary_metric() → FactorIC_mean
+    - replace-SOTA decision       → _decide_replace_sota(factor_ic_mean) → FactorIC_mean
+    - individual factor quality   → exp.factor_ic[name] → per-faktor standalone RankIC
+    - backtest_metrics["FactorIC_mean"] = mean(exp.factor_ic.values()) → primary selector
+    - combined LightGBM RankIC   → SUPPLEMENTARY ONLY (ditampilkan di [B] _format_key_metrics,
+      tidak lagi menentukan keputusan looping)
+  Baseline floor empiris (2026-06-14, test 2021):
+    combined baseline-only RankIC = +0.035 konstan (95-103% dari combined+faktor)
+    → alasan mengapa combined tidak bisa jadi primary selector.
+═══════════════════════════════════════════════════════════════════════════
+PERBAIKAN SESI 2026-06-14 — MIGRASI METRIK PRIMER → MODEL-FREE FactorIC_mean
+═══════════════════════════════════════════════════════════════════════════
+
+TEMUAN EMPIRIS (backtest laptop, /tmp/floor_experiment.py):
+  combined LightGBM RankIC = 95-103% baseline floor (4 fitur hardcoded
+  NestedDataLoader): OPEN_RET/VOL_RATIO/RANGE_RET/CLOSE_RET.
+  is_successful() (RankIC>0) dijamin true bahkan faktor anti-prediktif.
+  Model-free per-factor RankIC SATU-SATUNYA yang jujur membedakan baik/buruk.
+
+PERUBAHAN KODE (SUDAH DIIMPLEMENTASIKAN — BELUM GPU-TEST):
+
+  pipeline/evolution/trajectory.py — get_primary_metric():
+  - Prioritas DIBALIK: FactorIC_mean utama, fallback ke RankIC combined
+    (backward compat trajectory lama).
+  - is_successful(): docstring update; > 0 kini bermakna (model-free bisa negatif).
+
+  pipeline/loop.py — _decide_replace_sota():
+  - Tambah parameter `factor_ic_mean: Optional[float] = None`.
+  - Bila ada → pakai sebagai cur; label "FactorIC_mean".
+  - Bila tidak ada → fallback RankIC combined (label "RankIC(combined,fallback)").
+
+  pipeline/loop.py — feedback step (_run_latent_feedback):
+  - Hitung factor_ic + factor_ic_mean SEBELUM memanggil _decide_replace_sota.
+  - Hapus penghitungan factor_ic duplikat di bawah (sebelumnya di-inisialisasi
+    ulang setelah _decide_replace_sota).
+  - sota_block kini tampilkan FactorIC_mean (bukan combined RankIC).
+
+  pipeline/loop.py — _format_key_metrics():
+  - Tambah seksi [A] Model-free per-factor RankIC (primary) di atas.
+  - Ubah label combined ke [B] Combined LightGBM model (supplementary).
+
+  factors/factor_template/conf_combined_factors.yaml:
+  - test: 2021-2025 → 2021 (dengan komentar; 2022-2025 = holdout final).
+
+STATUS TERTUNDA (perlu GPU-test sebelum deploy):
+  - Verifikasi factor_ic_mean benar terisi di exp.factor_ic setelah _compute_factor_ic
+  - Verifikasi is_successful() kini bisa menolak faktor (tidak selalu true)
+  - Verifikasi correlation gate benar-benar men-drop faktor duplikat di GPU run nyata
+  - L-2 negative-hypothesis memory: PENDING
+  - L-4 diversity_lambda validation: PENDING
+
+═══════════════════════════════════════════════════════════════════════════
+PERBAIKAN SESI 2026-06-14 (lanjutan) — L-3 ICIR sebagai gate kualitas
+═══════════════════════════════════════════════════════════════════════════
+
+PRINSIP: ICIR = stabilitas IC (mean/std deret IC harian). Faktor IC tinggi tapi
+tidak stabil = noise. Gate is_successful() kini dua-syarat (IC kuat + ICIR stabil).
+Deret IC harian (per_day) SUDAH dihitung di _compute_factor_ic → tinggal agregasi
+kedua (tanpa komputasi data tambahan).
+
+STRUKTUR DATA: exp.factor_icir = {nama: icir} PARALEL dengan exp.factor_ic
+(tidak mengubah struktur factor_ic → konsumen lama aman).
+
+PERUBAHAN KODE (BELUM GPU-TEST):
+  factors/runner.py:
+  - _compute_factor_ic() return (ic_out, icir_out); icir=per_day.mean()/per_day.std()
+    (None bila std≤0/NaN → sinyal konstan).
+  - develop() set exp.factor_ic & exp.factor_icir (try/except set keduanya {}).
+  components/runner/__init__.py assign_cached_result: copy factor_icir dari cache.
+  pipeline/evolution/controller.py:
+  - create_trajectory: agregasi FactorICIR_mean ke backtest_metrics; factor_icir ke
+    extra_info.
+  - EvolutionConfig: tambah success_ic_threshold/success_icir_threshold (default 0.0).
+  - get_best_trajectories: is_successful(thr_ic, thr_icir) dari config.
+  pipeline/evolution/trajectory.py:
+  - is_successful(thr_ic=0.0, thr_icir=0.0): gate dua-syarat. FactorICIR_mean None →
+    lewati syarat ICIR (backward compat, jangan reject karena metrik hilang).
+  pipeline/factor_mining.py: baca success_ic/icir_threshold dari evolution_cfg.
+  pipeline/loop.py:
+  - factor_block [A]: tambah ICIR per faktor + baris [mean] RankIC/ICIR; label
+    "THIS decides SOTA".
+  - _format_key_metrics: REVERT [A] (factor_block sudah memikulnya) → [B]-only,
+    label "supplementary; does NOT decide SOTA".
+  latent_mas/prompts.yaml feedback:
+  - system: [A] decides SOTA (bukan [B]); jelaskan ICIR (strength vs stability);
+    threshold ICIR ≥0.3 reliable.
+  - user template: hapus label "[B] Combined LightGBM model backtest" ganda
+    (backtest_results kini self-label).
+
+KEPUTUSAN USER: threshold CONFIGURABLE, default LONGGAR (IC>0 AND ICIR>0) untuk
+bootstrap pool tanpa kelaparan. Perketat via experiment.yaml (success_ic_threshold,
+success_icir_threshold; mis. 0.01/0.3 ala QuantaAlpha) setelah data GPU nyata.
+
+VERIFIED (torch-free): py_compile 6 file, YAML load 9 agent, is_successful 7 tes
+(longgar+ketat+None+backward-compat). BELUM GPU-test (perlu cek factor_icir terisi
+& gate menolak faktor nyata).
+
+═══════════════════════════════════════════════════════════════════════════
+PERBAIKAN SESI 2026-06-14 (lanjutan) — L-1 Correlation Gate
+═══════════════════════════════════════════════════════════════════════════
+
+MASALAH: Template-collapse menghasilkan faktor-faktor berkorelasi tinggi di
+NILAI aktual meski sintaks berbeda. Gate sintaktik (match_alphazoo, dedup IC>0.99)
+buta terhadap ini. runner.py sudah meng-log new_factors.corr() tapi tidak dijadikan
+gate. deduplicate_new_factors() di runner.py adalah DEAD CODE (tidak pernah dipanggil).
+
+DUA LEVEL GATE:
+  (1) Within-round: pairwise Pearson |corr| antar kolom new_factors ronde ini.
+      Drop faktor dg IC lebih rendah dari pasangan yg berkorelasi. Gratis karena
+      new_factors sudah ada di memori sebelum LightGBM.
+  (2) Cross-round: cek faktor baru terhadap persistent store (daily cross-sectional
+      mean per faktor, OOS window). Kompak: ~250 baris × N faktor, 2KB/faktor.
+      Store hanya menyimpan faktor dg IC>0 (tidak tercemar faktor gagal).
+
+CALL SEQUENCE DI develop():
+  process_factor_data → new_factors
+  _compute_factor_ic  → factor_ic, factor_icir
+  _correlation_gate   → filtered_factors, dropped  ← titip sisip baru
+  update exp.factor_ic/icir (hapus dropped dari dict)
+  _update_corr_store  → simpan faktor yg lolos ke store
+  save parquet + LightGBM backtest (existing, tidak berubah)
+
+STRUKTUR DATA BARU:
+  exp.correlation_dropped = list[str]  — "{nama} [{reason}]" per faktor yg di-drop
+  data/factorlib/factor_corr_store.parquet — persistent store, kolom = factor names,
+    index = datetime (daily cs-mean OOS period)
+
+THRESHOLD:
+  Default 0.7. Ekspos via:
+  - experiment.yaml: evolution.corr_gate_threshold
+  - env var: FACTOR_CoSTEER_CORR_GATE_THRESHOLD
+  Chain: experiment.yaml → factor_mining.py (os.environ.setdefault) →
+         FACTOR_COSTEER_SETTINGS.corr_gate_threshold → runner._correlation_gate()
+  0.0 = gate nonaktif (semua faktor lolos, store tetap tidak diupdate).
+
+PERUBAHAN KODE (8 FILE, BELUM GPU-TEST):
+  factors/coder/config.py:
+  - FactorCoSTEERSettings: corr_gate_threshold: float = 0.7
+  factors/runner.py:
+  - _corr_store_path(): path ke data/factorlib/factor_corr_store.parquet
+  - _load_corr_store(): load store, None bila belum ada
+  - _update_corr_store(new_factors, factor_ic, start, end): simpan daily cs-mean
+    faktor IC>0 ke store (append kolom baru, skip yg sudah ada)
+  - _correlation_gate(new_factors, factor_ic, threshold, start, end):
+    within-round → pairwise corr, drop victim (IC lebih rendah)
+    cross-round  → daily cs-mean vs store, drop bila |corr| > threshold
+    return (filtered_df, dropped_list)
+  - develop(): wire gate setelah _compute_factor_ic, update exp fields, call store
+  components/runner/__init__.py:
+  - assign_cached_result: copy correlation_dropped dari cache
+  pipeline/evolution/controller.py:
+  - EvolutionConfig: corr_gate_threshold: float = 0.7
+  - create_trajectory extra_info: tambah "correlation_dropped"
+  pipeline/factor_mining.py:
+  - baca corr_gate_threshold dari evolution_cfg
+  - os.environ.setdefault("FACTOR_CoSTEER_CORR_GATE_THRESHOLD", ...) sebelum loop
+  pipeline/loop.py:
+  - factor_block: tampilkan [CORR-GATE] section bila ada dropped factors
+
+VERIFIED (torch-free): py_compile 6 file, within-round test (IC-based victim
+selection OK), cross-round test (store persist+load+check OK).
+
+═══════════════════════════════════════════════════════════════════════════
+PERBAIKAN SESI 2026-06-14 (lanjutan) — L-2 Negative-Hypothesis Memory
+═══════════════════════════════════════════════════════════════════════════
+
+MASALAH: agent proposal mulai tiap generasi "bersih" — tak tahu MEKANISME mana
+yang sudah gagal lintas-generasi → bisa mengusulkan ulang kerangka yang sama
+(akar pengulangan/anchoring di altitude MEKANISME). diversity_hint hanya melawan
+monokultur OPERATOR; ini melawan monokultur MEKANISME. Sinergis dgn fix anchoring.
+
+EVALUASI MENYELURUH (sesuai alur paper hypothesis→experiment→feedback): kegagalan
+trajectory dinilai dari BEBERAPA lapisan, bukan satu angka —
+  · hypothesis : mekanisme yang diusulkan (teks) → kunci dedup + tampilan AVOID
+  · ekspresi   : tak hasilkan faktor (no_factor) / semua di-drop corr gate (redundant)
+  · metrik     : FactorIC_mean (weak_ic) / FactorICIR_mean (unstable_icir) / hilang (no_metric)
+Reason code merangkum lapisan yang gagal. classify() memakai is_successful() yang
+SAMA dgn gate seleksi (konsisten), lalu menderivasi reason. Sukses → tidak direkam.
+
+ALUR (cross-generation):
+  report_task_complete(trajectory)               ← parent process, tiap task selesai
+    → negative_memory.record(traj, thr_ic, thr_icir)  (dedup per mekanisme, count++)
+  get_next_task / get_all_tasks_for_current_phase     ← saat menyusun task berikut
+    → task["negative_hint"] = render_hint()       (daftar AVOID, ≤ max_items)
+  factor_mining._run_evolution_task: task→AlphaAgentLoop(negative_hint=...)
+  loop.factor_propose: front.run(negative_hint=...) [original]
+  loop._evolution_propose: front.run_evolution(negative_hint=...) [mutation/crossover]
+  pipeline.run/run_evolution → proposal agent (HANYA proposal — altitude mekanisme,
+    BUKAN construct/judger yang altitude operator). prompts.yaml proposal user
+    template: blok {% if negative_hint %} disuntik setelah prior_feedback.
+
+STRUKTUR DATA BARU:
+  data/.../negative_memory.json  — persistent, key = prefix-ternormalisasi hipotesis,
+    value = NegativeEntry{hypothesis, reason, ic, icir, families, round, phase, count}
+  Persist di samping trajectory pool; auto-load saat fresh_start=False (resume),
+  auto-save tiap record (sama pola dgn corr store & pool).
+
+CONFIG (EvolutionConfig, ekspos via experiment.yaml evolution.*):
+  negative_memory_enabled: bool = True
+  negative_memory_max_items: int = 8   (jumlah entri dirender ke hint)
+  Ambang klasifikasi PAKAI ULANG success_ic_threshold/success_icir_threshold
+  (konsisten dgn is_successful — tak ada ambang ganda). enabled=False → nonaktif total.
+
+PERUBAHAN KODE (6 FILE + 1 BARU, BELUM GPU-TEST):
+  pipeline/evolution/negative_memory.py [BARU]:
+  - NegativeEntry (dataclass) + NegativeMemory (classify/record/render_hint/persist).
+  - classify(): is_successful? → reason berlapis (ekspresi dulu, lalu metrik).
+  pipeline/evolution/controller.py:
+  - EvolutionConfig: negative_memory_enabled, negative_memory_max_items.
+  - __init__: self.negative_memory = NegativeMemory(neg_path, ...).
+  - report_task_complete: record() bila gagal + log reason.
+  - get_next_task: wrapper → _dispatch_next_task() + setdefault negative_hint.
+  - get_all_tasks_for_current_phase: inject negative_hint ke tiap task (return tasks).
+  - _negative_hint(): helper render (try/except → "" agar tak ganggu loop).
+  pipeline/factor_mining.py:
+  - _run_evolution_task: baca task["negative_hint"] → AlphaAgentLoop(negative_hint=).
+  - EvolutionConfig: baca negative_memory_enabled/max_items dari evolution_cfg.
+  pipeline/loop.py:
+  - __init__: param negative_hint → self._negative_hint.
+  - factor_propose: run(negative_hint=) [original].
+  - _evolution_propose: run_evolution(negative_hint=) [mutation & crossover].
+  latent_mas/pipeline.py:
+  - run(): param negative_hint → proposal.run(negative_hint=).
+  - run_evolution(): param negative_hint → self.run(negative_hint=).
+  latent_mas/prompts.yaml:
+  - proposal user template: blok {% if negative_hint %} (setelah prior_feedback).
+
+VERIFIED (torch-free): py_compile 5 file, NegativeMemory 8 tes (success-skip,
+weak_ic, unstable_icir, redundant, no_factor, no_metric, merge-count, persist
+round-trip, disabled, max_items cap), proposal template render strict (dgn &
+tanpa negative_hint, no MISSING). BELUM GPU-test (perlu cek hint nyata terkumpul
+lintas-ronde & proposal benar-benar menghindari mekanisme gagal).
