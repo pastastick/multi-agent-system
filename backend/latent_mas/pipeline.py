@@ -216,6 +216,7 @@ class FrontEndPipeline:
         seed_kv: Optional[KVCache] = None,
         market_context: str = "",
         prior_feedback: str = "",
+        negative_hint: str = "",
     ) -> FrontEndOutput:
         rl = self.runlog
 
@@ -230,6 +231,7 @@ class FrontEndPipeline:
         r_prop = self._a("proposal").run(
             past_kv=seed_kv, direction=direction,
             market_context=market_context, prior_feedback=prior_feedback,
+            negative_hint=negative_hint,
         )
         r_con = self._a("construct").run(past_kv=r_prop.kv_cache, diversity_hint=dhint)
         r_cons = self._a("consistency").run(past_kv=r_con.kv_cache)
@@ -282,6 +284,7 @@ class FrontEndPipeline:
         parent_text: str,
         n_parents: int = 1,
         direction: str = "",
+        negative_hint: str = "",
     ) -> FrontEndOutput:
         """Evolution GUIDANCE → re-entry front-end (bounded per-generasi).
 
@@ -332,7 +335,7 @@ class FrontEndPipeline:
         # ── 2. RE-ENTER front-end di-seed guidance_kv (1 konsumen → no deepcopy) ─
         # proposal(past_kv=guidance_kv) → construct → consistency → judger →
         # _gate_and_repair_multi. FrontEndOutput sama seperti jalur original.
-        return self.run(direction=direction, seed_kv=guidance_kv)
+        return self.run(direction=direction, seed_kv=guidance_kv, negative_hint=negative_hint)
 
     @staticmethod
     def _auto_fix_arity(candidates: List[str], rl: Any = None) -> List[str]:

@@ -20,6 +20,7 @@ from llm.client import LocalLLMBackend
 from .trajectory import StrategyTrajectory, TrajectoryPool, RoundPhase
 from .mutation import MutationOperator
 from .crossover import CrossoverOperator
+from .negative_memory import NegativeMemory
 
 
 @dataclass
@@ -73,6 +74,28 @@ class EvolutionConfig:
     # beragam, tanpa hard-reject. Skala: metric (RankIC) ~0.01-0.05, penalty ∈[0,1].
     diversity_lambda: float = 0.0
 
+    # Gate is_successful() — ambang model-free per-factor (default LONGGAR = >0).
+    # success_ic_threshold:   FactorIC_mean harus > nilai ini (kekuatan sinyal).
+    # success_icir_threshold: FactorICIR_mean harus > nilai ini (stabilitas sinyal).
+    # Default 0.0 (IC>0 AND ICIR>0) untuk bootstrap pool tanpa kelaparan; perketat
+    # via experiment.yaml setelah data GPU nyata (mis. 0.01 / 0.3 ala QuantaAlpha).
+    success_ic_threshold: float = 0.0
+    success_icir_threshold: float = 0.0
+
+    # Correlation gate: faktor baru di-drop jika |Pearson corr| terhadap faktor lain
+    # dalam ronde yang sama (within-round) ATAU terhadap faktor di persistent store
+    # (cross-round) melebihi threshold ini. 0.7 default; 0.0 = nonaktif.
+    # Ekspos via env FACTOR_CoSTEER_CORR_GATE_THRESHOLD atau experiment.yaml.
+    corr_gate_threshold: float = 0.7
+
+    # Negative-hypothesis memory: rekam MEKANISME yang gagal lintas-generasi
+    # (evaluasi menyeluruh — hypothesis + ekspresi + metrik IC/ICIR) lalu suntik
+    # daftar "AVOID" ke prompt proposal agar tak mengusulkan ulang mekanisme gagal.
+    # Berbeda dari diversity_lambda (altitude OPERATOR) — ini altitude MEKANISME.
+    # negative_memory_max_items: jumlah maksimum entri yang dirender ke hint.
+    negative_memory_enabled: bool = True
+    negative_memory_max_items: int = 8
+
 
 class EvolutionController:
     """
@@ -124,6 +147,16 @@ class EvolutionController:
         pool_path = Path(config.pool_save_path) if config.pool_save_path else None
         self.pool = TrajectoryPool(save_path=pool_path, fresh_start=config.fresh_start)
 
+        # Negative-hypothesis memory — mekanisme gagal lintas-generasi → hint AVOID
+        # untuk proposal. Persist di samping pool (negative_memory.json).
+        neg_path = (pool_path.parent / "negative_memory.json") if pool_path else None
+        self.negative_memory = NegativeMemory(
+            save_path=neg_path,
+            max_items=getattr(config, "negative_memory_max_items", 8),
+            enabled=getattr(config, "negative_memory_enabled", True),
+            fresh_start=config.fresh_start,
+        )
+
         # Initialize operators dengan shared llm_backend untuk latent path.
         # Operators akan gunakan parent.kv_cache sebagai past_key_values
         # saat generate mutation/crossover guidance.
@@ -164,10 +197,25 @@ class EvolutionController:
             "pool_stats": self.pool.get_statistics(),
         }
     
+    def _negative_hint(self) -> str:
+        """Hint AVOID dari negative memory untuk disuntik ke task → proposal."""
+        try:
+            return self.negative_memory.render_hint()
+        except Exception:  # noqa: BLE001 — hint opsional, jangan ganggu loop
+            return ""
+
     def get_next_task(self) -> Optional[dict[str, Any]]: #* Sequential mode
+        """Wrapper: dispatch task berikutnya lalu suntik negative_hint (memori
+        kegagalan mekanisme lintas-generasi) ke task sebelum dikembalikan."""
+        task = self._dispatch_next_task()
+        if task is not None:
+            task.setdefault("negative_hint", self._negative_hint())
+        return task
+
+    def _dispatch_next_task(self) -> Optional[dict[str, Any]]:
         """
         Determine the next task to run.
-        
+
         Returns:
             Dictionary describing the next task:
             - "phase": RoundPhase (original/mutation/crossover)
@@ -175,7 +223,7 @@ class EvolutionController:
             - "parent_trajectories": Parent trajectories (for mutation/crossover)
             - "strategy_suffix": Prompt suffix for hypothesis generator
             - "round_idx": Current round index
-            
+
             Returns None if evolution is complete.
         """
         # Check if we've reached max rounds
@@ -328,9 +376,14 @@ class EvolutionController:
                     self._prepare_crossover_groups()
                     self._current_phase = RoundPhase.CROSSOVER
                 return self.get_all_tasks_for_current_phase()
-        
+
+        # Suntik negative_hint (memori kegagalan mekanisme lintas-generasi) ke
+        # tiap task sebelum dieksekusi paralel. setdefault: aman bila rekursif.
+        nh = self._negative_hint()
+        for t in tasks:
+            t.setdefault("negative_hint", nh)
         return tasks
-    
+
     #* Parallel execution helper methods
     def advance_phase_after_parallel_completion(self, completed_tasks: list[dict[str, Any]]):
         """
@@ -790,7 +843,18 @@ class EvolutionController:
         """
         # Add trajectory to pool (save ke JSON)
         self.pool.add(trajectory)
-        
+
+        # Rekam ke negative memory bila trajectory GAGAL (evaluasi menyeluruh:
+        # ekspresi + metrik IC/ICIR). Ambang sama dengan gate is_successful.
+        thr_ic = getattr(self.config, "success_ic_threshold", 0.0)
+        thr_icir = getattr(self.config, "success_icir_threshold", 0.0)
+        reason = self.negative_memory.record(trajectory, thr_ic, thr_icir)
+        if reason:
+            logger.info(
+                f"Negative memory: recorded failed mechanism "
+                f"{trajectory.trajectory_id} [{reason}]"
+            )
+
         # Update state based on phase
         phase = task["phase"]
         direction_id = task["direction_id"]
@@ -878,6 +942,12 @@ class EvolutionController:
             backtest_metrics["FactorIC_mean"] = float(sum(ic_vals) / len(ic_vals))
             backtest_metrics["FactorIC_max"] = float(max(ic_vals))
 
+        # ICIR = stabilitas IC (gate is_successful). Mean dari per-factor ICIR.
+        factor_icir = getattr(experiment, "factor_icir", None) or {}
+        icir_vals = [v for v in factor_icir.values() if isinstance(v, (int, float))]
+        if icir_vals:
+            backtest_metrics["FactorICIR_mean"] = float(sum(icir_vals) / len(icir_vals))
+
         # Extract feedback info
         feedback_text = str(feedback) if feedback else ""
         feedback_details = {}
@@ -905,7 +975,11 @@ class EvolutionController:
             parent_ids=parent_ids,
             hypothesis_embedding=hypothesis_embedding,
             kv_cache=kv_cache,
-            extra_info={"factor_ic": factor_ic},
+            extra_info={
+                "factor_ic": factor_ic,
+                "factor_icir": factor_icir,
+                "correlation_dropped": getattr(experiment, "correlation_dropped", []),
+            },
         )
     
     def _extract_metrics(self, result: Any) -> dict[str, Optional[float]]:
@@ -987,8 +1061,10 @@ class EvolutionController:
         from latent_mas.operator_families import trajectory_families, diversity_penalized
         all_trajs = self.pool.get_all()
 
-        # Filter to successful trajectories
-        valid = [t for t in all_trajs if t.is_successful()]
+        # Filter to successful trajectories (gate IC+ICIR dari config)
+        thr_ic = getattr(self.config, "success_ic_threshold", 0.0)
+        thr_icir = getattr(self.config, "success_icir_threshold", 0.0)
+        valid = [t for t in all_trajs if t.is_successful(thr_ic, thr_icir)]
 
         lam = getattr(self.config, "diversity_lambda", 0.0)
         scored = diversity_penalized(

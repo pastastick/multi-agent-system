@@ -101,7 +101,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         potential_direction,            # arah eksplorasi
         stop_event: threading.Event,
         use_local: bool = True,
-        strategy_suffix: str = "",      # suffix dari evolution 
+        strategy_suffix: str = "",      # suffix dari evolution
+        negative_hint: str = "",        # AVOID-list mekanisme gagal (L-2) → proposal
         evolution_phase: str = "original",
         trajectory_id: str = "",
         parent_trajectory_ids: list = None,
@@ -120,6 +121,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
             # Evolution-related attributes
             self.strategy_suffix = strategy_suffix
+            # Negative-hypothesis memory (L-2): teks AVOID mekanisme gagal lintas-
+            # generasi, disuntik ke prompt proposal (semua fase). "" = tak ada.
+            self._negative_hint = negative_hint or ""
             self.evolution_phase = evolution_phase  # original / mutation / crossover
             self.trajectory_id = trajectory_id
             self.parent_trajectory_ids = parent_trajectory_ids or []
@@ -330,6 +334,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                         direction=self._effective_direction,
                         seed_kv=self._pipeline_kv,
                         prior_feedback=self._prior_feedback,
+                        negative_hint=self._negative_hint,
                     )
             self._front_out = front
             self._last_hypothesis = front.hypothesis
@@ -695,6 +700,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 parent_text=self._format_parents_text(ordered),
                 n_parents=len(ordered),
                 direction=self._base_direction,
+                negative_hint=self._negative_hint,
             )
             label = f"crossover(n={len(ordered)})"
         else:
@@ -703,6 +709,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 parent_text=self._format_parents_text([parents[0]]),
                 n_parents=1,
                 direction=self._base_direction,
+                negative_hint=self._negative_hint,
             )
             label = "mutation"
         logger.info(f"[LatentMAS] {label} → n_expr={len(front.expressions)} "
@@ -773,28 +780,49 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         # ── DETERMINISTIK ─────────────────────────────────────────────────────
         complexity = self._complexity_audit_multi(front.expressions)
         metrics = self._extract_metrics_safe(exp)
-        prev_sota = _SOTA_BEST.get("metric")  # capture sebelum _decide_replace_sota mengubahnya
-        replace_flag, sota_note = self._decide_replace_sota(metrics, bool(complexity))
 
-        # ── [A] Individual factor signals (per-factor standalone RankIC) ──────
-        # Standalone RankIC = sinyal kualitas tiap faktor secara individu (OOS).
+        # Model-free per-factor IC+ICIR (primary metric) — dihitung sebelum
+        # _decide_replace_sota agar jadi penentu replace-SOTA, bukan combined LightGBM.
+        factor_ic = getattr(exp, "factor_ic", None) or {}
+        factor_icir = getattr(exp, "factor_icir", None) or {}
+        ic_vals = [v for v in factor_ic.values() if isinstance(v, (int, float))]
+        icir_vals = [v for v in factor_icir.values() if isinstance(v, (int, float))]
+        factor_ic_mean = float(sum(ic_vals) / len(ic_vals)) if ic_vals else None
+        factor_icir_mean = float(sum(icir_vals) / len(icir_vals)) if icir_vals else None
+
+        prev_sota = _SOTA_BEST.get("metric")  # capture sebelum _decide_replace_sota mengubahnya
+        replace_flag, sota_note = self._decide_replace_sota(metrics, bool(complexity), factor_ic_mean)
+
+        # ── [A] Individual factor signals (per-factor standalone RankIC + ICIR) ──
+        # Standalone RankIC = kekuatan sinyal tiap faktor; ICIR = stabilitasnya (OOS).
         # Ini BERBEDA dari RankIC gabungan model LightGBM di blok B.
         names = getattr(self, "_last_factor_names", None) or [self._last_factor_name]
         exprs = front.expressions or [front.expression]
-        factor_ic = getattr(exp, "factor_ic", None) or {}
 
         individual_lines: list[str] = []
         for n, e in zip(names, exprs):
             ic_val = factor_ic.get(n)
+            icir_val = factor_icir.get(n)
             ic_str = f"{ic_val:.4f}" if isinstance(ic_val, (int, float)) else "n/a"
-            individual_lines.append(f"  {n}: {e}\n    standalone RankIC={ic_str}")
+            icir_str = f"{icir_val:.4f}" if isinstance(icir_val, (int, float)) else "n/a"
+            individual_lines.append(
+                f"  {n}: {e}\n    standalone RankIC={ic_str}  ICIR={icir_str}")
+        mean_ic_str = f"{factor_ic_mean:.4f}" if factor_ic_mean is not None else "n/a"
+        mean_icir_str = f"{factor_icir_mean:.4f}" if factor_icir_mean is not None else "n/a"
+        individual_lines.append(f"  [mean]: RankIC={mean_ic_str}  ICIR={mean_icir_str}")
 
         factor_block = (
             f"Hypothesis: {front.hypothesis}\n\n"
-            f"[A] Individual factor signals (standalone RankIC vs label, OOS — "
-            f"measures each factor's own predictive signal):\n"
+            f"[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — "
+            f"each factor's own predictive strength & stability; THIS decides SOTA):\n"
             + "\n".join(individual_lines)
         )
+        corr_dropped = getattr(exp, "correlation_dropped", None) or []
+        if corr_dropped:
+            factor_block += (
+                f"\n[CORR-GATE] {len(corr_dropped)} faktor di-drop sebelum backtest "
+                f"(|corr| > threshold): " + "; ".join(corr_dropped)
+            )
         if complexity:
             factor_block += f"\nCOMPLEXITY WARNING: {complexity}"
 
@@ -806,11 +834,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
         # ── [C] SOTA comparison ────────────────────────────────────────────────
         prev_str = f"{prev_sota:.4f}" if prev_sota is not None else "none yet"
-        cur_rankic = metrics.get("RankIC")
-        cur_str = f"{cur_rankic:.4f}" if cur_rankic is not None else "n/a"
+        cur_str = f"{factor_ic_mean:.4f}" if factor_ic_mean is not None else "n/a"
         sota_block = (
-            f"Previous best RankIC (SOTA): {prev_str}\n"
-            f"This round RankIC: {cur_str}\n"
+            f"Previous best FactorIC_mean (SOTA): {prev_str}\n"
+            f"This round FactorIC_mean: {cur_str}\n"
             f"Decision: {'REPLACE' if replace_flag else 'KEEP'} — {sota_note}"
         )
 
@@ -891,30 +918,35 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         return out
 
     def _decide_replace_sota(self, metrics: dict[str, float],
-                             complexity_warning: bool) -> "tuple[bool, str]":
-        """Keputusan deterministik 'ganti SOTA?' — satu metrik primer: RankIC.
+                             complexity_warning: bool,
+                             factor_ic_mean: "Optional[float]" = None) -> "tuple[bool, str]":
+        """Keputusan deterministik 'ganti SOTA?' — metrik primer: model-free FactorIC_mean.
 
-        RankIC (Spearman rank correlation, OOS) dipakai tunggal untuk konsistensi
-        dengan evolution selection (trajectory.get_primary_metric). annualized_return
-        lebih rentan terhadap leverage/risk transient; RankIC mengukur kualitas
-        sinyal ranking murni. Bila ada complexity warning → JANGAN ganti.
+        FactorIC_mean (Spearman, OOS, per-factor standalone) dipakai karena tidak
+        tercemar baseline floor NestedDataLoader. Empiris (2026-06-14): combined
+        LightGBM RankIC = 95-103% floor → is_successful dijamin true bahkan untuk
+        faktor anti-prediktif. FactorIC_mean bisa negatif → gate bermakna.
+        Fallback ke combined RankIC bila factor_ic_mean tidak tersedia.
         """
-        cur = metrics.get("RankIC")
+        if factor_ic_mean is not None:
+            cur, label = factor_ic_mean, "FactorIC_mean"
+        else:
+            cur, label = metrics.get("RankIC"), "RankIC(combined,fallback)"
         if cur is None:
-            return False, "no RankIC → keep SOTA"
+            return False, "no FactorIC_mean → keep SOTA"
         if complexity_warning:
-            return False, f"RankIC={cur:.4f} but complexity warning → keep SOTA (overfit risk)"
+            return False, f"{label}={cur:.4f} but complexity warning → keep SOTA (overfit risk)"
         best = _SOTA_BEST.get("metric")
         if best is None or cur > best:
             _SOTA_BEST["metric"] = cur
             prev = "none" if best is None else f"{best:.4f}"
-            return True, f"RankIC {cur:.4f} > SOTA {prev} → replace"
-        return False, f"RankIC {cur:.4f} ≤ SOTA {best:.4f} → keep"
+            return True, f"{label} {cur:.4f} > SOTA {prev} → replace"
+        return False, f"{label} {cur:.4f} ≤ SOTA {best:.4f} → keep"
 
     @staticmethod
     def _format_key_metrics(exp) -> str:
-        """Format metrik kunci dari backtest result (combined LightGBM).
-        Hanya tampilkan metrik yang paling informatif; skip baris noise."""
+        """Format metrik combined LightGBM (supplementary — terkontaminasi baseline floor).
+        Metrik primer (model-free per-factor IC+ICIR) ada di factor_block [A], bukan di sini."""
         res = getattr(exp, "result", None)
         if res is None:
             return "backtest produced no result (factor may have failed)"
@@ -952,7 +984,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                         break
             if not lines:
                 return str(res)[:600]
-            return "[Combined LightGBM model — OOS]\n" + "\n".join(lines)
+            return ("[B] Combined LightGBM model — OOS "
+                    "(supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n"
+                    + "\n".join(lines))
         except Exception:
             return str(res)[:600]
 

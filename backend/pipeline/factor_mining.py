@@ -243,6 +243,7 @@ def _run_evolution_task( #* jalankan satu task dalam evolution loop (Original/Mu
     phase = task["phase"] #* fase task, misal "ORIGINAL", "MUTATION", "CROSSOVER"
     direction_id = task["direction_id"]
     strategy_suffix = task.get("strategy_suffix", "")
+    negative_hint = task.get("negative_hint", "")  #* AVOID-list mekanisme gagal (L-2)
     round_idx = task["round_idx"]
     parent_trajectories = task.get("parent_trajectories", [])
     
@@ -272,6 +273,7 @@ def _run_evolution_task( #* jalankan satu task dalam evolution loop (Original/Mu
         stop_event=stop_event,
         use_local=use_local,
         strategy_suffix=strategy_suffix,
+        negative_hint=negative_hint,
         evolution_phase=phase.value,
         trajectory_id=trajectory_id,
         parent_trajectory_ids=parent_ids,
@@ -705,6 +707,11 @@ def run_evolution_loop(
 
     logger.info(f"Trajectory pool path: {pool_save_path} (fresh_start={fresh_start})")
 
+    # Teruskan corr_gate_threshold ke FACTOR_COSTEER_SETTINGS via env var agar
+    # QlibFactorRunner.develop() bisa membacanya tanpa argumen eksplisit.
+    _corr_thr = float(evolution_cfg.get("corr_gate_threshold", 0.7))
+    os.environ.setdefault("FACTOR_CoSTEER_CORR_GATE_THRESHOLD", str(_corr_thr))
+    # setdefault: jangan overwrite bila sudah diset manual di environment.
 
     config = EvolutionConfig(
         num_directions=len(directions),
@@ -718,6 +725,11 @@ def run_evolution_loop(
         parent_selection_strategy=parent_selection_strategy,
         top_percent_threshold=top_percent_threshold,
         diversity_lambda=float(evolution_cfg.get("diversity_lambda", 0.0)),
+        success_ic_threshold=float(evolution_cfg.get("success_ic_threshold", 0.0)),
+        success_icir_threshold=float(evolution_cfg.get("success_icir_threshold", 0.0)),
+        corr_gate_threshold=float(evolution_cfg.get("corr_gate_threshold", 0.7)),
+        negative_memory_enabled=bool(evolution_cfg.get("negative_memory_enabled", True)),
+        negative_memory_max_items=int(evolution_cfg.get("negative_memory_max_items", 8)),
         parallel_enabled=parallel_enabled,
         pool_save_path=str(pool_save_path),
         mutation_prompt_path=str(mutation_prompt_path) if mutation_prompt_path.exists() else None,
