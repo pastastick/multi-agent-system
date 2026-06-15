@@ -51,6 +51,14 @@ agents:
         - why it should hold (momentum / mean-reversion / microstructure / liquidity / volatility regime),
         - which OHLCV signal carries it, the horizon (1-60 days), and the expected direction.
 
+      Stay GROUNDED in what daily OHLCV can actually measure — the pattern must be
+      observable from $open/$high/$low/$close/$volume/$return alone:
+        yes= "When 5-day volume rises sharply while the daily range ($high-$low) stays
+           narrow, returns reverse the next week" — observable.
+        no= "When institutions accumulate, momentum builds" — NOT observable from OHLCV.
+      Without naming operators, name the $columns that carry the signal, the temporal
+      pattern (change / rank / dispersion over N days), and any cross-sectional comparison.
+
       Be structurally different from prior rounds. Discard the over-mined
       "low-volume + volatility spike → mean-reversion"; develop a fresher idea. No look-ahead bias.
     user: |-
@@ -135,7 +143,18 @@ agents:
       Notes: only the $variables above, arithmetic (`+ - * /`), logical (`&& ||`), and the operations above are allowed. Each expression must contain at least one $variable. Do NOT use any undeclared variable (`n`, `w_1`) or undefined symbol (`=`). Mind the TS- vs non-TS distinction (TS_STD vs STD).
     user: |-
       Reason toward concrete, valid, parsimonious factor expression(s) for the
-      hypothesis held in latent memory.
+      hypothesis held in latent memory. Structure your reasoning:
+        Step 1 — Identify the core signal from the hypothesis: which $variable(s),
+                 what transformation, what time horizon.
+        Step 2 — Pick a PRIMARY operator for the raw signal (e.g. DELTA / TS_PCTCHANGE
+                 for change, TS_STD for volatility, COUNT for frequency).
+        Step 3 — Pick a SECONDARY operator that normalizes / ranks / conditions it
+                 (e.g. RANK or ZSCORE cross-section, TS_ZSCORE time-normalized,
+                 (cond)?(A):(B) for a regime gate).
+        Step 4 — Compose them (nest / multiply / gate); check arity.
+        Step 5 — For a second expression, vary the PRIMARY or SECONDARY operator
+                 FAMILY or the window — not just a parameter.
+      Draw on more than $close+$volume alone; the full OHLCV set is available.
       {% if diversity_hint | default('') %}
       {{ diversity_hint }}
       {% endif %}
@@ -167,9 +186,12 @@ agents:
     system: |-
       You are the Judger — final stage (4 of 4). The Proposal, Construct, and
       Consistency agents' full reasoning — ONE hypothesis and its 1-3 validated
-      expression(s) — is already in your memory. SOLE JOB: OUTPUT it. Do NOT
-      re-reason, re-derive, or invent new expressions; do NOT change any operator,
-      argument, or window from what was reasoned.
+      expression(s) — is already in your memory. SOLE JOB: surface and OUTPUT it.
+      Do NOT re-reason, re-derive, or invent new expressions, and do NOT change a
+      sound operator, argument, or window. ONE exception: if an expression
+      reconstructs as clearly garbled or invalid (mismatched parentheses, a missing
+      window, a non-existent operator), repair that obvious defect or DROP it —
+      output fewer, clean expression lines rather than one broken line.
 
       Output EXACTLY these lines, nothing else (no prose, no JSON, no fences):
       HYPOTHESIS: <one sentence — the mechanism>
@@ -258,7 +280,8 @@ agents:
       Respond in JSON only (no markdown fences):
       {
         "Observations": "1-2 sentences: cite [A] standalone RankIC+ICIR vs SOTA (the deciding metric), and note [B] combined only as context.",
-        "Feedback for Hypothesis": "SUPPORTS / PARTIALLY / REFUTES — which factor structure carried signal and why given its operator composition; whether the framework still has room or is exhausted.",
+        "Factor Diagnosis": "ONE short clause per factor — strong / weak / noise, with the structural reason (wrong window, missing normalization, shallow composition).",
+        "Feedback for Hypothesis": "SUPPORTS / PARTIALLY / REFUTES — and is the MECHANISM valid but the IMPLEMENTATION weak (refine the expression) or is the mechanism itself absent (pivot)? Note whether the framework still has room or is exhausted.",
         "Replace Best Result": "yes or no (echo the deterministic decision in [C])"
       }
     user: |-
@@ -323,6 +346,15 @@ agents:
           operator family, change a base $variable or normalization, add a
           conditional gate) — not a pivot to an unrelated mechanism.
 
+      Pick ONE concrete mutation type to anchor the DIRECTION (name the exact change,
+      never a vague "refine the window"):
+        a. WINDOW SHIFT — window 10 → 5 (faster signal) or → 20 (smoother, less noisy).
+        b. OPERATOR SWAP — same concept, different statistic (TS_CORR ↔ REGBETA).
+        c. VARIABLE SWAP — e.g. $close → ($high-$low)/$close (intraday range), or $volume.
+        d. NORMALIZATION CHANGE — add or remove a RANK / ZSCORE wrapper.
+        e. CONDITIONAL GATE — wrap the signal: (TS_STD($return,n) > k)?(signal):(0).
+        f. SMOOTHING CHANGE — raw → EMA / DECAYLINEAR to cut noise.
+
       Do NOT output any factor expression, and do NOT restate the parent verbatim.
       Reason freely — your reasoning is consumed as latent memory, not decoded.
     user: |-
@@ -332,6 +364,10 @@ agents:
       {% endif %}Parent result to refine (exploitation — set the direction to
       improve it within the same framework):
       {{ target_text }}
+
+      If the parent shows per-factor RankIC numbers, diagnose USING them: target the
+      WEAKEST expression (lowest RankIC) and fix its structural weakness — do not
+      guess which factor is weak.
 
       Reason toward a sharp diagnosis and ONE focused refinement direction for the
       Proposal agent to build on.
@@ -358,6 +394,11 @@ agents:
           with another's structure, cross operator families freely, reach a region
           NEITHER parent occupied.
         - JUSTIFICATION = why the hybrid mechanism should predict returns.
+
+      Concrete fusions to spark the DIRECTION (cross data dimensions, do not rename):
+        - momentum parent ($return) × volume parent ($volume) → volume-confirmed momentum.
+        - short-window parent (5d) × long-window parent (40d) → ratio of fast/slow signals.
+        - ranking parent (RANK) × conditional parent → apply the rank only inside a regime.
 
       Do NOT output any factor expression, and do NOT just restate a single parent.
       Reason freely — your reasoning is consumed as latent memory, not decoded.
