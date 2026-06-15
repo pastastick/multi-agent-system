@@ -98,23 +98,35 @@ class StrategyTrajectory:
         return hashlib.md5(content.encode()).hexdigest()[:12] #* ID unik berdasarkan direction, round, phase, dan timestamp (12 karakter pertama dari hash)
     
     def get_primary_metric(self) -> Optional[float]:
-        """Primary metric = RankIC combined LightGBM model (OOS test segment).
+        """Primary metric = model-free per-factor RankIC mean (OOS, standalone).
 
-        Satu metrik konsisten untuk evolution selection DAN replace-SOTA decision
-        (lihat loop._decide_replace_sota). RankIC combined dipilih karena:
-          - Mencerminkan kualitas sinyal model yang sebenarnya di-deploy.
-          - Sebanding antar-iterasi (tiap ronde hanya faktor baru, tanpa dilusi SOTA).
-        Fallback ke FactorIC_mean bila RankIC combined tak tersedia (mis. Qlib belum
-        jalan / run lama sebelum migrasi ke new-factors-only backtest)."""
-        ic = self.backtest_metrics.get("RankIC")
+        FactorIC_mean dipakai karena jujur: tidak tercemar baseline floor dari
+        NestedDataLoader. Empiris (2026-06-14): combined LightGBM RankIC terbukti
+        95-103% floor → tidak bisa membedakan faktor baik/buruk.
+        Fallback ke RankIC combined hanya untuk trajectory lama (sebelum migrasi)."""
+        ic = self.backtest_metrics.get("FactorIC_mean")
         if ic is not None:
             return ic
-        return self.backtest_metrics.get("FactorIC_mean")
-    
-    def is_successful(self) -> bool:
-        """Check if this trajectory produced valid results."""
-        rank_ic = self.get_primary_metric() #* sukses kalau RankIC ada dan positif
-        return rank_ic is not None and rank_ic > 0
+        return self.backtest_metrics.get("RankIC")
+
+    def is_successful(self, thr_ic: float = 0.0, thr_icir: float = 0.0) -> bool:
+        """Check if this trajectory produced valid results.
+
+        Gate dua-syarat (model-free, OOS):
+          FactorIC_mean   > thr_ic    → sinyal cukup kuat (arah benar)
+          FactorICIR_mean > thr_icir  → sinyal cukup STABIL (tidak sekadar noise)
+        Default thr=0.0 (longgar: IC>0 AND ICIR>0). Ambang dialirkan dari
+        EvolutionConfig (success_ic_threshold/success_icir_threshold).
+
+        Catatan: bila FactorICIR_mean None (trajectory lama / std=0), syarat ICIR
+        dilewati agar tidak menolak karena metrik hilang — bukan karena gagal."""
+        ic = self.get_primary_metric()
+        if ic is None or ic <= thr_ic:
+            return False
+        icir = self.backtest_metrics.get("FactorICIR_mean")
+        if icir is None:  # backward-compat / sinyal konstan → jangan reject
+            return True
+        return icir > thr_icir
     
     def to_summary_text(self) -> str: #* ringkasan untuk prompt LLM
         """Generate a concise summary for use in prompts."""
