@@ -106,7 +106,12 @@ task:
             segments:
                 train: [2016-01-01, 2019-12-31]
                 valid: [2020-01-01, 2020-12-31]
-                test: [2021-01-01, 2025-12-26]
+                # In-loop selection window = 2021 saja (1 tahun). Tahun 2022-2025
+                # SENGAJA disisakan sebagai holdout test terpisah (final eval),
+                # tidak boleh "diintip" oleh evolution selection / per-factor IC.
+                # _oos_window() di runner.py membaca segmen test ini → per-factor
+                # RankIC otomatis ikut 1 tahun & konsisten dgn combined LightGBM.
+                test: [2021-01-01, 2021-12-31]
 
     record:
         - class: SignalRecord
