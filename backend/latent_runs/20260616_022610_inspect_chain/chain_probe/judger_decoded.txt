@@ -1,0 +1,204 @@
+**Hypothesis:**  
+When    high $close is unusually higher than the previous day's $high, and the $volume is significantly higher than the median volume of the past  days, returns reverse the next day.
+
+
+
+
+
+
+
+
+
+
+
+
+
+.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ border
+
+ border
+
+ border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Border
+
+ Bordertext
+
+ Bordertextborder
+
+ Bordertextborder
+
+ Bordertextbordertextborder textborder textborder textborder textborder Textborder Textborder Textborder TextBorder Textborder Textborder TextBorder Textborder Textborder TextBorder Textborder Textborder Textborder Textborder TextBorder TextBorder TextBorder TextBorder TextBorder Textborder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder TextBorder

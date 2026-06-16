@@ -1,0 +1,4 @@
+**Hypothesis**: When high-volume days are followed by narrow price ranges (high-low close to zero) and low volume, returns reverse the next day.
+
+**Expression**:  
+`$return >   TS_PCTCHANGE($high - $low,      TS_RANK($volume, =  $volume /   $volume *  = $volume *  = $volume *  = $volume *  = $volume *`

@@ -1,0 +1,82 @@
+# original#2  verdict: PARSE✗ GATE✗ MD✗(bold,fence/backtick)
+# hypothesis: 
+# expressions (0 pass / 0 cand): []
+# gate_error: no expression from judger
+
+When   volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the next week. 
+
+**Expression(s):**
+
+1. `TS_RANK(TS_VOLUME, 5) > TS_RANK(TS_RANGE, 5) AND TS_RETURN(1, 7) < 0`
+
+- **Faithful**: Measures the hypothesis directly — high volume rank vs. narrow range rank, and next-week return direction.
+- **Valid**: Arity correct (2 args), all leaves are real $variables, window     .
+ 
+.
+- **Simple**: Direct comparison of two ranked signals, one operator for direction.
+
+.
+
+.
+
+.
+
+.
+
+.
+
+...
+
+..
+
+.............................................
+
+.
+
+..
+
+.
+
+
+
+.......
+
+.
+
+
+
+
+
+.
+
+.
+
+
+
+
+
+
+
+
+
+
+
+rectified.
+
+rectifieded.
+
+rectified.rectified
+
+rectified.rectified.rectified.rectified.rectified
+
+rectified.rectified.rectified.rectified.rectified.rectified.rectified.rectified.rectified.rectified.rectified.rectified.rectified
+
+rectified.rectified.rectified
+
+rectified
+
+rectified.rectified
+
+rectified.rectified
+
+rectifiedvariable.rectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectified variablerectifiedvariablerectifiedvariablerectified variablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectifiedvariablerectified

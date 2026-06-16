@@ -43,6 +43,16 @@ class _AlphaAgentLoggerWrapper:
         except (TypeError, pickle.PicklingError) as exc:
             pass  # silently skip unpicklable objects
 
+    # ---------- Compat: rdagent's RDAgentLog has info/warning/error but NO debug ----------
+    def debug(self, *args, **kwargs) -> None:
+        """RDAgentLog tidak punya .debug → delegasi bila ada, selain itu no-op.
+        Tanpa shim ini, setiap `logger.debug(...)` (mis. graceful parse-skip di
+        factor_regulator.validate_function_arity) melempar AttributeError yang
+        merambat ke gate → gate fail-closed dengan error palsu."""
+        fn = getattr(self._inner, "debug", None)
+        if callable(fn):
+            fn(*args, **kwargs)
+
     # ---------- Delegate to rdagent_logger ----------
     def __getattr__(self, name):
         return getattr(self._inner, name) #* delegasi atribut/metode lain ke rdagent_logger

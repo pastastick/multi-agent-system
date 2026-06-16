@@ -1,0 +1,135 @@
+{"t": 0.0071, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260616_012555_exp_judger_quality", "pid": 23711}
+{"t": 31.4971, "kind": "step_start", "step": "proposal"}
+{"t": 33.7218, "kind": "step_end", "step": "proposal", "duration_s": 2.224, "error": null}
+{"t": 33.7234, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 2.226, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 33.7267, "kind": "step_start", "step": "construct"}
+{"t": 34.6342, "kind": "step_end", "step": "construct", "duration_s": 0.9065, "error": null}
+{"t": 34.6355, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.909, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1845, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 259.45}, "parsed": null}
+{"t": 34.6373, "kind": "step_start", "step": "consistency"}
+{"t": 35.2202, "kind": "step_end", "step": "consistency", "duration_s": 0.5814, "error": null}
+{"t": 35.2215, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.584, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2065, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 290.39}, "parsed": null}
+{"t": 35.2278, "kind": "step_start", "step": "judger"}
+{"t": 39.1317, "kind": "step_end", "step": "judger", "duration_s": 3.9027, "error": null}
+{"t": 39.1334, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 3.905, "latent_steps": 10, "text_len": 186, "n_out_tok": 49, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2589, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 364.08}, "parsed": "HypothesisExprs(hypothesis='When high-volume days are followed by narrow daily ranges (high - low) and rising volume, returns reverse the next day.', expressions=['REGRESI($volume, $close, 1)'])"}
+{"t": 42.3721, "kind": "step_start", "step": "repair"}
+{"t": 53.5304, "kind": "step_end", "step": "repair", "duration_s": 11.1572, "error": null}
+{"t": 53.5315, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 11.159, "latent_steps": 10, "text_len": 1039, "n_out_tok": 250, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2475, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 348.05}, "parsed": null}
+{"t": 53.6611, "kind": "step_start", "step": "proposal"}
+{"t": 54.0705, "kind": "step_end", "step": "proposal", "duration_s": 0.4088, "error": null}
+{"t": 54.0712, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.41, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 388, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 54.56}, "parsed": null}
+{"t": 54.0732, "kind": "step_start", "step": "construct"}
+{"t": 54.6524, "kind": "step_end", "step": "construct", "duration_s": 0.5785, "error": null}
+{"t": 54.6531, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.58, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1827, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 256.92}, "parsed": null}
+{"t": 54.6543, "kind": "step_start", "step": "consistency"}
+{"t": 55.0468, "kind": "step_end", "step": "consistency", "duration_s": 0.3921, "error": null}
+{"t": 55.0475, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.393, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2047, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 287.86}, "parsed": null}
+{"t": 55.053, "kind": "step_start", "step": "judger"}
+{"t": 62.7953, "kind": "step_end", "step": "judger", "duration_s": 7.7415, "error": null}
+{"t": 62.7962, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 7.743, "latent_steps": 10, "text_len": 736, "n_out_tok": 206, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2552, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 358.88}, "parsed": null}
+{"t": 62.7974, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": "**Hypothesis:**  \nWhen overnight gaps (difference between $open and $low) are large and positive, returns the next day r"}
+{"t": 62.8018, "kind": "step_start", "step": "judger"}
+{"t": 65.1629, "kind": "step_end", "step": "judger", "duration_s": 2.3605, "error": null}
+{"t": 65.1639, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.362, "latent_steps": 10, "text_len": 185, "n_out_tok": 53, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2552, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 358.88}, "parsed": "HypothesisExprs(hypothesis='When overnight gap up occurs (i.e., $open > $close from previous day), returns reverse the next trading day.', expressions=['$return_1d < 0 && $open > $close_prev'])"}
+{"t": 65.1888, "kind": "step_start", "step": "repair"}
+{"t": 74.2689, "kind": "step_end", "step": "repair", "duration_s": 9.0796, "error": null}
+{"t": 74.2695, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 9.081, "latent_steps": 10, "text_len": 759, "n_out_tok": 201, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2499, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 351.42}, "parsed": null}
+{"t": 75.0676, "kind": "step_start", "step": "proposal"}
+{"t": 75.4913, "kind": "step_end", "step": "proposal", "duration_s": 0.4228, "error": null}
+{"t": 75.4922, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.425, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 75.4946, "kind": "step_start", "step": "construct"}
+{"t": 76.0843, "kind": "step_end", "step": "construct", "duration_s": 0.5887, "error": null}
+{"t": 76.0855, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.591, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1831, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 257.48}, "parsed": null}
+{"t": 76.0871, "kind": "step_start", "step": "consistency"}
+{"t": 76.486, "kind": "step_end", "step": "consistency", "duration_s": 0.3983, "error": null}
+{"t": 76.487, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.4, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2051, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 288.42}, "parsed": null}
+{"t": 76.4927, "kind": "step_start", "step": "judger"}
+{"t": 79.4943, "kind": "step_end", "step": "judger", "duration_s": 3.0003, "error": null}
+{"t": 79.4949, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 3.002, "latent_steps": 10, "text_len": 227, "n_out_tok": 70, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2561, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.14}, "parsed": "HypothesisExprs(hypothesis='When 5-day volume is ranked high within the cross-section and the 5-day range ($high - $low) is narrow, returns reverse the next day.', expressions=['REGRESI(RANK($volume, 5), TS_ZSCORE($high - $low, 5), 1)'])"}
+{"t": 79.5327, "kind": "log", "level": "INFO", "msg": "deterministic arity fix", "before": "REGRESI(RANK($volume, 5), TS_ZSCORE($high - $low, 5), 1)", "after": "REGRESI(TS_RANK($volume, 5), TS_ZSCORE(($high - $low), 5), 1)", "applied": ["RANK(.., n) \u2192 TS_RANK(.., n)"]}
+{"t": 79.883, "kind": "step_start", "step": "proposal"}
+{"t": 80.2955, "kind": "step_end", "step": "proposal", "duration_s": 0.4118, "error": null}
+{"t": 80.2967, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.414, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 80.2992, "kind": "step_start", "step": "construct"}
+{"t": 80.886, "kind": "step_end", "step": "construct", "duration_s": 0.5859, "error": null}
+{"t": 80.8868, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.587, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1831, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 257.48}, "parsed": null}
+{"t": 80.8888, "kind": "step_start", "step": "consistency"}
+{"t": 81.3078, "kind": "step_end", "step": "consistency", "duration_s": 0.4181, "error": null}
+{"t": 81.3157, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.427, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2051, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 288.42}, "parsed": null}
+{"t": 81.3272, "kind": "step_start", "step": "judger"}
+{"t": 84.7069, "kind": "step_end", "step": "judger", "duration_s": 3.378, "error": null}
+{"t": 84.7075, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 3.38, "latent_steps": 10, "text_len": 242, "n_out_tok": 82, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2561, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.14}, "parsed": "HypothesisExprs(hypothesis='When 5-day volume ranks high in the cross-section, and the 5-day range ($high - $low) is narrow, returns reverse the next day.', expressions=['REGRESI($return, RANK($volume), 5) > 0 AND TS_ZSCORE($high - $low,   5) < -0.5'])"}
+{"t": 84.8442, "kind": "step_start", "step": "repair"}
+{"t": 95.2421, "kind": "step_end", "step": "repair", "duration_s": 10.3974, "error": null}
+{"t": 95.2429, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 10.399, "latent_steps": 10, "text_len": 1135, "n_out_tok": 265, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2473, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 347.77}, "parsed": null}
+{"t": 95.718, "kind": "step_start", "step": "mutation"}
+{"t": 96.2408, "kind": "step_end", "step": "mutation", "duration_s": 0.5218, "error": null}
+{"t": 96.2417, "kind": "agent_done", "role": "mutation", "mode": "kv_only", "ok": true, "duration_s": 0.523, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 727, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 102.23}, "parsed": null}
+{"t": 96.2452, "kind": "step_start", "step": "proposal"}
+{"t": 96.7484, "kind": "step_end", "step": "proposal", "duration_s": 0.5026, "error": null}
+{"t": 96.7497, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.504, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1119, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 157.36}, "parsed": null}
+{"t": 96.7527, "kind": "step_start", "step": "construct"}
+{"t": 97.4452, "kind": "step_end", "step": "construct", "duration_s": 0.6915, "error": null}
+{"t": 97.4459, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.693, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2562, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.28}, "parsed": null}
+{"t": 97.4477, "kind": "step_start", "step": "consistency"}
+{"t": 97.9544, "kind": "step_end", "step": "consistency", "duration_s": 0.5063, "error": null}
+{"t": 97.955, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.507, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2782, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 391.22}, "parsed": null}
+{"t": 97.9625, "kind": "step_start", "step": "judger"}
+{"t": 103.3393, "kind": "step_end", "step": "judger", "duration_s": 5.3754, "error": null}
+{"t": 103.34, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 5.377, "latent_steps": 10, "text_len": 248, "n_out_tok": 91, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3296, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 463.5}, "parsed": "HypothesisExprs(hypothesis='When 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the next week.', expressions=['TS_ZSCORE($volume, 5) > RANK($high - $low, 5)', 'DELTA($return, 7)  (TS_MAD($volume, 5) < 0.1)'])"}
+{"t": 103.3908, "kind": "log", "level": "INFO", "msg": "deterministic arity fix", "before": "TS_ZSCORE($volume, 5) > RANK($high - $low, 5)", "after": "(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5))", "applied": ["RANK(.., n) \u2192 TS_RANK(.., n)"]}
+{"t": 104.2248, "kind": "step_start", "step": "mutation"}
+{"t": 104.7375, "kind": "step_end", "step": "mutation", "duration_s": 0.5122, "error": null}
+{"t": 104.74, "kind": "agent_done", "role": "mutation", "mode": "kv_only", "ok": true, "duration_s": 0.515, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 727, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 102.23}, "parsed": null}
+{"t": 104.7449, "kind": "step_start", "step": "proposal"}
+{"t": 105.2183, "kind": "step_end", "step": "proposal", "duration_s": 0.4731, "error": null}
+{"t": 105.2192, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.474, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1119, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 157.36}, "parsed": null}
+{"t": 105.2216, "kind": "step_start", "step": "construct"}
+{"t": 105.8884, "kind": "step_end", "step": "construct", "duration_s": 0.6661, "error": null}
+{"t": 105.8893, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.668, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2562, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.28}, "parsed": null}
+{"t": 105.8921, "kind": "step_start", "step": "consistency"}
+{"t": 106.356, "kind": "step_end", "step": "consistency", "duration_s": 0.4631, "error": null}
+{"t": 106.3571, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.465, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2782, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 391.22}, "parsed": null}
+{"t": 106.3622, "kind": "step_start", "step": "judger"}
+{"t": 111.588, "kind": "step_end", "step": "judger", "duration_s": 5.2254, "error": null}
+{"t": 111.5893, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 5.227, "latent_steps": 10, "text_len": 248, "n_out_tok": 91, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3296, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 463.5}, "parsed": "HypothesisExprs(hypothesis='When 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the next week.', expressions=['TS_ZSCORE($volume, 5) > RANK($high - $low, 5)', 'DELTA($return, 7)  (TS_MAD($volume, 5) < 0.1)'])"}
+{"t": 111.6445, "kind": "log", "level": "INFO", "msg": "deterministic arity fix", "before": "TS_ZSCORE($volume, 5) > RANK($high - $low, 5)", "after": "(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5))", "applied": ["RANK(.., n) \u2192 TS_RANK(.., n)"]}
+{"t": 112.4569, "kind": "step_start", "step": "repair"}
+{"t": 115.8847, "kind": "step_end", "step": "repair", "duration_s": 3.427, "error": null}
+{"t": 115.8856, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 3.428, "latent_steps": 10, "text_len": 108, "n_out_tok": 52, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3227, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 453.8}, "parsed": "(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5)) * DELTA($return, 7) * (TS_MAD($volume, 5) < 0.1)"}
+{"t": 117.674, "kind": "step_start", "step": "repair"}
+{"t": 120.6472, "kind": "step_end", "step": "repair", "duration_s": 2.9726, "error": null}
+{"t": 120.6479, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 2.974, "latent_steps": 10, "text_len": 108, "n_out_tok": 52, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3242, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 455.91}, "parsed": "(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5)) * DELTA($return, 7) * (TS_MAD($volume, 5) < 0.1)"}
+{"t": 122.5049, "kind": "step_start", "step": "repair"}
+{"t": 125.0426, "kind": "step_end", "step": "repair", "duration_s": 2.5371, "error": null}
+{"t": 125.0432, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 2.538, "latent_steps": 10, "text_len": 103, "n_out_tok": 51, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3237, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 455.2}, "parsed": "(TS_ZSCORE($volume, 5) > RANK($high - $low, 5)) * DELTA($return, 7) * (TS_MAD($volume, 5) < 0.1)"}
+{"t": 125.6868, "kind": "log", "level": "ERROR", "msg": "multi-repair exhausted; dropping gate-failing factors (fail-closed)", "n_dropped": 2, "n_kept": 0}
+{"t": 125.6955, "kind": "step_start", "step": "crossover"}
+{"t": 126.2748, "kind": "step_end", "step": "crossover", "duration_s": 0.5789, "error": null}
+{"t": 126.2755, "kind": "agent_done", "role": "crossover", "mode": "kv_only", "ok": true, "duration_s": 0.58, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 722, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 101.53}, "parsed": null}
+{"t": 126.2792, "kind": "step_start", "step": "proposal"}
+{"t": 126.8157, "kind": "step_end", "step": "proposal", "duration_s": 0.5361, "error": null}
+{"t": 126.817, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.538, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1114, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 156.66}, "parsed": null}
+{"t": 126.8218, "kind": "step_start", "step": "construct"}
+{"t": 127.5536, "kind": "step_end", "step": "construct", "duration_s": 0.7306, "error": null}
+{"t": 127.5544, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.732, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2557, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 359.58}, "parsed": null}
+{"t": 127.5556, "kind": "step_start", "step": "consistency"}
+{"t": 128.0101, "kind": "step_end", "step": "consistency", "duration_s": 0.4541, "error": null}
+{"t": 128.0152, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.459, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2777, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 390.52}, "parsed": null}
+{"t": 128.0203, "kind": "step_start", "step": "judger"}
+{"t": 133.854, "kind": "step_end", "step": "judger", "duration_s": 5.8333, "error": null}
+{"t": 133.8547, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 5.834, "latent_steps": 10, "text_len": 352, "n_out_tok": 131, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3291, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 462.8}, "parsed": "HypothesisExprs(hypothesis='When high-volume days are followed by narrow daily ranges and rising volume, returns reverse the next week.', expressions=['TS_ZSCORE($volume, 5) > 0.5 && $high - $low < $close - $open && $return > 0 && $return < 0.05', 'TS_MAD($volume, 5) > 0.1 && TS_QUANTILE($high - $low, 0.5, 5) < $close - $open && TS_RANK($return, 5) > 30'])"}
+{"t": 135.1922, "kind": "step_start", "step": "crossover"}
+{"t": 135.6959, "kind": "step_end", "step": "crossover", "duration_s": 0.5033, "error": null}
+{"t": 135.697, "kind": "agent_done", "role": "crossover", "mode": "kv_only", "ok": true, "duration_s": 0.505, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 722, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 101.53}, "parsed": null}
+{"t": 135.7003, "kind": "step_start", "step": "proposal"}
+{"t": 136.1757, "kind": "step_end", "step": "proposal", "duration_s": 0.4749, "error": null}
+{"t": 136.1766, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.476, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1114, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 156.66}, "parsed": null}
+{"t": 136.1797, "kind": "step_start", "step": "construct"}
+{"t": 136.8668, "kind": "step_end", "step": "construct", "duration_s": 0.6867, "error": null}
+{"t": 136.8676, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.688, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2560, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.0}, "parsed": null}
+{"t": 136.8699, "kind": "step_start", "step": "consistency"}
+{"t": 137.4624, "kind": "step_end", "step": "consistency", "duration_s": 0.5921, "error": null}
+{"t": 137.464, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.594, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2780, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 390.94}, "parsed": null}
+{"t": 137.4759, "kind": "step_start", "step": "judger"}
+{"t": 143.6862, "kind": "step_end", "step": "judger", "duration_s": 6.2095, "error": null}
+{"t": 143.6868, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 6.211, "latent_steps": 10, "text_len": 367, "n_out_tok": 133, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 3297, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 463.64}, "parsed": "HypothesisExprs(hypothesis='High-volume days precede short-horizon reversal through volume-driven momentum shifts in the next 5 days.', expressions=['TS_ZSCORE($volume, 5) > 0.5 && TS_ZSCORE($return, 5) < 1 && $close > $open && $high - $low < $close - $open', 'DELTA(TS_RANK($volume, 5), 5) > 0 && TS_ZSCORE($return, 5) < 1 && $close > $open && $high - $low < $close - $open'])"}

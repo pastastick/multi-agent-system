@@ -1,0 +1,124 @@
+{
+  "config": {
+    "scenarios": "original",
+    "reps": 4,
+    "direction": "high-volume days precede short-horizon reversal",
+    "direction2": "overnight gap mean-reversion",
+    "feedback": "Low RankIC (~0.01). Mechanism too volume-dominated and fragile under noise; needs a distinct signal family.",
+    "backtest_summary": "IC=0.010 RankIC=0.024 annualized_return=3.5% max_drawdown=-9.5%",
+    "parents_json": null,
+    "model": "Qwen/Qwen3-4B",
+    "device": "cuda",
+    "latent_steps": 10,
+    "use_realign": false,
+    "knn": false,
+    "console": "WARNING",
+    "out_dir": null
+  },
+  "scenarios": {
+    "original": {
+      "n": 4,
+      "ok_rate": 0.0,
+      "parse_rate": 1.0,
+      "usable_rate": 0.5,
+      "no_repetition_rate": 0.75,
+      "no_markdown_rate": 0.0,
+      "avg_s": 11.45134973526001,
+      "reps": [
+        {
+          "scenario": "original",
+          "rep": 1,
+          "ok": false,
+          "parse_ok": true,
+          "n_candidates": 1,
+          "n_passing": 1,
+          "usable": true,
+          "repaired": true,
+          "repetition": "",
+          "markdown": [
+            "bold"
+          ],
+          "min_symbol_len": 42,
+          "max_nodes": 9,
+          "distinct_ops": 1,
+          "gate_error": "unparsable expression",
+          "expressions": [
+            "$volume > 5 && TS_ZSCORE($return, 1.0) > 0"
+          ],
+          "hypothesis": "When  volume ranks high in the past 5 days and the TS_ZSCORE of $return over those    is positive, returns reverse next day.",
+          "duration_s": 13.979928016662598,
+          "error": ""
+        },
+        {
+          "scenario": "original",
+          "rep": 2,
+          "ok": false,
+          "parse_ok": true,
+          "n_candidates": 1,
+          "n_passing": 0,
+          "usable": false,
+          "repaired": false,
+          "repetition": "",
+          "markdown": [
+            "bold"
+          ],
+          "min_symbol_len": null,
+          "max_nodes": null,
+          "distinct_ops": 0,
+          "gate_error": "arity: `RANK` takes 1 argument(s) but got 3 (`RANK(($high - $low), $return, 1.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead.",
+          "expressions": [],
+          "hypothesis": "When  volume spikes and the daily range ($high - $low) narrows, returns reverse the next day.",
+          "duration_s": 9.778121948242188,
+          "error": ""
+        },
+        {
+          "scenario": "original",
+          "rep": 3,
+          "ok": false,
+          "parse_ok": true,
+          "n_candidates": 1,
+          "n_passing": 1,
+          "usable": true,
+          "repaired": true,
+          "repetition": "",
+          "markdown": [
+            "bold",
+            "fence/backtick"
+          ],
+          "min_symbol_len": 75,
+          "max_nodes": 15,
+          "distinct_ops": 3,
+          "gate_error": "unparsable expression",
+          "expressions": [
+            "TS_RANK($high - $low, 10) > TS_ZSCORE($volume, 10) && DELTA($return, 1) < 0"
+          ],
+          "hypothesis": "When  volume spikes and the daily range ($high - $low) narrows, returns reverse the next 5 days.",
+          "duration_s": 10.777311563491821,
+          "error": ""
+        },
+        {
+          "scenario": "original",
+          "rep": 4,
+          "ok": false,
+          "parse_ok": true,
+          "n_candidates": 1,
+          "n_passing": 0,
+          "usable": false,
+          "repaired": false,
+          "repetition": "( $high - $low \u00d73",
+          "markdown": [
+            "bold"
+          ],
+          "min_symbol_len": null,
+          "max_nodes": null,
+          "distinct_ops": 0,
+          "gate_error": "unparsable expression",
+          "expressions": [],
+          "hypothesis": "When  volume spikes sharply while the daily range ($high - $low) narrows, returns reverse in the next  day.",
+          "duration_s": 11.270037412643433,
+          "error": ""
+        }
+      ]
+    }
+  }
+}

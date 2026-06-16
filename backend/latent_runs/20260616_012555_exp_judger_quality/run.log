@@ -1,0 +1,7 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260616_012555_exp_judger_quality pid=23711
+[   62.80s] WARNING judger output unparseable (attempt 1/2)  head=**Hypothesis:**  
+When overnight gaps (difference between $open and $low) are large and positive, returns the next day r
+[   79.53s] INFO    deterministic arity fix  before=REGRESI(RANK($volume, 5), TS_ZSCORE($high - $low, 5), 1) after=REGRESI(TS_RANK($volume, 5), TS_ZSCORE(($high - $low), 5), 1) applied=['RANK(.., n) → TS_RANK(.., n)']
+[  103.39s] INFO    deterministic arity fix  before=TS_ZSCORE($volume, 5) > RANK($high - $low, 5) after=(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5)) applied=['RANK(.., n) → TS_RANK(.., n)']
+[  111.64s] INFO    deterministic arity fix  before=TS_ZSCORE($volume, 5) > RANK($high - $low, 5) after=(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5)) applied=['RANK(.., n) → TS_RANK(.., n)']
+[  125.69s] ERROR   multi-repair exhausted; dropping gate-failing factors (fail-closed)  n_dropped=2 n_kept=0

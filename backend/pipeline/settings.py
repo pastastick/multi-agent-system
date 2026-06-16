@@ -115,10 +115,12 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # ke KV-cache tanpa generate text) per LLM call.
     # Lebih tinggi = reasoning lebih dalam, tapi lebih lambat.
     # Referensi: LatentMASMethod.latent_steps di core/latent/latent_method.py
-    latent_steps: int = 10                      # default global untuk _CoreEngine
+    latent_steps: int = 40                      # default global untuk _CoreEngine
 
     # Per-step override (None = pakai latent_steps global).
-    # Semua agent disamakan ke 10 mengikuti hasil /try sweep.
+    # Dinaikkan 10 → 40: dengan reasoning-via-latent sebagai jalur utama (output
+    # kv_only TIDAK di-decode), kedalaman "thinking diam" jadi knob utama kualitas
+    # niat yang masuk ke KV. Tradeoff: lebih lambat per call.
     latent_steps_propose: Optional[int] = None
     latent_steps_construct: Optional[int] = None
     latent_steps_coder: Optional[int] = None

@@ -1,0 +1,3 @@
+# construct  {'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 1100, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 154.69}
+
+(empty)

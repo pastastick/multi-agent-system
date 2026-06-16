@@ -1,0 +1,12 @@
+# original#4  verdict: parse GATE✗ REPEAT✗ MD✗(bold)
+# hypothesis: When  volume spikes sharply while the daily range ($high - $low) narrows, returns reverse in the next  day.
+# expressions (0 pass / 1 cand): []
+# gate_error: unparsable expression
+
+**HYPOTHESIS**: When  volume spikes sharply while the daily range ($high - $low) narrows, returns reverse in the next  day.
+
+
+
+**EXPRESSION**:  
+TS_ZSCORE($volume, 5) > RANK(TS_STD($high - $low,      $return_1d <      
+TS_ZSCORE($volume,5) > RANK(TS_STD($high - $low,5) and $return_    $return_   $return_1d <

@@ -1,0 +1,6 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260616_005512_loop_original_0_0 pid=16045
+[   28.84s] WARNING judger output unparseable (attempt 1/2)  head=**Hypothesis:**  
+When 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the n
+[   43.66s] WARNING judger output unparseable (attempt 2/2)  head=**Hypothesis:**  
+When 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the n
+[   43.66s] ERROR   no expression from judger; skipping repair

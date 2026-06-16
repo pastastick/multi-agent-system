@@ -1,0 +1,87 @@
+{
+  "config": {
+    "scenarios": "mutation,crossover",
+    "reps": 1,
+    "direction": "high-volume days precede short-horizon reversal",
+    "direction2": "overnight gap mean-reversion",
+    "feedback": "Low RankIC (~0.01). Mechanism too volume-dominated and fragile under noise; needs a distinct signal family.",
+    "backtest_summary": "IC=0.010 RankIC=0.024 annualized_return=3.5% max_drawdown=-9.5%",
+    "parents_json": null,
+    "model": "Qwen/Qwen3-4B",
+    "device": "cuda",
+    "latent_steps": 10,
+    "use_realign": false,
+    "knn": false,
+    "console": "INFO",
+    "out_dir": null
+  },
+  "scenarios": {
+    "mutation": {
+      "n": 1,
+      "ok_rate": 1.0,
+      "parse_rate": 1.0,
+      "usable_rate": 1.0,
+      "no_repetition_rate": 1.0,
+      "no_markdown_rate": 1.0,
+      "avg_s": 32.51234984397888,
+      "reps": [
+        {
+          "scenario": "mutation",
+          "rep": 1,
+          "ok": true,
+          "parse_ok": true,
+          "n_candidates": 2,
+          "n_passing": 1,
+          "usable": true,
+          "repaired": false,
+          "repetition": "",
+          "markdown": [],
+          "min_symbol_len": 68,
+          "max_nodes": 11,
+          "distinct_ops": 3,
+          "gate_error": "",
+          "expressions": [
+            "REGBETA(TS_PCTCHANGE($volume, 5), TS_QUANTILE(high-$low, 0.5, 1), 1)"
+          ],
+          "hypothesis": "When 5-day volume rises sharply while the daily range ($high-$low]) stays narrow, returns reverse the next week.",
+          "duration_s": 32.51234984397888,
+          "error": ""
+        }
+      ]
+    },
+    "crossover": {
+      "n": 1,
+      "ok_rate": 1.0,
+      "parse_rate": 1.0,
+      "usable_rate": 1.0,
+      "no_repetition_rate": 1.0,
+      "no_markdown_rate": 1.0,
+      "avg_s": 25.450281620025635,
+      "reps": [
+        {
+          "scenario": "crossover",
+          "rep": 1,
+          "ok": true,
+          "parse_ok": true,
+          "n_candidates": 2,
+          "n_passing": 2,
+          "usable": true,
+          "repaired": false,
+          "repetition": "",
+          "markdown": [],
+          "min_symbol_len": 93,
+          "max_nodes": 24,
+          "distinct_ops": 3,
+          "gate_error": "",
+          "expressions": [
+            "TS_ZSCORE($volume, 14) > 2 && $high - $low < 10 && $close > $open ? $return < 0 : $return > 0",
+            "TS_PCTCHANGE($volume, 1) > 0.05 && TS_STD($high - $low, 7) < 0.03 && $close > $open ? $return < 0 : $return > 0"
+          ],
+          "hypothesis": "When high-volume days are followed by narrow daily range and rising close, returns reverse the next week..",
+          "duration_s": 25.450281620025635,
+          "error": ""
+        }
+      ]
+    }
+  }
+}

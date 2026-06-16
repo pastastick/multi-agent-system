@@ -1,0 +1,73 @@
+{"t": 0.0036, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260616_023434_exp_judger_quality", "pid": 38893}
+{"t": 27.2755, "kind": "step_start", "step": "proposal"}
+{"t": 29.1646, "kind": "step_end", "step": "proposal", "duration_s": 1.8882, "error": null}
+{"t": 29.1656, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.89, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 29.1685, "kind": "step_start", "step": "construct"}
+{"t": 29.8184, "kind": "step_end", "step": "construct", "duration_s": 0.6494, "error": null}
+{"t": 29.8192, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.651, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1039, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 146.11}, "parsed": null}
+{"t": 29.8205, "kind": "step_start", "step": "consistency"}
+{"t": 30.2843, "kind": "step_end", "step": "consistency", "duration_s": 0.4628, "error": null}
+{"t": 30.2858, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.465, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1259, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 177.05}, "parsed": null}
+{"t": 30.291, "kind": "step_start", "step": "judger"}
+{"t": 40.1789, "kind": "step_end", "step": "judger", "duration_s": 9.8874, "error": null}
+{"t": 40.1799, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 9.888, "latent_steps": 10, "text_len": 727, "n_out_tok": 235, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 40.1816, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": "from the hypothesis mechanism (do not))) now from the Hypo Mechanism (do not))) now From the Hypo Mechanism (DO NOT))) n"}
+{"t": 40.1862, "kind": "step_start", "step": "judger"}
+{"t": 58.3543, "kind": "step_end", "step": "judger", "duration_s": 18.1676, "error": null}
+{"t": 58.3548, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 18.168, "latent_steps": 10, "text_len": 2183, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 58.3563, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 2/2)", "head": "the hypothesis - expression pair(s in memory for faithfulness in the same hypothesis mechanism (do not) from the same in"}
+{"t": 58.3571, "kind": "log", "level": "ERROR", "msg": "no expression from judger; skipping repair"}
+{"t": 58.3729, "kind": "step_start", "step": "proposal"}
+{"t": 58.7797, "kind": "step_end", "step": "proposal", "duration_s": 0.4063, "error": null}
+{"t": 58.7807, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.408, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 58.7827, "kind": "step_start", "step": "construct"}
+{"t": 59.3486, "kind": "step_end", "step": "construct", "duration_s": 0.5653, "error": null}
+{"t": 59.3498, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.567, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1039, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 146.11}, "parsed": null}
+{"t": 59.3525, "kind": "step_start", "step": "consistency"}
+{"t": 59.8607, "kind": "step_end", "step": "consistency", "duration_s": 0.5074, "error": null}
+{"t": 59.8619, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.509, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1259, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 177.05}, "parsed": null}
+{"t": 59.8678, "kind": "step_start", "step": "judger"}
+{"t": 79.4522, "kind": "step_end", "step": "judger", "duration_s": 19.5836, "error": null}
+{"t": 79.4532, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 19.585, "latent_steps": 10, "text_len": 2191, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 79.4544, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": "in memory for the hypothesis mechanism mechanism (Do not) from the SeriesWith Your Memory for the Hyp Mechanism (Do Not)"}
+{"t": 79.459, "kind": "step_start", "step": "judger"}
+{"t": 97.7454, "kind": "step_end", "step": "judger", "duration_s": 18.2859, "error": null}
+{"t": 97.7465, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 18.287, "latent_steps": 10, "text_len": 564, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 97.7481, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 2/2)", "head": "\ufffd\n\n \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \u6807 \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \u6807 \ufffd \ufffd \u6807\u51c6 \ufffd \u6807 \ufffd \ufffd \u6807 \ufffd \ufffd \ufffd \ufffd \ufffd \ufffd \u6807 \ufffd \ufffd \ufffd \ufffd \u6807\u6807\u51c6 \ufffd \ufffd \u6807 \ufffd \u8f6c \ufffd \ufffd \u6807\u6807\u51c6 \ufffd \ufffd \u6807\u6807\u51c6 \u8f6c \ufffd"}
+{"t": 97.7488, "kind": "log", "level": "ERROR", "msg": "no expression from judger; skipping repair"}
+{"t": 97.7568, "kind": "step_start", "step": "proposal"}
+{"t": 98.1567, "kind": "step_end", "step": "proposal", "duration_s": 0.3994, "error": null}
+{"t": 98.1577, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.401, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 98.1597, "kind": "step_start", "step": "construct"}
+{"t": 98.6118, "kind": "step_end", "step": "construct", "duration_s": 0.4512, "error": null}
+{"t": 98.6127, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.453, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1039, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 146.11}, "parsed": null}
+{"t": 98.6141, "kind": "step_start", "step": "consistency"}
+{"t": 99.0054, "kind": "step_end", "step": "consistency", "duration_s": 0.3904, "error": null}
+{"t": 99.0065, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.392, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1259, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 177.05}, "parsed": null}
+{"t": 99.0122, "kind": "step_start", "step": "judger"}
+{"t": 117.8515, "kind": "step_end", "step": "judger", "duration_s": 18.8389, "error": null}
+{"t": 117.8527, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 18.84, "latent_steps": 10, "text_len": 1098, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 117.8537, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": "from the hypothesis \u2014expression pair(s) in memory for faithfulness\n\n validityand expression lineS\n\n now from the hypothe"}
+{"t": 117.8579, "kind": "step_start", "step": "judger"}
+{"t": 135.9238, "kind": "step_end", "step": "judger", "duration_s": 18.0654, "error": null}
+{"t": 135.9247, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 18.067, "latent_steps": 10, "text_len": 3000, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 135.9265, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 2/2)", "head": "the hypothesis \u2014 expression pair(s) now from the hypothesis mechanism (short-horizon reversal) Prior factor factor MININ"}
+{"t": 135.9276, "kind": "log", "level": "ERROR", "msg": "no expression from judger; skipping repair"}
+{"t": 135.945, "kind": "step_start", "step": "proposal"}
+{"t": 136.426, "kind": "step_end", "step": "proposal", "duration_s": 0.4806, "error": null}
+{"t": 136.4268, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 0.482, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 136.4294, "kind": "step_start", "step": "construct"}
+{"t": 136.9293, "kind": "step_end", "step": "construct", "duration_s": 0.4992, "error": null}
+{"t": 136.9302, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.501, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1039, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 146.11}, "parsed": null}
+{"t": 136.9379, "kind": "step_start", "step": "consistency"}
+{"t": 137.3737, "kind": "step_end", "step": "consistency", "duration_s": 0.435, "error": null}
+{"t": 137.3744, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.436, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1259, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 177.05}, "parsed": null}
+{"t": 137.3793, "kind": "step_start", "step": "judger"}
+{"t": 139.569, "kind": "step_end", "step": "judger", "duration_s": 2.189, "error": null}
+{"t": 139.5697, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 2.19, "latent_steps": 10, "text_len": 189, "n_out_tok": 51, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 139.5704, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": "from the hypothesis in Your memory\n\n  from the Hypo in Your Memory. From the Hypo in Your Memory\n\n From the Hypo In Your"}
+{"t": 139.5753, "kind": "step_start", "step": "judger"}
+{"t": 158.0102, "kind": "step_end", "step": "judger", "duration_s": 18.4337, "error": null}
+{"t": 158.0119, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 18.436, "latent_steps": 10, "text_len": 2134, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1730, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 243.28}, "parsed": null}
+{"t": 158.013, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 2/2)", "head": "the hypothesis \u2013expression pair(s) in memory for faithfulness\n\n validity and simplevolume $ volume $ return $ return $ r"}
+{"t": 158.0137, "kind": "log", "level": "ERROR", "msg": "no expression from judger; skipping repair"}

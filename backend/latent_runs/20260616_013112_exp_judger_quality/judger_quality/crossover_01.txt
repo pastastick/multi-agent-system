@@ -1,0 +1,8 @@
+# crossover#1  verdict: parse gate repaired
+# hypothesis: When high-volume days are followed by narrow daily ranges, returns reverse the next week.
+# expressions (3 pass / 2 cand): ['TS_ZSCORE(TS_PCTCHANGE($return, 7), 60)', 'TS_QUANTILE(TS_PCTCHANGE($return, 7), 0.5)', 'HIGHDAY($high, 7)']
+# gate_error: regulator evaluate failed
+
+HYPOTHESIS: When high-volume days are followed by narrow daily ranges, returns reverse the next week.  
+EXPRESSION 1: TS_ZSCORE(TS_PCTCHANGE($return, 7), 60) * RANK($volume)  
+EXPRESSION 2: TS_QUANTILE(TS_PCTCHANGE($return, 7), 0.5, 60) * HIGHDAY($high, 7)

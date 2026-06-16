@@ -1,0 +1,13 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260616_025053_exp_judger_quality pid=42732
+[   25.07s] WARNING judger output unparseable (attempt 1/2)  head=
+[   26.05s] WARNING judger output unparseable (attempt 2/2)  head=
+[   26.05s] ERROR   no expression from judger; skipping repair
+[   28.54s] WARNING judger output unparseable (attempt 1/2)  head=
+[   29.34s] WARNING judger output unparseable (attempt 2/2)  head=
+[   29.34s] ERROR   no expression from judger; skipping repair
+[   31.59s] WARNING judger output unparseable (attempt 1/2)  head=
+[   32.44s] WARNING judger output unparseable (attempt 2/2)  head=
+[   32.44s] ERROR   no expression from judger; skipping repair
+[   34.74s] WARNING judger output unparseable (attempt 1/2)  head=
+[   35.62s] WARNING judger output unparseable (attempt 2/2)  head=
+[   35.62s] ERROR   no expression from judger; skipping repair

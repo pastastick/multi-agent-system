@@ -1,0 +1,10 @@
+# original#1  verdict: parse GATE✗ MD✗(bold,fence/backtick)
+# hypothesis: When high-volume days follow low-range days, returns reverse the next day.
+# expressions (0 pass / 1 cand): []
+# gate_error: AttributeError: 'RDAgentLog' object has no attribute 'debug'
+
+**Hypothesis:**  
+When high-volume days follow low-range days, returns reverse the next day.
+
+**Expression:**  
+`TS_PCTCHANGE($close, 1) * RANK($high - $low) > 0`

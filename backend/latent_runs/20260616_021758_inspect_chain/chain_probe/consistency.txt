@@ -1,0 +1,9 @@
+# consistency  {'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 1446, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 203.34}
+
+FromYour latent memory, reconstruct and label each part of the hypothesis. the actual Chain of reasoning Held in your memory. This is a diagnostic readout so faithfulness matters more than fluENCY.
+
+
+
+
+
+ report only what is genuinely present in the latent memory. If a part is absent or vague or you are reconstructing rather than recalling, say so explicitly ("not present in memory" / "unclear"). Do NOT invent any rotationalize or fill gaps with plausible-sounding content — a confabulated readout is worse than an incomplete one.NO_THINK

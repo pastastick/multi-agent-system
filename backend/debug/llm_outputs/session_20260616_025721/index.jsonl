@@ -1,0 +1,12 @@
+{"n": 1, "ts": "2026-06-16 02:57:53", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "22942f17", "text_len": 569, "duration_s": 8.0108, "file": "0001_judger_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-16 02:57:59", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "95f3335d", "text_len": 219, "duration_s": 3.048, "file": "0002_judger_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-16 02:58:01", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "697c92d7", "text_len": 87, "duration_s": 1.8683, "file": "0003_repair_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-16 02:58:03", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "c626c5a9", "text_len": 83, "duration_s": 1.7589, "file": "0004_repair_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-16 02:58:05", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "a11f0b64", "text_len": 85, "duration_s": 1.8013, "file": "0005_repair_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-06-16 02:58:11", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "067440e9", "text_len": 291, "duration_s": 4.2858, "file": "0006_judger_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-06-16 02:58:29", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "2e6f1544", "text_len": 1812, "duration_s": 17.799, "file": "0007_judger_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-06-16 02:58:35", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "dbb1e4dc", "text_len": 340, "duration_s": 4.0913, "file": "0008_judger_kv_and_text.md", "vars": []}
+{"n": 9, "ts": "2026-06-16 02:58:36", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "8257f5f7", "text_len": 54, "duration_s": 1.3128, "file": "0009_repair_kv_and_text.md", "vars": []}
+{"n": 10, "ts": "2026-06-16 02:58:42", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "6e5b3ca9", "text_len": 305, "duration_s": 3.8329, "file": "0010_judger_kv_and_text.md", "vars": []}
+{"n": 11, "ts": "2026-06-16 02:58:44", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "67019476", "text_len": 107, "duration_s": 2.0749, "file": "0011_repair_kv_and_text.md", "vars": []}
+{"n": 12, "ts": "2026-06-16 02:58:47", "role": "repair", "mode": "kv_and_text", "step": 0, "conv_id": "a27560c3", "text_len": 107, "duration_s": 2.1528, "file": "0012_repair_kv_and_text.md", "vars": []}

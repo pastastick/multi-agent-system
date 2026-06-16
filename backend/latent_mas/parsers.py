@@ -41,6 +41,18 @@ def parse_hypothesis_exprs(raw: str) -> Optional[HypothesisExprs]:
     text = raw.strip()
     text = re.sub(r"```[a-zA-Z]*\n?", "", text).replace("```", "")
     text = re.sub(r"</?think>", "", text)
+    # Model 4B sering membungkus label dengan markdown bold/italic
+    # (`**HYPOTHESIS**:`) — '*' di antara kata-label dan ':' mematahkan regex di
+    # bawah. '*' bukan token DSL valid, jadi aman dibuang seluruhnya.
+    text = re.sub(r"\*+", "", text)
+    # Model 4B memakai 'AND'/'OR' kata benda (bahasa Inggris alami) alih-alih
+    # operator DSL '&&'/'||'. Substitusi aman: tidak ada operator/variabel DSL yang
+    # mengandung string '\bAND\b' atau '\bOR\b'.
+    text = re.sub(r"\bAND\b", "&&", text)
+    text = re.sub(r"\bOR\b", "||", text)
+    # Model kadang menulis '→' sebagai panah kausalitas setelah ekspresi ('expr → return < 0').
+    # Potong semua yang muncul setelah '→' — ekspresi DSL valid tak pernah mengandung '→'.
+    text = re.sub(r"→.*", "", text)
 
     hyp_m = re.search(
         r"hypo\w*\s*:\s*(.+?)(?=\n\s*expr\w*\s*\d*\s*:|\Z)",
@@ -74,6 +86,10 @@ def parse_repair_multi(raw: str) -> "tuple[bool, list]":
     if not raw or not raw.strip():
         return False, []
     text = re.sub(r"</?think>", "", raw).strip()
+    text = re.sub(r"\*+", "", text)
+    text = re.sub(r"\bAND\b", "&&", text)   # repair agent juga pakai AND/OR literal
+    text = re.sub(r"\bOR\b", "||", text)
+    text = re.sub(r"→.*", "", text)          # potong panah kausalitas (→ $return < 0)
     lines = text.splitlines()
     first = lines[0].strip() if lines else ""
     if re.fullmatch(r"pass[.!]?", first, flags=re.IGNORECASE):
@@ -124,6 +140,9 @@ def parse_hypothesis_expr(raw: str) -> Optional[HypothesisExpr]:
     # buang markdown fence global + tag think yatim
     text = re.sub(r"```[a-zA-Z]*\n?", "", text).replace("```", "")
     text = re.sub(r"</?think>", "", text)
+    text = re.sub(r"\*+", "", text)   # buang markdown bold/italic (lihat parse_hypothesis_exprs)
+    text = re.sub(r"\bAND\b", "&&", text)  # lihat parse_hypothesis_exprs
+    text = re.sub(r"\bOR\b", "||", text)
 
     # Label match longgar: 'hypo' diikuti word-char apa pun (hypo, hypoth,
     # hypoths, hypothesis) lalu ':'. Idem 'expr' (expr, expression).

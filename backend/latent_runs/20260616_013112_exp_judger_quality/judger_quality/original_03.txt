@@ -1,0 +1,9 @@
+# original#3  verdict: parse gate MD✗(bold,fence/backtick)
+# hypothesis: When 5-day volume is ranked high relative to the past 20 days, and the 5-day close is ranked low relative to the past 20 days, returns reverse the next day.
+# expressions (1 pass / 1 cand): ['REGRESI(TS_RANK($volume, 20), TS_RANK($close, 20), 1)']
+# gate_error: 
+
+**Hypothesis:** When 5-day volume is ranked high relative to the past 20 days, and the 5-day close is ranked low relative to the past 20 days, returns reverse the next day.
+
+**Expression:**  
+`REGRESI(RANK($volume, 20), RANK($close,     20), 1)`

@@ -1,0 +1,17 @@
+the actual chain of reasoning is in your memory. Reconstruct what is ACTUALLY there — including the reasoning process not just conclusions this is a diagnostic readout so faithfulness matters more than fluency.
+
+
+
+
+
+
+
+ the hypothesis and candidate expression(s) are in your memorysoLE JOB: silently check and in your reasoning, FIX any flaw in Your expression(s) Do NOT output a final answer (the Judger does).
+
+
+
+
+
+ the actual chain of reasoning is inYour memoryso Reconstruct what is ACTUALLY there — including the reasoning process not JUST conclusions this is a diagnostic readout so faithfulness matters more than fluency
+
+ the hypothesis and candidateexpression(s) are inYour memorysoLE JOB: silently check and in Your reasoning Fix any flaw in Your Expression(s) Do NOT output a Final Answer (the Judger does)

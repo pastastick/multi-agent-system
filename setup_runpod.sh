@@ -35,7 +35,20 @@ chmod +x "$RUNPOD_ENV_DEST"
 echo "  OK: $RUNPOD_ENV_DEST"
 
 source "$RUNPOD_ENV_DEST"
-echo "  HF_TOKEN: ${HF_TOKEN:0:8}... (${#HF_TOKEN} chars)"
+
+# runpod_env.sh adalah template — override HF_TOKEN dari .env jika token real tersedia
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    _HF_FROM_ENV=$(grep "^HF_TOKEN=" "$PROJECT_ROOT/.env" | head -1 | cut -d= -f2- | tr -d '"' | tr -d "'")
+    if [ -n "$_HF_FROM_ENV" ] && [[ "$_HF_FROM_ENV" == hf_* ]]; then
+        HF_TOKEN="$_HF_FROM_ENV"
+        export HF_TOKEN
+        echo "  HF_TOKEN: loaded from .env — ${HF_TOKEN:0:8}... (${#HF_TOKEN} chars)"
+    else
+        echo "  HF_TOKEN: ${HF_TOKEN:0:8}... (${#HF_TOKEN} chars) [from runpod_env.sh]"
+    fi
+else
+    echo "  HF_TOKEN: ${HF_TOKEN:0:8}... (${#HF_TOKEN} chars)"
+fi
 
 # Pastikan ~/.bashrc selalu source runpod_env.sh agar persisten di shell baru
 BASHRC_LINE="[ -f /workspace/runpod_env.sh ] && source /workspace/runpod_env.sh"
@@ -73,6 +86,16 @@ if uv python list 2>/dev/null | grep -q "3.10"; then
     UV_PYTHON_FLAG="--python 3.10"
 fi
 
+# Jika lock file lama masih punya torch 2.11.0/vllm 0.20.0 (tidak kompatibel dengan
+# pyproject.toml yang sudah diupdate ke vllm==0.8.5 + cu124 sources), hapus agar
+# uv me-resolve ulang dari scratch dengan sumber yang benar.
+LOCK_TORCH_VER=$(grep -A2 '^name = "torch"' uv.lock 2>/dev/null | grep 'version' | head -1 | grep -o '"[0-9.]*"' | tr -d '"')
+if [ -n "$LOCK_TORCH_VER" ] && python3 -c "from packaging.version import Version; exit(0 if Version('$LOCK_TORCH_VER') > Version('2.6.0') else 1)" 2>/dev/null; then
+    echo "  Lock file punya torch $LOCK_TORCH_VER (butuh CUDA 12.8+, tidak cocok driver ini)."
+    echo "  Menghapus uv.lock agar re-resolve ke torch 2.6.0+cu124 ..."
+    rm -f uv.lock
+fi
+
 uv sync $UV_PYTHON_FLAG
 
 echo "  venv: $(ls $PROJECT_ROOT/.venv/bin/python)"
@@ -83,35 +106,31 @@ echo "[3/7] Activating venv..."
 source "$PROJECT_ROOT/.venv/bin/activate"
 echo "  python: $(which python) — $(python --version)"
 
-# ── 4. Reinstall torch yang kompatibel dengan driver CUDA ────────
+# ── 4. Verifikasi torch / CUDA ───────────────────────────────────
+# torch 2.6.0+cu124 diinstall otomatis oleh uv sync via [tool.uv.sources] di
+# pyproject.toml → tidak perlu reinstall manual.
+# cu124 kompatibel dengan driver ≥ 550.54 (CUDA 12.4) — cocok untuk A40 driver 550.x.
 echo ""
-echo "[4/7] Checking torch / CUDA compatibility..."
+echo "[4/7] Verifying torch / CUDA (should be 2.6.0+cu124 from uv sync)..."
 
-CUDA_DRIVER_VER=$(nvidia-smi | grep "CUDA Version" | awk '{print $NF}' || echo "unknown")
+CUDA_DRIVER_VER=$(nvidia-smi | grep "CUDA Version" | awk '{print $NF}' 2>/dev/null || echo "unknown")
 echo "  NVIDIA Driver CUDA Version: $CUDA_DRIVER_VER"
 
-CUDA_OK=$(python -c "import torch; print(torch.cuda.is_available())" 2>/dev/null || echo "False")
 TORCH_VER=$(python -c "import torch; print(torch.__version__)" 2>/dev/null || echo "not installed")
+CUDA_OK=$(python -c "import torch; print(torch.cuda.is_available())" 2>/dev/null || echo "False")
 echo "  torch: $TORCH_VER | cuda available: $CUDA_OK"
 
 if [ "$CUDA_OK" != "True" ]; then
-    echo "  WARNING: CUDA tidak tersedia! Reinstalling torch dengan cu126..."
-    # README 3a: cu126 diverifikasi pada A40 driver 565. Pod ini A40 driver 570
-    # (max CUDA 12.8) → cu126 (butuh driver >=525) adalah pilihan terverifikasi.
-    uv pip install --reinstall \
-        torch torchvision torchaudio \
-        --index-url https://download.pytorch.org/whl/cu126
-
-    CUDA_OK=$(python -c "import torch; print(torch.cuda.is_available())" 2>/dev/null || echo "False")
-    TORCH_VER=$(python -c "import torch; print(torch.__version__)" 2>/dev/null || echo "not installed")
-    echo "  [after reinstall] torch: $TORCH_VER | cuda available: $CUDA_OK"
-
-    if [ "$CUDA_OK" != "True" ]; then
-        echo "  ERROR: CUDA masih tidak tersedia setelah reinstall."
-        echo "  Coba manual: uv pip install --reinstall torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu126"
-    fi
+    echo "  WARNING: CUDA tidak tersedia setelah uv sync."
+    echo "  Kemungkinan penyebab:"
+    echo "    - Driver terlalu lama (perlu ≥ 550.54 untuk cu124)"
+    echo "    - uv.lock lama tersisa — coba: rm uv.lock && uv sync"
+    echo "  Fallback manual (cu124, cocok driver ≥ 550.54):"
+    echo "    uv pip install --reinstall torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 \\"
+    echo "      --index-url https://download.pytorch.org/whl/cu124"
 else
-    echo "  CUDA OK! torch $TORCH_VER kompatibel."
+    CUDA_VER=$(python -c "import torch; print(torch.version.cuda)" 2>/dev/null || echo "?")
+    echo "  OK: torch $TORCH_VER | CUDA runtime $CUDA_VER"
 fi
 
 # ── 5. Buat folder output & data ─────────────────────────────────

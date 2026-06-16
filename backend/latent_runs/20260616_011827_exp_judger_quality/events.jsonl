@@ -1,0 +1,23 @@
+{"t": 0.0039, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260616_011827_exp_judger_quality", "pid": 21945}
+{"t": 53.4144, "kind": "step_start", "step": "proposal"}
+{"t": 55.7796, "kind": "step_end", "step": "proposal", "duration_s": 2.3646, "error": null}
+{"t": 55.7812, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 2.367, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 392, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 55.12}, "parsed": null}
+{"t": 55.7846, "kind": "step_start", "step": "construct"}
+{"t": 56.7177, "kind": "step_end", "step": "construct", "duration_s": 0.9321, "error": null}
+{"t": 56.7195, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 0.935, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1845, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 259.45}, "parsed": null}
+{"t": 56.7217, "kind": "step_start", "step": "consistency"}
+{"t": 57.322, "kind": "step_end", "step": "consistency", "duration_s": 0.5993, "error": null}
+{"t": 57.3235, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 0.602, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2065, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 290.39}, "parsed": null}
+{"t": 57.3306, "kind": "step_start", "step": "judger"}
+{"t": 61.6407, "kind": "step_end", "step": "judger", "duration_s": 4.309, "error": null}
+{"t": 61.6425, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 4.311, "latent_steps": 10, "text_len": 162, "n_out_tok": 50, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2589, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 364.08}, "parsed": "HypothesisExprs(hypothesis='When high-volume days follow low-range days, returns reverse the next day.', expressions=['TS_PCTCHANGE($close, 1)  RANK($high - $low) > 0'])"}
+{"t": 61.7253, "kind": "step_start", "step": "repair"}
+{"t": 69.7538, "kind": "step_end", "step": "repair", "duration_s": 8.0276, "error": null}
+{"t": 69.7547, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 8.029, "latent_steps": 10, "text_len": 682, "n_out_tok": 195, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2485, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 349.45}, "parsed": null}
+{"t": 71.7071, "kind": "step_start", "step": "repair"}
+{"t": 81.7596, "kind": "step_end", "step": "repair", "duration_s": 10.0517, "error": null}
+{"t": 81.7602, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 10.053, "latent_steps": 10, "text_len": 815, "n_out_tok": 223, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2485, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 349.45}, "parsed": null}
+{"t": 81.9812, "kind": "step_start", "step": "repair"}
+{"t": 94.1793, "kind": "step_end", "step": "repair", "duration_s": 12.1976, "error": null}
+{"t": 94.1802, "kind": "agent_done", "role": "repair", "mode": "kv_and_text", "ok": true, "duration_s": 12.199, "latent_steps": 10, "text_len": 1151, "n_out_tok": 287, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2529, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 355.64}, "parsed": null}
+{"t": 94.1996, "kind": "log", "level": "ERROR", "msg": "multi-repair exhausted; dropping gate-failing factors (fail-closed)", "n_dropped": 1, "n_kept": 0}

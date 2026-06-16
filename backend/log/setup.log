@@ -1,0 +1,15 @@
+============================================================
+ QuantaLatent — RunPod Setup Script
+============================================================
+
+[0/7] Deploying runpod_env.sh ke /workspace/ ...
+  OK: /workspace/runpod_env.sh
+  HF_TOKEN: loaded from .env — hf_otarf... (37 chars)
+  ~/.bashrc sudah berisi auto-source, skip.
+
+[1/7] Installing uv to /workspace/.local/bin ...
+  uv already installed: uv 0.11.21 (x86_64-unknown-linux-gnu)
+/workspace/.local/bin/uv
+  uv: uv 0.11.21 (x86_64-unknown-linux-gnu) at /workspace/.local/bin/uv
+
+[2/7] Running uv sync (this may take 5-15 min on first run)...

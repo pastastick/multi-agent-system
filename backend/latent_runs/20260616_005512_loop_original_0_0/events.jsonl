@@ -1,0 +1,30 @@
+{"t": 0.0082, "kind": "log", "level": "INFO", "msg": "run started", "run_dir": "/workspace/project/multi-agent-system/backend/latent_runs/20260616_005512_loop_original_0_0", "pid": 16045}
+{"t": 0.3815, "kind": "step_start", "step": "proposal"}
+{"t": 2.9006, "kind": "step_end", "step": "proposal", "duration_s": 2.518, "error": null}
+{"t": 2.9013, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 2.52, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 381, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 53.58}, "parsed": null}
+{"t": 2.908, "kind": "step_start", "step": "construct"}
+{"t": 4.9765, "kind": "step_end", "step": "construct", "duration_s": 2.0682, "error": null}
+{"t": 4.9771, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 2.069, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1834, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 257.91}, "parsed": null}
+{"t": 4.9792, "kind": "step_start", "step": "consistency"}
+{"t": 6.9582, "kind": "step_end", "step": "consistency", "duration_s": 1.9784, "error": null}
+{"t": 6.9598, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 1.98, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2054, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 288.84}, "parsed": null}
+{"t": 6.9753, "kind": "step_start", "step": "judger"}
+{"t": 28.8392, "kind": "step_end", "step": "judger", "duration_s": 21.8629, "error": null}
+{"t": 28.8421, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 21.865, "latent_steps": 10, "text_len": 1488, "n_out_tok": 512, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2564, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.56}, "parsed": null}
+{"t": 28.8444, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 1/2)", "head": "**Hypothesis:**  \nWhen 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the n"}
+{"t": 28.8595, "kind": "step_start", "step": "judger"}
+{"t": 43.6552, "kind": "step_end", "step": "judger", "duration_s": 14.7948, "error": null}
+{"t": 43.657, "kind": "agent_done", "role": "judger", "mode": "kv_and_text", "ok": true, "duration_s": 14.797, "latent_steps": 10, "text_len": 985, "n_out_tok": 312, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2564, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 360.56}, "parsed": null}
+{"t": 43.6594, "kind": "log", "level": "WARNING", "msg": "judger output unparseable (attempt 2/2)", "head": "**Hypothesis:**  \nWhen 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the n"}
+{"t": 43.6604, "kind": "log", "level": "ERROR", "msg": "no expression from judger; skipping repair"}
+{"t": 43.7226, "kind": "step_start", "step": "proposal"}
+{"t": 44.7604, "kind": "step_end", "step": "proposal", "duration_s": 1.0366, "error": null}
+{"t": 44.7614, "kind": "agent_done", "role": "proposal", "mode": "kv_only", "ok": true, "duration_s": 1.038, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 381, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 53.58}, "parsed": null}
+{"t": 44.7715, "kind": "step_start", "step": "construct"}
+{"t": 46.6572, "kind": "step_end", "step": "construct", "duration_s": 1.8853, "error": null}
+{"t": 46.6584, "kind": "agent_done", "role": "construct", "mode": "kv_only", "ok": true, "duration_s": 1.887, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 1834, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 257.91}, "parsed": null}
+{"t": 46.6618, "kind": "step_start", "step": "consistency"}
+{"t": 48.4654, "kind": "step_end", "step": "consistency", "duration_s": 1.8024, "error": null}
+{"t": 48.4665, "kind": "agent_done", "role": "consistency", "mode": "kv_only", "ok": true, "duration_s": 1.804, "latent_steps": 10, "text_len": 0, "n_out_tok": 0, "kv": {"present": true, "format": "DynamicCache", "n_layers": 36, "seq_len": 2054, "n_heads": 8, "head_dim": 128, "device": "cuda:0", "dtype": "torch.bfloat16", "size_mb": 288.84}, "parsed": null}
+{"t": 48.4844, "kind": "step_start", "step": "judger"}
+{"t": 60.0698, "kind": "step_end", "step": "judger", "duration_s": 11.5847, "error": "KeyboardInterrupt()"}

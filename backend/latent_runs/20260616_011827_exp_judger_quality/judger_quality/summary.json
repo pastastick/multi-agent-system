@@ -1,0 +1,54 @@
+{
+  "config": {
+    "scenarios": "original",
+    "reps": 1,
+    "direction": "high-volume days precede short-horizon reversal",
+    "direction2": "overnight gap mean-reversion",
+    "feedback": "Low RankIC (~0.01). Mechanism too volume-dominated and fragile under noise; needs a distinct signal family.",
+    "backtest_summary": "IC=0.010 RankIC=0.024 annualized_return=3.5% max_drawdown=-9.5%",
+    "parents_json": null,
+    "model": "Qwen/Qwen3-4B",
+    "device": "cuda",
+    "latent_steps": 10,
+    "use_realign": false,
+    "knn": false,
+    "console": "WARNING",
+    "out_dir": null
+  },
+  "scenarios": {
+    "original": {
+      "n": 1,
+      "ok_rate": 0.0,
+      "parse_rate": 1.0,
+      "usable_rate": 0.0,
+      "no_repetition_rate": 1.0,
+      "no_markdown_rate": 0.0,
+      "avg_s": 40.790892124176025,
+      "reps": [
+        {
+          "scenario": "original",
+          "rep": 1,
+          "ok": false,
+          "parse_ok": true,
+          "n_candidates": 1,
+          "n_passing": 0,
+          "usable": false,
+          "repaired": false,
+          "repetition": "",
+          "markdown": [
+            "bold",
+            "fence/backtick"
+          ],
+          "min_symbol_len": null,
+          "max_nodes": null,
+          "distinct_ops": 0,
+          "gate_error": "AttributeError: 'RDAgentLog' object has no attribute 'debug'",
+          "expressions": [],
+          "hypothesis": "When high-volume days follow low-range days, returns reverse the next day.",
+          "duration_s": 40.790892124176025,
+          "error": ""
+        }
+      ]
+    }
+  }
+}

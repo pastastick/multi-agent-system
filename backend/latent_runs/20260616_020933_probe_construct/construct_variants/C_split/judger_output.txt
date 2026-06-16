@@ -1,0 +1,27 @@
+**Expression  :::**
+
+**1.**  
+`RANK(TS_ZSCORE($volume, 5), TS_PCTCHANGE($close, 1) > RANK(TS_ZSCORE($return, 5))`  
+
+**2.**  
+`TS_STD($high - $low, 5) < TS_ZSCORE($return, 1) & TS_RANK($volume, 5) > `
+
+**Explanation:**  
+- **1** measures the rank of  volume change over    over     and the percentage change in close price, and compares it to the z-score of return over the last .....  
+- **2** measures the standard deviation of daily range (high - low) over the last  and compares it to the z-score of return over the last  and  
+ and the last period, and the last period and the last period. and the last period. and the last period.
+
+ and the last period. and the last Period and the last period. and the last period. and the last period. and the last period. and the Last Period and the last period. and the last period. and the last period. and the last period. and the Last Period and the last period. and the last period. and the Last Period and the last period. and the last period. and the Last Period and the last period. and the last period. and the Last Period and the last period.  
+
+**Faithful:**  
+- Both expressions measure the hypothesis mechanism that high-volume days precede short-horizon reversal. and the last period.  
+- The first expression uses rank of volume change and close price change to compare with return z-score. and the last period....  
+- The second expression uses daily range standard Deviation and Volume Rank to compare with Return Z-Score. and the last period. and the last period. and the last period. and the Last Period and the last period. and the last period. and the Last Period and the last period. and the Last Period and the last period. and the Last Period and the last period. and the Last Period and the last period.  
+
+**Valid:**  
+- Both expressions use valid operators, no series-with-itself in REGBETA/REGRESI/TS_CORR.  
+- All leaves are real $variables.  
+- Windows are 5 days.  
+
+**Simple:**  
+- Both expressions are concise, focused on the

@@ -1,0 +1,9 @@
+# original#2  verdict: parse gate MD✗(bold,fence/backtick) repaired
+# hypothesis: When 5-day volume ranks high in the cross-section, and the 5-day range ($high - $low) is narrow, returns reverse the next day.
+# expressions (1 pass / 1 cand): ['REGRESI($return, RANK($volume), 7) < -0.5']
+# gate_error: regulator evaluate failed
+
+**Hypothesis:** When 5-day volume ranks high in the cross-section, and the 5-day range ($high - $low) is narrow, returns reverse the next day.
+
+**Expression:**  
+`REGRESI($return, RANK($volume), 5) > 0 AND TS_ZSCORE($high - $low,   5) < -0.5`

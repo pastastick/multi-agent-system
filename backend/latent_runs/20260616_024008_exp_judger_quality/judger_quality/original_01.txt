@@ -1,0 +1,6 @@
+# original#1  verdict: PARSE✗ GATE✗
+# hypothesis: 
+# expressions (0 pass / 0 cand): []
+# gate_error: no expression from judger
+
+When -volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the next week.

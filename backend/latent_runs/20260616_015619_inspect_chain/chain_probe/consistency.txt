@@ -1,0 +1,28 @@
+# consistency  {'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2065, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 290.39}
+
+the hypothesis is: the actual mechanism of reasoning in memory, and what is the actual mechanism that drives the pattern. (the actual mechanism is a specific, measurable, and observable relationship between variables / operators / features / windows / rankings / z-scores / etc. that is believed to drive the pattern in the hypothesis.
+
+Now, I must refine the hypothesis-expression pair(s) in memory for faithfulness, validity, and parsimony. Let me do that.
+
+### Hypothesis (from memory):
+> When 5-day volume rises sharply while the daily range ($high - $low) stays narrow, returns reverse the next week.
+
+### Expression(s) (from memory):
+- `TS_RANK($volume, 5) > RANK($high - $low, 1)`
+- `TS_ZSCORE(TS_MEAN($volume, 5), 1) > ZSCORE($high - $low, 1)`
+
+### Refinement:
+
+**Faithfulness**:  
+The hypothesis is about a **cross-sectional** pattern: when **5-day volume** is high relative to **daily range**, returns reverse next week. The expressions capture this by comparing **ranked 5-day volume** with **ranked daily range**, and **z-scored  ** with **z-scored daily range**. This is faithful.
+
+**Validity**:  
+The expressions are valid because they use only $open, $high, $low, $close, $volume, $return — no invented variables. They compare **time-series ranks** and **z-scores** across stocks, which is valid.
+
+**Parsimony**:  
+The first expression is simpler and more direct. It uses **TS_RANK** on volume and **RANK** on range, which is sufficient to capture the hypothesis. The second is more complex and introduces unnecessary layers (z-scores on means). The first is better.
+
+### Final Expression:
+```  
+TS_RANK($volume,         $high - $low,    
+```

@@ -1,0 +1,10 @@
+**Expression  :::**
+
+**1.**  
+`COND(RANK($volume) > 30, TS_ZSCORE(TS_MEAN($close, 5), TS_MEAN($close, 5)) < -0.5)`  
+
+**2.**  
+`TS_PCTCHANGE($close, 1) < -0. TS_ZSCORE(TS_STD($close, 5), TS_STD($close, 5)) > 1 0 0 0 `
+
+**3.**  
+`FILTER($volume >  RANK($volume) >   , `

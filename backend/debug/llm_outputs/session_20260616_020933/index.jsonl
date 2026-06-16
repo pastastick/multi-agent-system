@@ -1,0 +1,10 @@
+{"n": 1, "ts": "2026-06-16 02:10:51", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "8270f7d2", "text_len": 2793, "duration_s": 28.1789, "file": "0001_introspect_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-16 02:11:32", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "0b26fc1b", "text_len": 2597, "duration_s": 40.5555, "file": "0002_introspect_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-16 02:11:37", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "a5c452e4", "text_len": 303, "duration_s": 4.5609, "file": "0003_judger_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-16 02:11:44", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "38437c98", "text_len": 593, "duration_s": 7.4339, "file": "0004_introspect_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-16 02:12:23", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "07d0e8be", "text_len": 4706, "duration_s": 37.9078, "file": "0005_introspect_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-06-16 02:12:29", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "cde21cda", "text_len": 268, "duration_s": 5.8613, "file": "0006_judger_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-06-16 02:12:37", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "d2f9f00f", "text_len": 816, "duration_s": 7.7232, "file": "0007_introspect_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-06-16 02:13:05", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "eb819ef5", "text_len": 1909, "duration_s": 27.0351, "file": "0008_introspect_kv_and_text.md", "vars": []}
+{"n": 9, "ts": "2026-06-16 02:13:24", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "720d3684", "text_len": 2000, "duration_s": 18.9716, "file": "0009_judger_kv_and_text.md", "vars": []}
+{"n": 10, "ts": "2026-06-16 02:13:34", "role": "introspect", "mode": "kv_and_text", "step": 0, "conv_id": "63bb567c", "text_len": 1113, "duration_s": 10.0342, "file": "0010_introspect_kv_and_text.md", "vars": []}

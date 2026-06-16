@@ -1,0 +1,36 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260616_013112_exp_judger_quality pid=25192
+[   80.03s] WARNING repair attempt 2 produced no expression
+[   92.43s] INFO    deterministic arity fix  before=$return_1d < 0 && RANK($volume, 20) > RANK($volume, 5) after=(($return_1d < 0) && (TS_RANK($volume, 20) > TS_RANK($volume, 5))) applied=['RANK(.., n) → TS_RANK(.., n)', 'RANK(.., n) → TS_RANK(.., n)']
+[  104.00s] INFO    deterministic arity fix  before=REGBETA(RANK($volume, 5), TS_ZSCORE($high - $low, 5), 1) after=REGBETA(TS_RANK($volume, 5), TS_ZSCORE(($high - $low), 5), 1) applied=['RANK(.., n) → TS_RANK(.., n)']
+[  108.85s] INFO    deterministic arity fix  before=REGRESI(RANK($volume, 20), RANK($close,     20), 1) after=REGRESI(TS_RANK($volume, 20), TS_RANK($close, 20), 1) applied=['RANK(.., n) → TS_RANK(.., n)', 'RANK(.., n) → TS_RANK(.., n)']
+[  145.59s] WARNING judger output unparseable (attempt 1/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory___
+
+ the hypothesis and_expression_line the hypot
+[  163.17s] WARNING judger output unparseable (attempt 2/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory)
+
+. the hypothesis and_expression_line_line now_f
+[  163.17s] ERROR   no expression from judger; skipping repair
+[  182.24s] WARNING judger output unparseable (attempt 1/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory__  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[  183.76s] WARNING judger output unparseable (attempt 2/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory)
+
+. the hypothesis and_expression_line_line_now f
+[  183.76s] ERROR   no expression from judger; skipping repair
+[  203.30s] WARNING judger output unparseable (attempt 1/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory___  _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+[  220.47s] WARNING judger output unparseable (attempt 2/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory___ __ __ __ __ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+[  220.47s] ERROR   no expression from judger; skipping repair
+[  223.72s] WARNING judger output unparseable (attempt 1/2)  head=the hypothesis and expression line(s now_from_the_analysis_in_y_memory.
+
+ the hypothesis and_expression_line_s from_the_
+[  240.86s] WARNING judger output unparseable (attempt 2/2)  head=:  the
+
+
+
+,,
+
+
+
+
+
+ the hypothesis is: the mechanism is that high-volume_daysthe the mechanism_is that_high-volume_dayspr
+[  240.86s] ERROR   no expression from judger; skipping repair
+[  282.64s] INFO    deterministic arity fix  before=REGRESI(TS_PCTCHANGE($return, 7), RANK($volume, 60), 60) after=REGRESI(TS_PCTCHANGE($return, 7), TS_RANK($volume, 60), 60) applied=['RANK(.., n) → TS_RANK(.., n)']

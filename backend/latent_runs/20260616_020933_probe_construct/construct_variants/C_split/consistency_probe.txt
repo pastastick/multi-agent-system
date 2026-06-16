@@ -1,0 +1,43 @@
+the actual chain of reasoning and expression is held in your memory. Reconstruct what is ACTUALLY present — including the reasoning process, not just conclusions. This is a diagnostic readout, so faithfulness matters more than fluency.
+
+
+
+
+
+
+
+
+
+
+
+
+
+ the actual chain of reasoning and Expression is held in your memory. Reconstruct what is ACTUALLY present — including the reasoning process not JUST Conclusions this is a diagnostic readout so faithfulness matters more than fluency.
+
+
+
+
+
+
+
+
+
+
+
+
+
+ the actual Chain of Reasoning and Expression is Held in Your Memory. Reconstruct What is ACTUALLY Present — Including
+
+
+
+ the actual Chain of Reasoning and Expression is Held in Your Memory. Reconstruct What is ACTUALLY Present — Including
+
+The actual Chain of Reasoning and Expression is Held in Your Memory. Reconstruct What is ACTUALLY Present — Including
+
+The actual Chain of Reasoning and Expression is Held in Your Memory. Reconstruct What is ACTUALLY Present — Including
+
+**Faithful:** Yes  
+**Valid:** Yes  
+**Simple:** Yes  
+
+**Expression:** `RANK(TS_ZSCORE(DELTA($volume), 5) > RANK(TS_ZSCORE($return, 5))`

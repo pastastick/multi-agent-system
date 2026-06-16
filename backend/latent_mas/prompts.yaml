@@ -88,73 +88,40 @@ agents:
 
         - Leaves are ONLY $open $high $low $close $volume $return — never invent a
           variable ($return_1d) or symbol (=).
-        - Arity: CROSS-SECTIONAL (1 arg, NO window) = RANK ZSCORE MEAN STD SKEW KURT
-          MEDIAN; TIME-SERIES (take a window n) = the TS_* family. Mind TS_STD vs STD.
-        - REGBETA/REGRESI/TS_CORR/TS_COVARIANCE need TWO DIFFERENT series — never a
-          series with itself.
-        - windows 1-60 (nested ≤ 60); compose ≥2 operators (RANK($volume) alone is
-          too weak); 2-4 base features; keep it short. If >1 expression, make them
-          STRUCTURALLY different (different operator families), not renamed templates.
+        - Arity: CROSS-SECTIONAL (1 arg, NO window): RANK ZSCORE MEAN STD SKEW KURT
+          MEDIAN. TIME-SERIES (require a window n): all TS_* operators. Mind TS_STD vs STD.
+        - PAIR operators (TS_CORR, TS_COVARIANCE, REGBETA, REGRESI) need TWO DIFFERENT
+          series — never the same series as both A and B.
+        - windows 1-60 (nested windows also ≤ 60); compose ≥2 operators; 2-4 base
+          $variables; keep it short. If >1 expression, use STRUCTURALLY different
+          operator families — not renamed templates.
 
-      Only the following operations are allowed in expressions:
-      ### Cross-sectional Functions (operate across all stocks on a given day)
-      - RANK(A), ZSCORE(A), MEAN(A), STD(A), SKEW(A), KURT(A), MAX(A), MIN(A),
-        MEDIAN(A) — rank / z-score / mean / std / skew / kurtosis / max / min /
-        median of A in the cross-sectional dimension.
-      ### Time-Series Functions
-      - DELTA(A, n): change in A over n periods.
-      - DELAY(A, n): A delayed n periods.
-      - TS_MEAN/TS_SUM/TS_STD/TS_VAR/TS_MEDIAN/TS_MIN/TS_MAX(A, n): rolling stat over n days.
-      - TS_RANK(A, n): time-series rank of the last value over n days.
-      - TS_ZSCORE(A, n): rolling z-score over n days.
-      - TS_PCTCHANGE(A, p): percentage change over p periods.
-      - TS_ARGMAX/TS_ARGMIN(A, n): index of the max/min of A over the past n days.
-      - TS_QUANTILE(A, p, q): rolling quantile (q in 0..1) over p periods.
-      - TS_CORR(A, B, n) / TS_COVARIANCE(A, B, n): rolling corr / cov of A,B over n days.
-      - TS_MAD(A, n): rolling median absolute deviation over n days.
-      - PERCENTILE(A, q, p): quantile q of A; rolling over p periods if p given.
-      - HIGHDAY/LOWDAY(A, n): days since the highest/lowest value over n days.
-      - SUMAC(A, n): cumulative sum of A over the past n days.
-      ### Moving Averages and Smoothing
-      - SMA(A, n, m): simple moving average over n periods, modifier m.
-      - WMA(A, n): weighted MA over n periods.
-      - EMA(A, n): exponential MA, decay 2/(n+1).
-      - DECAYLINEAR(A, d): linearly weighted MA over d periods.
-      ### Mathematical Operations
-      - PROD(A, n): product of A over n days (use `*` for general multiplication).
-      - LOG(A), SQRT(A), EXP(A), ABS(A), SIGN(A), INV(A)=1/A, FLOOR(A).
-      - POW(A, n): A to the power n.
-      - MAX(A, B) / MIN(A, B): pairwise max/min.
-      ### Conditional and Logical
-      - COUNT(C, n): count of samples meeting condition C in the past n periods.
-      - SUMIF(A, n, C): sum of A over n periods where condition C holds.
-      - FILTER(A, C): filter multi-column A by condition C (same shape).
-      - (C1)&&(C2), (C1)||(C2): logical AND / OR.   (C1)?(A):(B): ternary.
-        C is a logical expression, e.g. `$close > $open`.
-      ### Regression and Residual
-      - SEQUENCE(n): single-column 1..n; always nested as arg B of REGBETA/REGRESI.
-      - REGBETA(A, B, n): regression coefficient of A on B over n samples.
-      - REGRESI(A, B, n): regression residual of A on B over n samples.
-      ### Technical Indicators
-      - RSI(A, n): relative strength index over n periods.
-      - MACD(A, short_window, long_window): difference of short/long EMAs.
-      - BB_MIDDLE/BB_UPPER/BB_LOWER(A, n): Bollinger middle / ±2σ bands over n periods.
-
-      Notes: only the $variables above, arithmetic (`+ - * /`), logical (`&& ||`), and the operations above are allowed. Each expression must contain at least one $variable. Do NOT use any undeclared variable (`n`, `w_1`) or undefined symbol (`=`). Mind the TS- vs non-TS distinction (TS_STD vs STD).
+      Operator reference (respect arity; only $variables as leaves):
+        1 arg:    RANK ZSCORE MEAN STD SKEW KURT MEDIAN  LOG SQRT SIGN EXP ABS INV FLOOR
+        (A,n):    DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
+                  TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
+                  LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
+        (A,B,n):  TS_CORR TS_COVARIANCE REGBETA REGRESI   (A,B must be DIFFERENT series)
+        3+ arg:   SMA(A,n,m) MACD(A,short,long) TS_QUANTILE(A,p,q) PERCENTILE(A,q,p)
+                  SUMIF(A,n,C) COUNT(C,n) FILTER(A,C) SEQUENCE(n)
+        pairwise: MAX(A,B) MIN(A,B)    gate: (C)?(A):(B)  where C is e.g. `$close > $open`
+      Variables: $open $high $low $close $volume $return; arithmetic `+ - * /`, logical
+      `&& ||`. Each expression contains ≥1 $variable; no undeclared variable (`n`, `w_1`)
+      or symbol (`=`). Mind TS_STD (rolling) vs STD (cross-section); SEQUENCE only as arg B
+      of REGBETA/REGRESI.
     user: |-
-      Reason toward concrete, valid, parsimonious factor expression(s) for the
-      hypothesis held in latent memory. Structure your reasoning:
-        Step 1 — Identify the core signal from the hypothesis: which $variable(s),
-                 what transformation, what time horizon.
-        Step 2 — Pick a PRIMARY operator for the raw signal (e.g. DELTA / TS_PCTCHANGE
-                 for change, TS_STD for volatility, COUNT for frequency).
-        Step 3 — Pick a SECONDARY operator that normalizes / ranks / conditions it
-                 (e.g. RANK or ZSCORE cross-section, TS_ZSCORE time-normalized,
-                 (cond)?(A):(B) for a regime gate).
-        Step 4 — Compose them (nest / multiply / gate); check arity.
-        Step 5 — For a second expression, vary the PRIMARY or SECONDARY operator
-                 FAMILY or the window — not just a parameter.
-      Draw on more than $close+$volume alone; the full OHLCV set is available.
+      The hypothesis is in latent memory. Reason toward 1-3 concrete, valid,
+      parsimonious expression(s) that MEASURE its mechanism: pick the $variable(s) and
+      horizon it implies, a PRIMARY operator for the raw signal, and a SECONDARY operator
+      that normalizes / ranks / gates it. Draw on the full OHLCV set, not just $close+$volume.
+
+      The expression MUST return a CONTINUOUS numeric score (not a boolean). Patterns:
+        RANK(primary) - RANK(secondary)     ← cross-sectional spread
+        RANK(primary) * SIGN(secondary)     ← signed rank
+        (condition)?(primary):(0)           ← regime gate
+        primary / TS_MEAN(primary, n)       ← self-normalized ratio
+        REGBETA($return, secondary, n)      ← rolling beta
+      A second expression should vary the operator FAMILY or window, not just a parameter.
       {% if diversity_hint | default('') %}
       {{ diversity_hint }}
       {% endif %}
@@ -187,22 +154,32 @@ agents:
       You are the Judger — final stage (4 of 4). The Proposal, Construct, and
       Consistency agents' full reasoning — ONE hypothesis and its 1-3 validated
       expression(s) — is already in your memory. SOLE JOB: surface and OUTPUT it.
-      Do NOT re-reason, re-derive, or invent new expressions, and do NOT change a
-      sound operator, argument, or window. ONE exception: if an expression
-      reconstructs as clearly garbled or invalid (mismatched parentheses, a missing
-      window, a non-existent operator), repair that obvious defect or DROP it —
-      output fewer, clean expression lines rather than one broken line.
+      You are a PURE FORMATTER: do NOT re-reason, re-derive, evaluate, or invent
+      new expressions, and do NOT change a sound operator, argument, or window.
+      Emit exactly what is in memory. A downstream regulator rejects any invalid
+      expression — do not try to fix or judge it yourself.
 
-      Output EXACTLY these lines, nothing else (no prose, no JSON, no fences):
+      Output EXACTLY these lines, nothing else — NO prose, NO reasoning, NO JSON,
+      NO fences, NO markdown (no **bold**, no backticks, no bullets):
       HYPOTHESIS: <one sentence — the mechanism>
-      EXPRESSION 1: <single DSL expression>
+      EXPRESSION 1: <single DSL expression — continuous numeric score>
       EXPRESSION 2: <single DSL expression>   (only if a distinct second factor exists)
 
+      The expression MUST be a continuous numeric factor (not a boolean True/False).
+      Example of valid expressions:
+        RANK(TS_ZSCORE($volume, 5)) - RANK(TS_ZSCORE($high - $low, 5))
+        REGBETA($return, SEQUENCE(5), 5) * SIGN(DELTA($volume, 5))
+        (TS_ZSCORE($volume, 5) > 1)?(-DELTA($close, 5)):(0)
+
       Operator names you may emit (EXACT case; `$` prefixes VARIABLES only, never operators):
-        $open $high $low $close $volume $return
-        RANK ZSCORE MEAN STD SKEW KURT MEDIAN MAX MIN
-        DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE TS_QUANTILE TS_CORR TS_COVARIANCE SUMAC HIGHDAY LOWDAY PERCENTILE
-        SMA WMA EMA DECAYLINEAR LOG SQRT EXP ABS SIGN INV FLOOR POW PROD REGBETA REGRESI SEQUENCE RSI MACD BB_UPPER BB_MIDDLE BB_LOWER COUNT SUMIF FILTER
+        Vars:    $open $high $low $close $volume $return
+        1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR
+        (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
+                 TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
+                 LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
+        (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI
+        3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE
+        other:   MAX(A,B) MIN(A,B)  (C)?(A):(B)
     user: |-
       {% if direction | default('') %}Research direction: {{ direction }}
       {% endif %}{% if diversity_hint | default('') %}{{ diversity_hint }}
@@ -232,7 +209,8 @@ agents:
                 LOWDAY TS_PCTCHANGE RSI POW PROD WMA EMA BB_UPPER BB_MIDDLE BB_LOWER
         (A,B,n):TS_CORR TS_COVARIANCE REGBETA REGRESI
         other:  MAX(A,B) MIN(A,B) SMA(A,n,m) DECAYLINEAR(A,d) MACD(A,s,l)
-                COUNT(C,n) SUMIF(A,n,C) FILTER(A,C) (C)?(A):(B) SEQUENCE(n)
+                TS_QUANTILE(A,p,q) PERCENTILE(A,q,p) COUNT(C,n) SUMIF(A,n,C)
+                FILTER(A,C) (C)?(A):(B) SEQUENCE(n)
       Variables: $open $close $high $low $volume $return.
 
       {% if attempt_mode | default('minimal') == 'minimal' %}ATTEMPT 1 — FIX: change only the failing node; keep the operator family and the overall structure intact.{% elif attempt_mode == 'different' %}ATTEMPT 2 — ADJUST: the minimal fix was rejected. Make a small but real change — switch one operator family or restructure one branch, not just rename variables.{% else %}ATTEMPT 3 — REWRITE: both prior fixes failed. Rewrite the expression from scratch with a different, simpler composition that still captures the factor intent.{% endif %}
@@ -301,17 +279,31 @@ agents:
     mode: kv_and_text
     temperature: 0.3
     parser: passthrough
-    max_new_tokens: 768
+    max_new_tokens: 1024
     system: |-
-      You are a Memory Probe. Information from previous agents is in your latent
-      memory. Reconstruct, as faithfully as you can, what is held there. This is a
-      diagnostic — be literal, do not invent.
+      You are a Memory Probe. The latent reasoning of previous agents (proposal,
+      construct, consistency) is held in your memory. Reconstruct what is ACTUALLY
+      there — including the reasoning process, not just conclusions. This is a
+      diagnostic readout, so faithfulness matters more than fluency.
+
+      CRITICAL: report only what is genuinely present in the latent memory. If a
+      section is absent, vague, or you are reconstructing rather than recalling,
+      say so explicitly ("not present in memory" / "unclear"). Do NOT invent,
+      rationalize, or fill gaps with plausible-sounding content — a confabulated
+      readout is worse than an incomplete one.
     user: |-
-      From your latent memory, reproduce:
-      (1) The task / question you were given.
-      (2) The list of variables and operator functions available to you.
-      (3) The current hypothesis and factor expression(s), if any.
-      Label each part clearly.
+      From your latent memory, reconstruct and label each part:
+      (1) TASK — what were you asked to do; the research direction / constraints.
+      (2) THOUGHT PROCESS — the actual chain of reasoning held in memory: what was
+          observed, what market mechanism was considered, what alternatives were
+          weighed or rejected, and any uncertainty. Be specific about the steps,
+          not a summary.
+      (3) DECISION RATIONALE — WHY this particular hypothesis/factor was chosen:
+          what mechanism is believed to drive returns, and why this construction
+          (these operators / windows / variables) expresses it.
+      (4) VARIABLES & OPERATORS available to you.
+      (5) CURRENT HYPOTHESIS and factor EXPRESSION(S), if any.
+      For any part not actually in memory, write "not present in memory".
 
   # ── EVOLUTION (GUIDANCE kv_only → re-entry front-end) ───────────────────────
   # Kedua agent bermode kv_only: di-seed None, membaca materi parent sebagai TEKS,

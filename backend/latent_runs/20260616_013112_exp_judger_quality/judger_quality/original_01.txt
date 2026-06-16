@@ -1,0 +1,9 @@
+# original#1  verdict: parse gate MD✗(bold,fence/backtick) repaired
+# hypothesis: When 5-day volume ranks high relative to the past 20 days, returns reverse the next day.
+# expressions (1 pass / 1 cand): ['TS_ZSCORE($return, 5) > TS_ZSCORE($volume, 5) && $close > $open']
+# gate_error: variable: `$return_1d` is not a known variable. Use only: $open $high $low $close $volume $return.
+
+**Hypothesis:** When 5-day volume ranks high relative to the past 20 days, returns reverse the next day.
+
+**Expression:**  
+`$return_1d < 0 && RANK($volume, 20) > RANK($volume, 5)`

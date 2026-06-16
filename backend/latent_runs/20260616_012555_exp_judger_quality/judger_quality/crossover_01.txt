@@ -1,0 +1,8 @@
+# crossover#1  verdict: parse gate REPEAT✗
+# hypothesis: When high-volume days are followed by narrow daily ranges and rising volume, returns reverse the next week.
+# expressions (2 pass / 2 cand): ['TS_ZSCORE($volume, 5) > 0.5 && $high - $low < $close - $open && $return > 0 && $return < 0.05', 'TS_MAD($volume, 5) > 0.1 && TS_QUANTILE($high - $low, 0.5, 5) < $close - $open && TS_RANK($return, 5) > 30']
+# gate_error: 
+
+HYPOTHESIS: When high-volume days are followed by narrow daily ranges and rising volume, returns reverse the next week.  
+EXPRESSION 1: TS_ZSCORE($volume, 5) > 0.5 && $high - $low < $close - $open && $return > 0 && $return < 0.05  
+EXPRESSION 2: TS_MAD($volume, 5) > 0.1 && TS_QUANTILE($high - $low, 0.5, 5) < $close - $open && TS_RANK($return, 5) > 30

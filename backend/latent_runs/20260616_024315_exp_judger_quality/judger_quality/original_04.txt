@@ -1,0 +1,10 @@
+# original#4  verdict: parse gate MD✗(bold,fence/backtick) repaired
+# hypothesis: When 5-day volume rises sharply while the daily range ($high - $low) stays narrow, returns reverse the next week.
+# expressions (1 pass / 1 cand): ['$return > 0.01']
+# gate_error: regulator evaluate failed
+
+**Hypothesis:**  
+When 5-day volume rises sharply while the daily range ($high - $low) stays narrow, returns reverse the next week.
+
+**Expression:**  
+`TS_RANK($volume, 5) > RANK($high - $low) AND TS_MEAN($return, 7) < 0`

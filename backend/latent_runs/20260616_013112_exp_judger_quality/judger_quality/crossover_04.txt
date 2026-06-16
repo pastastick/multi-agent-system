@@ -1,0 +1,9 @@
+# crossover#4  verdict: parse gate
+# hypothesis: When high-volume days are followed by narrow daily ranges and a sharp drop in volume, returns reverse the next week.
+# expressions (1 pass / 2 cand): ['REGRESI(TS_PCTCHANGE($return, 7), TS_RANK($volume, 60), 60)']
+# gate_error: 
+
+HYPOTHESIS: When high-volume days are followed by narrow daily ranges and a sharp drop in volume, returns reverse the next week.
+
+EXPRESSION 1: TS_ZSCORE(TS_PCTCHANGE($return, 7), 60) * RANK(TS_STD($high - $low, 1), 60)
+EXPRESSION 2: REGRESI(TS_PCTCHANGE($return, 7), RANK($volume, 60), 60)

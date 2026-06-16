@@ -123,32 +123,39 @@ which python   # harus: /workspace/project/multi-agent-system/.venv/bin/python
 
 > `pip` sudah disertakan di `pyproject.toml` sebagai dependency, jadi `uv sync` otomatis menginstallnya.
 
-### 3a. Pastikan torch cocok dengan driver CUDA
+### 3a. Torch + CUDA — sudah dikonfigurasi otomatis untuk A40 driver 550
 
-`uv sync` akan menarik torch versi default (saat ini `2.11.0+cu130`) yang **butuh driver NVIDIA ≥ 580**. Driver lama menyebabkan `torch.cuda.is_available() == False` dan model di-load ke CPU sehingga pipeline macet di `Workflow Progress: 0/5`.
+`pyproject.toml` menggunakan `[tool.uv.sources]` untuk memaksa `uv sync` menarik torch dari indeks PyTorch cu124:
 
-Cek dulu:
+```toml
+[[tool.uv.index]]
+name = "pytorch-cu124"
+url = "https://download.pytorch.org/whl/cu124"
+explicit = true
 
-```bash
-nvidia-smi | grep "CUDA Version"
-.venv/bin/python -c "import torch; print('cuda:', torch.cuda.is_available(), '| torch:', torch.__version__)"
+[tool.uv.sources]
+torch = { index = "pytorch-cu124" }
+torchvision = { index = "pytorch-cu124" }
+torchaudio = { index = "pytorch-cu124" }
 ```
 
-Jika `cuda: False`, install ulang torch sesuai versi driver (cache wheel tersimpan di `/workspace/.cache/uv`):
+Hasilnya: `uv sync` langsung menginstall `torch 2.6.0+cu124` — **tidak perlu reinstall manual**. cu124 kompatibel dengan driver ≥ 550.54 (CUDA 12.4), cocok untuk A40 driver 550.x yang ada di pod ini.
+
+Verifikasi setelah `uv sync`:
 
 ```bash
-# Driver support CUDA 12.8 (driver ≥ 575)
-uv pip install --reinstall \
-  torch torchvision torchaudio \
-  --index-url https://download.pytorch.org/whl/cu128
-
-# Driver support CUDA 12.6–12.7 (driver ≥ 525) — diverifikasi pada A40 driver 565
-uv pip install --reinstall \
-  torch torchvision torchaudio \
-  --index-url https://download.pytorch.org/whl/cu126
+.venv/bin/python -c "import torch; print('cuda:', torch.cuda.is_available(), '| torch:', torch.__version__, '| cu:', torch.version.cuda)"
+# Expected: cuda: True | torch: 2.6.0+cu124 | cu: 12.4
 ```
 
-Verifikasi: `.venv/bin/python -c "import torch; print(torch.cuda.is_available())"` harus mengembalikan `True`.
+> **Jika pod diganti ke driver ≥ 560**: bisa upgrade ke cu126 dengan mengubah URL index di `pyproject.toml` dan menghapus `uv.lock`, lalu jalankan ulang `uv sync`. Lihat tabel kompatibilitas di bawah.
+
+| CUDA Variant | Driver Min | torch Max | Pod A40 (driver 550) |
+|---|---|---|---|
+| cu124 | ≥ 550.54 | 2.6.0 | **✓ digunakan** |
+| cu126 | ≥ 560.28 | latest | ✗ butuh driver lebih baru |
+| cu128 | ≥ 570.00 | latest | ✗ butuh driver lebih baru |
+| cu130 | ≥ 580.00 | latest | ✗ butuh driver lebih baru |
 
 ---
 
@@ -479,7 +486,15 @@ Jika kosong, ulangi bagian [0](#0-catatan-penting-runpod--workspace-vs-root) dan
 nvidia-smi | grep "CUDA Version"
 ```
 
-Kalau `cuda: False` dan versi torch (misal `cu130`) lebih tinggi dari yang didukung driver, install ulang torch sesuai bagian [3a](#3a-pastikan-torch-cocok-dengan-driver-cuda).
+Kalau `cuda: False`, kemungkinan uv.lock lama masih memiliki torch 2.11.0+cu130 (butuh driver ≥ 580). Solusi: hapus lock file dan sync ulang:
+
+```bash
+cd /workspace/project/multi-agent-system
+rm uv.lock
+uv sync
+```
+
+`uv sync` akan me-resolve ulang dan menginstall `torch 2.6.0+cu124` sesuai konfigurasi di `pyproject.toml`. Lihat bagian [3a](#3a-torch--cuda--sudah-dikonfigurasi-otomatis-untuk-a40-driver-550).
 
 ### Pesan `No module named pip` di stderr
 
@@ -554,11 +569,11 @@ print('qlib:', qlib.__version__, '| mlflow:', mlflow.__version__)
 | Package | Versi | Catatan |
 |---|---|---|
 | `pyqlib` | 0.9.7 | |
-| `mlflow` | **3.12.0** | Versi 1.x tidak kompatibel dengan protobuf ≥4 |
-| `protobuf` | 6.33.6 | mlflow 3.x requires `<8` |
-| `numpy` | 2.2.6 | |
-| `pandas` | 2.3.3 | |
-| `torch` | 2.11.0+cu130 | |
+| `mlflow` | **3.x** | Versi 1.x tidak kompatibel dengan protobuf ≥4 |
+| `protobuf` | 6.x | mlflow 3.x requires `<8` |
+| `numpy` | 2.x | |
+| `vllm` | **0.8.5** | Versi lebih baru (0.9+) butuh torch ≥ 2.7 → tidak ada cu124 wheel |
+| `torch` | **2.6.0+cu124** | Max versi tersedia di cu124; cocok driver 550 (CUDA 12.4) |
 
 ### ImportError / ModuleNotFoundError (umum)
 

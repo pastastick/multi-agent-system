@@ -1,0 +1,8 @@
+# mutation#1  verdict: parse gate
+# hypothesis: When 5-day volume rises sharply while the daily range ($high-$low]) stays narrow, returns reverse the next week.
+# expressions (1 pass / 2 cand): ['REGBETA(TS_PCTCHANGE($volume, 5), TS_QUANTILE(high-$low, 0.5, 1), 1)']
+# gate_error: 
+
+HYPOTHESIS: When 5-day volume rises sharply while the daily range ($high-$low]) stays narrow, returns reverse the next week.  
+EXPRESSION 1: TS_PCTCHANGE($volume, 5) * TS_STD(high-$low, 1)  
+EXPRESSION 2: REGBETA(TS_PCTCHANGE($volume, 5), TS_QUANTILE(high-$low, 0.5, 1), 1)
