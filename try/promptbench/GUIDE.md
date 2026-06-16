@@ -162,16 +162,33 @@ Output skor: `results/phaseA/<agent>/scoreboard.{csv,md}` + artefak teks per-rep
 - **Phase 0** — Setup. (a) branch ✅, (b) scaffold folder ✅, (c) skrip koleksi
   varian + manifest, (d) modul scorer, (e) driver paralel (process-pool 3 worker;
   grid §3; GPU guard).
-- **Phase A** — Benchmark per-agent independen, CORE 4 dulu (text-emitting mode),
-  lalu A-ext (mutation/crossover/feedback/repair). → pilih varian+setting terbaik
-  per agent (boleh override manual).
-- **Phase B** — Rantai multi-agent via KV-cache, bertahap: 2-agent
-  (proposal→construct; mutation→proposal; crossover→proposal) → +judger →
-  +consistency → full front-end → terminal `feedback` (backtest rekayasa). Skor
-  output final + `kv_shape_report` tiap batas. **Loop diagnosa**: output memburuk
-  → coba kombinasi prompt lain → kalau tetap buruk → KV-probe (`introspect`/
-  `kv_probe_v2`) untuk efek akumulasi; pakai detektor collapse (lonjakan token /
-  repetisi / unparseable).
+- **Phase A** — ✅ DIJALANKAN (GPU, 2026-06-16). Benchmark per-agent independen
+  CORE 4 (text-emitting mode). Hasil di `results/phaseA/scoreboard.{md,csv}` +
+  artefak per (variant×ls×rep). Top per-agent (baris teratas tiap seksi):
+    - proposal    : `proposal__working__258abdbbccea`        @ ls=60 (0.84, observable 0.8)
+    - construct   : `construct__working__56396e7d44b0`        @ ls=0  (0.80); latent terbaik
+                    `construct__git_optimalisasi__e9a6a179b181` @ ls=60 (0.707, variety 6)
+    - consistency : flat 0.5 (kv_only → skor isolasi tak informatif; sinyal di Phase B)
+    - judger      : `judger__git_gate_deterministik__6ce003675450` @ ls=20 (0.90, gate 0.8)
+  Catatan: parse_rate < 1.0 di beberapa construct/judger meski teks tampak benar →
+  "bagus-tapi-gagal-parse" → ditangani via `chain/parsing_hook.py` (lihat Phase B).
+  A-ext (mutation/crossover/feedback/repair) belum diukur terpisah.
+- **Phase B** — ✅ KODE SIAP (`chain/`, dry-run lolos; butuh GPU untuk run).
+  Rantai multi-agent via KV-cache, bertahap, disiplin KV identik `pipeline.py`
+  (front-end in-place; judger & feedback dari `deepcopy(kv_consist)`). Tahap:
+    `s1_pc` proposal→construct[tip] · `s2_pcj` +judger[tip] (consistency dilewati) ·
+    `s3_pccj` front-end penuh→judger[tip] · `s4_full_fb` +feedback[tip] (backtest
+    rekayasa) · `s5_mut` mutation-guidance→… · `s6_cross` crossover-guidance→….
+  Tiap batas agent → `Boundary` (kv_tokens/in/out/ls) dicetak+disimpan; tiap tip →
+  scorer Phase A + `collapse.detect` (repetisi / unparseable / lonjakan-token KV).
+  Varian default auto dari `scoreboard.csv` (top per-agent), override via
+  `--pick agent=substr` / `--ls agent=N` / `--uniform-ls N`.
+  **Parser hook**: `chain/parsing_hook.py` = EXTENSION POINT. Default delegate ke
+  `parse_hypothesis_exprs` (nol perubahan). Saat prompt final dipilih & ketemu pola
+  output-bagus-gagal-parse, daftarkan pre-normalizer di `_PRENORMALIZERS`; parser
+  PRODUKSI `backend/latent_mas/parsers.py` TIDAK disentuh sampai pola terbukti aman.
+  **Loop diagnosa**: output memburuk → coba kombinasi prompt lain → kalau tetap
+  buruk → KV-probe (`introspect`/`kv_probe_v2`); detektor collapse menandai otomatis.
 - **Phase C** — Ablation & redesign workflow: chain dengan/tanpa tiap agent
   kv_only (terutama consistency) → buang yang tak signifikan; prototipe agent/
   loop baru bila ada gap; output **rekomendasi workflow** (agent, urutan,
@@ -218,6 +235,17 @@ cd quantalatent
     --agents proposal,construct,consistency,judger \
     --latent-steps 0,10,20,40,60,80 --reps 5 --workers 3
 # → hasil: results/phaseA/scoreboard.{csv,md} + artefak per (variant×ls×rep).
+
+# Phase B — dry-run (tanpa GPU): cek wiring + picks auto dari scoreboard.csv
+.venv/bin/python -m try.promptbench.chain.chain --stages all --reps 1 --dry-run
+
+# Phase B penuh di runpod (GPU): rantai bertahap + kv_shape + collapse detector
+.venv/bin/python -m try.promptbench.chain.chain \
+    --stages s1_pc,s2_pcj,s3_pccj,s4_full_fb --reps 3
+# override varian/ls: --pick judger=gate_deterministik --ls construct=60 --uniform-ls 20
+# evolution entry: --stages s5_mut,s6_cross
+# → hasil: results/phaseB/scoreboard.md + artefak per (stage×rep) berisi
+#   KV boundaries, collapse verdict, parse trace, tip response, score detail.
 ```
 
 Catatan teknis penting:
@@ -240,7 +268,13 @@ Catatan teknis penting:
 - [x] Phase 0d — `scoring/score.py` (regulator gate + variety + stabilitas), smoke-test OK.
 - [x] Phase 0e — `runners/bench.py` driver paralel (2 fase text/latent), **dry-run
       96 job lolos** (semua varian core4 render tanpa MISSING var).
-- [ ] Phase A+ — **butuh GPU runpod** (belum dijalankan).
+- [x] Phase A — **DIJALANKAN GPU 2026-06-16**. `results/phaseA/scoreboard.{md,csv}`.
+      Top per-agent tercatat di §7. (A-ext belum.)
+- [x] Phase B — **KODE SIAP** (`chain/`: `chain.py` runner, `parsing_hook.py`
+      extension-point parser, `collapse.py` detektor). Dry-run semua 6 stage lolos
+      (ok=6, err=0). Picks auto dari scoreboard. **Butuh GPU untuk run nyata.**
+- [ ] Phase B run GPU + Phase C/D.
 
-**Belum ada run GPU.** Semua Phase 0 berjalan tanpa GPU. Belum di-commit (tunggu
-aba-aba user). Phase A dst. dieksekusi di runpod.
+User sedang sortir manual varian mana yang layak utk Phase B; default saat ini =
+top scoreboard (boleh diganti via `--pick`). Parser belum diubah (tunggu pilihan
+prompt final → tambal di `parsing_hook.py`).
