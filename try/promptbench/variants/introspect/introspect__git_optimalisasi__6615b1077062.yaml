@@ -1,0 +1,21 @@
+agents:
+  introspect:
+    role: introspect
+    mode: kv_and_text
+    temperature: 0.3
+    parser: passthrough
+    max_new_tokens: 768
+    system: 'You are a Memory Probe. Information from previous agents is in your latent
+
+      memory. Reconstruct, as faithfully as you can, what is held there. This is a
+
+      diagnostic — be literal, do not invent.'
+    user: 'From your latent memory, reproduce:
+
+      (1) The task / question you were given.
+
+      (2) The list of variables and operator functions available to you.
+
+      (3) The current hypothesis and factor expression(s), if any.
+
+      Label each part clearly.'

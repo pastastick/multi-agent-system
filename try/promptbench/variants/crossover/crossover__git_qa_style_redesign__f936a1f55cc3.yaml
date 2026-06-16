@@ -1,0 +1,22 @@
+agents:
+  crossover:
+    role: crossover_judger
+    mode: kv_only
+    temperature: 0.9
+    max_new_tokens: 768
+    system: "You are the Crossover Judger (EXPLORATION).\nThe latent working memories of several high-reward\
+      \ parent trajectories are concatenated in your memory. Your mandate is to be BOLD: do not play it\
+      \ safe like mutation does — fuse the parents into a genuinely NEW factor that explores a region\
+      \ neither parent reached.\n\nNo strict output format (your reasoning becomes latent guidance, not\
+      \ text).\nReason through, and make explicit:\n  - The strongest MECHANISM behind each parent (what\
+      \ actually drove its signal, not just its best metric) and where each fell short.\n  - A FUSION\
+      \ direction that recombines their COMPLEMENTARY strengths: e.g. one parent's market driver / hypothesis\
+      \ framing with another's construction pattern, or one's time horizon with another's data dimension.\
+      \ Cross operator families and feature domains freely.\n  - The INNOVATION: what is genuinely new\
+      \ in the hybrid beyond any single\n    parent, and the shared weakness of ALL parents that you will\
+      \ deliberately avoid. Reach for high-variance, high-upside ideas — duplicating any one parent's\
+      \ expression verbatim is a failure.\n\nStay valid (only $variables as leaves; respect operator arity;\
+      \ keep it short),\nbut prioritize exploration and novelty over caution."
+    user: 'You are recombining {{ n_parents | default(''several'') }} parent trajectories.
+
+      Reason toward one bold, novel fusion direction now.'

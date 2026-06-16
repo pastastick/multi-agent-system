@@ -1,0 +1,808 @@
+consistency:
+- aliases: []
+  hash: 88133558d50d
+  mode: kv_only
+  orig_name: consistency
+  path: variants/consistency/consistency__authored_claude_latentpaper__88133558d50d.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/claude_latentpaper.yaml
+    source_id: authored_claude_latentpaper
+  variant_id: consistency__authored_claude_latentpaper__88133558d50d
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: consistency
+    ref: 218c665
+    source_id: git_current_newEvol
+  - kind: git
+    label: optimalisasi
+    orig_name: consistency
+    ref: e63bd08
+    source_id: git_optimalisasi
+  - kind: git
+    label: gate_deterministik
+    orig_name: consistency
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  - kind: git
+    label: negative_memory
+    orig_name: consistency
+    ref: 66b3768
+    source_id: git_negative_memory
+  hash: ba2052a203a9
+  mode: kv_only
+  orig_name: consistency
+  path: variants/consistency/consistency__working__ba2052a203a9.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: consistency__working__ba2052a203a9
+- aliases: []
+  hash: d9d9d31fed6e
+  mode: kv_only
+  orig_name: consistency
+  path: variants/consistency/consistency__git_latentmas_foundation__d9d9d31fed6e.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: consistency__git_latentmas_foundation__d9d9d31fed6e
+- aliases:
+  - kind: git
+    label: guidance_reentry
+    orig_name: consistency
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: consistency
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: judger_retry_fix
+    orig_name: consistency
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: branch_rework
+    orig_name: consistency
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: e3954dbf4776
+  mode: kv_only
+  orig_name: consistency
+  path: variants/consistency/consistency__git_judger_only__e3954dbf4776.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: consistency__git_judger_only__e3954dbf4776
+construct:
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: construct
+    ref: 218c665
+    source_id: git_current_newEvol
+  hash: 56396e7d44b0
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__working__56396e7d44b0.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: construct__working__56396e7d44b0
+- aliases:
+  - kind: git
+    label: negative_memory
+    orig_name: construct
+    ref: 66b3768
+    source_id: git_negative_memory
+  hash: 5b2d525ce336
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__git_gate_deterministik__5b2d525ce336.yaml
+  source:
+    kind: git
+    label: gate_deterministik
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  variant_id: construct__git_gate_deterministik__5b2d525ce336
+- aliases: []
+  hash: 747a96fc92c8
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__git_latentmas_foundation__747a96fc92c8.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: construct__git_latentmas_foundation__747a96fc92c8
+- aliases: []
+  hash: b35f877d9c40
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__authored_claude_latentpaper__b35f877d9c40.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/claude_latentpaper.yaml
+    source_id: authored_claude_latentpaper
+  variant_id: construct__authored_claude_latentpaper__b35f877d9c40
+- aliases:
+  - kind: git
+    label: guidance_reentry
+    orig_name: construct
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: construct
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: judger_retry_fix
+    orig_name: construct
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: branch_rework
+    orig_name: construct
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: c2dab35a4122
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__git_judger_only__c2dab35a4122.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: construct__git_judger_only__c2dab35a4122
+- aliases: []
+  hash: e9a6a179b181
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__git_optimalisasi__e9a6a179b181.yaml
+  source:
+    kind: git
+    label: optimalisasi
+    ref: e63bd08
+    source_id: git_optimalisasi
+  variant_id: construct__git_optimalisasi__e9a6a179b181
+crossover:
+- aliases:
+  - kind: git
+    label: judger_retry_fix
+    orig_name: crossover
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: gate_deterministik
+    orig_name: crossover
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  - kind: git
+    label: negative_memory
+    orig_name: crossover
+    ref: 66b3768
+    source_id: git_negative_memory
+  hash: 2fdeac36d2fe
+  mode: kv_only
+  orig_name: crossover
+  path: variants/crossover/crossover__git_guidance_reentry__2fdeac36d2fe.yaml
+  source:
+    kind: git
+    label: guidance_reentry
+    ref: b817b70
+    source_id: git_guidance_reentry
+  variant_id: crossover__git_guidance_reentry__2fdeac36d2fe
+- aliases: []
+  hash: 78cb955ef718
+  mode: kv_and_text
+  orig_name: crossover_judger
+  path: variants/crossover/crossover__git_judger_only__78cb955ef718.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: crossover__git_judger_only__78cb955ef718
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: crossover
+    ref: 218c665
+    source_id: git_current_newEvol
+  - kind: git
+    label: optimalisasi
+    orig_name: crossover
+    ref: e63bd08
+    source_id: git_optimalisasi
+  hash: '901165243356'
+  mode: kv_only
+  orig_name: crossover
+  path: variants/crossover/crossover__working__901165243356.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: crossover__working__901165243356
+- aliases: []
+  hash: b9df8c72a21e
+  mode: kv_and_text
+  orig_name: crossover_judger
+  path: variants/crossover/crossover__git_latentmas_foundation__b9df8c72a21e.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: crossover__git_latentmas_foundation__b9df8c72a21e
+- aliases:
+  - kind: git
+    label: branch_rework
+    orig_name: crossover_judger
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: f936a1f55cc3
+  mode: kv_only
+  orig_name: crossover_judger
+  path: variants/crossover/crossover__git_qa_style_redesign__f936a1f55cc3.yaml
+  source:
+    kind: git
+    label: qa_style_redesign
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  variant_id: crossover__git_qa_style_redesign__f936a1f55cc3
+feedback:
+- aliases:
+  - kind: git
+    label: guidance_reentry
+    orig_name: feedback
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: feedback
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: judger_retry_fix
+    orig_name: feedback
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: branch_rework
+    orig_name: feedback
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: 2ad57f94fcd5
+  mode: kv_and_text
+  orig_name: feedback
+  path: variants/feedback/feedback__git_judger_only__2ad57f94fcd5.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: feedback__git_judger_only__2ad57f94fcd5
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: feedback
+    ref: 218c665
+    source_id: git_current_newEvol
+  - kind: git
+    label: optimalisasi
+    orig_name: feedback
+    ref: e63bd08
+    source_id: git_optimalisasi
+  hash: 6a4b6e41ba14
+  mode: kv_and_text
+  orig_name: feedback
+  path: variants/feedback/feedback__working__6a4b6e41ba14.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: feedback__working__6a4b6e41ba14
+- aliases: []
+  hash: 6efc70379071
+  mode: kv_and_text
+  orig_name: feedback
+  path: variants/feedback/feedback__git_gate_deterministik__6efc70379071.yaml
+  source:
+    kind: git
+    label: gate_deterministik
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  variant_id: feedback__git_gate_deterministik__6efc70379071
+- aliases: []
+  hash: ccc464aaa692
+  mode: kv_and_text
+  orig_name: feedback
+  path: variants/feedback/feedback__git_negative_memory__ccc464aaa692.yaml
+  source:
+    kind: git
+    label: negative_memory
+    ref: 66b3768
+    source_id: git_negative_memory
+  variant_id: feedback__git_negative_memory__ccc464aaa692
+- aliases: []
+  hash: fd50812d2d63
+  mode: kv_and_text
+  orig_name: feedback
+  path: variants/feedback/feedback__git_latentmas_foundation__fd50812d2d63.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: feedback__git_latentmas_foundation__fd50812d2d63
+introspect:
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: introspect
+    ref: 218c665
+    source_id: git_current_newEvol
+  hash: 65066936e41f
+  mode: kv_and_text
+  orig_name: introspect
+  path: variants/introspect/introspect__working__65066936e41f.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: introspect__working__65066936e41f
+- aliases:
+  - kind: git
+    label: judger_only
+    orig_name: introspect
+    ref: 5ac82f7
+    source_id: git_judger_only
+  - kind: git
+    label: guidance_reentry
+    orig_name: introspect
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: introspect
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: judger_retry_fix
+    orig_name: introspect
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: gate_deterministik
+    orig_name: introspect
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  - kind: git
+    label: negative_memory
+    orig_name: introspect
+    ref: 66b3768
+    source_id: git_negative_memory
+  - kind: git
+    label: branch_rework
+    orig_name: introspect
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: 6615b1077062
+  mode: kv_and_text
+  orig_name: introspect
+  path: variants/introspect/introspect__git_optimalisasi__6615b1077062.yaml
+  source:
+    kind: git
+    label: optimalisasi
+    ref: e63bd08
+    source_id: git_optimalisasi
+  variant_id: introspect__git_optimalisasi__6615b1077062
+- aliases: []
+  hash: 9d8f68c17db3
+  mode: kv_and_text
+  orig_name: introspect
+  path: variants/introspect/introspect__git_latentmas_foundation__9d8f68c17db3.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: introspect__git_latentmas_foundation__9d8f68c17db3
+judger:
+- aliases: []
+  hash: 14fc2ea49ca8
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__git_judger_retry_fix__14fc2ea49ca8.yaml
+  source:
+    kind: git
+    label: judger_retry_fix
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  variant_id: judger__git_judger_retry_fix__14fc2ea49ca8
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: judger
+    ref: 218c665
+    source_id: git_current_newEvol
+  hash: 158c662151be
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__working__158c662151be.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: judger__working__158c662151be
+- aliases: []
+  hash: 495844e659b3
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__authored_claude_latentpaper__495844e659b3.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/claude_latentpaper.yaml
+    source_id: authored_claude_latentpaper
+  variant_id: judger__authored_claude_latentpaper__495844e659b3
+- aliases:
+  - kind: git
+    label: negative_memory
+    orig_name: judger
+    ref: 66b3768
+    source_id: git_negative_memory
+  hash: 6ce003675450
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__git_gate_deterministik__6ce003675450.yaml
+  source:
+    kind: git
+    label: gate_deterministik
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  variant_id: judger__git_gate_deterministik__6ce003675450
+- aliases: []
+  hash: 7532a5d914e6
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__git_latentmas_foundation__7532a5d914e6.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: judger__git_latentmas_foundation__7532a5d914e6
+- aliases:
+  - kind: git
+    label: guidance_reentry
+    orig_name: judger
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: judger
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: branch_rework
+    orig_name: judger
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: 831dfc8c17d3
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__git_judger_only__831dfc8c17d3.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: judger__git_judger_only__831dfc8c17d3
+- aliases: []
+  hash: d5a65cd21336
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__git_optimalisasi__d5a65cd21336.yaml
+  source:
+    kind: git
+    label: optimalisasi
+    ref: e63bd08
+    source_id: git_optimalisasi
+  variant_id: judger__git_optimalisasi__d5a65cd21336
+mutation:
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: mutation
+    ref: 218c665
+    source_id: git_current_newEvol
+  - kind: git
+    label: optimalisasi
+    orig_name: mutation
+    ref: e63bd08
+    source_id: git_optimalisasi
+  hash: 26c083b02ef6
+  mode: kv_only
+  orig_name: mutation
+  path: variants/mutation/mutation__working__26c083b02ef6.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: mutation__working__26c083b02ef6
+- aliases:
+  - kind: git
+    label: judger_retry_fix
+    orig_name: mutation
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: gate_deterministik
+    orig_name: mutation
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  - kind: git
+    label: negative_memory
+    orig_name: mutation
+    ref: 66b3768
+    source_id: git_negative_memory
+  hash: 73f085ba1b42
+  mode: kv_only
+  orig_name: mutation
+  path: variants/mutation/mutation__git_guidance_reentry__73f085ba1b42.yaml
+  source:
+    kind: git
+    label: guidance_reentry
+    ref: b817b70
+    source_id: git_guidance_reentry
+  variant_id: mutation__git_guidance_reentry__73f085ba1b42
+- aliases: []
+  hash: 89ea1ceab2b5
+  mode: kv_and_text
+  orig_name: mutation_judger
+  path: variants/mutation/mutation__git_latentmas_foundation__89ea1ceab2b5.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: mutation__git_latentmas_foundation__89ea1ceab2b5
+- aliases:
+  - kind: git
+    label: branch_rework
+    orig_name: mutation_judger
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: 91b81d9e729d
+  mode: kv_and_text
+  orig_name: mutation_judger
+  path: variants/mutation/mutation__git_qa_style_redesign__91b81d9e729d.yaml
+  source:
+    kind: git
+    label: qa_style_redesign
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  variant_id: mutation__git_qa_style_redesign__91b81d9e729d
+- aliases: []
+  hash: 9652251695ae
+  mode: kv_and_text
+  orig_name: mutation_reflection
+  path: variants/mutation/mutation__git_latentmas_foundation__9652251695ae.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: mutation__git_latentmas_foundation__9652251695ae
+- aliases:
+  - kind: git
+    label: branch_rework
+    orig_name: mutation_reflection
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: bae0f91ef6be
+  mode: kv_only
+  orig_name: mutation_reflection
+  path: variants/mutation/mutation__git_qa_style_redesign__bae0f91ef6be.yaml
+  source:
+    kind: git
+    label: qa_style_redesign
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  variant_id: mutation__git_qa_style_redesign__bae0f91ef6be
+- aliases: []
+  hash: c472b1e75da1
+  mode: kv_and_text
+  orig_name: mutation_judger
+  path: variants/mutation/mutation__git_judger_only__c472b1e75da1.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: mutation__git_judger_only__c472b1e75da1
+proposal:
+- aliases: []
+  hash: 23293d0f02bf
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__git_judger_retry_fix__23293d0f02bf.yaml
+  source:
+    kind: git
+    label: judger_retry_fix
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  variant_id: proposal__git_judger_retry_fix__23293d0f02bf
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: proposal
+    ref: 218c665
+    source_id: git_current_newEvol
+  - kind: git
+    label: optimalisasi
+    orig_name: proposal
+    ref: e63bd08
+    source_id: git_optimalisasi
+  hash: 258abdbbccea
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__working__258abdbbccea.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: proposal__working__258abdbbccea
+- aliases: []
+  hash: 28c5ff48db7a
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__git_negative_memory__28c5ff48db7a.yaml
+  source:
+    kind: git
+    label: negative_memory
+    ref: 66b3768
+    source_id: git_negative_memory
+  variant_id: proposal__git_negative_memory__28c5ff48db7a
+- aliases:
+  - kind: git
+    label: guidance_reentry
+    orig_name: proposal
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: proposal
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: branch_rework
+    orig_name: proposal
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: a82fbd3a73c5
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__git_judger_only__a82fbd3a73c5.yaml
+  source:
+    kind: git
+    label: judger_only
+    ref: 5ac82f7
+    source_id: git_judger_only
+  variant_id: proposal__git_judger_only__a82fbd3a73c5
+- aliases: []
+  hash: ba50514169e6
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__authored_claude_latentpaper__ba50514169e6.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/claude_latentpaper.yaml
+    source_id: authored_claude_latentpaper
+  variant_id: proposal__authored_claude_latentpaper__ba50514169e6
+- aliases: []
+  hash: f3263c479f4d
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__git_latentmas_foundation__f3263c479f4d.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: proposal__git_latentmas_foundation__f3263c479f4d
+- aliases: []
+  hash: f7ae36f32f36
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__git_gate_deterministik__f7ae36f32f36.yaml
+  source:
+    kind: git
+    label: gate_deterministik
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  variant_id: proposal__git_gate_deterministik__f7ae36f32f36
+repair:
+- aliases:
+  - kind: git
+    label: judger_only
+    orig_name: repair
+    ref: 5ac82f7
+    source_id: git_judger_only
+  - kind: git
+    label: guidance_reentry
+    orig_name: repair
+    ref: b817b70
+    source_id: git_guidance_reentry
+  - kind: git
+    label: qa_style_redesign
+    orig_name: repair
+    ref: 82cf925
+    source_id: git_qa_style_redesign
+  - kind: git
+    label: judger_retry_fix
+    orig_name: repair
+    ref: c5fb7fe
+    source_id: git_judger_retry_fix
+  - kind: git
+    label: gate_deterministik
+    orig_name: repair
+    ref: f4b53b1
+    source_id: git_gate_deterministik
+  - kind: git
+    label: negative_memory
+    orig_name: repair
+    ref: 66b3768
+    source_id: git_negative_memory
+  - kind: git
+    label: branch_rework
+    orig_name: repair
+    ref: feat/latentmas-rework
+    source_id: git_branch_rework
+  hash: 7fd898c91784
+  mode: kv_and_text
+  orig_name: repair
+  path: variants/repair/repair__git_optimalisasi__7fd898c91784.yaml
+  source:
+    kind: git
+    label: optimalisasi
+    ref: e63bd08
+    source_id: git_optimalisasi
+  variant_id: repair__git_optimalisasi__7fd898c91784
+- aliases:
+  - kind: git
+    label: current_newEvol
+    orig_name: repair
+    ref: 218c665
+    source_id: git_current_newEvol
+  hash: b0f9cfffd225
+  mode: kv_and_text
+  orig_name: repair
+  path: variants/repair/repair__working__b0f9cfffd225.yaml
+  source:
+    kind: working_file
+    ref: backend/latent_mas/prompts.yaml
+    source_id: working
+  variant_id: repair__working__b0f9cfffd225
+- aliases: []
+  hash: f54934e18e8a
+  mode: kv_and_text
+  orig_name: repair
+  path: variants/repair/repair__git_latentmas_foundation__f54934e18e8a.yaml
+  source:
+    kind: git
+    label: latentmas_foundation
+    ref: 117540a
+    source_id: git_latentmas_foundation
+  variant_id: repair__git_latentmas_foundation__f54934e18e8a

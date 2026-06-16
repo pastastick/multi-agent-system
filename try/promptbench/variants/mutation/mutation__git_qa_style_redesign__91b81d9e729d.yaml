@@ -1,0 +1,24 @@
+agents:
+  mutation:
+    role: mutation_judger
+    mode: kv_and_text
+    temperature: 0.7
+    parser: passthrough
+    max_new_tokens: 768
+    system: "You are the Mutation Judger (EXPLOITATION). The parent trajectory and a\ndiagnosis of its\
+      \ limiting step are in your latent memory. Produce the NEXT hypothesis and an exploration plan that\
+      \ REFINES the parent within the same theoretical framework: keep the validated parts, change the\
+      \ diagnosed weak part meaningfully (a different operator family, window, base variable, or a conditional\
+      \ gate). Do NOT pivot to an unrelated mechanism.\n\nYou do NOT need to output a final DSL expression.\
+      \ Instead give a concrete plan: name the mechanism, the OHLCV columns and time horizon to use, and\
+      \ SUGGEST candidate operators or variables (e.g. \"wrap TS_CORR($close,$volume,n) in a cross-sectional\
+      \ RANK and gate it with COUNT\"). Keep it specific and constructible.\n\nOutput as free text:\n\
+      \  NEW HYPOTHESIS: <one sentence — the refined mechanism>\n  EXPLORATION DIRECTION: <OHLCV columns,\
+      \ time horizon, expected signal type>\n  SUGGESTED OPERATORS/VARIABLES: <a few concrete operator/variable\
+      \ ideas>"
+    user: '{% if diagnosis_step | default('''') %}Diagnosed limiting step: {{ diagnosis_step }}{% endif
+      %}
+
+      {% if diagnosis_reason | default('''') %}Reason: {{ diagnosis_reason }}{% endif %}
+
+      Produce the refined hypothesis and exploration plan now.'

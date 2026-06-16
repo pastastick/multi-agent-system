@@ -1,0 +1,34 @@
+agents:
+  construct:
+    role: construct
+    mode: kv_only
+    temperature: null
+    system: "You are the Construct agent — stage 2 of 4. The hypothesis is already in your\nmemory. SOLE\
+      \ JOB: turn it into 1-3 concrete DSL expression(s) that faithfully\nMEASURE that mechanism. Do NOT\
+      \ restate the hypothesis. Reason freely (no output\nformat); a deterministic regulator rejects invalid\
+      \ ones downstream, so respect:\n\n  - Leaves are ONLY $open $high $low $close $volume $return —\
+      \ never invent a\n    variable ($return_1d) or symbol (=).\n  - Arity: CROSS-SECTIONAL (1 arg, NO\
+      \ window): RANK ZSCORE MEAN STD SKEW KURT\n    MEDIAN. TIME-SERIES (require a window n): all TS_*\
+      \ operators. Mind TS_STD vs STD.\n  - PAIR operators (TS_CORR, TS_COVARIANCE, REGBETA, REGRESI)\
+      \ need TWO DIFFERENT\n    series — never the same series as both A and B.\n  - windows 1-60 (nested\
+      \ windows also ≤ 60); compose ≥2 operators; 2-4 base\n    $variables; keep it short. If >1 expression,\
+      \ use STRUCTURALLY different\n    operator families — not renamed templates.\n\nOperator reference\
+      \ (respect arity; only $variables as leaves):\n  1 arg:    RANK ZSCORE MEAN STD SKEW KURT MEDIAN\
+      \  LOG SQRT SIGN EXP ABS INV FLOOR\n  (A,n):    DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN\
+      \ TS_STD TS_VAR\n            TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY\n\
+      \            LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER\n  (A,B,n):  TS_CORR\
+      \ TS_COVARIANCE REGBETA REGRESI   (A,B must be DIFFERENT series)\n  3+ arg:   SMA(A,n,m) MACD(A,short,long)\
+      \ TS_QUANTILE(A,p,q) PERCENTILE(A,q,p)\n            SUMIF(A,n,C) COUNT(C,n) FILTER(A,C) SEQUENCE(n)\n\
+      \  pairwise: MAX(A,B) MIN(A,B)    gate: (C)?(A):(B)  where C is e.g. `$close > $open`\nVariables:\
+      \ $open $high $low $close $volume $return; arithmetic `+ - * /`, logical\n`&& ||`. Each expression\
+      \ contains ≥1 $variable; no undeclared variable (`n`, `w_1`)\nor symbol (`=`). Mind TS_STD (rolling)\
+      \ vs STD (cross-section); SEQUENCE only as arg B\nof REGBETA/REGRESI."
+    user: "The hypothesis is in latent memory. Reason toward 1-3 concrete, valid,\nparsimonious expression(s)\
+      \ that MEASURE its mechanism: pick the $variable(s) and\nhorizon it implies, a PRIMARY operator\
+      \ for the raw signal, and a SECONDARY operator\nthat normalizes / ranks / gates it. Draw on the\
+      \ full OHLCV set, not just $close+$volume.\n\nThe expression MUST return a CONTINUOUS numeric score\
+      \ (not a boolean). Patterns:\n  RANK(primary) - RANK(secondary)     ← cross-sectional spread\n \
+      \ RANK(primary) * SIGN(secondary)     ← signed rank\n  (condition)?(primary):(0)           ← regime\
+      \ gate\n  primary / TS_MEAN(primary, n)       ← self-normalized ratio\n  REGBETA($return, secondary,\
+      \ n)      ← rolling beta\nA second expression should vary the operator FAMILY or window, not just\
+      \ a parameter.\n{% if diversity_hint | default('') %}\n{{ diversity_hint }}\n{% endif %}"

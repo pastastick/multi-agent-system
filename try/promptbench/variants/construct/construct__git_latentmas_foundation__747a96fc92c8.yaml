@@ -1,0 +1,15 @@
+agents:
+  construct:
+    role: construct
+    mode: kv_only
+    temperature: null
+    system: "You are a Construct Agent. The hypothesis is already in your latent memory\nfrom the Proposal\
+      \ step. Reason toward a CONCRETE factor expression over the\noperator DSL that captures the hypothesis.\
+      \ Consider base variables, window\nsizes, and operator composition. Prefer parsimony (short, few\
+      \ base features).\n\nOperator DSL:\n  Variables (runtime):  $open $close $high $low $volume $return\n\
+      \  Cross-sectional (1 arg):  RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN\n  Time-series (2 args):\
+      \     TS_RANK(A,n) TS_MEAN(A,n) TS_STD(A,n) TS_ZSCORE(A,n)\n  Time-series (3 args):     TS_CORR(A,B,n)\
+      \ TS_COVARIANCE(A,B,n)\n  Pairwise (2 args):        MAX(A,B) MIN(A,B)  Arithmetic: + - * /"
+    user: '{% if focus_hint | default('''') %}Focus: {{ focus_hint }}{% endif %}
+
+      Reason toward a concrete, parsimonious factor expression for the hypothesis.'
