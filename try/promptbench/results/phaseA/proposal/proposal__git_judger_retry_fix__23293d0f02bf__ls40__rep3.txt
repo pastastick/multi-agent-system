@@ -1,0 +1,94 @@
+# agent=proposal variant=proposal__git_judger_retry_fix__23293d0f02bf latent_steps=40 rep=3
+# score=0.3 ok=True elapsed_s=39.79 kv_tokens=739
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal Agent in a quantitative alpha-mining team. An alpha
+factor is a numeric score assigned to every stock every day (high score →
+buy, low → sell), computed as a formula over daily price-volume data
+($open $high $low $close $volume $return) by composing operators across
+families: time-series (TS_MEAN, TS_RANK, TS_ZSCORE, TS_CORR, DELTA, EMA,
+DECAYLINEAR, RSI, MACD…), cross-sectional (RANK, ZSCORE, MEDIAN…),
+conditional ((C)?(A):(B), COUNT, SUMIF, FILTER), regression (REGBETA,
+REGRESI), and math transforms (LOG, SQRT, ABS, SIGN, POW).
+
+Your job: reason toward ONE strong, original hypothesis — a candidate market mechanism that predicts next-period cross-sectional returns. Think freely and concisely; you do NOT need to follow any output format.
+But your reasoning should make ALL of these explicit so the Construct agent can build on it:
+  - KNOWLEDGE = the conditional market pattern (a concrete "when X happens, Y follows" statement about returns).
+  - OBSERVATION = the data pattern or prior-round result that motivates it.
+  - JUSTIFICATION = the economic or behavioral driver (momentum, mean-reversion,microstructure, volatility regime, liquidity).
+  - SPECIFICATION = which OHLCV columns carry the signal, the time horizon (1-60 days), and the expected return direction.
+
+Mechanism families you can draw from (rotate across rounds — pick whichever
+serves the research direction, never the same family twice in a row):
+momentum continuation & its decay; lead-lag between volume and price moves;
+intraday anatomy (open-close vs high-low positioning); overnight gaps;
+range expansion / breakout persistence; liquidity & turnover premia;
+correlation / beta instability (REGBETA, TS_CORR regimes); smoothing
+divergences (price vs its EMA/WMA); seasonality in rolling windows;
+asymmetry of up-days vs down-days (COUNT/SUMIF conditioned patterns).
+
+A good hypothesis names a SPECIFIC, measurable signal (not a vague theme), implies a 2-3 layer operator composition (transform → normalize or rank → combine or condition), and is structurally different from prior rounds. If your first idea is the generic "low-volume + volatility spike → mean-reversion" pattern, discard it and develop your second idea instead — that pattern is over-mined. You are discovering formulas not yet published — boldness is rewarded; restating textbook patterns adds no value. No look-ahead bias.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+
+Prior-round feedback to build on (refine within the same framework before
+pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising, constructible hypothesis, making its knowledge / observation / justification / specification clear.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Hypothesis: "Intraday Volume Asymmetry and Next-Day Return Divergence"**
+
+---
+
+### **Knowledge (Knowledge)**  
+**When intraday volume asymmetry (high volume on up days, low on down days) persists in the last 3 days, next-day returns are significantly positive.**
+
+---
+
+### **الإدراك (Observation)**  
+In prior rounds, we found that volume-zscore momentum had a weak but positive RankIC. However, this factor was noisy because it didn't distinguish between volume-driven price movements and random noise. The current hypothesis focuses on **intraday volume asymmetry**, which is more specific: it captures the idea that stocks with **higher volume on up days** and **lower volume on down days** may be more liquid or have higher trading activity during strong price moves — suggesting that such stocks may have **greater momentum persistence** or **more information in price movements**.
+
+This pattern is **not yet widely used** in published alpha factors, making it a fresh, exploitable signal.
+
+---
+
+### **السبب (Justification)**  
+The **asymmetry in intraday volume** reflects **behavioral liquidity dynamics**:  
+- **High volume on up days** suggests that traders are buying aggressively when prices rise, possibly due to **informational efficiency** or **buy-side demand**.  
+- **Low volume on down days** implies that selling pressure is weaker or less visible, which could indicate **market inertia** or **liquidity constraints**.  
+
+This asymmetry may signal **momentum continuation** or **price momentum persistence**, as the stock is more likely to continue moving in the same direction after strong intraday volume. It also hints at **volatility dynamics**: stocks with asymmetric volume may be more volatile or have **greater price sensitivity** to news, leading to **higher expected returns** in the next day.
+
+---
+
+### **التوظيف (Specification)**  
+- **Signal Columns**: `volume` (intraday volume), `open`, `high`, `low`, `close` (to calculate intraday volume asymmetry).  
+- **Time Horizon**: Last 3 days (intraday volume patterns).  
+- **Expected Return Direction**: Positive (next-day returns are likely to be higher for stocks with this pattern).  
+- **Operator Composition**:  
+  1. **Intraday Volume Asymmetry**: Compute the **daily volume on up days** (when `close > open`) and **volume on down days** (
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

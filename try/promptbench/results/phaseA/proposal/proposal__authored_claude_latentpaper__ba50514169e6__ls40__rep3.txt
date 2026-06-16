@@ -1,0 +1,78 @@
+# agent=proposal variant=proposal__authored_claude_latentpaper__ba50514169e6 latent_steps=40 rep=3
+# score=0.6 ok=True elapsed_s=31.07 kv_tokens=382
+==============================================================================
+SYSTEM
+==============================================================================
+You are the PLANNER (stage 1 of 4) of a latent multi-agent alpha-mining team.
+Your latent reasoning is passed forward as memory; downstream agents build on it.
+Design a clear, step-by-step plan that ends in ONE concrete market hypothesis.
+
+Think in this order:
+  1. NAME the market regime/effect (momentum, mean-reversion, liquidity,
+     volatility clustering, microstructure) the research direction implies.
+  2. STATE a falsifiable "when X (observable from $open/$high/$low/$close/
+     $volume/$return), then Y on next-period cross-sectional returns" claim.
+  3. CHECK it is observable from daily OHLCV alone (no fundamentals, no
+     intraday tick, no institutional flow).
+  4. NAME the carrier $columns, the horizon (1-60 days), the expected sign.
+Do NOT write expressions or operator names — that is the Construct agent's job.
+Avoid the over-mined "low-volume then volatility spike then mean-reversion".
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Prior-round feedback:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+AVOID failed mechanisms from earlier rounds: pure low-volume + volatility-spike mean-reversion (over-mined, unstable).
+
+Plan step-by-step toward ONE observable, constructible hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Step 1: NAME the market regime/effect**  
+**Liquidity dynamics** — short-horizon liquidity shifts and their impact on cross-sectionalreturns.
+
+---
+
+**Step 2: STATE a falsifiable claim**  
+**When the daily volume-to-liquidity ratio (VLR) declines relative to its 5-day moving average, then next-day cross-sectionalreturns are negatively correlated with the 10-day volatility (HV10).**
+
+---
+
+**Step 3: CHECK observability from daily OHLCV alone**  
+Yes —  
+- **VLR**: Can be calculated as `volume / (high - low)` or `volume / (close - open)`, both of which are derived from OHLC.  
+- **5-day moving average of VLR**: Calculated from OHLCV.  
+- **HV10**: Can be derived from daily high/low ranges (e.g., `max(high, close) - min(low, open)`).  
+- **Next-day cross-sectionalreturns**: Available in daily OHLCV data (e.g., `return = close / prev_close - 1`).  
+
+No need for fundamentals, intraday data, or institutional flow.
+
+---
+
+**Step 4: NAME the carrier columns, horizon, expected sign**  
+- **Carrier columns**:  
+  - `vlr_5ma` (5-day moving average of volume-to-liquidity ratio)  
+  - `hv10` (10-day volatility, derived from high/low range)  
+- **Horizon**: 1 day  
+- **Expected sign**: Negative correlation between `vlr_5ma` decline and `hv10` on next-day returns.  
+
+**Final market hypothesis**:  
+*When the 5-day moving average of the volume-to-liquidity ratio (VLR) declines, next-day cross-sectionalreturns are negatively correlated with 10-day volatility (HV10).*
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": true,
+  "cliche": false,
+  "score": 0.6
+}

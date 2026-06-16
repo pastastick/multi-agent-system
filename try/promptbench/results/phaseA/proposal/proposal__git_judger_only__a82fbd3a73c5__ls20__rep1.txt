@@ -1,0 +1,81 @@
+# agent=proposal variant=proposal__git_judger_only__a82fbd3a73c5 latent_steps=20 rep=1
+# score=0.3 ok=True elapsed_s=38.72 kv_tokens=562
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal Agent in a quantitative alpha-mining team. An alpha
+factor is a numeric score assigned to every stock every day (high score →
+buy, low → sell), computed as a formula over daily price-volume data
+($open $high $low $close $volume $return) by composing operators across
+families: time-series (TS_MEAN, TS_RANK, TS_ZSCORE, TS_CORR, DELTA, EMA,
+DECAYLINEAR, RSI, MACD…), cross-sectional (RANK, ZSCORE, MEDIAN…),
+conditional ((C)?(A):(B), COUNT, SUMIF, FILTER), regression (REGBETA,
+REGRESI), and math transforms (LOG, SQRT, ABS, SIGN, POW).
+
+Your job: reason toward ONE strong, original hypothesis — a candidate market mechanism that predicts next-period cross-sectional returns. Think freely and concisely; you do NOT need to follow any output format.
+But your reasoning should make ALL of these explicit so the Construct agent can build on it:
+  - KNOWLEDGE = the conditional market pattern, e.g. "when volatility spikes after low-volume periods, mean-reversion amplifies".
+  - OBSERVATION = the data pattern or prior-round result that motivates it.
+  - JUSTIFICATION = the economic or behavioral driver (momentum, mean-reversion,microstructure, volatility regime, liquidity).
+  - SPECIFICATION = which OHLCV columns carry the signal, the time horizon (1-60 days), and the expected return direction.
+
+A good hypothesis names a SPECIFIC, measurable signal (not a vague theme), implies a 2-3 layer operator composition (transform → normalize or rank → combine or condition), and is structurally different from prior rounds. You are discovering formulas not yet published — boldness is rewarded; restating textbook patterns adds no value. No look-ahead bias.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+
+Prior-round feedback to build on (refine within the same framework before
+pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising, constructible hypothesis, making its knowledge / observation / justification / specification clear.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Hypothesis:**  
+**"Short-term liquidity anomalies in high-volatility regimes predict next-day returns through price discovery inefficiencies."**
+
+---
+
+### **KNOWLEDGE**  
+In high-volatility environments, price discovery is less efficient due to increased noise and heterogeneous trader behavior. Short-term liquidity (e.g., low bid-ask spread, high orderbook depth) may persist during volatility spikes, creating temporary mispricings that are corrected by subsequent trading. This leads to a "liquidity anomaly" where stocks with higher short-term liquidity during volatile periods outperform the next day.
+
+---
+
+### **OBSERVATION**  
+Prior rounds identified that volume-zscore momentum had weak but positive RankIC (0.018), suggesting that volume-based signals could be useful. However, volatility-gated variants were noisier, possibly because volatility itself is not a direct predictor of return direction — it is the *interaction* between liquidity and volatility that matters.
+
+In 2018–2021, equity markets experienced frequent volatility spikes (e.g., earnings surprises, macro shocks). During these periods, liquidity (measured as bid-ask spread or orderbook depth) often declined, but in some cases, it remained stable or even increased due to institutional trading activity. These stocks showed stronger next-day returns than others, implying that liquidity resilience during volatility was predictive.
+
+---
+
+### **JUSTIFICATION**  
+**Behavioral driver:** During volatility spikes, retail traders and algorithmic systems react differently. Retail traders may panic and sell, while institutional traders may act as liquidity providers, stabilizing prices. In such cases, stocks with higher short-term liquidity (e.g., tighter spreads, deeper orderbooks) are more likely to be "corrected" by informed traders, leading to higher returns the next day. This is a form of **momentum with a liquidity filter**, where liquidity acts as a signal of information asymmetry and price discovery efficiency.
+
+**Microstructural driver:** In high-volatility regimes, the market’s ability to price news efficiently is impaired. Stocks with higher liquidity can absorb news more quickly, reducing the mispricing effect. Thus, liquidity resilience during volatility is a proxy for information efficiency, which correlates with future returns.
+
+---
+
+### **SPECIFICATION**  
+- **Signal columns:** `bidAskSpread`, `orderBookDepth` (from OHLCV or orderbook data), `volatility` (e.g., TS_ZSCORE of daily return volatility).  
+- **Time horizon:**
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

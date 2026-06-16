@@ -1,0 +1,79 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=60 rep=1
+# score=0.3 ok=True elapsed_s=40.98 kv_tokens=267
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let's build a hypothesis step-by-step, grounded in the research direction, market context, and prior-round feedback.
+
+---
+
+### **Step 1: Focus on Short-Horizon Liquidity & Volatility Dynamics**  
+The goal is to find a **cross-sectional** (i.e., across stocks) factor from daily OHLCV data that predicts next-day returns. The focus is on **short-horizon liquidity** and **volatility dynamics**, suggesting that the factor should relate to **immediate liquidity conditions** or **volatility expectations**.
+
+---
+
+### **Step 2: Consider What Might Predict Next-Day Returns**  
+Next-day returns are influenced by:
+
+- **Liquidity conditions** (e.g., trade volume, bid-ask spread, order book depth)
+- **Volatility expectations** (e.g., implied volatility, volatility clustering, news sentiment)
+- **Momentum effects** (e.g., recent price trends, volume patterns)
+- **Market noise** (e.g., random walk, short-term anomalies)
+
+Given the time frame (daily OHLCV → next-day return), we're looking for **short-term signals** that reflect **immediate market sentiment** or **implied liquidity**.
+
+---
+
+### **Step 3: Use Prior Feedback to Guide Hypothesis**  
+In the prior round, a **volume-zscore momentum** factor had a small but positive IC (0.018), with an ICIR of 0.22. This suggests that **volume-based signals** can provide some predictive power, but they’re not strong enough on their own. The **volatility-gated variant** was noisier, implying that **volatility clustering** might be a confounding factor.
+
+So, we need to **refine the volume signal** by incorporating **volatility information**, but in a way that **filters out noise** and captures **true liquidity dynamics**.
+
+---
+
+### **Step 4: Identify a Candidate Market Mechanism**  
+A promising hypothesis could be:
+
+> **"The next-day return is predicted by the inverse of the daily bid-ask spread (BAS), scaled by the daily realized volatility (RV)."**
+
+This hypothesis is grounded in the idea that:
+
+- **Bid-ask spread** reflects **liquidity** — narrower spreads imply higher liquidity.
+- **Realized volatility** reflects **price uncertainty** — higher volatility implies more expected price movement.
+- The **inverse of the spread** (higher liquidity) is likely to be **more valuable
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

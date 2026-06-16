@@ -1,0 +1,83 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=20 rep=4
+# score=0.3 ok=True elapsed_s=37.93 kv_tokens=227
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let's build a hypothesis step by step, grounded in the research direction, market context, and prior feedback.
+
+---
+
+### **Step 1: Identify Key Economic Effects to Exploit**
+We are looking for a **cross-sectional** factor that predicts **next-day returns**, based on **daily OHLCV data**, and **exploits short-horizon liquidity and volatility dynamics**. 
+
+Given the prior round's feedback that a **volume-zscore momentum** factor had low RankIC (0.018), but positive ICIR (0.22), it suggests that **momentum** is present but weak. Also, the **volatility-gated variant** was noisier — implying that **volatility** may be a key driver of mispricing, but its interaction with **liquidity** is not yet well captured.
+
+So, we should consider **economic effects** that:
+- Relate to **short-term price discovery**.
+- Are influenced by **liquidity** and **volatility**.
+- May be **mispriced** in the short term due to **information asymmetry** or **market noise**.
+
+---
+
+### **Step 2: Consider Price/Volume Signals**
+From daily OHLCV, we have:
+- **Open**, **High**, **Low**, **Close** (price signals).
+- **Volume** (liquidity signal).
+
+But volume alone is too noisy. We need something that captures **asymmetric liquidity** or **asymmetric price movement** that may reflect **informational inefficiency**.
+
+A promising angle is **asymmetric price movement relative to volume**.
+
+For example:
+- **High/Close ratio** (or similar) could signal **buying pressure** or **selling pressure**.
+- **Volume anomalies** — like **volume spikes** or **volume drops** relative to expected levels.
+
+But we also need to incorporate **volatility**. A **volatility-gated** version might help filter out noise.
+
+---
+
+### **Step 3: Time Scale Consideration**
+The market context is **daily bars**, and we're interested in **next-day returns**. So the time scale is:
+- **Short-term**: 1 day.
+- **Medium-term**: 1 week (for volatility estimation).
+- **Long-term**: 1 month (for liquidity or information persistence).
+
+But since we're working with daily data, we can:
+- Use **daily volatility** (e.g., range-based volatility).
+- Use **weekly or monthly liquidity measures** as proxies for
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

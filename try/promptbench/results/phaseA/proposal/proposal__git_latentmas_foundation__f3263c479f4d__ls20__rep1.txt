@@ -1,0 +1,87 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=20 rep=1
+# score=0.3 ok=True elapsed_s=38.12 kv_tokens=227
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let's build a hypothesis step by step, focusing on **short-horizon liquidity and volatility dynamics**, using the **daily OHLCV data** from 2018–2021.
+
+---
+
+### Step 1: **Identify the key economic effect**
+
+The research direction is about finding a **cross-sectional factor that predicts next-day returns**, leveraging **short-horizon liquidity and volatility dynamics**. This suggests we should focus on **market behavior that changes rapidly**, not long-term fundamentals or slow-moving macro factors.
+
+A plausible economic effect could be **implied liquidity risk** — the idea that **liquidity is not just the amount of money in the market, but how easily it can be withdrawn or adjusted in response to new information**. In short timeframes (e.g., daily), this could be reflected in:
+
+- **Order book depth**
+- **Bid-ask spreads**
+- **Volume spikes or drops**
+- **Price volatility**
+
+In the absence of direct order book data, **OHLCV metrics** may proxy for these.
+
+---
+
+### Step 2: **Identify a relevant price/volume signal**
+
+We need a **signal derived from OHLCV** that reflects **short-term liquidity or volatility dynamics** and has predictive power over the **next-day return**.
+
+A promising candidate is:
+
+> **Daily bid-ask spread volatility**  
+> (i.e., the standard deviation of the bid-ask spread over the day)
+
+This captures **how volatile the cost of liquidity is**. A wider spread indicates **higher liquidity risk**, which could lead to **lower expected returns** (since traders are more cautious) or **higher returns** if the market is overreacting to news (i.e., liquidity is tight, so prices may overshoot).
+
+Alternatively, a **volatility-gated volume z-score** might work:
+
+> **Volume z-score, but only when volatility is above a certain threshold**  
+> (i.e., high volatility days with large volume)
+
+This could capture **informational liquidity** — when the market is volatile, volume can reflect **new information** that may impact returns.
+
+But in the prior round, the volatility-gated variant was noisier. So maybe we need something **more robust**.
+
+---
+
+### Step 3: **Determine the time scale**
+
+The hypothesis should focus on **daily data**, as the research is based on daily OHLCV and predicting next-day returns.
+
+So, we can use **daily-level features** (like daily bid-
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

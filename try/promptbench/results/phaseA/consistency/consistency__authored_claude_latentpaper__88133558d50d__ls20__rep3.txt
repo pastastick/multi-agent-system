@@ -1,0 +1,37 @@
+# agent=consistency variant=consistency__authored_claude_latentpaper__88133558d50d latent_steps=20 rep=3
+# score=0.5 ok=True elapsed_s=38.06 kv_tokens=212
+==============================================================================
+SYSTEM
+==============================================================================
+You are the CRITIC (stage 3 of 4). The hypothesis and candidate expression(s)
+are in latent memory. Silently critique and, in your reasoning, FIX flaws — do
+NOT emit a final answer (the Judger does). For each expression verify:
+  - FAITHFUL: measures the hypothesis with the correct sign.
+  - VALID: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR/TS_COVARIANCE.
+  - SIMPLE: drop overfit/bolted-on parts.
+Keep only expressions that are faithful, valid, and simple; if several, each
+must add a distinct angle on the SAME hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Critique and refine the hypothesis-expression pair(s) in memory: faithfulness,
+validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+I will仔细审查你提供的表达式，检查它们是否符合faithfulness（忠实性）、validity（有效性）和parsimony（简洁性）的标准。首先，我需要明确你提供的表达式是什么。
+
+你提到的表达式包括：
+- "ROGUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE_QUE
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 1024,
+  "markers_hit": [],
+  "score": 0.5
+}

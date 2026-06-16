@@ -1,0 +1,35 @@
+# agent=consistency variant=consistency__git_judger_only__e3954dbf4776 latent_steps=20 rep=4
+# score=0.5 ok=True elapsed_s=4.35 kv_tokens=258
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency Agent (refiner). The hypothesis and one or more
+candidate factor expressions are in your latent memory. Silently check and correct, in your reasoning, any mismatch — do NOT output a final answer (the Judger does that). Verify:
+  - Faithfulness: does each expression actually MEASURE what the hypothesis claims? Does the sign/direction match the predicted return direction?
+  - Validity: is every operator's arity correct? is every leaf a runtime
+    $variable? are TS- vs cross-sectional ops used correctly? windows 1-60?
+  - Parsimony: is any expression over-complex (long, many base features, many
+    free constants) and therefore likely to overfit? If so, simplify it.
+  - Coherence across expressions: if several, do they each add a distinct
+    angle on the SAME hypothesis rather than duplicating one another?
+Refine toward expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis-expression pair(s) held in latent memory for
+faithfulness, validity, and parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+I will silently refine the hypothesis-expression pair(s) held in latent memory for faithfulness, validity, and parsimony. Please provide the hypothesis and candidate factor expressions so I can perform the refinement.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 217,
+  "markers_hit": [],
+  "score": 0.5
+}

@@ -1,0 +1,46 @@
+# agent=construct variant=construct__git_latentmas_foundation__747a96fc92c8 latent_steps=20 rep=1
+# score=0.0 ok=True elapsed_s=10.74 kv_tokens=231
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Construct Agent. The hypothesis is already in your latent memory
+from the Proposal step. Reason toward a CONCRETE factor expression over the
+operator DSL that captures the hypothesis. Consider base variables, window
+sizes, and operator composition. Prefer parsimony (short, few base features).
+
+Operator DSL:
+  Variables (runtime):  $open $close $high $low $volume $return
+  Cross-sectional (1 arg):  RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN
+  Time-series (2 args):     TS_RANK(A,n) TS_MEAN(A,n) TS_STD(A,n) TS_ZSCORE(A,n)
+  Time-series (3 args):     TS_CORR(A,B,n) TS_COVARIANCE(A,B,n)
+  Pairwise (2 args):        MAX(A,B) MIN(A,B)  Arithmetic: + - * /
+
+==============================================================================
+USER
+==============================================================================
+Reason toward a concrete, parsimonious factor expression for the hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+It seems like you're trying to express a hypothesis in the context of financial trading or quantitative analysis, but the text "trigger trigger trigger trigger trigger trigger trigger trigger trigger trigger trigger" is not clear or meaningful in that context. Could you please rephrase or clarify your hypothesis? For example, are you trying to express something like:
+
+- A hypothesis about stock price trends?
+- A hypothesis about volume and return relationships?
+- A hypothesis about technical indicators (e.g., RANK, ZSCORE, TS_CORR)?
+
+Once you clarify the hypothesis, I can help construct a concrete, parsimonious factor expression using the operator DSL provided.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "parse_ok": false,
+  "hypothesis": null,
+  "n_expr": 0,
+  "gate_pass": 0,
+  "gate_pass_frac": 0.0,
+  "n_families": 0,
+  "families": [],
+  "score": 0.0
+}

@@ -1,0 +1,48 @@
+# agent=construct variant=construct__git_latentmas_foundation__747a96fc92c8 latent_steps=20 rep=4
+# score=0.0 ok=True elapsed_s=13.95 kv_tokens=231
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Construct Agent. The hypothesis is already in your latent memory
+from the Proposal step. Reason toward a CONCRETE factor expression over the
+operator DSL that captures the hypothesis. Consider base variables, window
+sizes, and operator composition. Prefer parsimony (short, few base features).
+
+Operator DSL:
+  Variables (runtime):  $open $close $high $low $volume $return
+  Cross-sectional (1 arg):  RANK ZSCORE MEAN STD MAX MIN SKEW KURT MEDIAN
+  Time-series (2 args):     TS_RANK(A,n) TS_MEAN(A,n) TS_STD(A,n) TS_ZSCORE(A,n)
+  Time-series (3 args):     TS_CORR(A,B,n) TS_COVARIANCE(A,B,n)
+  Pairwise (2 args):        MAX(A,B) MIN(A,B)  Arithmetic: + - * /
+
+==============================================================================
+USER
+==============================================================================
+Reason toward a concrete, parsimonious factor expression for the hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+It seems there may be a misunderstanding or typo in your input. The phrase "roleship test_..._test_..._test_..._test_..." does not appear to be a clear hypothesis or instruction related to financial data analysis or factor construction using the operator DSL provided.
+
+If you meant to express a hypothesis about financial data (e.g., stock returns, volume, price movements), please clarify or rephrase your hypothesis. For example:
+
+- "Stocks with high return and low volume are more likely to have high volatility."
+- "The correlation between open and close prices is strong over a 20-day window."
+- "The z-score of the return over a 30-day period is negatively correlated with volume."
+
+Once you provide a clear hypothesis, I can help construct a concrete, parsimonious factor expression using the operator DSL.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "parse_ok": false,
+  "hypothesis": null,
+  "n_expr": 0,
+  "gate_pass": 0,
+  "gate_pass_frac": 0.0,
+  "n_families": 0,
+  "families": [],
+  "score": 0.0
+}

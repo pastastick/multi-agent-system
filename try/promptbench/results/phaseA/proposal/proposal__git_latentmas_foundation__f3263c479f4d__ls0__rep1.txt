@@ -1,0 +1,80 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=0 rep=1
+# score=0.3 ok=True elapsed_s=36.32 kv_tokens=207
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let's build a hypothesis step by step, considering the research direction, market context, and prior feedback.
+
+---
+
+### 1. **Research Direction Focus**
+We are looking for a **cross-sectional factor** based on **daily OHLCV data** that predicts **next-day returns**, with an emphasis on **short-horizon liquidity and volatility dynamics**.
+
+- This suggests we should look at **intraday or daily liquidity measures** and how they interact with **volatility**.
+- The goal is to find a signal that captures **asymmetric information** or **market sentiment** that persists into the next day.
+
+---
+
+### 2. **Market Context: Liquid Equities, Daily Bars, 2018–2021**
+- The dataset is composed of **liquid equities**, so we can expect relatively stable volume and price behavior.
+- **Daily bars** give us a coarse-grained view of price and volume, but still allow for meaningful signals.
+- The time period (2018–2021) includes both **market stress** (e.g., trade wars, pandemic) and **normal conditions**, which may help test the robustness of the signal.
+
+---
+
+### 3. **Prior Round Feedback: Volume-Zscore Momentum**
+- A **volume-zscore momentum** factor had a **RankIC of 0.018** and **ICIR of 0.22** — **weak but positive**.
+- The **volatility-gated variant** was noisier — suggesting that **volatility filtering** may not be helping in this context, or that it's introducing too much noise.
+
+This implies:
+- **Volume-based signals** may have some predictive power, but they need to be **refined**.
+- **Volatility** may not be the key driver here, or it's not being used effectively.
+
+---
+
+### 4. **What Could Be a Stronger Signal?**
+
+Let’s consider **short-horizon liquidity** and **volatility dynamics** together.
+
+- **Liquidity** in the short term can reflect **implied volatility expectations**, **market sentiment**, or **information asymmetry**.
+- **Volatility** itself may not be the key, but **how it changes** over short horizons could be.
+
+A promising idea is to look at **implied volatility from the previous day’s price range** (i.e., high/low), and then use that as a proxy for **expected future volatility**.
+
+But
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

@@ -1,0 +1,59 @@
+# agent=consistency variant=consistency__working__ba2052a203a9 latent_steps=10 rep=2
+# score=0.5 ok=True elapsed_s=25.75 kv_tokens=213
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency agent — stage 3 of 4. The hypothesis and candidate
+expression(s) are in your memory. SOLE JOB: silently check and, in your
+reasoning, FIX any flaw. Do NOT output a final answer (the Judger does). For
+each expression check:
+  - Faithful: does it actually measure the hypothesis, with the right sign?
+  - Valid: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR?
+  - Simple: drop anything bolted-on or overfit (too long / too many features).
+If several, each must add a distinct angle on the SAME hypothesis. Keep only
+expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair(s) in memory for faithfulness, validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Memory:**
+- **Hypothesis:** The relationship between temperature and sales is linear with a positive slope.
+- **Candidate Expression(s):** `sales = 50 + 2*temperature`, `sales = 50 + 2*temperature + 0.1*temperature^2`
+
+---
+
+**Reasoning:**
+
+1. **Faithfulness Check:**
+   - Both expressions model the relationship between temperature and sales.
+   - The hypothesis states a linear relationship with a positive slope, so the first expression (`sales = 50 + 2*temperature`) is faithful as it has a positive slope (2).
+   - The second expression (`sales = 50 + 2*temperature + 0.1*temperature^2`) introduces a quadratic term, which adds curvature to the relationship. This makes it **not faithful** to the hypothesis of a strictly linear relationship.
+
+2. **Validity Check:**
+   - Both expressions are valid in terms of syntax and use only real variables (temperature and sales).
+   - The temperature variable is within a reasonable range (1-60), and there is no series-with-itself issue.
+   - The expressions have the correct arity (one independent variable, one dependent variable).
+
+3. **Parsimony Check:**
+   - The first expression is simpler (only one term) and does not include unnecessary features.
+   - The second expression is more complex due to the addition of the quadratic term, making it less parsimonious.
+
+---
+
+**Conclusion:**
+The candidate expression `sales = 50 + 2*temperature` is **faithful, valid, and simple**. The other expression is **not faithful** to the hypothesis.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 1489,
+  "markers_hit": [],
+  "score": 0.5
+}

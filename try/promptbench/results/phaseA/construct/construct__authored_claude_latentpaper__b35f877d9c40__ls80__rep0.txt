@@ -1,0 +1,90 @@
+# agent=construct variant=construct__authored_claude_latentpaper__b35f877d9c40 latent_steps=80 rep=0
+# score=0.0 ok=True elapsed_s=42.19 kv_tokens=430
+==============================================================================
+SYSTEM
+==============================================================================
+You are the BUILDER (stage 2 of 4). The hypothesis is in latent memory.
+Translate its MECHANISM into 1-3 DSL expressions. Reason as a plan:
+  a. Restate (silently) the signal: which $variable, transform, horizon.
+  b. PRIMARY operator = raw signal; SECONDARY operator = normalize/rank/gate.
+  c. Compose, check arity, keep parsimonious (2-4 base $variables).
+  d. A 2nd expression must change the operator FAMILY or window, not a number.
+Leaves are ONLY $open $high $low $close $volume $return. Respect arity:
+cross-sectional (1 arg, no window) RANK ZSCORE MEAN STD SKEW KURT MEDIAN;
+time-series (need window n) the TS_* family + DELTA DELAY SMA WMA EMA
+DECAYLINEAR RSI; pair (A,B,n with A!=B) TS_CORR TS_COVARIANCE REGBETA REGRESI;
+conditional COUNT SUMIF FILTER (C)?(A):(B). windows 1-60. A deterministic
+regulator rejects invalid expressions downstream.
+
+==============================================================================
+USER
+==============================================================================
+The hypothesis is in latent memory. Build 1-3 valid, parsimonious expressions
+that MEASURE its mechanism; output a CONTINUOUS score, not a boolean.
+
+Diversity: recent factors leaned on cross_sectional + time_series families. Consider an under-used family — smoothing (EMA/DECAYLINEAR), regression (REGBETA/REGRESI), or conditional gating (COUNT/SUMIF) — if the mechanism fits.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**BUILDER (Stage 2) Output:**
+
+---
+
+### **MECHANISM TRANSLATION:**
+The hypothesis involves a **dynamic, evolving signal** that responds to both **cross-sectional** and **time-series transformations**, with a focus on **smoothed, adaptive responses**. It suggests a mechanism that combines **normalization**, **smoothing**, and **conditional filtering** to produce a continuous score.
+
+---
+
+### **1. DSL Expression (Parsimonious, Time-Series + Smoothing):**
+```dsl
+TS_EMA(OPEN, 20) - TS_DECAYLINEAR(VOLUME, 30)
+```
+
+- **Mechanism**:  
+  - `TS_EMA(OPEN, 20)` = Smoothed open price over 20 periods (time-series smoothing).  
+  - `TS_DECAYLINEAR(VOLUME, 30)` = Smoothed volume decay over 30 periods.  
+  - The difference between these two signals captures a **continuous, adaptive response** to the interplay of price and volume dynamics.
+
+---
+
+### **2. DSL Expression (Parsimonious, Regression + Conditional):**
+```dsl
+REGRESI(OPEN, VOLUME, 10) * SUMIF(RETURN > 0.01, 1, 0)
+```
+
+- **Mechanism**:  
+  - `REGRESI(OPEN, VOLUME, 10)` = Regress open price on volume over 10 periods (regression-based relationship).  
+  - `SUMIF(RETURN > 0.01, 1, 0)` = Conditional gate: only active when return is above 1% (binary, but multiplied into a continuous score via regression coefficient).  
+  - This expression measures a **conditional, smoothed relationship** between price and volume, weighted by positive returns.
+
+---
+
+### **3. DSL Expression (Optional, Cross-sectional + Time-Series):**
+```dsl
+RANK(OPEN) * TS_SMA(RETURN, 5)
+```
+
+- **Mechanism**:  
+  - `RANK(OPEN)` = Cross-sectional rank of open prices (normalization).  
+  - `TS_SMA(RETURN, 5)` = Time-series average of returns over 5 periods.  
+  - The product creates a **continuous score** that weights high-open days against recent return trends.
+
+---
+
+### **Final Note:**
+All expressions are **parsimonious**, **continuous**, and based
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "parse_ok": false,
+  "hypothesis": null,
+  "n_expr": 0,
+  "gate_pass": 0,
+  "gate_pass_frac": 0.0,
+  "n_families": 0,
+  "families": [],
+  "score": 0.0
+}

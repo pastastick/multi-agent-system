@@ -1,0 +1,60 @@
+# agent=consistency variant=consistency__working__ba2052a203a9 latent_steps=0 rep=0
+# score=0.5 ok=True elapsed_s=24.04 kv_tokens=203
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency agent — stage 3 of 4. The hypothesis and candidate
+expression(s) are in your memory. SOLE JOB: silently check and, in your
+reasoning, FIX any flaw. Do NOT output a final answer (the Judger does). For
+each expression check:
+  - Faithful: does it actually measure the hypothesis, with the right sign?
+  - Valid: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR?
+  - Simple: drop anything bolted-on or overfit (too long / too many features).
+If several, each must add a distinct angle on the SAME hypothesis. Keep only
+expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair(s) in memory for faithfulness, validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Memory:**
+- **Hypothesis:** The relationship between hours studied and exam scores is linear and positive.
+- **Candidate Expression:** `exam_score = 50 + 2 * hours_studied + 3 * hours_studied^2`
+
+**Reasoning:**
+
+1. **Faithfulness:**
+   - The hypothesis states a **linear and positive** relationship between hours studied and exam scores.
+   - The candidate expression includes a **quadratic term** (`hours_studied^2`), which introduces **non-linearity**.
+   - This makes the expression **unfaithful** to the hypothesis, as it does not strictly measure a linear relationship.
+
+2. **Validity:**
+   - The expression has the correct arity (one input variable, one output variable).
+   - The only leaf is `hours_studied`, which is a real variable.
+   - The quadratic term is mathematically valid and does not involve a series-with-itself (as per REGBETA/REGRESI/TS_CORR rules).
+
+3. **Parsimony:**
+   - The expression includes an unnecessary quadratic term, making it more complex than needed.
+   - A simpler expression would be `exam_score = 50 + 2 * hours_studied`.
+
+**Conclusion:**
+- The candidate expression is **not faithful** to the hypothesis due to the inclusion of a quadratic term.
+- It is **valid** in terms of structure and variables.
+- It is **not parsimonious** due to the added complexity.
+
+**Fix:**
+- Replace the candidate expression with a simpler, linear form that aligns with the hypothesis.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 1406,
+  "markers_hit": [],
+  "score": 0.5
+}

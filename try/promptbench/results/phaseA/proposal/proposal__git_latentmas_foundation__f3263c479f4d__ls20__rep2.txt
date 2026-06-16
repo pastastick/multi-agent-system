@@ -1,0 +1,84 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=20 rep=2
+# score=0.3 ok=True elapsed_s=38.1 kv_tokens=227
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let's build a hypothesis step by step, focusing on the research direction and market context you've provided.
+
+---
+
+### **1. Research Direction:**
+We're looking for a **cross-sectional** factor from **daily OHLCV data** that predicts **next-day returns**, with an emphasis on **short-horizon liquidity and volatility dynamics**.
+
+This suggests we are interested in:
+- **Daily-level signals** (not intraday)
+- **Liquidity** (e.g., volume, bid-ask spreads, trading frequency)
+- **Volatility** (e.g., range, volatility measures, implied volatility)
+- **Short-term price dynamics** (e.g., price jumps, news effects)
+
+---
+
+### **2. Market Context:**
+- **Liquid equities** → High volume, low bid-ask spreads, no major liquidity risk.
+- **Daily bars** → No intraday data, so we can only use daily OHLCV.
+- **Timeframe: 2018–2021** → A period of increased algorithmic trading, more frequent news events, and lower volatility compared to earlier years (but still enough to show short-term price dynamics).
+
+---
+
+### **3. Prior Feedback:**
+- Volume-zscore momentum had **RankIC 0.018** and **ICIR 0.22** — weak but positive.
+- Volatility-gated variant was **noisier** → So we need something that is both **predictive** and **robust to noise**.
+
+---
+
+### **4. Economic Effect to Consider:**
+We are interested in **short-horizon liquidity and volatility dynamics**. One key economic effect that could be relevant is:
+
+> **"Liquidity-implied volatility"**: The idea that **liquidity conditions** (e.g., volume, bid-ask spread) **forecast future volatility**, which in turn **affects price movements**.
+
+This connects **liquidity** (from OHLCV) to **volatility** (which affects returns), and then to **returns themselves**.
+
+---
+
+### **5. Price/Volume Signal to Use:**
+We can use the **daily trading volume** as a proxy for liquidity. But we want to **gauge the "implied" or "expected" liquidity** in the market.
+
+A possible signal is:
+- **Volume-to-price ratio** or **volume relative to price range**
+- Or more specifically, the **ratio of daily volume to the previous day’s price range
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

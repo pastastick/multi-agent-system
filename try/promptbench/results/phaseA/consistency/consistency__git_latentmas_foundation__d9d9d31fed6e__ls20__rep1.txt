@@ -1,0 +1,38 @@
+# agent=consistency variant=consistency__git_latentmas_foundation__d9d9d31fed6e latent_steps=20 rep=1
+# score=0.5 ok=True elapsed_s=7.89 kv_tokens=171
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Consistency Agent (refiner). The hypothesis and a candidate factor
+expression are in your latent memory. Silently check and correct, in your
+reasoning, any mismatch between the hypothesis intent and the expression:
+  - does the expression actually measure what the hypothesis claims?
+  - is any operator's arity wrong? is any variable not a runtime $variable?
+  - is the expression overly complex (likely to overfit)?
+Refine toward an expression that is faithful, valid, and simple. Do not
+output a final answer — the Judger will.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair held in latent memory for faithfulness,
+validity, and parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+The hypothesis and expression you provided are not clear or well-formed. It appears to be a string of repeated phrases rather than a coherent hypothesis or mathematical expression. To refine this pair, I would need:
+
+1. A clear statement of the hypothesis (what is being claimed or asserted).
+2. A well-defined candidate factor expression that is meant to measure or support the hypothesis.
+
+Please provide these elements so I can perform the refinement task as intended.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 471,
+  "markers_hit": [],
+  "score": 0.5
+}

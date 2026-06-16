@@ -1,0 +1,84 @@
+# agent=proposal variant=proposal__git_judger_only__a82fbd3a73c5 latent_steps=60 rep=0
+# score=0.0 ok=True elapsed_s=41.51 kv_tokens=602
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal Agent in a quantitative alpha-mining team. An alpha
+factor is a numeric score assigned to every stock every day (high score →
+buy, low → sell), computed as a formula over daily price-volume data
+($open $high $low $close $volume $return) by composing operators across
+families: time-series (TS_MEAN, TS_RANK, TS_ZSCORE, TS_CORR, DELTA, EMA,
+DECAYLINEAR, RSI, MACD…), cross-sectional (RANK, ZSCORE, MEDIAN…),
+conditional ((C)?(A):(B), COUNT, SUMIF, FILTER), regression (REGBETA,
+REGRESI), and math transforms (LOG, SQRT, ABS, SIGN, POW).
+
+Your job: reason toward ONE strong, original hypothesis — a candidate market mechanism that predicts next-period cross-sectional returns. Think freely and concisely; you do NOT need to follow any output format.
+But your reasoning should make ALL of these explicit so the Construct agent can build on it:
+  - KNOWLEDGE = the conditional market pattern, e.g. "when volatility spikes after low-volume periods, mean-reversion amplifies".
+  - OBSERVATION = the data pattern or prior-round result that motivates it.
+  - JUSTIFICATION = the economic or behavioral driver (momentum, mean-reversion,microstructure, volatility regime, liquidity).
+  - SPECIFICATION = which OHLCV columns carry the signal, the time horizon (1-60 days), and the expected return direction.
+
+A good hypothesis names a SPECIFIC, measurable signal (not a vague theme), implies a 2-3 layer operator composition (transform → normalize or rank → combine or condition), and is structurally different from prior rounds. You are discovering formulas not yet published — boldness is rewarded; restating textbook patterns adds no value. No look-ahead bias.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+
+Prior-round feedback to build on (refine within the same framework before
+pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising, constructible hypothesis, making its knowledge / observation / justification / specification clear.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**HYPOTHESIS: Volume-Adjusted Z-Score with Volatility Gating and Liquidity Weighting**
+
+---
+
+### **KNOWLEDGE**  
+When low-volume stocks experience sudden liquidity inflows (e.g., due to news or institutional buying), their price reactions are often more volatile and less mean-reverting. This creates a short-term "volatility trap" where the volume-zscore signal becomes less reliable. However, in such cases, stocks that show the highest volume-zscore (relative to their volatility) tend to exhibit stronger mean-reversion in the next day.
+
+---
+
+### **OBSERVERVATION**  
+In the 2018–2021 train segment, stocks with low volume (below 500K) that experienced sudden volume spikes (e.g., >3x their average daily volume) showed higher next-day price volatility and lower mean-reversion. However, among those, the stocks with the highest volume-zscore (relative to their own volatility) had the strongest mean-reversion in the following day.
+
+This suggests a "volatility-gated volume-zscore" signal that is only effective when liquidity is suddenly injected into low-volume stocks.
+
+---
+
+### **JUSTIFICATION**  
+Behaviorally, low-volume stocks are often traded by retail investors or institutions seeking to exploit mispricings. When these stocks experience sudden liquidity inflows, they may be overreacted to, leading to higher volatility. However, the volume-zscore (which measures how extreme a stock’s volume is relative to its peers) can still capture the true mispricing. In such cases, the stocks with the highest volume-zscore (i.e., the most "abnormal" volume) are the ones that most likely reflect true mispricing, and thus will mean-revert more strongly.
+
+This mechanism is distinct from prior rounds, which focused on general volume-zscore momentum without volatility gating. This hypothesis leverages both liquidity dynamics and volatility regimes to filter out noise and isolate the most meaningful volume-based signals.
+
+---
+
+### **SPECFICATION**  
+- **Signal Columns**:  
+  - `volume` (daily volume)  
+  - `volatility` (e.g., 20-day standard deviation of log returns)  
+  - `volume_zscore` = (volume - TS_MEAN(volume)) / TS_STDDEV(volume)  
+  - `volume_zscore_vol_gated` = IF(volatility > 0.02, volume_zscore, 0)  
+  - `liquidity_weight
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": true,
+  "score": 0.0
+}

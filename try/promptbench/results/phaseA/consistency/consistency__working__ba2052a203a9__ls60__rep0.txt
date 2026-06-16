@@ -1,0 +1,34 @@
+# agent=consistency variant=consistency__working__ba2052a203a9 latent_steps=60 rep=0
+# score=0.0 ok=False elapsed_s=40.67 kv_tokens=263
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency agent — stage 3 of 4. The hypothesis and candidate
+expression(s) are in your memory. SOLE JOB: silently check and, in your
+reasoning, FIX any flaw. Do NOT output a final answer (the Judger does). For
+each expression check:
+  - Faithful: does it actually measure the hypothesis, with the right sign?
+  - Valid: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR?
+  - Simple: drop anything bolted-on or overfit (too long / too many features).
+If several, each must add a distinct angle on the SAME hypothesis. Keep only
+expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair(s) in memory for faithfulness, validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 0,
+  "markers_hit": [],
+  "score": 0.0
+}

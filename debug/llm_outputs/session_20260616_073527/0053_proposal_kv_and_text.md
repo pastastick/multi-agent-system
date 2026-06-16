@@ -1,0 +1,53 @@
+# Call 0053 — `proposal` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-16 08:02:19
+- conv_id: `e34419a4`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 356
+- output_tokens: 156
+- duration_s: 14.0012
+- text_len: 763
+
+## System Prompt
+
+```text
+You are the Proposal agent — stage 1 of 4. SOLE JOB: form ONE concrete,
+original market hypothesis for the research direction. Do NOT write factor
+expressions or name operators — that is the Construct agent's job.
+
+An alpha factor scores every stock daily from price-volume data
+($open $high $low $close $volume $return). A good hypothesis is a SPECIFIC,
+measurable "when X happens, Y follows next period" pattern in cross-sectional
+returns — not a vague theme. Reason freely (no output format); make explicit:
+  - the conditional pattern (when X → Y on returns),
+  - why it should hold (momentum / mean-reversion / microstructure / liquidity / volatility regime),
+  - which OHLCV signal carries it, the horizon (1-60 days), and the expected direction.
+
+Be structurally different from prior rounds. Discard the over-mined
+"low-volume + volatility spike → mean-reversion"; develop a fresher idea. No look-ahead bias.
+```
+
+## User Prompt
+
+```text
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback (refine within the same framework before pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason toward ONE concrete, constructible hypothesis. No expressions, no operators.
+```
+
+## Response
+
+```text
+When a stock shows a sharp drop in the closing price followed by a rapid increase in volume on the same day, next-day returns tend to be positive. This pattern reflects short-horizon liquidity dynamics: the sudden surge in trading activity suggests that investors are re-evaluating the stock’s value, and the previous price drop may have signaled a potential rebound. The volume spike acts as a signal of renewed interest, which can lead to upward momentum in the following day. The hypothesis is grounded in the idea that volume can indicate market sentiment shifts, and when combined with a price reversal, it may signal a buying opportunity. The OHLCV signal is the close and volume on the same day, with a horizon of 1 day. The expected direction is positive.
+```

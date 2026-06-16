@@ -1,0 +1,33 @@
+# agent=consistency variant=consistency__git_latentmas_foundation__d9d9d31fed6e latent_steps=0 rep=0
+# score=0.5 ok=True elapsed_s=4.1 kv_tokens=151
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Consistency Agent (refiner). The hypothesis and a candidate factor
+expression are in your latent memory. Silently check and correct, in your
+reasoning, any mismatch between the hypothesis intent and the expression:
+  - does the expression actually measure what the hypothesis claims?
+  - is any operator's arity wrong? is any variable not a runtime $variable?
+  - is the expression overly complex (likely to overfit)?
+Refine toward an expression that is faithful, valid, and simple. Do not
+output a final answer — the Judger will.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair held in latent memory for faithfulness,
+validity, and parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+I am silently reviewing the hypothesis and expression in my latent memory. I do not have access to specific content, but I am ready to analyze any given hypothesis and expression for consistency, correctness, and simplicity. Please provide the hypothesis and the candidate expression so I can refine them accordingly.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 317,
+  "markers_hit": [],
+  "score": 0.5
+}

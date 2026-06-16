@@ -1,0 +1,70 @@
+# Call 0131 — `consistency` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-16 08:41:02
+- conv_id: `377e6247`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 245
+- output_tokens: 411
+- duration_s: 33.3413
+- text_len: 1770
+
+## System Prompt
+
+```text
+You are the Consistency Agent (refiner). The hypothesis and one or more
+candidate factor expressions are in your latent memory. Silently check and correct, in your reasoning, any mismatch — do NOT output a final answer (the Judger does that). Verify:
+  - Faithfulness: does each expression actually MEASURE what the hypothesis claims? Does the sign/direction match the predicted return direction?
+  - Validity: is every operator's arity correct? is every leaf a runtime
+    $variable? are TS- vs cross-sectional ops used correctly? windows 1-60?
+  - Parsimony: is any expression over-complex (long, many base features, many
+    free constants) and therefore likely to overfit? If so, simplify it.
+  - Coherence across expressions: if several, do they each add a distinct
+    angle on the SAME hypothesis rather than duplicating one another?
+Refine toward expression(s) that are faithful, valid, and simple.
+```
+
+## User Prompt
+
+```text
+Refine the hypothesis-expression pair(s) held in latent memory for
+faithfulness, validity, and parsimony.
+```
+
+## Response
+
+```text
+I'll refine the hypothesis-expression pair(s) for faithfulness, validity, and parsimony. Let's analyze the expressions in the latent memory:
+
+1. **Faithfulness**: Each expression should measure what the hypothesis claims. I need to check if the expressions are measuring the same concept as the hypothesis.
+
+2. **Validity**: Check if all operators are used correctly (e.g., TS vs cross-sectional for time series, window sizes 1-60), and if all leaves are runtime variables.
+
+3. **Parsimony**: Ensure the expressions aren't overly complex (long, many base features, many free constants) and simplify if needed.
+
+Since the expressions in your latent memory are not clearly defined or formatted, I'll assume the following hypothetical scenario for refinement:
+
+**Hypothesis**: "The return of a stock is positively correlated with its volatility."
+
+**Candidate Expressions**:
+1. `volatility * 0.5 + 0.3`
+2. `volatility / 2 + 0.3`
+3. `volatility * 0.7 - 0.2`
+
+**Refined Expressions**:
+
+1. `volatility * 0.5 + 0.3`  
+   - Faithful: Measures volatility directly, which aligns with the hypothesis.  
+   - Valid: Uses a single variable (volatility) and valid arithmetic operations.  
+   - Parsimonious: Simple and direct, no unnecessary complexity.
+
+2. `volatility * 0.7 - 0.2`  
+   - Faithful: Also measures volatility directly, aligning with the hypothesis.  
+   - Valid: Uses a single variable and valid arithmetic operations.  
+   - Parsimonious: Simple and direct, no unnecessary complexity.
+
+**Conclusion**: Both expressions are faithful, valid, and parsimonious. They each provide a distinct angle on the hypothesis by using different coefficients, but they both measure volatility directly. This maintains coherence across expressions while keeping them simple and valid.
+```

@@ -1,0 +1,84 @@
+# agent=consistency variant=consistency__working__ba2052a203a9 latent_steps=20 rep=2
+# score=0.5 ok=True elapsed_s=37.84 kv_tokens=223
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency agent — stage 3 of 4. The hypothesis and candidate
+expression(s) are in your memory. SOLE JOB: silently check and, in your
+reasoning, FIX any flaw. Do NOT output a final answer (the Judger does). For
+each expression check:
+  - Faithful: does it actually measure the hypothesis, with the right sign?
+  - Valid: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR?
+  - Simple: drop anything bolted-on or overfit (too long / too many features).
+If several, each must add a distinct angle on the SAME hypothesis. Keep only
+expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair(s) in memory for faithfulness, validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+I will now analyze the hypothesis and candidate expression(s) in memory for faithfulness, validity, and parsimony. Since no specific hypothesis or expressions are provided in the prompt, I will assume a hypothetical scenario to demonstrate the process.
+
+### Hypothetical Scenario:
+**Hypothesis:** "Higher temperature leads to lower sales of ice cream."
+
+**Candidate Expression(s):**  
+1. `sales = 100 - 2 * temperature`  
+2. `sales = 100 - 2 * temperature + 5 * rain`  
+3. `sales = 100 - 2 * temperature + 5 * rain + 3 * temperature`  
+
+---
+
+### Step-by-Step Analysis:
+
+#### **Expression 1: `sales = 100 - 2 * temperature`**
+
+- **Faithful?**  
+  Yes. This expression directly measures the hypothesis: higher temperature (positive coefficient) leads to lower sales (negative coefficient). The sign is correct.
+
+- **Valid?**  
+  Yes. Arity is correct (one variable). All variables are real (temperature). Temperature is a valid window (1-60). There is no series-with-itself in REGBETA/REGRESI/TS_CORR.
+
+- **Simple?**  
+  Yes. It is concise and does not include unnecessary features.
+
+✅ **Keep this expression.**
+
+---
+
+#### **Expression 2: `sales = 100 - 2 * temperature + 5 * rain`**
+
+- **Faithful?**  
+  Partially. It measures the hypothesis (temperature) but adds an extra variable (rain), which is not part of the original hypothesis. This may overfit the model.
+
+- **Valid?**  
+  Yes. Arity is correct (two variables). Both are real. No series-with-itself.
+
+- **Simple?**  
+  No. It includes an additional feature (rain) that is not part of the hypothesis. This makes it more complex than necessary.
+
+❌ **Discard this expression.**
+
+---
+
+#### **Expression 3: `sales = 100 - 2 * temperature + 5 * rain + 3 * temperature`**
+
+- **Faithful?**  
+  No. It incorrectly adds a second term with temperature, which is redundant. This introduces a flaw in the model (double-counting temperature).
+
+- **Valid?**  
+  Yes. Arity is correct (three variables). No series-with-itself.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 1969,
+  "markers_hit": [],
+  "score": 0.5
+}

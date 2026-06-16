@@ -1,0 +1,86 @@
+# agent=construct variant=construct__working__56396e7d44b0 latent_steps=60 rep=2
+# score=0.0 ok=True elapsed_s=33.65 kv_tokens=897
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Construct agent — stage 2 of 4. The hypothesis is already in your
+memory. SOLE JOB: turn it into 1-3 concrete DSL expression(s) that faithfully
+MEASURE that mechanism. Do NOT restate the hypothesis. Reason freely (no output
+format); a deterministic regulator rejects invalid ones downstream, so respect:
+
+  - Leaves are ONLY $open $high $low $close $volume $return — never invent a
+    variable ($return_1d) or symbol (=).
+  - Arity: CROSS-SECTIONAL (1 arg, NO window): RANK ZSCORE MEAN STD SKEW KURT
+    MEDIAN. TIME-SERIES (require a window n): all TS_* operators. Mind TS_STD vs STD.
+  - PAIR operators (TS_CORR, TS_COVARIANCE, REGBETA, REGRESI) need TWO DIFFERENT
+    series — never the same series as both A and B.
+  - windows 1-60 (nested windows also ≤ 60); compose ≥2 operators; 2-4 base
+    $variables; keep it short. If >1 expression, use STRUCTURALLY different
+    operator families — not renamed templates.
+
+Operator reference (respect arity; only $variables as leaves):
+  1 arg:    RANK ZSCORE MEAN STD SKEW KURT MEDIAN  LOG SQRT SIGN EXP ABS INV FLOOR
+  (A,n):    DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
+            TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
+            LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
+  (A,B,n):  TS_CORR TS_COVARIANCE REGBETA REGRESI   (A,B must be DIFFERENT series)
+  3+ arg:   SMA(A,n,m) MACD(A,short,long) TS_QUANTILE(A,p,q) PERCENTILE(A,q,p)
+            SUMIF(A,n,C) COUNT(C,n) FILTER(A,C) SEQUENCE(n)
+  pairwise: MAX(A,B) MIN(A,B)    gate: (C)?(A):(B)  where C is e.g. `$close > $open`
+Variables: $open $high $low $close $volume $return; arithmetic `+ - * /`, logical
+`&& ||`. Each expression contains ≥1 $variable; no undeclared variable (`n`, `w_1`)
+or symbol (`=`). Mind TS_STD (rolling) vs STD (cross-section); SEQUENCE only as arg B
+of REGBETA/REGRESI.
+
+==============================================================================
+USER
+==============================================================================
+The hypothesis is in latent memory. Reason toward 1-3 concrete, valid,
+parsimonious expression(s) that MEASURE its mechanism: pick the $variable(s) and
+horizon it implies, a PRIMARY operator for the raw signal, and a SECONDARY operator
+that normalizes / ranks / gates it. Draw on the full OHLCV set, not just $close+$volume.
+
+The expression MUST return a CONTINUOUS numeric score (not a boolean). Patterns:
+  RANK(primary) - RANK(secondary)     ← cross-sectional spread
+  RANK(primary) * SIGN(secondary)     ← signed rank
+  (condition)?(primary):(0)           ← regime gate
+  primary / TS_MEAN(primary, n)       ← self-normalized ratio
+  REGBETA($return, secondary, n)      ← rolling beta
+A second expression should vary the operator FAMILY or window, not just a parameter.
+
+Diversity: recent factors leaned on cross_sectional + time_series families. Consider an under-used family — smoothing (EMA/DECAYLINEAR), regression (REGBETA/REGRESI), or conditional gating (COUNT/SUMIF) — if the mechanism fits.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Expression 1 (Cross-sectionalsectional + Time Series):**  
+`RANK(TS_ZSCORE($return, 20)) - RANK(TS_MEAN($return, 20))`  
+- **Mechanism**: Measures the relative strength of returns compared to their 20-period mean, normalized via z-score. The difference in ranks captures how far above/below the mean a given return is, relative to its peers.  
+- **Primary operator**: `TS_ZSCORE($return, 20)` — normalizes returns to a standard score over a 20-period window.  
+- **Secondary operator**: `TS_MEAN($return, 20)` — provides a baseline for comparison.  
+
+**Expression 2 (Smoothing + Regression):**  
+`REGBETA($return, EMA($close, 50), 20)`  
+- **Mechanism**: Estimates the beta of returns against a smoothed close price (50-period EMA), capturing how much returns move relative to the market trend.  
+- **Primary operator**: `EMA($close, 50)` — smooths the close price to filter noise.  
+- **Secondary operator**: `REGBETA($return, ...)` — measures linear dependence between returns and the smoothed close.  
+
+**Expression 3 (Conditional Gating + Cross-sectional):**  
+`( $volume > TS_MEDIAN($volume, 20) ) ? (TS_ZSCORE($return, 20)) : (0)`  
+- **Mechanism**: Gates returns only when volume exceeds the 20-period median, creating a signal that is both volume-driven and return-normalized.  
+- **Primary operator**: `TS_ZSCORE($return, 20)` — same as Expression 1.  
+- **Secondary operator**: Conditional gate using `TS_MEDIAN($volume, 20)` — filters for high-volume periods.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "parse_ok": false,
+  "hypothesis": null,
+  "n_expr": 0,
+  "gate_pass": 0,
+  "gate_pass_frac": 0.0,
+  "n_families": 0,
+  "families": [],
+  "score": 0.0
+}

@@ -1,0 +1,50 @@
+# agent=consistency variant=consistency__working__ba2052a203a9 latent_steps=0 rep=4
+# score=0.5 ok=True elapsed_s=21.34 kv_tokens=203
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency agent — stage 3 of 4. The hypothesis and candidate
+expression(s) are in your memory. SOLE JOB: silently check and, in your
+reasoning, FIX any flaw. Do NOT output a final answer (the Judger does). For
+each expression check:
+  - Faithful: does it actually measure the hypothesis, with the right sign?
+  - Valid: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR?
+  - Simple: drop anything bolted-on or overfit (too long / too many features).
+If several, each must add a distinct angle on the SAME hypothesis. Keep only
+expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair(s) in memory for faithfulness, validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Step 1: Check Faithfulness**  
+Ensure each expression actually measures the hypothesis with the correct sign. For example, if the hypothesis is "increased rainfall leads to higher crop yields," the expression should reflect a positive relationship between rainfall and crop yields.
+
+**Step 2: Check Validity**  
+Verify that:
+- The arity (number of variables) is correct.
+- Every leaf is a real variable (not a derived or composite variable).
+- All variables are within the range 1–60 (assuming this is a constraint for window sizes or other numeric variables).
+- There are no series-with-itself in REGBETA/REGRESI/TS_CORR (i.e., no variable is used in both the dependent and independent variables in the same model without proper adjustment).
+
+**Step 3: Check Parsimony**  
+Remove any expressions that are bolted-on or overfit. Keep only those that are concise and add a distinct angle on the same hypothesis. Avoid expressions that include too many features or are unnecessarily complex.
+
+**Reasoning:**  
+I will now go through each expression in memory and apply the above checks. If any expression fails in faithfulness, validity, or parsimony, it will be adjusted or removed. I will ensure that only expressions that are faithful, valid, and simple remain.
+
+**Note:** Since no specific hypothesis or expressions are provided in the current prompt, I cannot perform the actual checks. Please provide the hypothesis and the candidate expressions for refinement.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 1465,
+  "markers_hit": [],
+  "score": 0.5
+}

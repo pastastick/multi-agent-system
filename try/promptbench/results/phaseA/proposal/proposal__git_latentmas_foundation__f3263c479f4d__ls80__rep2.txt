@@ -1,0 +1,80 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=80 rep=2
+# score=0.3 ok=True elapsed_s=42.18 kv_tokens=287
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let’s step through the reasoning toward a promising hypothesis for a cross-sectional factor that predicts next-day returns, based on **daily OHLCV data**, **liquidity and volatility dynamics**, and the **2018–2021 train segment**.
+
+---
+
+### **Step 1: Understand the Research Direction**
+
+The goal is to find a **cross-sectional factor** from daily OHLCV (open, high, low, close, volume) that predicts **next-day stock returns**. The focus is on **short-horizon liquidity and volatility dynamics**. This suggests we're interested in factors that capture **immediate market reactions** or **short-term price behavior**, rather than long-term fundamentals or macroeconomic signals.
+
+---
+
+### **Step 2: Consider Prior Round Feedback**
+
+In the prior round, a **volume-zscore momentum factor** had a **RankIC of 0.018** (ICIR of 0.22). That’s weak but positive. A **volatility-gated variant** was noisier.
+
+- **Volume-zscore momentum** suggests using volume as a signal, normalized by volatility or liquidity.
+- But it’s not strong enough — maybe because it’s too generic, or because the noise from volatility makes it less reliable.
+
+So, we need something more **specific** to liquidity or volatility, but also **robust to noise**.
+
+---
+
+### **Step 3: Think About Economic Effects**
+
+What economic effects are tied to **liquidity and volatility** in short timeframes?
+
+- **Liquidity shocks**: Sudden changes in trading volume or bid-ask spreads can signal information flow or institutional activity.
+- **Volatility clustering**: High volatility on one day may lead to lower returns the next day due to “overreaction” or “mean reversion.”
+- **Order book dynamics**: The difference between bid and ask prices (depth) can signal liquidity pressure.
+- **Price momentum**: High-volume days with large price moves might be followed by lower returns due to “overbought” conditions.
+
+---
+
+### **Step 4: Consider Time Scale and Noise**
+
+We’re working with **daily OHLCV**, so we can’t use intraday data. But we can look at **daily liquidity measures** (e.g., volume, bid-ask spread, order book depth).
+
+- **Noise** comes from:
+  - Volatility itself (e.g., days with high volatility may have random price jumps).
+  - Institutional activity (e.g., large
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

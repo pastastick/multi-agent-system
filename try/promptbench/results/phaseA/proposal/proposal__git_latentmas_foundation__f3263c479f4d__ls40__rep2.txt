@@ -1,0 +1,81 @@
+# agent=proposal variant=proposal__git_latentmas_foundation__f3263c479f4d latent_steps=40 rep=2
+# score=0.3 ok=True elapsed_s=39.49 kv_tokens=247
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+Let's build a hypothesis step-by-step, grounded in the research direction and market context.
+
+---
+
+### **1. Research Direction Focus**
+We are seeking a **cross-sectional** (i.e., across stocks) factor that predicts **next-day returns**, derived from **daily OHLCV data**, with an emphasis on **short-horizon liquidity** and **volatility dynamics**.
+
+This implies we're looking for a **stock-level signal** that is **predictive of future returns**, but not necessarily related to fundamentals or long-term fundamentals.
+
+---
+
+### **2. Market Context**
+- **Liquid equities**: High trading volume, low bid-ask spreads.
+- **Daily bars**: We can use open, high, low, close, volume (OHLCV) data at the daily level.
+- **Time frame**: 2018–2021 — a period of **increased market volatility**, **algorithmic trading**, and **greater liquidity** due to increased market participation and digital infrastructure.
+
+---
+
+### **3. Prior Round Feedback**
+- A **volume-zscore momentum factor** had a **weak RankIC of 0.018**, but a **moderate ICIR of 0.22**.
+- A **volatility-gated variant** was **noisier** — implying that volatility may not be a reliable filter for this type of factor.
+
+This suggests that:
+- Volume-based signals may still hold value, but need refinement.
+- Volatility is not the most useful filter in this context.
+- The factor is **not strong enough** to be standalone, but has some predictive power.
+
+---
+
+### **4. Key Economic Effects & Signals to Consider**
+
+#### **A. Economic Effect: Short-Horizon Liquidity Dynamics**
+- In liquid markets, **liquidity** (as measured by **volume**) is **high**, but it also reflects **market sentiment**.
+- When volume is high, it could indicate **immediate demand/supply imbalances** — which may persist into the next day.
+- However, volume is noisy — so we need a **signal that captures the direction of liquidity**.
+
+#### **B. Price/Volume Signal: Price-Volume Correlation**
+- A key signal could be the **correlation between price and volume** over the past few days.
+- For example, if a stock has been **trading with high volume and high price increases**, it might indicate **strong buying pressure** that could continue into the next day.
+-
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

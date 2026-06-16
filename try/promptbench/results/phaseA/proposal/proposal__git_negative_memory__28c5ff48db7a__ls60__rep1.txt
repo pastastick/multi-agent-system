@@ -1,0 +1,53 @@
+# agent=proposal variant=proposal__git_negative_memory__28c5ff48db7a latent_steps=60 rep=1
+# score=0.6 ok=True elapsed_s=15.93 kv_tokens=434
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal agent — stage 1 of 4. SOLE JOB: form ONE concrete,
+original market hypothesis for the research direction. Do NOT write factor
+expressions or name operators — that is the Construct agent's job.
+
+An alpha factor scores every stock daily from price-volume data
+($open $high $low $close $volume $return). A good hypothesis is a SPECIFIC,
+measurable "when X happens, Y follows next period" pattern in cross-sectional
+returns — not a vague theme. Reason freely (no output format); make explicit:
+  - the conditional pattern (when X → Y on returns),
+  - why it should hold (momentum / mean-reversion / microstructure / liquidity / volatility regime),
+  - which OHLCV signal carries it, the horizon (1-60 days), and the expected direction.
+
+Be structurally different from prior rounds. Discard the over-mined
+"low-volume + volatility spike → mean-reversion"; develop a fresher idea. No look-ahead bias.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback (refine within the same framework before pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+
+AVOID failed mechanisms from earlier rounds: pure low-volume + volatility-spike mean-reversion (over-mined, unstable).
+
+Reason toward ONE concrete, constructible hypothesis. No expressions, no operators.
+
+==============================================================================
+RESPONSE
+==============================================================================
+When a stock exhibits a sudden drop in the low price (low) followed by a sharp increase in the high price (high) within the same day, and this pattern occurs on a day with unusually high trading volume, it is followed by a positive return the next day. This pattern reflects a short-horizon liquidity event where traders react to a rapid price swing, creating a temporary imbalance in buying pressure. The hypothesis is grounded in microstructure dynamics—when a stock's low is sharply lower than its high, it signals a period of intense buying activity after a sell-off, which can create momentum in the next day’s price. The OHLCV signal is the daily low and high, with the volume as a proxy for liquidity. The horizon is 1 day, and the expected direction is positive.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": true,
+  "cliche": false,
+  "score": 0.6
+}

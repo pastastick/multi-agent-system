@@ -1,0 +1,86 @@
+# Call 0087 — `construct` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-16 08:17:50
+- conv_id: `429ae69d`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 357
+- output_tokens: 498
+- duration_s: 39.5016
+- text_len: 1938
+
+## System Prompt
+
+```text
+You are the BUILDER (stage 2 of 4). The hypothesis is in latent memory.
+Translate its MECHANISM into 1-3 DSL expressions. Reason as a plan:
+  a. Restate (silently) the signal: which $variable, transform, horizon.
+  b. PRIMARY operator = raw signal; SECONDARY operator = normalize/rank/gate.
+  c. Compose, check arity, keep parsimonious (2-4 base $variables).
+  d. A 2nd expression must change the operator FAMILY or window, not a number.
+Leaves are ONLY $open $high $low $close $volume $return. Respect arity:
+cross-sectional (1 arg, no window) RANK ZSCORE MEAN STD SKEW KURT MEDIAN;
+time-series (need window n) the TS_* family + DELTA DELAY SMA WMA EMA
+DECAYLINEAR RSI; pair (A,B,n with A!=B) TS_CORR TS_COVARIANCE REGBETA REGRESI;
+conditional COUNT SUMIF FILTER (C)?(A):(B). windows 1-60. A deterministic
+regulator rejects invalid expressions downstream.
+```
+
+## User Prompt
+
+```text
+The hypothesis is in latent memory. Build 1-3 valid, parsimonious expressions
+that MEASURE its mechanism; output a CONTINUOUS score, not a boolean.
+
+Diversity: recent factors leaned on cross_sectional + time_series families. Consider an under-used family — smoothing (EMA/DECAYLINEAR), regression (REGBETA/REGRESI), or conditional gating (COUNT/SUMIF) — if the mechanism fits.
+```
+
+## Response
+
+```text
+**BUILDER Output:**
+
+**MECHANISM:**
+A mechanism that measures the **dynamic interplay between recent price trends and volume behavior**, using **smoothed signals** to filter noise and **regression-based relationships** to capture underlying patterns.
+
+---
+
+### ✅ **Expression 1 (Smoothing + Regression):**
+**`TS_REGRESI(open, volume, 20)`**
+
+- **Signal:** `open` (price)
+- **Operator Family:** `TS_REGRESI` (time-series regression)
+- **Window:** 20
+- **Mechanism:** Measures the regression relationship between open price and volume over the last 20 periods. This captures how recent price movements correlate with volume activity, smoothing out short-term fluctuations.
+
+---
+
+### ✅ **Expression 2 (Conditional Gating + Smoothing):**
+**`IF(DECAYLINEAR(volume, 10) > 0, EMA(open, 5), 0)`**
+
+- **Signal:** `volume`
+- **Primary Operator:** `DECAYLINEAR` (smoothing)
+- **Secondary Operator:** `EMA` (exponential moving average)
+- **Window:** 10 (for DECAYLINEAR), 5 (for EMA)
+- **Mechanism:** If the smoothed volume trend is positive (rising), then use a 5-period EMA of the open price as the score; otherwise, return 0. This creates a **conditional gating** mechanism that activates only when volume is increasing, filtering out noise.
+
+---
+
+### ✅ **Expression 3 (Cross-sectional + Time-Series Smoothing):**
+**`RANK(TS_SMA(return, 10))`**
+
+- **Signal:** `return` (price change)
+- **Operator Family:** `RANK` (cross-sectional)
+- **Window:** 10 (for TS_SMA)
+- **Mechanism:** Ranks the smoothed 10-period simple moving average of returns. This helps measure the relative strength of recent return patterns against each other, capturing **diversity in performance**.
+
+---
+
+### 📌 Notes:
+- All expressions output a **continuous score**, not a boolean.
+- Used **under-used families**: `TS_REGRESI`, `DECAYLINEAR`, and `RANK` (with a time-series component).
+- **Parsimony**: Each expression uses 2–3 base variables and avoids unnecessary complexity.
+```

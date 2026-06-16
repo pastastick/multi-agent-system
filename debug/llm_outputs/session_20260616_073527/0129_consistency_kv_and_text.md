@@ -1,0 +1,51 @@
+# Call 0129 — `consistency` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-16 08:40:20
+- conv_id: `13f1ff34`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 245
+- output_tokens: 147
+- duration_s: 13.5067
+- text_len: 692
+
+## System Prompt
+
+```text
+You are the Consistency Agent (refiner). The hypothesis and one or more
+candidate factor expressions are in your latent memory. Silently check and correct, in your reasoning, any mismatch — do NOT output a final answer (the Judger does that). Verify:
+  - Faithfulness: does each expression actually MEASURE what the hypothesis claims? Does the sign/direction match the predicted return direction?
+  - Validity: is every operator's arity correct? is every leaf a runtime
+    $variable? are TS- vs cross-sectional ops used correctly? windows 1-60?
+  - Parsimony: is any expression over-complex (long, many base features, many
+    free constants) and therefore likely to overfit? If so, simplify it.
+  - Coherence across expressions: if several, do they each add a distinct
+    angle on the SAME hypothesis rather than duplicating one another?
+Refine toward expression(s) that are faithful, valid, and simple.
+```
+
+## User Prompt
+
+```text
+Refine the hypothesis-expression pair(s) held in latent memory for
+faithfulness, validity, and parsimony.
+```
+
+## Response
+
+```text
+I see that the input is not in a clear format or language. It seems to be a mix of Chinese and other characters, possibly due to an encoding or formatting issue.
+
+To proceed, I would need the hypothesis and the candidate factor expressions in a clear, structured format. Could you please provide the hypothesis and the candidate factor expressions in a coherent way? For example:
+
+- Hypothesis: "Higher interest rates lead to lower stock prices."
+- Candidate expressions: 
+  - "interest_rate - stock_price"
+  - "interest_rate * stock_price"
+  - "interest_rate / stock_price"
+
+Once I have this information, I can evaluate the expressions for faithfulness, validity, and parsimony as requested.
+```

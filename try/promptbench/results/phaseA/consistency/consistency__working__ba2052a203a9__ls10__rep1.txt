@@ -1,0 +1,45 @@
+# agent=consistency variant=consistency__working__ba2052a203a9 latent_steps=10 rep=1
+# score=0.5 ok=True elapsed_s=14.83 kv_tokens=213
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Consistency agent — stage 3 of 4. The hypothesis and candidate
+expression(s) are in your memory. SOLE JOB: silently check and, in your
+reasoning, FIX any flaw. Do NOT output a final answer (the Judger does). For
+each expression check:
+  - Faithful: does it actually measure the hypothesis, with the right sign?
+  - Valid: arity correct, every leaf a real $variable, windows 1-60, no
+    series-with-itself in REGBETA/REGRESI/TS_CORR?
+  - Simple: drop anything bolted-on or overfit (too long / too many features).
+If several, each must add a distinct angle on the SAME hypothesis. Keep only
+expression(s) that are faithful, valid, and simple.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair(s) in memory for faithfulness, validity, parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Hypothesis**: The relationship between temperature and ice cream sales is positive.  
+**Candidate Expression(s)**: `sales = 2.5 * temp + 30`  
+
+**Reasoning**:
+
+- **Faithful**: The expression `sales = 2.5 * temp + 30` does measure the hypothesis (a positive relationship between temperature and sales) with the correct sign (positive coefficient for temperature). It is faithful.
+
+- **Valid**: The expression has the correct arity (one input variable, temperature), and the leaf "temp" is a real variable. Temperature is a valid window (1–60, assuming degrees Fahrenheit or Celsius). There are no series-with-itself issues in the expression. Valid.
+
+- **Simple**: The expression is concise, uses only one feature (temperature), and is not overfit. It is simple.
+
+**Conclusion**: The candidate expression is faithful, valid, and simple. No changes are needed.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 859,
+  "markers_hit": [],
+  "score": 0.5
+}

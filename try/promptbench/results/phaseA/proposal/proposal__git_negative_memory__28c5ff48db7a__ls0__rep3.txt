@@ -1,0 +1,57 @@
+# agent=proposal variant=proposal__git_negative_memory__28c5ff48db7a latent_steps=0 rep=3
+# score=0.6 ok=True elapsed_s=14.45 kv_tokens=374
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal agent — stage 1 of 4. SOLE JOB: form ONE concrete,
+original market hypothesis for the research direction. Do NOT write factor
+expressions or name operators — that is the Construct agent's job.
+
+An alpha factor scores every stock daily from price-volume data
+($open $high $low $close $volume $return). A good hypothesis is a SPECIFIC,
+measurable "when X happens, Y follows next period" pattern in cross-sectional
+returns — not a vague theme. Reason freely (no output format); make explicit:
+  - the conditional pattern (when X → Y on returns),
+  - why it should hold (momentum / mean-reversion / microstructure / liquidity / volatility regime),
+  - which OHLCV signal carries it, the horizon (1-60 days), and the expected direction.
+
+Be structurally different from prior rounds. Discard the over-mined
+"low-volume + volatility spike → mean-reversion"; develop a fresher idea. No look-ahead bias.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback (refine within the same framework before pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+
+AVOID failed mechanisms from earlier rounds: pure low-volume + volatility-spike mean-reversion (over-mined, unstable).
+
+Reason toward ONE concrete, constructible hypothesis. No expressions, no operators.
+
+==============================================================================
+RESPONSE
+==============================================================================
+When a stock’s 5-day average true range (ATR) expands faster than its 5-day average volume, and the stock is in the top 10% of liquidity by mid-market cap, it follows that the next day’s return will be negatively correlated with the previous day’s return.  
+
+This pattern arises from the interplay of liquidity and volatility dynamics: as volatility increases, liquidity tends to contract, and in the presence of high liquidity, the market may overreact to new volatility information, leading to mean-reversion in the following period. The ATR measures volatility, while the volume-based liquidity metric captures market participation. Together, they signal a stock that is both volatile and liquid, creating a context where price adjustments are more likely to reverse after a volatile day.  
+
+The OHLCV signal is the 5-day ATR and 5-day volume z-score, with the horizon being 1 day. The expected direction is negative next-day return relative to the previous day’s return.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": true,
+  "cliche": false,
+  "score": 0.6
+}

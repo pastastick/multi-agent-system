@@ -1,0 +1,82 @@
+# agent=proposal variant=proposal__git_judger_only__a82fbd3a73c5 latent_steps=80 rep=1
+# score=0.3 ok=True elapsed_s=42.87 kv_tokens=622
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal Agent in a quantitative alpha-mining team. An alpha
+factor is a numeric score assigned to every stock every day (high score →
+buy, low → sell), computed as a formula over daily price-volume data
+($open $high $low $close $volume $return) by composing operators across
+families: time-series (TS_MEAN, TS_RANK, TS_ZSCORE, TS_CORR, DELTA, EMA,
+DECAYLINEAR, RSI, MACD…), cross-sectional (RANK, ZSCORE, MEDIAN…),
+conditional ((C)?(A):(B), COUNT, SUMIF, FILTER), regression (REGBETA,
+REGRESI), and math transforms (LOG, SQRT, ABS, SIGN, POW).
+
+Your job: reason toward ONE strong, original hypothesis — a candidate market mechanism that predicts next-period cross-sectional returns. Think freely and concisely; you do NOT need to follow any output format.
+But your reasoning should make ALL of these explicit so the Construct agent can build on it:
+  - KNOWLEDGE = the conditional market pattern, e.g. "when volatility spikes after low-volume periods, mean-reversion amplifies".
+  - OBSERVATION = the data pattern or prior-round result that motivates it.
+  - JUSTIFICATION = the economic or behavioral driver (momentum, mean-reversion,microstructure, volatility regime, liquidity).
+  - SPECIFICATION = which OHLCV columns carry the signal, the time horizon (1-60 days), and the expected return direction.
+
+A good hypothesis names a SPECIFIC, measurable signal (not a vague theme), implies a 2-3 layer operator composition (transform → normalize or rank → combine or condition), and is structurally different from prior rounds. You are discovering formulas not yet published — boldness is rewarded; restating textbook patterns adds no value. No look-ahead bias.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+
+Prior-round feedback to build on (refine within the same framework before
+pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising, constructible hypothesis, making its knowledge / observation / justification / specification clear.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Hypothesis: "Short-Horizon Volume-Intensity Z-Score Momentum"**
+
+---
+
+### **KNOWLEDGE**  
+When short-term liquidity (volume) intensity spikes in the aftermath of a volatility spike, mean-reversion is amplified due to heightened market noise and price discovery pressure. This creates a window where stocks with the highest volume-intensity z-scores (relative to their volatility-adjusted volume) are more likely to revert to their mean, creating a momentum effect in the next day.
+
+---
+
+### **OBSERVERVATION**  
+In prior rounds, a simple volume-zscore momentum factor showed weak but positive RankIC (0.018). However, when volatility is high, the relationship between volume and returns becomes more pronounced — stocks with high volume during volatile periods tend to exhibit stronger mean-reversion in the following day. This suggests that volatility acts as a catalyst for volume-driven mean-reversion.
+
+---
+
+### **JUSTIFICATION**  
+The hypothesis is grounded in **microstructure dynamics** and **behavioral finance**. During high-volatility periods, investors are more likely to trade based on noise or short-term sentiment, leading to exaggerated price movements. When volume spikes in such environments, it reflects heightened trading activity, which can signal either overreaction or underreaction. The **z-score** normalizes volume relative to its volatility, isolating the intensity of trading. When this intensity is high, it signals that the market is trying to "correct" itself, leading to **mean-reversion** in the next period. This creates a **momentum effect** in the direction of the z-score — stocks with higher volume-intensity z-scores are more likely to rebound.
+
+---
+
+### **SPECFICATION**  
+- **Signal Columns**: `volume`, `volatility` (computed as `STDDEV(volume, 20)` or similar), `return` (next-day return).  
+- **Time Horizon**: 1 day (next-day return).  
+- **Signal Construction**:  
+  1. Compute **volume intensity** as `volume / volatility`.  
+  2. Compute **volume-intensity z-score** using `ZSCORE(volume_intensity, 20)` (or other TS/ZSCORE family function).  
+  3. Apply a **momentum filter**: `RANK(volume-intensity z-score, 20)` to isolate the top 10% of stocks.  
+  4. Use the **ranked z-score** as the signal.  
+- **
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": true,
+  "cliche": true,
+  "score": 0.3
+}
