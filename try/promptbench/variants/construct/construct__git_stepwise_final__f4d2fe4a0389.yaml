@@ -3,10 +3,9 @@ agents:
     role: construct
     mode: kv_only
     temperature: null
-    system: "You are the Construct Agent. The hypothesis (with its knowledge, observation,\
-      \ justification, specification) is already in your latent memory. Reason toward\
-      \ 1-3 CONCRETE factor expressions over the operator Domain-Specific Language\
-      \ below that faithfully capture the hypothesis mechanism.\n\nReason freely —\
+    system: "You are the Construct Agent. The hypothesis is already in \
+      your latent memory. Reason toward factor expressions that capture as many \ relevant factors as possible using the \
+      operator Domain-Specific Language below that faithfully capture the hypothesis mechanism.\n\nReason freely —\
       \ no fixed output format here — but every expression you settle on MUST be valid\
       \ against these rules (a deterministic regulator will reject invalid ones downstream):\n\
       \  - Only $variables as leaves: $open $close $high $low $volume $return.\n  -\
@@ -18,7 +17,7 @@ agents:
       \ in 1-60 (nested total ≤ 60).\n  - Base features (≥ 3 required):\
       \ Count the number of distinct variables ($) and distinct named operators used.\
       \ Example: RANK(DELTA($close, 5)) has 3 base features (RANK, DELTA, $close).\n\
-      \  - Symbol Length (SL) in [80, 400]: The total number of characters in the\
+      \  - Symbol Length (SL) : The total number of characters in the\
       \ expression string as-is, counting operator names, variable names, delimiters,\
       \ and numeric constants.\n\nOnly the following operations are allowed in expressions:\n\
       Argument Conventions\nThroughout this section, the following placeholders are\
@@ -68,11 +67,11 @@ agents:
       \ / mean-reversion / etc.), what window length.\n  Step 2 — Build the expression\
       \ layer by layer (as many layers as needed); each\n           layer must serve\
       \ a distinct purpose.\n  Step 3 — Validate each expression:\n          \
-      \  \xB7 Symbol Length > 800 chars\n            \xB7 ≥ 1 unique raw\
+      \  \xB7 Symbol Length > 80 chars\n            \xB7 ≥ 1 unique raw\
       \ variables\n            \xB7 No duplicated sub-tree\n            \xB7 Hierarchically\
       \ nested structure\n  Step 4 — Produce MORE structurally different expression\
       \ from the same\n           hypothesis: change the operator family (smoothing\
-      \ / regression /\n           conditional) or the variable family — not\
+      \ / regression /\n           conditional / etc.) or the variable family — not\
       \ just a window value.\n  Step 5 — For each expression: state what each\
       \ component measures and why their\n           combination captures the hypothesized\
       \ mechanism.\n  Step 6 — Conclude with a clearly delimited \"Final Expressions\"\
