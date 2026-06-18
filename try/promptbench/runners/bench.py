@@ -161,21 +161,19 @@ def run_job(job: dict, *, dry_run: bool, temp: float) -> dict:
 
 
 def _save_artifact(out: dict, system: str, user: str, score_detail: dict) -> None:
-    d = RESULTS_DIR / out["agent"]
-    d.mkdir(parents=True, exist_ok=True)
-    fp = d / f"{out['variant_id']}__ls{out['latent_steps']}__rep{out['rep']}.txt"
-    lines = [
-        f"# agent={out['agent']} variant={out['variant_id']} latent_steps={out['latent_steps']} rep={out['rep']}",
-        f"# score={out.get('score')} ok={out.get('ok')} elapsed_s={out.get('elapsed_s')} kv_tokens={out.get('kv_tokens')}",
-        "=" * 78, "SYSTEM", "=" * 78, system,
-        "", "=" * 78, "USER", "=" * 78, user,
-        "", "=" * 78, "RESPONSE", "=" * 78, (out.get("text") or ""),
-        "", "=" * 78, "SCORE DETAIL", "=" * 78,
-        json.dumps(score_detail, indent=2, ensure_ascii=False),
-    ]
-    if out.get("err"):
-        lines += ["", "ERROR", out["err"], out.get("traceback", "")]
-    fp.write_text("\n".join(lines), encoding="utf-8")
+    # Layout nested & mudah dibaca: phaseA/<agent>/<variant_short>/ls<N>/rep<R>.txt
+    from ..artifacts import phaseA_artifact, write_step_artifact
+    fp = phaseA_artifact(out["agent"], out["variant_id"], out["latent_steps"], out["rep"])
+    write_step_artifact(
+        fp,
+        header={"agent": out["agent"], "variant": out["variant_id"],
+                "latent_steps": out["latent_steps"], "rep": out["rep"],
+                "score": out.get("score"), "ok": out.get("ok"),
+                "elapsed_s": out.get("elapsed_s"), "kv_tokens": out.get("kv_tokens")},
+        system=system, user=user, response=out.get("text") or "",
+        score_detail=score_detail,
+        error=(out["err"] + "\n" + out.get("traceback", "")) if out.get("err") else None,
+    )
 
 
 # ════════════════════════════════════════════════════════════════════════════

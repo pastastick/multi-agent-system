@@ -1,0 +1,81 @@
+# promptbench/chains/chain_manifest.yaml
+# =======================================
+# Definisi RANTAI multi-agent untuk Phase B (KV-cache chaining bertahap).
+#
+# Tiap chain = urutan langkah. Tiap langkah menyebut `agent` dan `variant`
+# (pemenang Phase A — boleh di-override via CLI `--pick agent=variant_short`).
+# Langkah TERAKHIR otomatis di-decode (kv_only → kv_and_text) supaya outputnya
+# bisa diskor. Langkah perantara berjalan di mode native-nya (kv_only = transfer
+# latent murni; kv_and_text = decode + KV ter-crop sebelum diteruskan).
+#
+# `transfer` menentukan bagaimana KV langkah sebelumnya masuk ke langkah ini:
+#   chain  : ambil KV langkah tepat sebelumnya (kv_deepcopy → tidak menimbun).
+#   none   : mulai tanpa seed KV (untuk langkah-0 / agen sumber).
+#   concat : gabung KV beberapa langkah ber-`tag` (LatentMAS Eq.4) — Phase C.
+#
+# `variant` boleh:
+#   - "winner"        : ambil pemenang Phase A dari scoreboard (default).
+#   - "<source_id>"   : pilih varian spesifik, mis. "working", "git_optimalisasi".
+#
+# Default latent_steps per langkah = global CLI `--latent-steps`; bila langkah
+# punya `latent_steps:` eksplisit, itu meng-override (untuk uji per-agent step).
+
+defaults:
+  # Pemenang sementara dari Phase A (scoreboard 2026-06-16) — boleh dioverride.
+  picks:
+    proposal: working
+    construct: working
+    consistency: working
+    judger: git_gate_deterministik
+    feedback: winner
+    mutation: winner
+    crossover: winner
+
+chains:
+
+  # ── 2-agent: front-end paling pendek ──────────────────────────────────────
+  pc_2agent:
+    desc: "proposal → construct (terminal construct di-decode untuk skor)"
+    steps:
+      - { agent: proposal,  variant: winner, transfer: none }
+      - { agent: construct, variant: winner, transfer: chain }
+
+  # ── 2-agent: evolution seed → proposal ────────────────────────────────────
+  mut_proposal:
+    desc: "mutation → proposal (apakah mutation KV mengubah arah hipotesis?)"
+    steps:
+      - { agent: mutation, variant: winner, transfer: none }
+      - { agent: proposal, variant: winner, transfer: chain }
+
+  cross_proposal:
+    desc: "crossover → proposal (apakah crossover KV mewarisi 2 parent?)"
+    steps:
+      - { agent: crossover, variant: winner, transfer: none }
+      - { agent: proposal,  variant: winner, transfer: chain }
+
+  # ── +judger ───────────────────────────────────────────────────────────────
+  pcj_judger:
+    desc: "proposal → construct → judger (judger decode hypothesis+exprs)"
+    steps:
+      - { agent: proposal,  variant: winner, transfer: none }
+      - { agent: construct, variant: winner, transfer: chain }
+      - { agent: judger,    variant: winner, transfer: chain }
+
+  # ── +consistency : FULL front-end ─────────────────────────────────────────
+  front_end_full:
+    desc: "proposal → construct → consistency → judger (front-end lengkap)"
+    steps:
+      - { agent: proposal,    variant: winner, transfer: none }
+      - { agent: construct,   variant: winner, transfer: chain }
+      - { agent: consistency, variant: winner, transfer: chain }
+      - { agent: judger,      variant: winner, transfer: chain }
+
+  # ── terminal feedback (backtest rekayasa dari fixtures) ───────────────────
+  front_end_feedback:
+    desc: "proposal → construct → consistency → judger → feedback (terminal JSON)"
+    steps:
+      - { agent: proposal,    variant: winner, transfer: none }
+      - { agent: construct,   variant: winner, transfer: chain }
+      - { agent: consistency, variant: winner, transfer: chain }
+      - { agent: judger,      variant: winner, transfer: chain }
+      - { agent: feedback,    variant: winner, transfer: chain }

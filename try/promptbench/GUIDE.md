@@ -217,7 +217,25 @@ cd quantalatent
 .venv/bin/python -m try.promptbench.runners.bench \
     --agents proposal,construct,consistency,judger \
     --latent-steps 0,10,20,40,60,80 --reps 5 --workers 3
-# → hasil: results/phaseA/scoreboard.{csv,md} + artefak per (variant×ls×rep).
+# → hasil: results/phaseA/scoreboard.{csv,md} + artefak NESTED:
+#   results/phaseA/<agent>/<variant_short>/ls<N>/rep<R>.txt   (mudah disortir manual)
+
+# Rapikan artefak Phase A LAMA (datar) → nested (idempoten; --apply utk eksekusi):
+.venv/bin/python -m try.promptbench.runners.reorg_phaseA --apply
+
+# ── Phase B: rantai multi-agent via KV-cache ──────────────────────────────
+# dry-run (tanpa GPU): render tiap langkah + validasi wiring KV (delta = prompt+latent)
+.venv/bin/python -m try.promptbench.runners.bench_chain \
+    --chains pc_2agent,pcj_judger --latent-steps 0,20 --reps 1 --dry-run
+
+# runpod (GPU): chain penuh + deteksi collapse/penimbunan KV
+.venv/bin/python -m try.promptbench.runners.bench_chain \
+    --chains front_end_full,front_end_feedback \
+    --latent-steps 0,10,20,40 --reps 5 --workers 3
+# override varian pemenang per agent (kalau sortir manual beda dari scoreboard):
+#   --pick judger=working,construct=git_optimalisasi
+# → hasil: results/phaseB/scoreboard.{csv,md} + per run:
+#   results/phaseB/<chain>/ls<N>/rep<R>/{NN_<agent>.txt, chain.json}
 ```
 
 Catatan teknis penting:
@@ -230,17 +248,32 @@ Catatan teknis penting:
   terverifikasi. Regulator mencetak `factor_expression:` ke stdout → di driver
   di-redirect ke devnull.
 
-## 10. STATUS TERKINI (2026-06-16)
+## 10. STATUS TERKINI (2026-06-18)
 
-- [x] Phase 0a — branch `experiment/prompt-bench` dari newEvol @218c665.
-- [x] Phase 0b — scaffold + GUIDE.
-- [x] Phase 0c — `collect_variants.py` → **47 varian unik** (core4: proposal 7,
-      construct 6, consistency 4, judger 7) + `variants_manifest.yaml` +
-      authored `_authored/claude_latentpaper.yaml`.
-- [x] Phase 0d — `scoring/score.py` (regulator gate + variety + stabilitas), smoke-test OK.
-- [x] Phase 0e — `runners/bench.py` driver paralel (2 fase text/latent), **dry-run
-      96 job lolos** (semua varian core4 render tanpa MISSING var).
-- [ ] Phase A+ — **butuh GPU runpod** (belum dijalankan).
+- [x] Phase 0a–0e — setup, varian, scorer, driver (lihat riwayat).
+- [x] Phase A — **SUDAH JALAN di GPU** (commit `06b1ea2`): scoreboard.{csv,md}
+      + ~720 artefak core4. Pemenang sementara: proposal `working`@ls60 (0.84),
+      construct `working`@ls0 (0.80), judger `git_gate_deterministik`@ls20 (0.90),
+      consistency semua ~0.5 (memang harus diukur DOWNSTREAM di Phase B).
+      → User sedang **sortir manual** varian yang layak.
+- [x] Artefak Phase A dirapikan ke layout **nested** `<agent>/<variant_short>/ls<N>/rep<R>.txt`
+      (reorg_phaseA.py). `bench.py` juga sudah menulis nested untuk run berikutnya.
+- [x] **Phase B infra (tanpa GPU, dry-run 12 job lolos):**
+      - `chains/chain_manifest.yaml` + `chains/registry.py` — 6 rantai bertahap
+        (pc_2agent → mut/cross_proposal → pcj_judger → front_end_full → front_end_feedback);
+        resolusi varian "winner" otomatis dari scoreboard, override via `--pick`.
+      - `runners/bench_chain.py` — eksekutor KV-chain. **Clone-on-transfer**
+        (`kv_deepcopy` tiap batas) → tidak ada penimbunan tak sengaja; engine
+        meng-crop answer-token; realign W_a aktif utk latent_steps>0.
+      - `diagnostics/collapse.py` — detektor KV-growth (spike/overflow/transfer-missing)
+        + teks terminal (repetition/runaway/unparseable).
+      - `scoring/score_chain.py` — skor terminal reuse gate+variety Phase A.
+      - `artifacts.py` — sumber tunggal path/penamaan nested (Phase A + B).
+- [ ] Phase B+ — **butuh GPU runpod** (dry-run lolos; belum dijalankan di GPU).
 
-**Belum ada run GPU.** Semua Phase 0 berjalan tanpa GPU. Belum di-commit (tunggu
-aba-aba user). Phase A dst. dieksekusi di runpod.
+**Catatan KV-transfer (penting, sudah diverifikasi di kode):**
+`latent_pass()` memutasi `past_key_values` IN-PLACE (HF DynamicCache). Karena itu
+bench_chain SELALU `kv_deepcopy()` sebelum mengoper ke langkah berikutnya — output
+tiap langkah membeku, pertumbuhan KV murni = prompt+latent_steps (terlihat di
+chain.json: `delta` vs `expected_delta`). KNN auto-OFF saat latent_steps>0
+(RoPE desync guard), jadi panjang KV tidak berubah diam-diam.
