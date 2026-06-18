@@ -84,8 +84,12 @@ def score_expressions(exprs: List[str]) -> Dict[str, Any]:
     }
 
 
-def score_construct_judger(text: str) -> Dict[str, Any]:
-    parsed = parse_hypothesis_exprs(text or "")
+def score_construct_judger(text: str, parsed: Any = None) -> Dict[str, Any]:
+    # `parsed` boleh diinjeksi (mis. hasil parsing_hook dgn fallback) supaya
+    # skor Phase B memakai parser yang sama dgn detektor collapse. Default None
+    # → parser produksi (perilaku Phase A tak berubah).
+    if parsed is None:
+        parsed = parse_hypothesis_exprs(text or "")
     if parsed is None:
         return {"parse_ok": False, "hypothesis": None, "n_expr": 0,
                 "gate_pass": 0, "gate_pass_frac": 0.0, "n_families": 0,

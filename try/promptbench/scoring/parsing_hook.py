@@ -1,7 +1,12 @@
 """
-promptbench/chain/parsing_hook.py
-=================================
+promptbench/scoring/parsing_hook.py
+===================================
 EXTENSION POINT untuk parsing output judger/construct di Phase B.
+
+(Dahulu `chain/parsing_hook.py`. Dipindah ke `scoring/` saat konsolidasi Phase B
+2026-06-18: kini SATU-SATUNYA hook parser, dipakai oleh KEDUA desain Phase B —
+stages `chain/chain.py` dan chains `runners/bench_chain.py` — lewat
+`scoring/score_chain.py`. Dependensi searah: chain & chains → scoring.)
 
 KENAPA FILE INI ADA
 -------------------

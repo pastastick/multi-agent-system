@@ -8,6 +8,15 @@ Beda dengan Phase A: input bukan agent terisolasi, melainkan hasil akhir rantai
 KV (proposal→…→terminal). Yang kita ukur sama — parse-rate, gate pass-rate,
 variety family — plus sinyal `parser_ok` untuk detektor collapse.
 
+PARSER HOOK (konsolidasi 2026-06-18)
+------------------------------------
+Untuk construct/judger, parsing di sini lewat `parsing_hook.parse_with_trace`
+(bukan `parse_hypothesis_exprs` langsung). Jadi SATU titik parser dipakai oleh
+KEDUA desain Phase B (stages `chain/chain.py` & chains `runners/bench_chain.py`),
+keduanya memanggil `score_terminal`. Default hook = delegate apa adanya ke parser
+produksi (zero perubahan), tapi pre-normalizer yang didaftarkan otomatis ikut
+serta + jejak audit (`parse_trace`) ikut disertakan untuk artefak.
+
 Tanpa GPU. Murni teks → skor.
 """
 
@@ -16,6 +25,7 @@ from __future__ import annotations
 from typing import Any, Dict, Optional
 
 from . import score as _A   # reuse Phase A scorers (score_output, dll.)
+from . import parsing_hook
 
 
 def parser_ok_for(role: str, text: str) -> Optional[bool]:
@@ -26,8 +36,8 @@ def parser_ok_for(role: str, text: str) -> Optional[bool]:
     Dipakai detektor collapse (`unparseable`).
     """
     if role in ("construct", "judger"):
-        d = _A.score_construct_judger(text or "")
-        return bool(d.get("parse_ok"))
+        parsed, _ = parsing_hook.parse_with_trace(text or "", role=role)
+        return not parsing_hook._is_empty(parsed)
     if role == "feedback":
         d = _A.score_feedback(text or "")
         return bool(d.get("json_ok"))
@@ -35,7 +45,17 @@ def parser_ok_for(role: str, text: str) -> Optional[bool]:
 
 
 def score_terminal(role: str, text: str) -> Dict[str, Any]:
-    """Skor output terminal rantai + sertakan parser_ok untuk collapse-check."""
+    """Skor output terminal rantai + sertakan parser_ok untuk collapse-check.
+
+    Untuk construct/judger: parsing lewat hook (fallback pre-normalizer + trace),
+    lalu skor memakai hasil parse yang sama → konsisten dengan parser_ok.
+    """
+    if role in ("construct", "judger"):
+        parsed, trace = parsing_hook.parse_with_trace(text or "", role=role)
+        detail = _A.score_construct_judger(text or "", parsed=parsed)
+        detail["parser_ok"] = not parsing_hook._is_empty(parsed)
+        detail["parse_trace"] = trace
+        return detail
     detail = _A.score_output(role, text or "")
     detail["parser_ok"] = parser_ok_for(role, text or "")
     return detail

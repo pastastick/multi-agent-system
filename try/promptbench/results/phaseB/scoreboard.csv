@@ -1,2 +1,5 @@
 chain,config,terminal_agent,n,score_mean,score_std,ok_rate,healthy_rate,kv_flag_rate,text_collapse_rate,err_rate
-pcj_judger,ls60__c-git_stepwise_final__j-working__p-authored_mixed_scoped,judger,3,0.583,0.118,1.0,1.0,0.0,0.0,0.0
+front_end_feedback,ls0,feedback,1,1.0,0.0,1.0,1.0,0.0,0.0,0.0
+front_end_feedback,ls20,feedback,1,1.0,0.0,1.0,1.0,0.0,0.0,0.0
+pc_2agent,ls0,construct,1,1.0,0.0,1.0,1.0,0.0,0.0,0.0
+pc_2agent,ls20,construct,1,1.0,0.0,1.0,1.0,0.0,0.0,0.0

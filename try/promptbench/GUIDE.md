@@ -241,21 +241,25 @@ cd quantalatent
 .venv/bin/python -m try.promptbench.runners.reorg_phaseA --apply
 
 # ── Phase B: rantai multi-agent via KV-cache ──────────────────────────────
-# CATATAN: ada DUA implementasi Phase B paralel (hasil merge dua mesin) — lihat §10.
-# Belum dikonsolidasi; pilih salah satu sebagai produksi sebelum lanjut Phase C.
+# KONSOLIDASI 2026-06-18: dua desain DIPERTAHANKAN (mengukur hal berbeda — lihat
+# §10) di atas INFRASTRUKTUR BERSAMA impl 2: diagnostics/collapse.py, artifacts.py,
+# scoring/score_chain.py + scoring/parsing_hook.py (parser hook, satu-satunya
+# bagian impl 1 yang dipertahankan). Disiplin KV = LINEAR penuh (clone-on-transfer);
+# DEFAULT_MAX_NEW=30000; metode input = seragam **FIXTURES.
 #
-# (B-impl 1) paket `chain/` — CLI berbasis --stages
+# (B-STAGES) paket `chain/` — CLI berbasis --stages (prefix bertahap, ls TETAP)
 # dry-run (tanpa GPU): cek wiring + picks auto dari scoreboard.csv
 .venv/bin/python -m try.promptbench.chain.chain --stages all --reps 1 --dry-run
-# runpod (GPU): rantai bertahap + kv_shape + collapse detector
+# runpod (GPU): rantai bertahap + kv_shape + collapse detector (paralel)
 .venv/bin/python -m try.promptbench.chain.chain \
-    --stages s1_pc,s2_pcj,s3_pccj,s4_full_fb --reps 3
+    --stages s1_pc,s2_pcj,s3_pccj,s4_full_fb --reps 3 --workers 3
 # override varian/ls: --pick judger=gate_deterministik --ls construct=60 --uniform-ls 20
 # evolution entry: --stages s5_mut,s6_cross
-# → hasil: results/phaseB/scoreboard.md + artefak per (stage×rep) berisi
-#   KV boundaries, collapse verdict, parse trace, tip response, score detail.
+# → hasil: results/phaseB/scoreboard_stages.{csv,md} + artefak nested
+#   results/phaseB/<stage>/<config>/rep<R>/{NN_<agent>.txt, chain.json}
+#   (KV boundaries, collapse verdict, parse trace, tip response, score detail).
 #
-# (B-impl 2) `chains/` + runners/bench_chain.py — CLI berbasis --chains
+# (B-CHAINS) `chains/` + runners/bench_chain.py — CLI berbasis --chains
 # dry-run (tanpa GPU): render tiap langkah + validasi wiring KV (delta = prompt+latent)
 .venv/bin/python -m try.promptbench.runners.bench_chain \
     --chains pc_2agent,pcj_judger --latent-steps 0,20 --reps 1 --dry-run
@@ -266,7 +270,9 @@ cd quantalatent
 # override varian pemenang per agent (kalau sortir manual beda dari scoreboard):
 #   --pick judger=working,construct=git_optimalisasi
 # → hasil: results/phaseB/scoreboard.{csv,md} + per run:
-#   results/phaseB/<chain>/ls<N>/rep<R>/{NN_<agent>.txt, chain.json}
+#   results/phaseB/<chain>/<config>/rep<R>/{NN_<agent>.txt, chain.json}
+# CATATAN scoreboard: STAGES → scoreboard_stages.{csv,md}; CHAINS → scoreboard.{csv,md}
+#        (file terpisah, tidak saling menimpa di results/phaseB/).
 ```
 
 Catatan teknis penting:
@@ -292,25 +298,32 @@ Catatan teknis penting:
 - [x] Artefak Phase A dirapikan ke layout **nested** `<agent>/<variant_short>/ls<N>/rep<R>.txt`
       (reorg_phaseA.py). `bench.py` juga sudah menulis nested untuk run berikutnya.
 
-- [!] **Phase B — ADA DUA IMPLEMENTASI PARALEL (hasil merge 2 mesin, 2026-06-18).**
-      Keduanya dipertahankan; **belum dikonsolidasi**. Putuskan mana produksi
-      sebelum Phase C. Keduanya dry-run lolos, **butuh GPU untuk run nyata**:
-      - **(impl 1) `chain/`** — `chain.py` runner (CLI `--stages`), `parsing_hook.py`
-        (extension-point parser), `collapse.py` detektor. Dry-run 6 stage lolos
-        (ok=6, err=0); picks auto dari scoreboard.
-      - **(impl 2) `chains/` + `runners/bench_chain.py`** (CLI `--chains`) —
-        `chains/chain_manifest.yaml` + `chains/registry.py` (6 rantai bertahap,
-        winner auto dari scoreboard, override `--pick`); `bench_chain.py` eksekutor
-        clone-on-transfer (`kv_deepcopy` tiap batas); `diagnostics/collapse.py`
-        (KV-growth: spike/overflow/transfer-missing + teks terminal);
-        `scoring/score_chain.py`; `artifacts.py` (path/penamaan nested). Plus
-        `runners/bench_chain_grid.py` + artefak sesi `debug/llm_outputs/session_20260618_*`.
-        Dry-run 12 job lolos.
-- [ ] **Konsolidasi Phase B (pilih 1 impl)** → lalu Phase B run GPU → Phase C/D.
+- [x] **Phase B — DIKONSOLIDASI (2026-06-18).** Dua desain DIPERTAHANKAN karena
+      MENGUKUR HAL BERBEDA, di atas infrastruktur impl 2 yang sama. Keputusan user:
+      semua fundamental ikut impl 2 (KV LINEAR penuh, DEFAULT_MAX_NEW=30000,
+      collapse=diagnostics/, paralelisme ProcessPool, input seragam **FIXTURES),
+      KECUALI parser hook (impl 1, dipertahankan). Keduanya dry-run lolos
+      (ok=6/6, no MISSING var), **butuh GPU untuk run nyata**:
+      - **STAGES `chain/`** — `chain.py` (CLI `--stages`): prefix bertahap pada
+        latent_steps TETAP (top per-agent) → isolasi kontribusi MARGINAL tiap agent
+        + skip-consistency (s2 vs s3) + evolution-seed (s5/s6). Kini memakai
+        diagnostics/collapse.py, artifacts.py (nested), scoring/score_chain.py.
+        KV linear clone-on-transfer (feedback meng-chain dari judger). ProcessPool
+        text/latent split. Scoreboard → `scoreboard_stages.{csv,md}`.
+      - **CHAINS `chains/` + `runners/bench_chain.py`** (CLI `--chains`): skenario
+        tematik × GRID latent_steps × rep (termasuk evolution-first). Tak berubah
+        selain parser hook kini lewat score_chain. Scoreboard → `scoreboard.{csv,md}`.
+      - **Parser hook** dipindah `chain/parsing_hook.py` → `scoring/parsing_hook.py`
+        (dependensi searah), di-wire ke `scoring/score_chain.py` → KEDUA desain dapat
+        fallback + audit trace. `scoring/score.py` dapat param `parsed=` (Phase A
+        tetap byte-identik by-default). `chain/collapse.py` DIHAPUS (redundan dgn
+        diagnostics/collapse.py). FIXTURES dilengkapi var alt-variant (hypothesis_text,
+        focus_hint, parent_*, diagnosis_*, backtest_summary) → semua pick render bersih.
+- [ ] **Phase B run GPU** (stages + chains) → Phase C (ablation) → Phase D (konsolidasi prompt).
 
 User sedang sortir manual varian mana yang layak utk Phase B; default = top
-scoreboard (boleh diganti via `--pick`). Parser belum diubah (tunggu pilihan
-prompt final → tambal di `chain/parsing_hook.py`).
+scoreboard (boleh diganti via `--pick`). Parser produksi belum diubah (tunggu pilihan
+prompt final → tambal pre-normalizer di `scoring/parsing_hook.py`).
 
 **Catatan KV-transfer (penting, sudah diverifikasi di kode):**
 `latent_pass()` memutasi `past_key_values` IN-PLACE (HF DynamicCache). Karena itu

@@ -87,6 +87,29 @@ PARENTS_TEXT = (
 )
 N_PARENTS = 2
 
+# ── mutation single-parent fields (varian yang men-dekomposisi 1 parent) ──────
+PARENT_HYPOTHESIS = HYPOTHESIS_TEXT
+PARENT_EXPRESSION = "TS_ZSCORE($volume,5) - RANK(($high-$low)/$close)"
+PARENT_FEEDBACK = (
+    "PARTIALLY supports: the volume-zscore leg carries the signal; the range leg "
+    "adds little. Window may be too short for a stable beta."
+)
+BACKTEST_SUMMARY = (
+    "standalone RankIC=0.031 (ICIR=0.41); combined LightGBM RankIC=0.052, "
+    "MaxDrawdown=0.17 — near baseline floor."
+)
+DIAGNOSIS_REASON = (
+    "Weak marginal contribution: the range-compression term is collinear with the "
+    "volume-zscore term, so the second leg barely improves IC."
+)
+DIAGNOSIS_STEP = "expression"
+
+# ── construct focus hint (varian yang memakai focus_hint, bukan diversity_hint) ─
+FOCUS_HINT = (
+    "Focus: prioritise an under-used operator family this round — smoothing "
+    "(EMA/DECAYLINEAR) or regression (REGBETA) — over another cross-sectional rank."
+)
+
 # ── superset dict: dipakai LatentAgent.render(**FIXTURES) ─────────────────────
 FIXTURES = {
     "direction": DIRECTION,
@@ -94,8 +117,16 @@ FIXTURES = {
     "prior_feedback": PRIOR_FEEDBACK,
     "negative_hint": NEGATIVE_HINT,
     "diversity_hint": DIVERSITY_HINT,
+    "focus_hint": FOCUS_HINT,
     "hypothesis": HYPOTHESIS_TEXT,
+    "hypothesis_text": HYPOTHESIS_TEXT,
     "target_hypothesis": HYPOTHESIS_TEXT,
+    "parent_hypothesis": PARENT_HYPOTHESIS,
+    "parent_expression": PARENT_EXPRESSION,
+    "parent_feedback": PARENT_FEEDBACK,
+    "backtest_summary": BACKTEST_SUMMARY,
+    "diagnosis_reason": DIAGNOSIS_REASON,
+    "diagnosis_step": DIAGNOSIS_STEP,
     "former_expression": FORMER_EXPRESSION,
     "error_log": ERROR_LOG,
     "value_feedback": VALUE_FEEDBACK,
