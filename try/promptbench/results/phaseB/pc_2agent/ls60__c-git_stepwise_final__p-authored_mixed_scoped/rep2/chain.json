@@ -1,0 +1,160 @@
+{
+  "chain": "pc_2agent",
+  "config": "ls60__c-git_stepwise_final__p-authored_mixed_scoped",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.5,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 967,
+      "kv_seq_len": 1027,
+      "kv_size_mb": 144.42,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1027,
+      "expected_delta": 1027,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1551,
+      "kv_seq_len": 2631,
+      "kv_size_mb": 369.98,
+      "transfer": "chain",
+      "prev_seq_len": 1027,
+      "delta": 1604,
+      "expected_delta": 1611,
+      "text_len": 4626
+    }
+  ],
+  "elapsed_s": 101.68,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "",
+    "n_expr": 6,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "families": [
+      "cross_sectional",
+      "regression",
+      "time_series"
+    ],
+    "n_families": 3,
+    "per_expr": [
+      {
+        "expr": "- Symbol Length: The expression is 84 characters long, which is within the [80, 400] range.",
+        "gate_ok": false,
+        "reason": "unparsable expression",
+        "families": []
+      },
+      {
+        "expr": "Use a conditional z-score instead of a rank",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": []
+      },
+      {
+        "expr": "Use a regression-based signal instead of a rank",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": []
+      },
+      {
+        "expr": "RANK(DELTA($range_ratio, 1), IF($low_liquidity, TRUE, FALSE))",
+        "gate_ok": false,
+        "reason": "arity: `RANK` takes 1 argument(s) but got 2 (`RANK(DELTA($range_ratio, 1.0), IF($low_liquidity, TRUE, FALSE))`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead. `IF` is not a known function. Use only functions from the allowed list.",
+        "families": [
+          "cross_sectional",
+          "time_series"
+        ]
+      },
+      {
+        "expr": "TS_ZSCORE(DELTA($range_ratio, 1), 10, IF($low_liquidity, TRUE, FALSE))",
+        "gate_ok": false,
+        "reason": "arity: `TS_ZSCORE` takes 1-2 argument(s) but got 3 (`TS_ZSCORE(DELTA($range_ratio, 1.0), 10.0, IF($low_liquidity, TRUE, FALSE))`). `IF` is not a known function. Use only functions from the allowed list.",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "REGBETA(DELTA($range_ratio, 1), $low_liquidity, 10)",
+        "gate_ok": false,
+        "reason": "variable: `$range_ratio` is not a known variable. Use only: $open $high $low $close $volume $return. `$low_liquidity` is not a known variable. Use only: $open $high $low $close $volume $return.",
+        "families": [
+          "regression",
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.5,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 967,
+          "kv_seq_len": 1027,
+          "kv_size_mb": 144.42,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1027,
+          "expected_delta": 1027,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1551,
+          "kv_seq_len": 2631,
+          "kv_size_mb": 369.98,
+          "transfer": "chain",
+          "prev_seq_len": 1027,
+          "delta": 1604,
+          "expected_delta": 1611,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 4626,
+        "repetition": 0.157,
+        "longest_run": 8,
+        "output_tokens": 1221,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct (terminal construct di-decode untuk skor)"
+}

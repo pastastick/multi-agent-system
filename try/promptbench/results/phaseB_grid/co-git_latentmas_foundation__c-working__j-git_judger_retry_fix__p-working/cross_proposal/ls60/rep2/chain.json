@@ -1,0 +1,108 @@
+{
+  "chain": "cross_proposal",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "proposal",
+  "ok": true,
+  "score": 0.3,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "crossover",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 514,
+      "kv_seq_len": 574,
+      "kv_size_mb": 80.72,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 574,
+      "expected_delta": 574,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "proposal",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 503,
+      "kv_seq_len": 1130,
+      "kv_size_mb": 158.91,
+      "transfer": "chain",
+      "prev_seq_len": 574,
+      "delta": 556,
+      "expected_delta": 563,
+      "text_len": 1506
+    }
+  ],
+  "elapsed_s": 36.58,
+  "score_detail": {
+    "has_text": true,
+    "observable_cols": [],
+    "observable": false,
+    "conditional": true,
+    "cliche": true,
+    "score": 0.3,
+    "parser_ok": null
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "crossover",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 514,
+          "kv_seq_len": 574,
+          "kv_size_mb": 80.72,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 574,
+          "expected_delta": 574,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "proposal",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 503,
+          "kv_seq_len": 1130,
+          "kv_size_mb": 158.91,
+          "transfer": "chain",
+          "prev_seq_len": 574,
+          "delta": 556,
+          "expected_delta": 563,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 1506,
+        "repetition": 0.037,
+        "longest_run": 1,
+        "output_tokens": 379,
+        "runaway": false,
+        "parser_ok": null
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "crossover → proposal (apakah crossover KV mewarisi 2 parent?)"
+}

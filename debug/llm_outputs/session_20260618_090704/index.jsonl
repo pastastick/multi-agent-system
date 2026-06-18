@@ -1,0 +1,3 @@
+{"n": 1, "ts": "2026-06-18 09:09:10", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "5d1aa7e2", "text_len": 1967, "duration_s": 45.6295, "file": "0001_construct_kv_and_text.md", "vars": []}
+{"n": 1, "ts": "2026-06-18 09:09:10", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "78bef025", "text_len": 1958, "duration_s": 45.6286, "file": "0001_construct_kv_and_text.md", "vars": []}
+{"n": 1, "ts": "2026-06-18 09:09:10", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "4e5d21cf", "text_len": 2044, "duration_s": 45.6293, "file": "0001_construct_kv_and_text.md", "vars": []}

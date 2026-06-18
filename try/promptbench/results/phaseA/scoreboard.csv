@@ -24,6 +24,7 @@ consistency,consistency__git_latentmas_foundation__d9d9d31fed6e,60,5,0.0,0.0,0.0
 consistency,consistency__working__ba2052a203a9,60,5,0.0,0.0,0.0,,,,,,
 consistency,consistency__working__ba2052a203a9,80,5,0.0,0.0,0.0,,,,,,
 construct,construct__working__56396e7d44b0,0,5,1.0,0.8,0.4,,0.8,0,,0.8,3
+construct,construct__git_stepwise_final__f4d2fe4a0389,60,3,1.0,0.727,0.207,,0.455,1,,1.0,3
 construct,construct__git_optimalisasi__e9a6a179b181,60,5,1.0,0.707,0.36,,0.693,4,,0.8,6
 construct,construct__git_optimalisasi__e9a6a179b181,20,5,1.0,0.68,0.349,,0.8,4,,0.8,3
 construct,construct__working__56396e7d44b0,40,5,1.0,0.653,0.295,,0.467,0,,1.0,5
@@ -120,6 +121,7 @@ proposal,proposal__git_gate_deterministik__f7ae36f32f36,20,5,1.0,0.54,0.12,0.0,,
 proposal,proposal__git_negative_memory__28c5ff48db7a,40,5,1.0,0.54,0.12,0.2,,,0.0,,
 proposal,proposal__git_gate_deterministik__f7ae36f32f36,60,5,1.0,0.54,0.12,0.2,,,0.0,,
 proposal,proposal__git_negative_memory__28c5ff48db7a,60,5,1.0,0.54,0.12,0.2,,,0.0,,
+proposal,proposal__authored_mixed_scoped__mix3a1b2c3d,60,3,1.0,0.5,0.374,0.667,,,0.667,,
 proposal,proposal__git_gate_deterministik__f7ae36f32f36,0,5,1.0,0.48,0.147,0.2,,,0.0,,
 proposal,proposal__git_negative_memory__28c5ff48db7a,10,5,1.0,0.48,0.147,0.4,,,0.0,,
 proposal,proposal__git_negative_memory__28c5ff48db7a,80,5,1.0,0.48,0.147,0.2,,,0.0,,

@@ -1,0 +1,60 @@
+# combo: co-git_judger_only__c-git_optimalisasi__j-git_judger_retry_fix__p-git_judger_only
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_judger_only,construct=git_optimalisasi,judger=git_judger_retry_fix,proposal=git_judger_only
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_judger_only', 'construct': 'git_optimalisasi', 'judger': 'git_judger_retry_fix', 'proposal': 'git_judger_only'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  23%|██▎       | 92/398 [00:00<00:00, 805.77it/s]Loading weights:  45%|████▌     | 180/398 [00:00<00:00, 769.63it/s]Loading weights:  65%|██████▍   | 258/398 [00:00<00:00, 611.13it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  81%|████████  | 322/398 [00:00<00:00, 604.49it/s]Loading weights:  13%|█▎        | 51/398 [00:00<00:00, 504.70it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  98%|█████████▊| 392/398 [00:00<00:00, 633.95it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 657.18it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2189.86it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 8940.83it/s]
+2026-06-18 08:58:34.813 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: 1. RANK(TS_ZSCORE($volume, 1), 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 3), (line:1, col:4)
+2026-06-18 08:58:34.864 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: 1. RANK(TS_ZSCORE($volume, 1), 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 3), (line:1, col:4)
+2026-06-18 08:58:34.935 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: 1. RANK(TS_ZSCORE($volume, 1), 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 3), (line:1, col:4)
+2026-06-18 08:58:34.979 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: 1. RANK(TS_ZSCORE($volume, 1), 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 3), (line:1, col:4)
+2026-06-18 08:58:35.502 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) < 20)?(TS_ZSCORE($close, 1)):0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 08:58:35.646 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) < 20)?(TS_ZSCORE($close, 1)):0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 08:58:35.769 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) < 20)?(TS_ZSCORE($close, 1)):0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 08:58:35.888 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) < 20)?(TS_ZSCORE($close, 1)):0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+/usr/lib/python3.10/multiprocessing/resource_tracker.py:224: UserWarning: resource_tracker: There appear to be 8 leaked semaphore objects to clean up at shutdown
+  warnings.warn('resource_tracker: There appear to be %d '

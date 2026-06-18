@@ -1,0 +1,178 @@
+{
+  "chain": "front_end_full",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.3,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 274,
+      "kv_size_mb": 38.53,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 274,
+      "expected_delta": 274,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1385,
+      "kv_seq_len": 1719,
+      "kv_size_mb": 241.73,
+      "transfer": "chain",
+      "prev_seq_len": 274,
+      "delta": 1445,
+      "expected_delta": 1445,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 158,
+      "kv_seq_len": 1937,
+      "kv_size_mb": 272.39,
+      "transfer": "chain",
+      "prev_seq_len": 1719,
+      "delta": 218,
+      "expected_delta": 218,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 644,
+      "kv_seq_len": 2634,
+      "kv_size_mb": 370.41,
+      "transfer": "chain",
+      "prev_seq_len": 1937,
+      "delta": 697,
+      "expected_delta": 704,
+      "text_len": 735
+    }
+  ],
+  "elapsed_s": 31.73,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "Short-term liquidity and volatility dynamics in the cross-section predict next-day returns through price discovery and risk adjustment.  \nOBSERVATION: High-volume  volume and high volatility in the same day are correlated with higher next-day returns.  \nJUSTIFICATION: Liquidity and volatility are inversely related to information asymmetry; higher liquidity implies faster price discovery, while higher volatility reflects higher risk-adjusted potential return.  \nSPECIFICATION: $volume, $volatility (TS_STD($close, 1)), 1-day horizon, positive effect on next-day return.  \nFACTOR 1 NAME: VOLI | DESC: Volume and volatility interaction signal",
+    "n_expr": 1,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "families": [
+      "time_series"
+    ],
+    "n_families": 1,
+    "per_expr": [
+      {
+        "expr": ": TS_ZSCORE(TS_SUM($volume, 1), 1) + TS_ZSCORE(TS_STD($close, 1), 1)",
+        "gate_ok": false,
+        "reason": "unparsable expression",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.3,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 274,
+          "kv_size_mb": 38.53,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 274,
+          "expected_delta": 274,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1385,
+          "kv_seq_len": 1719,
+          "kv_size_mb": 241.73,
+          "transfer": "chain",
+          "prev_seq_len": 274,
+          "delta": 1445,
+          "expected_delta": 1445,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 158,
+          "kv_seq_len": 1937,
+          "kv_size_mb": 272.39,
+          "transfer": "chain",
+          "prev_seq_len": 1719,
+          "delta": 218,
+          "expected_delta": 218,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 644,
+          "kv_seq_len": 2634,
+          "kv_size_mb": 370.41,
+          "transfer": "chain",
+          "prev_seq_len": 1937,
+          "delta": 697,
+          "expected_delta": 704,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 735,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 172,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct → consistency → judger (front-end lengkap)"
+}

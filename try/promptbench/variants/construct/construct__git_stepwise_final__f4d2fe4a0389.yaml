@@ -18,7 +18,7 @@ agents:
       \ in 1-60 (nested total ≤ 60).\n  - Base features (≥ 3 required):\
       \ Count the number of distinct variables ($) and distinct named operators used.\
       \ Example: RANK(DELTA($close, 5)) has 3 base features (RANK, DELTA, $close).\n\
-      \  - Symbol Length (SL) in [80, 300]: The total number of characters in the\
+      \  - Symbol Length (SL) in [80, 400]: The total number of characters in the\
       \ expression string as-is, counting operator names, variable names, delimiters,\
       \ and numeric constants.\n\nOnly the following operations are allowed in expressions:\n\
       Argument Conventions\nThroughout this section, the following placeholders are\
@@ -27,7 +27,7 @@ agents:
       \ in standard mathematical function notation f(x).\nC — a logical/conditional\
       \ expression that evaluates to a boolean, e.g. $close > $open.\nn, p —\
       \ integer window sizes (number of periods or days).\nq — a quantile value\
-      \ in the range [0, 1].\n\nCross-sectional Functions (operate across all stocks\
+      \ in the range [0, 1].\n\nFunctions (operate across all stocks\
       \ on a given day)=\n  - RANK(A), ZSCORE(A), MEAN(A), STD(A), SKEW(A), KURT(A),\
       \ MAX(A), MIN(A),\n    MEDIAN(A) of A across all assets at each point in time\n\
       \  - DELTA(A, n): change in A over n periods.\n  - DELAY(A, n): A delayed n\
@@ -68,7 +68,7 @@ agents:
       \ / mean-reversion / etc.), what window length.\n  Step 2 — Build the expression\
       \ layer by layer (as many layers as needed); each\n           layer must serve\
       \ a distinct purpose.\n  Step 3 — Validate each expression:\n          \
-      \  \xB7 Symbol Length ≤ 300 chars\n            \xB7 ≤ 6 unique raw\
+      \  \xB7 Symbol Length > 800 chars\n            \xB7 ≥ 1 unique raw\
       \ variables\n            \xB7 No duplicated sub-tree\n            \xB7 Hierarchically\
       \ nested structure\n  Step 4 — Produce MORE structurally different expression\
       \ from the same\n           hypothesis: change the operator family (smoothing\

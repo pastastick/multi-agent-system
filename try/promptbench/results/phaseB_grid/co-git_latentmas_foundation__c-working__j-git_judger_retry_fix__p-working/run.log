@@ -1,0 +1,33 @@
+# combo: co-git_latentmas_foundation__c-working__j-git_judger_retry_fix__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=working,judger=git_judger_retry_fix,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'working', 'judger': 'git_judger_retry_fix', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 5709.50it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  88%|████████▊ | 351/398 [00:00<00:00, 3489.58it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3691.48it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 5238.83it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-18 08:12:39.424 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 08:12:39.556 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 08:12:39.650 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 08:12:39.721 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=11
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-working__j-git_judger_retry_fix__p-working/scoreboard.csv

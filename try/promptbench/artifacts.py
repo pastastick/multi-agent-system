@@ -26,11 +26,13 @@ import json
 from pathlib import Path
 from typing import Any, Dict, Optional
 
+import os as _os
+
 _THIS = Path(__file__).resolve()
 PROMPTBENCH = _THIS.parent
 RESULTS = PROMPTBENCH / "results"
 PHASE_A = RESULTS / "phaseA"
-PHASE_B = RESULTS / "phaseB"
+PHASE_B = Path(_os.environ["PHASE_B_OVERRIDE"]) if _os.environ.get("PHASE_B_OVERRIDE") else RESULTS / "phaseB"
 
 _SEP = "=" * 78
 
@@ -61,14 +63,28 @@ def variant_short(variant_id: str, agent: Optional[str] = None) -> str:
     return variant_id
 
 
+_AGENT_ABBREV: Dict[str, str] = {
+    "construct": "c", "consistency": "co", "judger": "j", "proposal": "p",
+}
+
+
 def config_slug(latent_steps: int, *, seed: Optional[int] = None,
-                extra: Optional[str] = None) -> str:
-    """Slug konfigurasi run: `ls20`, `ls20__seed3`, `ls20__knn0.8`."""
+                extra: Optional[str] = None,
+                overrides: Optional[Dict[str, str]] = None) -> str:
+    """Slug konfigurasi run, contoh: `ls60__c-git_stepwise_final__j-working`.
+
+    `overrides` adalah dict {agent: variant_short} dari --pick CLI. Dikodekan
+    ke slug agar run dengan pick berbeda tidak saling menimpa folder.
+    """
     s = f"ls{latent_steps}"
     if seed is not None:
         s += f"__seed{seed}"
     if extra:
         s += f"__{extra}"
+    if overrides:
+        for agent in sorted(overrides):
+            abbr = _AGENT_ABBREV.get(agent, agent[:2])
+            s += f"__{abbr}-{overrides[agent]}"
     return s
 
 

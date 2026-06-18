@@ -1,0 +1,29 @@
+# combo: co-git_latentmas_foundation__c-git_judger_only__j-git_judger_only__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_judger_only,judger=git_judger_only,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_judger_only', 'judger': 'git_judger_only', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  26%|██▌       | 104/398 [00:00<00:00, 911.30it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  49%|████▉     | 196/398 [00:00<00:00, 607.67it/s]Loading weights:  54%|█████▍    | 215/398 [00:00<00:00, 2147.55it/s]Loading weights:  72%|███████▏  | 286/398 [00:00<00:00, 706.82it/s]Loading weights:  91%|█████████ | 363/398 [00:00<00:00, 625.87it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 1056.13it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 674.20it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 4458.97it/s]
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=10
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_judger_only__j-git_judger_only__p-working/scoreboard.csv

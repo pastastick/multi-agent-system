@@ -1,0 +1,122 @@
+{
+  "chain": "pc_2agent",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.3,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 503,
+      "kv_seq_len": 563,
+      "kv_size_mb": 79.17,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 563,
+      "expected_delta": 563,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 844,
+      "kv_seq_len": 1460,
+      "kv_size_mb": 205.31,
+      "transfer": "chain",
+      "prev_seq_len": 563,
+      "delta": 897,
+      "expected_delta": 904,
+      "text_len": 859
+    }
+  ],
+  "elapsed_s": 33.74,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "",
+    "n_expr": 1,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "families": [
+      "time_series"
+    ],
+    "n_families": 1,
+    "per_expr": [
+      {
+        "expr": "1. TS_ZSCORE($volume,,  ,",
+        "gate_ok": false,
+        "reason": "unparsable expression",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.3,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 503,
+          "kv_seq_len": 563,
+          "kv_size_mb": 79.17,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 563,
+          "expected_delta": 563,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 844,
+          "kv_seq_len": 1460,
+          "kv_size_mb": 205.31,
+          "transfer": "chain",
+          "prev_seq_len": 563,
+          "delta": 897,
+          "expected_delta": 904,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 859,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 253,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct (terminal construct di-decode untuk skor)"
+}

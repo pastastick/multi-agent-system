@@ -1,0 +1,71 @@
+# chain=front_end_feedback  config=ls60  rep=0  step=4  agent=feedback  variant=working  transfer=chain  mode=kv_and_text  latent_steps=60  terminal=True
+
+# kv: {"step_idx": 4, "agent": "feedback", "mode": "kv_and_text", "latent_steps": 60, "n_prompt_tokens": 810, "kv_seq_len": 3791, "kv_size_mb": 533.11, "transfer": "chain", "prev_seq_len": 2928, "delta": 863, "expected_delta": 870}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Feedback Agent for an evolutionary alpha-mining loop. The factor's full reasoning context is already in your latent memory — do NOT restate the hypothesis or expressions. You receive three blocks of data and a DETERMINISTIC replace-best decision that has ALREADY been made (do not re-decide it — only echo it).
+
+UNDERSTAND THE TWO METRIC BLOCKS — and which one decides SOTA:
+  [A] Standalone RankIC + ICIR per factor = each factor's own predictive power,
+      model-free (no LightGBM, no baseline features). RankIC = signal strength
+      (Spearman vs next-day returns); ICIR = signal STABILITY (mean/std of the
+      daily IC series). A factor with RankIC 0.05 but ICIR 0.05 is unstable noise;
+      RankIC 0.03 with ICIR 0.5 is a reliable signal. **[A] is the metric that
+      decides SOTA** — it is honest because it is not contaminated by baseline.
+  [B] Combined model RankIC = the LightGBM model trained on ALL factors PLUS 4
+      hardcoded baseline features. SUPPLEMENTARY ONLY — empirically it is 95-103%
+      baseline floor, so it cannot distinguish a good mined factor from a bad one.
+      Read it for context (interactions, drawdown), but do NOT treat it as the
+      verdict on the mined factors.
+
+Thresholds (on [A]): RankIC ≥ 0.02 = meaningful, ≥ 0.05 = strong; ICIR ≥ 0.3 =
+reliable, ≥ 0.5 = strong. A high RankIC with low ICIR = unstable, treat as weak.
+[B] MaxDrawdown < 0.20 = robust; > 0.30 = fragile. If a COMPLEXITY WARNING is
+present, treat it as critical — simpler expression always preferred over complex.
+
+Your role is PURELY EVALUATIVE. Diagnose, do NOT propose the next hypothesis.
+
+Respond in JSON only (no markdown fences):
+{
+  "Observations": "1-2 sentences: cite [A] standalone RankIC+ICIR vs SOTA (the deciding metric), and note [B] combined only as context.",
+  "Factor Diagnosis": "ONE short clause per factor — strong / weak / noise, with the structural reason (wrong window, missing normalization, shallow composition).",
+  "Feedback for Hypothesis": "SUPPORTS / PARTIALLY / REFUTES — and is the MECHANISM valid but the IMPLEMENTATION weak (refine the expression) or is the mechanism itself absent (pivot)? Note whether the framework still has room or is exhausted.",
+  "Replace Best Result": "yes or no (echo the deterministic decision in [C])"
+}
+
+==============================================================================
+USER
+==============================================================================
+[A] Standalone per-factor metrics:
+  Factor 1: TS_ZSCORE($volume,5) - RANK(($high-$low)/$close)  [standalone RankIC=0.031, ICIR=0.41]
+  Factor 2: REGBETA($return, $volume, 20)  [standalone RankIC=0.009, ICIR=0.10]
+
+[B] Combined LightGBM RankIC=0.052, ICIR=0.48, MaxDrawdown=0.17 (near baseline floor; supplementary only).
+
+[C] SOTA comparison & replace decision (deterministic — already final):
+[C] SOTA FactorIC_mean=0.025; this round FactorIC_mean=0.020 → Replace Best Result: no (deterministic).
+
+Apply the evaluation logic above, then output the JSON.
+
+==============================================================================
+RESPONSE
+==============================================================================
+"Observations": "Factor 1 has a moderate standalone RankIC (0.031) with higher ICIR (0.41), suggesting unstable signal; Factor 2 is weak (0.009) with low ICIR (0.10), indicating unreliable predictive power. Combined model is near baseline (RankIC=0.052, ICIR=0.48), with acceptable drawdown (0.17).",
+  "Factor Diagnosis": "Factor 1: Weak signal with high ICIR — normalization missing; Factor 2: Noise with shallow composition — no meaningful regression.",
+  "Feedback for Hypothesis": "PARTIALLY — the mechanism is valid but the implementation is weak (missing normalization); the framework has room for refinement.",
+  "Replace Best Result": "no"
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "json_ok": false,
+  "missing": [
+    "Observations",
+    "Feedback for Hypothesis",
+    "Replace Best Result"
+  ],
+  "score": 0.0,
+  "parser_ok": false
+}

@@ -1,0 +1,197 @@
+{
+  "chain": "front_end_feedback",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "feedback",
+  "ok": true,
+  "score": 0.833,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 274,
+      "kv_size_mb": 38.53,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 274,
+      "expected_delta": 274,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 844,
+      "kv_seq_len": 1178,
+      "kv_size_mb": 165.66,
+      "transfer": "chain",
+      "prev_seq_len": 274,
+      "delta": 904,
+      "expected_delta": 904,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 158,
+      "kv_seq_len": 1396,
+      "kv_size_mb": 196.31,
+      "transfer": "chain",
+      "prev_seq_len": 1178,
+      "delta": 218,
+      "expected_delta": 218,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 603,
+      "kv_seq_len": 2052,
+      "kv_size_mb": 288.56,
+      "transfer": "chain",
+      "prev_seq_len": 1396,
+      "delta": 656,
+      "expected_delta": 663,
+      "text_len": 4149
+    },
+    {
+      "step_idx": 4,
+      "agent": "feedback",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 810,
+      "kv_seq_len": 2915,
+      "kv_size_mb": 409.92,
+      "transfer": "chain",
+      "prev_seq_len": 2052,
+      "delta": 863,
+      "expected_delta": 870,
+      "text_len": 673
+    }
+  ],
+  "elapsed_s": 190.16,
+  "score_detail": {
+    "json_ok": true,
+    "keys": [
+      "Observ測",
+      "Factor Diagnosis",
+      "Feedback for Hypothesis",
+      "Replace Best Result"
+    ],
+    "missing": [
+      "Observations"
+    ],
+    "score": 0.833,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 274,
+          "kv_size_mb": 38.53,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 274,
+          "expected_delta": 274,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 844,
+          "kv_seq_len": 1178,
+          "kv_size_mb": 165.66,
+          "transfer": "chain",
+          "prev_seq_len": 274,
+          "delta": 904,
+          "expected_delta": 904,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 158,
+          "kv_seq_len": 1396,
+          "kv_size_mb": 196.31,
+          "transfer": "chain",
+          "prev_seq_len": 1178,
+          "delta": 218,
+          "expected_delta": 218,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 603,
+          "kv_seq_len": 2052,
+          "kv_size_mb": 288.56,
+          "transfer": "chain",
+          "prev_seq_len": 1396,
+          "delta": 656,
+          "expected_delta": 663,
+          "status": "ok"
+        },
+        {
+          "step_idx": 4,
+          "agent": "feedback",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 810,
+          "kv_seq_len": 2915,
+          "kv_size_mb": 409.92,
+          "transfer": "chain",
+          "prev_seq_len": 2052,
+          "delta": 863,
+          "expected_delta": 870,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 673,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 208,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct → consistency → judger → feedback (terminal JSON)"
+}

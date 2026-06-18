@@ -1,0 +1,7 @@
+{"n": 1, "ts": "2026-06-18 08:14:51", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "841b7d1b", "text_len": 1498, "duration_s": 30.509, "file": "0001_construct_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-18 08:15:28", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "5d2e2ae7", "text_len": 1341, "duration_s": 27.2125, "file": "0002_proposal_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-18 08:16:03", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "242d76e6", "text_len": 1445, "duration_s": 30.0518, "file": "0003_proposal_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-18 08:16:32", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "281759a9", "text_len": 634, "duration_s": 19.5432, "file": "0004_judger_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-18 08:17:08", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "dc65fca8", "text_len": 814, "duration_s": 21.6879, "file": "0005_judger_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-06-18 08:17:38", "role": "judger", "mode": "kv_and_text", "step": 0, "conv_id": "6144819a", "text_len": 535, "duration_s": 16.0078, "file": "0006_judger_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-06-18 08:17:57", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "0890e552", "text_len": 639, "duration_s": 19.0717, "file": "0007_feedback_kv_and_text.md", "vars": []}

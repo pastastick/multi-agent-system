@@ -1,0 +1,77 @@
+# combo: co-git_latentmas_foundation__c-working__j-git_optimalisasi__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=working,judger=git_optimalisasi,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'working', 'judger': 'git_optimalisasi', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  16%|█▌        | 62/398 [00:00<00:00, 614.29it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  38%|███▊      | 151/398 [00:00<00:00, 1251.32it/s]Loading weights:  31%|███       | 124/398 [00:00<00:00, 384.67it/s]Loading weights:  66%|██████▋   | 264/398 [00:00<00:00, 639.05it/s]Loading weights:  70%|██████▉   | 277/398 [00:00<00:00, 608.24it/s] Loading weights:  84%|████████▎ | 333/398 [00:00<00:00, 557.40it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  97%|█████████▋| 387/398 [00:00<00:00, 742.25it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 766.25it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 632.51it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 4944.74it/s]
+2026-06-18 08:52:08.261 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: 1. TS_ZSCORE($volume,,  ,. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:08.300 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: 1. TS_ZSCORE($volume,,  ,. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:08.350 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: 1. TS_ZSCORE($volume,,  ,. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:08.392 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: 1. TS_ZSCORE($volume,,  ,. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:21.561 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,, TS_RANK($high - $low,,    ,,  TS_MEAN($return,          TS_CORR($volume,,,, TS_RANK($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:21.615 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,, TS_RANK($high - $low,,    ,,  TS_MEAN($return,          TS_CORR($volume,,,, TS_RANK($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:21.662 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,, TS_RANK($high - $low,,    ,,  TS_MEAN($return,          TS_CORR($volume,,,, TS_RANK($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:52:21.704 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,, TS_RANK($high - $low,,    ,,  TS_MEAN($return,          TS_CORR($volume,,,, TS_RANK($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:53:11.822 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,,, TS_RANK($high-$low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:53:11.843 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,,, TS_RANK($high-$low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:53:11.874 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,,, TS_RANK($high-$low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:53:11.898 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,,, TS_RANK($high-$low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 08:53:39.032 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_CORR($volume, $return, 1) < -0.3 && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 50
+                        # Base Features (ER): 2
+                        
+2026-06-18 08:53:39.113 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_CORR($volume, $return, 1) < -0.3 && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 50
+                        # Base Features (ER): 2
+                        
+2026-06-18 08:53:39.236 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_CORR($volume, $return, 1) < -0.3 && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 50
+                        # Base Features (ER): 2
+                        
+2026-06-18 08:53:39.348 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_CORR($volume, $return, 1) < -0.3 && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 50
+                        # Base Features (ER): 2
+                        
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=6
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-working__j-git_optimalisasi__p-working/scoreboard.csv

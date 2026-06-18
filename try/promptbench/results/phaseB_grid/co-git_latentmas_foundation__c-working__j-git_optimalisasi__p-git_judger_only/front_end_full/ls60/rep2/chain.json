@@ -1,0 +1,174 @@
+{
+  "chain": "front_end_full",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.0,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 549,
+      "kv_seq_len": 609,
+      "kv_size_mb": 85.64,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 609,
+      "expected_delta": 609,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 844,
+      "kv_seq_len": 1513,
+      "kv_size_mb": 212.77,
+      "transfer": "chain",
+      "prev_seq_len": 609,
+      "delta": 904,
+      "expected_delta": 904,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 158,
+      "kv_seq_len": 1731,
+      "kv_size_mb": 243.42,
+      "transfer": "chain",
+      "prev_seq_len": 1513,
+      "delta": 218,
+      "expected_delta": 218,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 479,
+      "kv_seq_len": 2263,
+      "kv_size_mb": 318.23,
+      "transfer": "chain",
+      "prev_seq_len": 1731,
+      "delta": 532,
+      "expected_delta": 539,
+      "text_len": 567
+    }
+  ],
+  "elapsed_s": 57.11,
+  "score_detail": {
+    "parse_ok": false,
+    "hypothesis": null,
+    "n_expr": 0,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "n_families": 0,
+    "families": [],
+    "score": 0.0,
+    "parser_ok": false
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 549,
+          "kv_seq_len": 609,
+          "kv_size_mb": 85.64,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 609,
+          "expected_delta": 609,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 844,
+          "kv_seq_len": 1513,
+          "kv_size_mb": 212.77,
+          "transfer": "chain",
+          "prev_seq_len": 609,
+          "delta": 904,
+          "expected_delta": 904,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 158,
+          "kv_seq_len": 1731,
+          "kv_size_mb": 243.42,
+          "transfer": "chain",
+          "prev_seq_len": 1513,
+          "delta": 218,
+          "expected_delta": 218,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 479,
+          "kv_seq_len": 2263,
+          "kv_size_mb": 318.23,
+          "transfer": "chain",
+          "prev_seq_len": 1731,
+          "delta": 532,
+          "expected_delta": 539,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "repetition=0.866 ≥ 0.5 (loop/ngelantur)",
+        "runaway: output_tokens=512 ≈ max_new_tokens (512) → tak berhenti",
+        "unparseable: parser struktur gagal"
+      ],
+      "metrics": {
+        "len": 567,
+        "repetition": 0.866,
+        "longest_run": 2,
+        "output_tokens": 512,
+        "runaway": true,
+        "parser_ok": false
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "repetition=0.866 ≥ 0.5 (loop/ngelantur)",
+        "runaway: output_tokens=512 ≈ max_new_tokens (512) → tak berhenti",
+        "unparseable: parser struktur gagal"
+      ]
+    }
+  },
+  "desc": "proposal → construct → consistency → judger (front-end lengkap)"
+}

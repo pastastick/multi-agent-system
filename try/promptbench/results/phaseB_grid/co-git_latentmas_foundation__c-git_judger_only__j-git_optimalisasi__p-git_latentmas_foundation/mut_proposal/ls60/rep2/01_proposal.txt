@@ -1,0 +1,53 @@
+# chain=mut_proposal  config=ls60  rep=2  step=1  agent=proposal  variant=git_latentmas_foundation  transfer=chain  mode=kv_and_text  latent_steps=60  terminal=True
+
+# kv: {"step_idx": 1, "agent": "proposal", "mode": "kv_and_text", "latent_steps": 60, "n_prompt_tokens": 214, "kv_seq_len": 1079, "kv_size_mb": 151.73, "transfer": "chain", "prev_seq_len": 812, "delta": 267, "expected_delta": 274}
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**DIAGNOSIS**: The parent's weakest expression is **EXPRESSION 2** (REGBETA($return, $volume, 20)), with the lowest RankIC (0.009) and ICIR (0.10). This suggests that the beta-based signal is too noisy or not informative enough for predicting next-day returns. The 20-day window is likely too short to capture meaningful beta relationships, and the REGBETA operator may be sensitive to microstructure noise or idiosyncratic volatility.
+
+**KNOWLEDGE**: The market may exhibit short-term momentum in beta estimates when volume is high, but the 20-day window is insufficient to filter out noise. A longer window (e.g., 50 days) could stabilize beta estimates, making them more predictive of future returns.
+
+**OBSERVATION**: The parent's metrics show that the volume-zscore (EXPRESSION 1) has a moderate RankIC (0.031), while the beta-based factor (EXPRESSION 2) is significantly weaker. This implies that the beta signal is less reliable under short-term price fluctuations, possibly due to overfitting or insufficient time to establish a stable relationship.
+
+**DIRECTION**: **WINDOW SHIFT** — change the beta window from 20 to 50 days. This would smooth the beta estimate, reducing noise and improving its predictive power for next-day returns. The longer window aligns better with the research direction of short-horizon liquidity dynamics.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [
+    "$return",
+    "$volume"
+  ],
+  "observable": true,
+  "conditional": true,
+  "cliche": false,
+  "score": 0.9,
+  "parser_ok": null
+}

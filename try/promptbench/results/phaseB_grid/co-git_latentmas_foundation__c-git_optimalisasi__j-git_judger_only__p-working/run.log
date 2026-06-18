@@ -1,0 +1,109 @@
+# combo: co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_only__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_optimalisasi,judger=git_judger_only,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_optimalisasi', 'judger': 'git_judger_only', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  22%|██▏       | 89/398 [00:00<00:00, 810.07it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  43%|████▎     | 171/398 [00:00<00:00, 730.58it/s]Loading weights:  43%|████▎     | 173/398 [00:00<00:00, 1684.02it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  62%|██████▏   | 245/398 [00:00<00:00, 573.08it/s]Loading weights:  69%|██████▉   | 275/398 [00:00<00:00, 2748.05it/s]Loading weights:  80%|███████▉  | 318/398 [00:00<00:00, 614.85it/s]Loading weights:  86%|████████▌ | 342/398 [00:00<00:00, 783.11it/s] Loading weights:  96%|█████████▌| 383/398 [00:00<00:00, 623.20it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 1365.55it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 644.63it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 824.74it/s]
+2026-06-18 06:21:11.294 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - Primary Signal: RANK($volume) in the cross-section (CROSSE) where $volume is among the top 10%.. Error: Invalid operator(s): "%"
+2026-06-18 06:21:11.436 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: DELTA($return, 7)  RANK($volume). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 19), (line:1, col:20)
+2026-06-18 06:21:11.479 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - Primary Signal: RANK($volume) in the cross-section (CROSSE) where $volume is among the top 10%.. Error: Invalid operator(s): "%"
+2026-06-18 06:21:11.843 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: DELTA($return, 7)  RANK($volume). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 19), (line:1, col:20)
+2026-06-18 06:21:11.867 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - Primary Signal: RANK($volume) in the cross-section (CROSSE) where $volume is among the top 10%.. Error: Invalid operator(s): "%"
+2026-06-18 06:21:11.900 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: DELTA($return, 7)  RANK($volume). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 19), (line:1, col:20)
+2026-06-18 06:21:11.928 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - Primary Signal: RANK($volume) in the cross-section (CROSSE) where $volume is among the top 10%.. Error: Invalid operator(s): "%"
+2026-06-18 06:21:11.979 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: DELTA($return, 7)  RANK($volume). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 19), (line:1, col:20)
+2026-06-18 06:22:42.498 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 5) > 80 && TS_STD($return,5) < 0.02
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:22:42.702 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 5) > 80 && TS_STD($return,5) < 0.02
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:22:42.899 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 5) > 80 && TS_STD($return,5) < 0.02
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:22:43.076 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 5) > 80 && TS_STD($return,5) < 0.02
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:23:23.073 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return,10) > 0.5
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:23:23.190 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return,10) > 0.5
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:23:23.314 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return,10) > 0.5
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:23:23.428 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return,10) > 0.5
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=9
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_only__p-working/scoreboard.csv

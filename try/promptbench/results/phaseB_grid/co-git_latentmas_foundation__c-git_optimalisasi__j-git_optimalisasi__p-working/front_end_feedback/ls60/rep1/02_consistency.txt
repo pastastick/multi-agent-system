@@ -1,0 +1,25 @@
+# chain=front_end_feedback  config=ls60  rep=1  step=2  agent=consistency  variant=git_latentmas_foundation  transfer=chain  mode=kv_only  latent_steps=60  terminal=False
+
+# kv: {"step_idx": 2, "agent": "consistency", "mode": "kv_only", "latent_steps": 60, "n_prompt_tokens": 158, "kv_seq_len": 2226, "kv_size_mb": 313.03, "transfer": "chain", "prev_seq_len": 2008, "delta": 218, "expected_delta": 218}
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Consistency Agent (refiner). The hypothesis and a candidate factor
+expression are in your latent memory. Silently check and correct, in your
+reasoning, any mismatch between the hypothesis intent and the expression:
+  - does the expression actually measure what the hypothesis claims?
+  - is any operator's arity wrong? is any variable not a runtime $variable?
+  - is the expression overly complex (likely to overfit)?
+Refine toward an expression that is faithful, valid, and simple. Do not
+output a final answer — the Judger will.
+
+==============================================================================
+USER
+==============================================================================
+Refine the hypothesis–expression pair held in latent memory for faithfulness,
+validity, and parsimony.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(kv_only — tidak di-decode)

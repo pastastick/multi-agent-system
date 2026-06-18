@@ -1,0 +1,113 @@
+# combo: co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_retry_fix__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_optimalisasi,judger=git_judger_retry_fix,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_optimalisasi', 'judger': 'git_judger_retry_fix', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   3%|▎         | 11/398 [00:00<00:04, 96.32it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   1%|          | 4/398 [00:00<00:10, 38.82it/s]Loading weights:   5%|▌         | 21/398 [00:00<00:05, 74.34it/s]Loading weights:   6%|▌         | 22/398 [00:00<00:01, 199.91it/s]Loading weights:   7%|▋         | 29/398 [00:00<00:05, 69.67it/s]Loading weights:  11%|█         | 42/398 [00:00<00:01, 196.56it/s]Loading weights:  10%|█         | 40/398 [00:00<00:04, 82.33it/s]Loading weights:   2%|▏         | 8/398 [00:00<00:18, 21.59it/s]Loading weights:  16%|█▌        | 62/398 [00:00<00:01, 174.34it/s]Loading weights:  26%|██▋       | 105/398 [00:00<00:01, 262.58it/s]Loading weights:  53%|█████▎    | 212/398 [00:00<00:00, 651.28it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 848.39it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 625.80it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 918.93it/s]
+2026-06-18 05:55:21.804 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) > 0.2) && ($close > $open)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 3
+                        Symbol Length (SL): 41
+                        # Base Features (ER): 3
+                        
+2026-06-18 05:55:22.144 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) > 0.2) && ($close > $open)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 3
+                        Symbol Length (SL): 41
+                        # Base Features (ER): 3
+                        
+2026-06-18 05:55:22.258 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) > 0.2) && ($close > $open)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 3
+                        Symbol Length (SL): 41
+                        # Base Features (ER): 3
+                        
+2026-06-18 05:55:22.363 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK($volume) > 0.2) && ($close > $open)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 3
+                        Symbol Length (SL): 41
+                        # Base Features (ER): 3
+                        
+2026-06-18 05:57:07.846 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume,5) < TS_Z SCORE($high - $low,5). Error: Failed to parse expression: Expected end of text, found 'SCORE'  (at char 28), (line:1, col:29)
+2026-06-18 05:57:07.995 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume,5) < TS_Z SCORE($high - $low,5). Error: Failed to parse expression: Expected end of text, found 'SCORE'  (at char 28), (line:1, col:29)
+2026-06-18 05:57:08.132 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume,5) < TS_Z SCORE($high - $low,5). Error: Failed to parse expression: Expected end of text, found 'SCORE'  (at char 28), (line:1, col:29)
+2026-06-18 05:57:08.243 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume,5) < TS_Z SCORE($high - $low,5). Error: Failed to parse expression: Expected end of text, found 'SCORE'  (at char 28), (line:1, col:29)
+2026-06-18 05:57:29.791 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($volume) >   2 and TS_ZSCORE($high - $low, 1) < 0.1. Error: Failed to parse expression: Expected end of text, found 'and'  (at char 20), (line:1, col:21)
+2026-06-18 05:57:29.880 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 1) > TS_ZSCORE($return, 2)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 1
+                        
+2026-06-18 05:57:29.911 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($volume) >   2 and TS_ZSCORE($high - $low, 1) < 0.1. Error: Failed to parse expression: Expected end of text, found 'and'  (at char 20), (line:1, col:21)
+2026-06-18 05:57:30.000 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 1) > TS_ZSCORE($return, 2)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 1
+                        
+2026-06-18 05:57:30.041 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($volume) >   2 and TS_ZSCORE($high - $low, 1) < 0.1. Error: Failed to parse expression: Expected end of text, found 'and'  (at char 20), (line:1, col:21)
+2026-06-18 05:57:30.133 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 1) > TS_ZSCORE($return, 2)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 1
+                        
+2026-06-18 05:57:30.162 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($volume) >   2 and TS_ZSCORE($high - $low, 1) < 0.1. Error: Failed to parse expression: Expected end of text, found 'and'  (at char 20), (line:1, col:21)
+2026-06-18 05:57:30.251 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 1) > TS_ZSCORE($return, 2)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 1
+                        
+2026-06-18 05:57:42.823 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_PCTCHANGE($volume, $close, $open,      $close > $open and $volume > previous_volume, $close - $open > 0.5  ($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 05:57:42.881 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_PCTCHANGE($volume, $close, $open,      $close > $open and $volume > previous_volume, $close - $open > 0.5  ($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 05:57:42.949 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_PCTCHANGE($volume, $close, $open,      $close > $open and $volume > previous_volume, $close - $open > 0.5  ($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 05:57:43.002 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_PCTCHANGE($volume, $close, $open,      $close > $open and $volume > previous_volume, $close - $open > 0.5  ($high - $low). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=8
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_retry_fix__p-working/scoreboard.csv

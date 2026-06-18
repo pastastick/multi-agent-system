@@ -1,0 +1,86 @@
+# Call 0001 — `construct` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-18 08:14:51
+- conv_id: `841b7d1b`
+- step: 0
+- temperature: 0.7
+- has_past_kv: True
+- input_tokens: 844
+- output_tokens: 348
+- duration_s: 30.509
+- text_len: 1498
+
+## System Prompt
+
+```text
+You are the Construct agent — stage 2 of 4. The hypothesis is already in your
+memory. SOLE JOB: turn it into 1-3 concrete DSL expression(s) that faithfully
+MEASURE that mechanism. Do NOT restate the hypothesis. Reason freely (no output
+format); a deterministic regulator rejects invalid ones downstream, so respect:
+
+  - Leaves are ONLY $open $high $low $close $volume $return — never invent a
+    variable ($return_1d) or symbol (=).
+  - Arity: CROSS-SECTIONAL (1 arg, NO window): RANK ZSCORE MEAN STD SKEW KURT
+    MEDIAN. TIME-SERIES (require a window n): all TS_* operators. Mind TS_STD vs STD.
+  - PAIR operators (TS_CORR, TS_COVARIANCE, REGBETA, REGRESI) need TWO DIFFERENT
+    series — never the same series as both A and B.
+  - windows 1-60 (nested windows also ≤ 60); compose ≥2 operators; 2-4 base
+    $variables; keep it short. If >1 expression, use STRUCTURALLY different
+    operator families — not renamed templates.
+
+Operator reference (respect arity; only $variables as leaves):
+  1 arg:    RANK ZSCORE MEAN STD SKEW KURT MEDIAN  LOG SQRT SIGN EXP ABS INV FLOOR
+  (A,n):    DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
+            TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
+            LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
+  (A,B,n):  TS_CORR TS_COVARIANCE REGBETA REGRESI   (A,B must be DIFFERENT series)
+  3+ arg:   SMA(A,n,m) MACD(A,short,long) TS_QUANTILE(A,p,q) PERCENTILE(A,q,p)
+            SUMIF(A,n,C) COUNT(C,n) FILTER(A,C) SEQUENCE(n)
+  pairwise: MAX(A,B) MIN(A,B)    gate: (C)?(A):(B)  where C is e.g. `$close > $open`
+Variables: $open $high $low $close $volume $return; arithmetic `+ - * /`, logical
+`&& ||`. Each expression contains ≥1 $variable; no undeclared variable (`n`, `w_1`)
+or symbol (`=`). Mind TS_STD (rolling) vs STD (cross-section); SEQUENCE only as arg B
+of REGBETA/REGRESI.
+```
+
+## User Prompt
+
+```text
+The hypothesis is in latent memory. Reason toward 1-3 concrete, valid,
+parsimonious expression(s) that MEASURE its mechanism: pick the $variable(s) and
+horizon it implies, a PRIMARY operator for the raw signal, and a SECONDARY operator
+that normalizes / ranks / gates it. Draw on the full OHLCV set, not just $close+$volume.
+
+The expression MUST return a CONTINUOUS numeric score (not a boolean). Patterns:
+  RANK(primary) - RANK(secondary)     ← cross-sectional spread
+  RANK(primary) * SIGN(secondary)     ← signed rank
+  (condition)?(primary):(0)           ← regime gate
+  primary / TS_MEAN(primary, n)       ← self-normalized ratio
+  REGBETA($return, secondary, n)      ← rolling beta
+A second expression should vary the operator FAMILY or window, not just a parameter.
+
+Diversity: recent factors leaned on cross_sectional + time_series families. Consider an under-used family — smoothing (EMA/DECAYLINEAR), regression (REGBETA/REGRESI), or conditional gating (COUNT/SUMIF) — if the mechanism fits.
+```
+
+## Response
+
+```text
+**Hypothesis**: When liquidity declines sharply after a period of low volatility, the difference in price rank between high and low volume stocks becomes more pronounced, signaling potential mean-reversion.  
+
+**Knowledge (Knowledge)**: Low-volume periods are followed by sharp liquidity drops, creating imbalances in price discovery. This creates a cross-sectional for mean-reversion in low-volume stocks.  
+**�察 (Observation)**: In 2018–2021, low-volume stocks showed higher rank spreads (RANK($close) - RANK($low)) after liquidity drops (DECAY($volume, 5)).  
+**�明 (Justification)**: Low-volume stocks are less efficiently priced, so price discovery is slower. When liquidity drops, these stocks are more likely to revert to their mean as traders adjust to new information.  
+**指定 (Specification)**:  
+- **Signal**: `RANK($close) - RANK($low)`  
+- **Window**: 5 days (to capture liquidity shifts)  
+- **Normalization**: `TS_ZSCORE(RANK($close) - RANK($low), 5)`  
+- **Time Horizon**: 1 day  
+- **Expected Return Direction**: Positive (mean-reversion)  
+
+**Expression**:  
+`TS_ZSCORE(RANK($close) - RANK($low), 5)`  
+
+This factor captures the relative price rank spread between close and low prices, normalized by volatility over 5 days. It exploits the idea that low-volume stocks are less efficient, so price discovery is slower, creating larger rank differences when liquidity drops. The Z-score normalizes this spread, making it sensitive to mean-reversion opportunities in low-volume stocks.
+```

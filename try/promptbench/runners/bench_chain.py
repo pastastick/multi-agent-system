@@ -59,7 +59,7 @@ PROMPTBENCH = _THIS.parent.parent
 REPO = PROMPTBENCH.parent.parent
 
 DECODE_TEMPERATURE = 0.7
-DEFAULT_MAX_NEW = 512
+DEFAULT_MAX_NEW = 30000 
 
 
 class _Vis(Undefined):
@@ -116,7 +116,7 @@ def run_chain_job(job: dict, *, dry_run: bool, temp: float) -> dict:
     chain = resolve_chain(job["chain"], overrides=job.get("overrides") or {})
     ls = job["latent_steps"]
     rep = job["rep"]
-    cfg = config_slug(ls)
+    cfg = config_slug(ls, overrides=job.get("overrides") or {})
 
     out: Dict[str, Any] = {
         "chain": chain.name, "config": cfg, "latent_steps": ls, "rep": rep,

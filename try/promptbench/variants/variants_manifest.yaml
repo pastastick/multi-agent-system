@@ -176,6 +176,17 @@ construct:
     ref: e63bd08
     source_id: git_optimalisasi
   variant_id: construct__git_optimalisasi__e9a6a179b181
+- aliases: []
+  hash: f4d2fe4a0389
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__git_stepwise_final__f4d2fe4a0389.yaml
+  source:
+    kind: git
+    label: stepwise_final
+    ref: f4d2fe4a0389
+    source_id: git_stepwise_final
+  variant_id: construct__git_stepwise_final__f4d2fe4a0389
 crossover:
 - aliases:
   - kind: git
@@ -733,6 +744,16 @@ proposal:
     ref: f4b53b1
     source_id: git_gate_deterministik
   variant_id: proposal__git_gate_deterministik__f7ae36f32f36
+- aliases: []
+  hash: mix3a1b2c3d
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__authored_mixed_scoped__mix3a1b2c3d.yaml
+  source:
+    kind: authored
+    ref: manual
+    source_id: authored_mixed_scoped
+  variant_id: proposal__authored_mixed_scoped__mix3a1b2c3d
 repair:
 - aliases:
   - kind: git
