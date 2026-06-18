@@ -1,0 +1,53 @@
+# chain=mut_proposal  config=ls60  rep=0  step=1  agent=proposal  variant=git_latentmas_foundation  transfer=chain  mode=kv_and_text  latent_steps=60  terminal=True
+
+# kv: {"step_idx": 1, "agent": "proposal", "mode": "kv_and_text", "latent_steps": 60, "n_prompt_tokens": 214, "kv_seq_len": 1079, "kv_size_mb": 151.73, "transfer": "chain", "prev_seq_len": 812, "delta": 267, "expected_delta": 274}
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**DIAGNOSIS:** The parent factor’s weak RankIC (0.018) suggests limited predictive power in the train segment, likely due to noise in volume dynamics — the z-score is too broad, averaging across all volumes, not capturing short-horizon liquidity spikes or compression patterns.
+
+**KNOWLEDGE:** A more granular volume signal, such as the 5-day cumulative volume weighted by price change, could better capture short-horizon liquidity shifts and volatility clustering.
+
+**OBSERVATION:** The standalone RankIC of 0.018 indicates that the current volume z-score is not sufficiently discriminative — it may be too broad or too noisy for the train segment’s liquidity dynamics.
+
+**DIRECTION:** **VARIABLE SWAP** — replace $volume with `TS_SUM($volume * $return, 5)` to weight volume by price change, enhancing sensitivity to short-horizon liquidity shifts and volatility patterns.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [
+    "$return",
+    "$volume"
+  ],
+  "observable": true,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.6,
+  "parser_ok": null
+}

@@ -1,0 +1,197 @@
+{
+  "chain": "front_end_full",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.667,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 274,
+      "kv_size_mb": 38.53,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 274,
+      "expected_delta": 274,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 844,
+      "kv_seq_len": 1178,
+      "kv_size_mb": 165.66,
+      "transfer": "chain",
+      "prev_seq_len": 274,
+      "delta": 904,
+      "expected_delta": 904,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 158,
+      "kv_seq_len": 1396,
+      "kv_size_mb": 196.31,
+      "transfer": "chain",
+      "prev_seq_len": 1178,
+      "delta": 218,
+      "expected_delta": 218,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 644,
+      "kv_seq_len": 2093,
+      "kv_size_mb": 294.33,
+      "transfer": "chain",
+      "prev_seq_len": 1396,
+      "delta": 697,
+      "expected_delta": 704,
+      "text_len": 932
+    }
+  ],
+  "elapsed_s": 39.52,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "Next-day returns are positively correlated with the signed 3-day volume deviation from its mean, reflecting short-horizon liquidity and sentiment-driven trading.",
+    "n_expr": 3,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.333,
+    "families": [
+      "math",
+      "time_series",
+      "ts_pair"
+    ],
+    "n_families": 3,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE($volume,3)  SIGN($return_1d)",
+        "gate_ok": false,
+        "reason": "variable: `$return_1d` is not a known variable. Use only: $open $high $low $close $volume $return.",
+        "families": [
+          "math",
+          "time_series"
+        ]
+      },
+      {
+        "expr": "TS_MEAN($volume,3) - $volume",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "TS_CORR($volume, $return_1d, 3)",
+        "gate_ok": false,
+        "reason": "variable: `$return_1d` is not a known variable. Use only: $open $high $low $close $volume $return.",
+        "families": [
+          "ts_pair"
+        ]
+      }
+    ],
+    "score": 0.667,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 274,
+          "kv_size_mb": 38.53,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 274,
+          "expected_delta": 274,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 844,
+          "kv_seq_len": 1178,
+          "kv_size_mb": 165.66,
+          "transfer": "chain",
+          "prev_seq_len": 274,
+          "delta": 904,
+          "expected_delta": 904,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 158,
+          "kv_seq_len": 1396,
+          "kv_size_mb": 196.31,
+          "transfer": "chain",
+          "prev_seq_len": 1178,
+          "delta": 218,
+          "expected_delta": 218,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 644,
+          "kv_seq_len": 2093,
+          "kv_size_mb": 294.33,
+          "transfer": "chain",
+          "prev_seq_len": 1396,
+          "delta": 697,
+          "expected_delta": 704,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 932,
+        "repetition": 0.108,
+        "longest_run": 5,
+        "output_tokens": 264,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct → consistency → judger (front-end lengkap)"
+}

@@ -1,0 +1,41 @@
+# combo: co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_only__p-git_latentmas_foundation
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_optimalisasi,judger=git_judger_only,proposal=git_latentmas_foundation
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_optimalisasi', 'judger': 'git_judger_only', 'proposal': 'git_latentmas_foundation'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  14%|█▍        | 55/398 [00:00<00:00, 508.77it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  27%|██▋       | 106/398 [00:00<00:01, 153.37it/s]Loading weights:  75%|███████▍  | 298/398 [00:00<00:00, 2912.90it/s]Loading weights:  78%|███████▊  | 312/398 [00:00<00:00, 528.25it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 1745.63it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 518.58it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 9087.53it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-06-18 06:11:40.658 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - Use TS_ZSCORE on $volume.. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 6), (line:1, col:7)
+2026-06-18 06:11:40.708 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - Use TS_ZSCORE on $volume.. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 6), (line:1, col:7)
+2026-06-18 06:11:40.767 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - Use TS_ZSCORE on $volume.. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 6), (line:1, col:7)
+2026-06-18 06:11:40.820 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - Use TS_ZSCORE on $volume.. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 6), (line:1, col:7)
+2026-06-18 06:12:50.692 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: SUMAC($volume, 30)  (HIGH($high, 30) == $high). Error: Failed to parse expression: Expected end of text, found '('  (at char 20), (line:1, col:21)
+2026-06-18 06:12:50.730 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: SUMAC($volume, 30)  (HIGH($high, 30) == $high). Error: Failed to parse expression: Expected end of text, found '('  (at char 20), (line:1, col:21)
+2026-06-18 06:12:50.789 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: SUMAC($volume, 30)  (HIGH($high, 30) == $high). Error: Failed to parse expression: Expected end of text, found '('  (at char 20), (line:1, col:21)
+2026-06-18 06:12:50.836 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: SUMAC($volume, 30)  (HIGH($high, 30) == $high). Error: Failed to parse expression: Expected end of text, found '('  (at char 20), (line:1, col:21)
+2026-06-18 06:15:11.053 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :: RANK(ZSCORE($volume)). Error: Invalid operator(s): "::"
+2026-06-18 06:15:11.198 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :: RANK(ZSCORE($volume)). Error: Invalid operator(s): "::"
+2026-06-18 06:15:11.289 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :: RANK(ZSCORE($volume)). Error: Invalid operator(s): "::"
+2026-06-18 06:15:11.365 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :: RANK(ZSCORE($volume)). Error: Invalid operator(s): "::"
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=8
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_only__p-git_latentmas_foundation/scoreboard.csv

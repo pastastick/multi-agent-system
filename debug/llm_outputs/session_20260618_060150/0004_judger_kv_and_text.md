@@ -1,0 +1,76 @@
+# Call 0004 — `judger` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-18 06:06:29
+- conv_id: `8435ff86`
+- step: 0
+- temperature: 0.6
+- has_past_kv: True
+- input_tokens: 603
+- output_tokens: 502
+- duration_s: 42.2615
+- text_len: 1806
+
+## System Prompt
+
+```text
+You are the Judger. The latent reasoning of the Proposal, Construct, and Consistency agents is in your memory. Synthesize it into ONE complete hypothesis and 1-3 factor expressions.
+
+Operator reference (only these are valid; respect arity):
+  Variables:        $open $close $high $low $volume $return
+  Cross-sectional:  RANK ZSCORE MEAN STD SKEW KURT MAX MIN MEDIAN
+  Time-series(A,n): DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD SUMAC HIGHDAY LOWDAY TS_PCTCHANGE
+  Time-series(A,B,n): TS_CORR TS_COVARIANCE
+  Smoothing: SMA(A,n,m) WMA(A,n) EMA(A,n) DECAYLINEAR(A,d)
+  Math: LOG SQRT SIGN EXP ABS INV FLOOR  POW(A,n) PROD(A,n)
+  Pairwise: MAX(A,B) MIN(A,B)
+  Conditional: COUNT(C,n) SUMIF(A,n,C) FILTER(A,C) (C1)&&(C2) (C1)||(C2) (C)?(A):(B)
+  Regression: REGBETA(A,B,n) REGRESI(A,B,n) SEQUENCE(n)
+  Technical: RSI(A,n) MACD(A,s,l) BB_UPPER/BB_MIDDLE/BB_LOWER(A,n)
+  Quantile: TS_QUANTILE(A,p,q) PERCENTILE(A,q,p)
+
+Rules: only $variables as leaves; respect arity; windows 1-60 (nested ≤ 60);
+keep each expression short (target 50-250 chars, 2-4 base features).
+
+Output a complete answer in EXACTLY this labeled block (plain text, no JSON, no markdown fences). Put the HYPOTHESIS line and the EXPRESSION lines LAST, with nothing between them:
+
+KNOWLEDGE: <one line — the conditional market pattern>
+OBSERVATION: <one line — data/result that motivates it>
+JUSTIFICATION: <one line — economic / behavioral reason it should work>
+SPECIFICATION: <one line — variables, time horizon, expected effect>
+FACTOR 1 NAME: <short_name_no_spaces> | DESC: <one line — what it measures>
+FACTOR 2 NAME: <short_name_no_spaces> | DESC: <one line>   (only if >1 factor)
+HYPOTHESIS: <ONE sentence stating the mechanism>
+EXPRESSION 1: <single DSL expression>
+EXPRESSION 2: <single DSL expression>   (only if a second factor adds a distinct angle)
+```
+
+## User Prompt
+
+```text
+Output the complete hypothesis and the 1-3 factor expression(s) now, in the required labeled block.
+```
+
+## Response
+
+```text
+(I)  the core signal is the deviation of the most recent $volume from its rolling mean, normalized by its standard deviation — a measure of abnormal volume activity. This could indicate liquidity shifts or information asymmetry.  
+  (II)  The primary operator is TS_ZSCORE for time-series normalization, and the secondary is RANK for cross-sectional for ranking.  
+  (III)  The hypothesis is that when this volume z-score is high (abnormal volume), it signals potential information asymmetry or liquidity shifts, which could lead to mean-reversion in the next day.  
+  (IV)  The time horizon is 10 days for the rolling mean and standard deviation.  
+  (V)  The expected return direction is negative (mean-reversion).  
+
+KNOWLEDGE: When abnormal volume (TS_ZSCORE($volume, 10)) ranks highly in the cross-sectional, it signals potential information asymmetry or liquidity shifts, which may trigger mean-reversion in the next day.  
+OBSERVATION: In 2018-2021, stocks with high RANK(TS_ZSCORE($volume, 10)) had a 0.033 RankIC (ICIR 0.56) in the train segment, outperforming the baseline.  
+JUSTIFICATION: Abnormal volume activity (high TS_ZSCORE) may indicate information asymmetry or liquidity shifts, which can create mispricing that mean-reverts.  
+SPECIFICATION: $volume, 10-day horizon, expected negative return.
+
+FACTOR 1 NAME: VOLUMEZSCORE | DESC: Volume z-score over 10-day rolling mean and std  
+EXPRESSION 1: TS_ZSCORE($volume, 10)  
+FACTOR 2 NAME: VOLUMERANK | DESC: Rank of volume z-score across stocks  
+EXPRESSION 2: RANK(TS_ZSCORE($volume, 10))  
+HYPOTHHESIS: High-rank volume z-scores (abnormal volume activity) predict mean-reversion in the next day.  
+EXPRESSION 1: RANK(TS_ZSCORE($volume, 10))  
+EXPRESSION 2: (RANK(TS_ZSCORE($volume, 10)) > 0.75) ? (RANK(TS_ZSCORE($volume, 10)) - 0.75) : 0
+```

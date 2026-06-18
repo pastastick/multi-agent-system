@@ -1,0 +1,52 @@
+# chain=mut_proposal  config=ls60  rep=2  step=1  agent=proposal  variant=git_latentmas_foundation  transfer=chain  mode=kv_and_text  latent_steps=60  terminal=True
+
+# kv: {"step_idx": 1, "agent": "proposal", "mode": "kv_and_text", "latent_steps": 60, "n_prompt_tokens": 214, "kv_seq_len": 1079, "kv_size_mb": 151.73, "transfer": "chain", "prev_seq_len": 812, "delta": 267, "expected_delta": 274}
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**DIAGNOSIS**: The parent factor's weakness lies in its reliance on a **volume z-score** without accounting for **short-horizon volatility clustering**. While the standalone RankIC is weak (0.018), the **volatility-gated variant** is noisier, suggesting that volume alone is insufficient to capture liquidity dynamics in the context of short-term price noise. The 5-day volume z-score is too long for short-horizon liquidity signals, and the range compression (high-low)/close is too crude for volatility estimation.
+
+**KNOWLEDGE**: A more refined hypothesis could focus on **intraday volume volatility** — specifically, the **daily range (high - low)** normalized by the **previous day's close**, which captures short-term price dispersion better than the 5-day range. This would align with the research direction of exploiting short-horizon liquidity and volatility dynamics.
+
+**OBSERVATION**: The parent factor’s metrics show a weak RankIC, indicating limited predictive power. The volatility gate is noisier, suggesting that the original signal is not robust enough to distinguish liquidity shifts under short-term noise.
+
+**DIRECTION**: **VARIABLE SWAP** — replace the 5-day volume z-score with **TS_STD((high - low)/$close, 2)**, a 2-day standard deviation of intraday range normalized by close. This captures short-term volatility more sharply than a 5-day volume z-score, aligning with the goal of exploiting short-horizon liquidity dynamics.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [
+    "$close"
+  ],
+  "observable": true,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.6,
+  "parser_ok": null
+}

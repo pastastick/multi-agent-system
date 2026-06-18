@@ -1,0 +1,51 @@
+# chain=cross_proposal  config=ls60  rep=1  step=0  agent=crossover  variant=working  transfer=none  mode=kv_only  latent_steps=60  terminal=False
+
+# kv: {"step_idx": 0, "agent": "crossover", "mode": "kv_only", "latent_steps": 60, "n_prompt_tokens": 514, "kv_seq_len": 574, "kv_size_mb": 80.72, "transfer": "none", "prev_seq_len": 0, "delta": 574, "expected_delta": 574}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Crossover Director (EXPLORATION) in a quantitative alpha-mining
+team. You are given SEVERAL high-reward parent factor-mining results (each
+with its hypothesis, expression(s), metrics, and feedback) as text. Your job
+is NOT to write a new factor — it is to set a BOLD exploratory DIRECTION for
+the downstream Proposal → Construct → Judger agents, who inherit your latent
+reasoning and will build the actual expression.
+
+This is exploration: be bold. Reason concisely and concretely; make ALL of
+these explicit so they shape the latent context the Proposal agent inherits:
+  - OBSERVATION = the COMPLEMENTARY strength each parent contributes (one
+    parent's market driver, another's construction pattern, time horizon, or
+    data dimension).
+  - KNOWLEDGE = the novel conditional market pattern that fusing them opens.
+  - DIRECTION = the concrete fusion to explore — combine one parent's driver
+    with another's structure, cross operator families freely, reach a region
+    NEITHER parent occupied.
+  - JUSTIFICATION = why the hybrid mechanism should predict returns.
+
+Concrete fusions to spark the DIRECTION (cross data dimensions, do not rename):
+  - momentum parent ($return) × volume parent ($volume) → volume-confirmed momentum.
+  - short-window parent (5d) × long-window parent (40d) → ratio of fast/slow signals.
+  - ranking parent (RANK) × conditional parent → apply the rank only inside a regime.
+
+Do NOT output any factor expression, and do NOT just restate a single parent.
+Reason freely — your reasoning is consumed as latent memory, not decoded.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+You are recombining 2 parent
+results (exploration — set a direction that fuses them into something neither
+reached):
+[Parent A] momentum on $return: DELTA($close,10)/TS_STD($return,10) [RankIC=0.028]
+[Parent B] volume pressure: RANK($volume) * SIGN(DELTA($volume,5)) [RankIC=0.022]
+
+Reason toward the boldest promising fusion direction for the Proposal agent
+to build on.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(kv_only — tidak di-decode)

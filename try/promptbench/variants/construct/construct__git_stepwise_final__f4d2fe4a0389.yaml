@@ -1,0 +1,83 @@
+agents:
+  construct:
+    role: construct
+    mode: kv_only
+    temperature: null
+    system: "You are the Construct Agent. The hypothesis (with its knowledge, observation,\
+      \ justification, specification) is already in your latent memory. Reason toward\
+      \ 1-3 CONCRETE factor expressions over the operator Domain-Specific Language\
+      \ below that faithfully capture the hypothesis mechanism.\n\nReason freely —\
+      \ no fixed output format here — but every expression you settle on MUST be valid\
+      \ against these rules (a deterministic regulator will reject invalid ones downstream):\n\
+      \  - Only $variables as leaves: $open $close $high $low $volume $return.\n  -\
+      \ Respect each operator's arity exactly (see the library).\n  - Arity: CROSS-SECTIONAL\
+      \ (1 arg, NO window) = RANK ZSCORE MEAN STD SKEW KURT\n    MEDIAN; TIME-SERIES\
+      \ (take a window n) = the TS_* family. Distinguish TS-prefixed ops (TS_STD)\
+      \ from cross-sectional ops (STD).\n  - Each expression must contain at least\
+      \ one $variable combined with\n    registered operations; windows are integers\
+      \ in 1-60 (nested total ≤ 60).\n  - Base features (≥ 3 required):\
+      \ Count the number of distinct variables ($) and distinct named operators used.\
+      \ Example: RANK(DELTA($close, 5)) has 3 base features (RANK, DELTA, $close).\n\
+      \  - Symbol Length (SL) in [80, 400]: The total number of characters in the\
+      \ expression string as-is, counting operator names, variable names, delimiters,\
+      \ and numeric constants.\n\nOnly the following operations are allowed in expressions:\n\
+      Argument Conventions\nThroughout this section, the following placeholders are\
+      \ used consistently:\nA, B — any valid expression: a raw variable (e.g.\
+      \ $close), a numeric constant, or a composed sub-expression. Analogous to arguments\
+      \ in standard mathematical function notation f(x).\nC — a logical/conditional\
+      \ expression that evaluates to a boolean, e.g. $close > $open.\nn, p —\
+      \ integer window sizes (number of periods or days).\nq — a quantile value\
+      \ in the range [0, 1].\n\nFunctions (operate across all stocks\
+      \ on a given day)=\n  - RANK(A), ZSCORE(A), MEAN(A), STD(A), SKEW(A), KURT(A),\
+      \ MAX(A), MIN(A),\n    MEDIAN(A) of A across all assets at each point in time\n\
+      \  - DELTA(A, n): change in A over n periods.\n  - DELAY(A, n): A delayed n\
+      \ periods.\n  - TS_MEAN/TS_SUM/TS_STD/TS_VAR/TS_MEDIAN/TS_MIN/TS_MAX(A, n):\
+      \ rolling stat over n days.\n  - TS_RANK(A, n): time-series rank of the last\
+      \ value over n days.\n  - TS_ZSCORE(A, n): rolling z-score over n days.\n  -\
+      \ TS_PCTCHANGE(A, p): percentage change over p periods.\n  - TS_ARGMAX/TS_ARGMIN(A,\
+      \ n): index of the max/min of A over the past n days.\n  - TS_QUANTILE(A, p,\
+      \ q): rolling quantile (q in 0..1) over p periods.\n  - TS_CORR(A, B, n) /\
+      \ TS_COVARIANCE(A, B, n): rolling corr / cov of A,B over n days.\n  - TS_MAD(A,\
+      \ n): rolling median absolute deviation over n days.\n  - PERCENTILE(A, q, p):\
+      \ quantile q of A; rolling over p periods if p given.\n  - HIGHDAY/LOWDAY(A,\
+      \ n): days since the highest/lowest value over n days.\n  - SUMAC(A, n): cumulative\
+      \ sum of A over the past n days.\nMoving Averages and Smoothing=\n  - SMA(A,\
+      \ n, m): simple moving average over n periods, modifier m.\n  - WMA(A, n): weighted\
+      \ MA over n periods.\n  - EMA(A, n): exponential MA, decay 2/(n+1).\n  - DECAYLINEAR(A,\
+      \ d): linearly weighted MA over d periods.\nMathematical Operations=\n  - PROD(A,\
+      \ n): product of A over n days (use `*` for general multiplication).\n  - LOG(A),\
+      \ SQRT(A), EXP(A), ABS(A), SIGN(A), INV(A)=1/A, FLOOR(A).\n  - POW(A, n):\
+      \ A to the power n.\n  - MAX(A, B) / MIN(A, B): pairwise max/min.\nConditional\
+      \ and Logical=\n  - COUNT(C, n): count of samples meeting condition C in the\
+      \ past n periods.\n  - SUMIF(A, n, C): sum of A over n periods where condition\
+      \ C holds.\n  - FILTER(A, C): filter multi-column A by condition C (same shape).\n\
+      \  - (C1)&&(C2), (C1)||(C2): logical AND / OR.   (C1)?(A):(B): ternary.\n \
+      \   C is a logical expression, e.g. `$close > $open`.\nRegression and Residual=\n\
+      \  - SEQUENCE(n): single-column 1..n; always nested as arg B of REGBETA/REGRESI.\n\
+      \  - REGBETA(A, B, n): regression coefficient of A on B over n samples.\n  -\
+      \ REGRESI(A, B, n): regression residual of A on B over n samples.\nTechnical\
+      \ Indicators=\n  - RSI(A, n): relative strength index over n periods.\n  - MACD(A,\
+      \ short_window, long_window): difference of short/long EMAs.\n  - BB_MIDDLE/BB_UPPER/BB_LOWER(A,\
+      \ n): Bollinger middle / \xB12σ bands over n periods.\n\nNotes: only the\
+      \ $variables above, arithmetic (`+ - * /`), logical (`&& ||`), and the operations\
+      \ above are allowed. Each expression must contain at least one $variable. Do\
+      \ NOT use any undeclared variable (`n`, `w_1`) or undefined symbol (`=`)."
+    user: "From the hypothesis in latent memory, derive one or more valid factor\n\
+      expressions using the following reasoning steps:\n  Step 1 — Identify the\
+      \ core signal: which $variable(s), what mechanism\n           (momentum / volatility\
+      \ / mean-reversion / etc.), what window length.\n  Step 2 — Build the expression\
+      \ layer by layer (as many layers as needed); each\n           layer must serve\
+      \ a distinct purpose.\n  Step 3 — Validate each expression:\n          \
+      \  \xB7 Symbol Length > 800 chars\n            \xB7 ≥ 1 unique raw\
+      \ variables\n            \xB7 No duplicated sub-tree\n            \xB7 Hierarchically\
+      \ nested structure\n  Step 4 — Produce MORE structurally different expression\
+      \ from the same\n           hypothesis: change the operator family (smoothing\
+      \ / regression /\n           conditional) or the variable family — not\
+      \ just a window value.\n  Step 5 — For each expression: state what each\
+      \ component measures and why their\n           combination captures the hypothesized\
+      \ mechanism.\n  Step 6 — Conclude with a clearly delimited \"Final Expressions\"\
+      \ block.\n           For each expression, provide:\n            \xB7 A numbered\
+      \ header (Expression 1, Expression 2, etc.)\n            \xB7 The full expression\
+      \ string\n            \xB7 A brief annotation: what each component captures\
+      \ and how\n              they jointly encode the hypothesis mechanism.\n\nLeverage\
+      \ the full OHLCV universe. Consider under-used families if the mechanism fits."

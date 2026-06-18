@@ -1,0 +1,7 @@
+chain,config,terminal_agent,n,score_mean,score_std,ok_rate,healthy_rate,kv_flag_rate,text_collapse_rate,err_rate
+cross_proposal,ls60,proposal,3,0.6,0.0,1.0,0.0,0.0,1.0,0.0
+front_end_feedback,ls60,feedback,3,1.0,0.0,1.0,1.0,0.0,0.0,0.0
+front_end_full,ls60,judger,3,0.533,0.33,1.0,1.0,0.0,0.0,0.0
+mut_proposal,ls60,proposal,3,0.6,0.0,1.0,1.0,0.0,0.0,0.0
+pc_2agent,ls60,construct,3,0.0,0.0,1.0,0.0,0.0,1.0,0.0
+pcj_judger,ls60,judger,3,0.417,0.312,1.0,0.667,0.0,0.333,0.0

@@ -1,0 +1,118 @@
+{
+  "chain": "cross_proposal",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 0,
+  "terminal_agent": "proposal",
+  "ok": true,
+  "score": 0.6,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "crossover",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 514,
+      "kv_seq_len": 574,
+      "kv_size_mb": 80.72,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 574,
+      "expected_delta": 574,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "proposal",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 841,
+      "kv_size_mb": 118.27,
+      "transfer": "chain",
+      "prev_seq_len": 574,
+      "delta": 267,
+      "expected_delta": 274,
+      "text_len": 2063
+    }
+  ],
+  "elapsed_s": 45.77,
+  "score_detail": {
+    "has_text": true,
+    "observable_cols": [
+      "$close",
+      "$return",
+      "$volume"
+    ],
+    "observable": true,
+    "conditional": false,
+    "cliche": false,
+    "score": 0.6,
+    "parser_ok": null
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "crossover",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 514,
+          "kv_seq_len": 574,
+          "kv_size_mb": 80.72,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 574,
+          "expected_delta": 574,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "proposal",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 841,
+          "kv_size_mb": 118.27,
+          "transfer": "chain",
+          "prev_seq_len": 574,
+          "delta": 267,
+          "expected_delta": 274,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "longest_run=15 ≥ 12 (kata berulang beruntun)",
+        "runaway: output_tokens=512 ≈ max_new_tokens (512) → tak berhenti"
+      ],
+      "metrics": {
+        "len": 2063,
+        "repetition": 0.115,
+        "longest_run": 15,
+        "output_tokens": 512,
+        "runaway": true,
+        "parser_ok": null
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "longest_run=15 ≥ 12 (kata berulang beruntun)",
+        "runaway: output_tokens=512 ≈ max_new_tokens (512) → tak berhenti"
+      ]
+    }
+  },
+  "desc": "crossover → proposal (apakah crossover KV mewarisi 2 parent?)"
+}

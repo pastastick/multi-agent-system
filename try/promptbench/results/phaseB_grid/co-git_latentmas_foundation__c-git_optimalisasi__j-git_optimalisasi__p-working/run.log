@@ -1,0 +1,149 @@
+# combo: co-git_latentmas_foundation__c-git_optimalisasi__j-git_optimalisasi__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_optimalisasi,judger=git_optimalisasi,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_optimalisasi', 'judger': 'git_optimalisasi', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   8%|▊         | 33/398 [00:00<00:01, 299.19it/s]Loading weights:   8%|▊         | 30/398 [00:00<00:02, 143.25it/s]Loading weights:  11%|█▏        | 45/398 [00:00<00:02, 128.92it/s]Loading weights:  16%|█▌        | 63/398 [00:00<00:02, 150.04it/s]Loading weights:  21%|██▏       | 85/398 [00:00<00:01, 159.65it/s]Loading weights:  15%|█▍        | 58/398 [00:00<00:03, 89.34it/s] Loading weights:  26%|██▌       | 104/398 [00:00<00:01, 160.63it/s]Loading weights:  19%|█▉        | 76/398 [00:00<00:02, 111.28it/s]Loading weights:  31%|███       | 122/398 [00:00<00:01, 155.41it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 507.14it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 522.22it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 9962.24it/s]
+2026-06-18 06:44:07.779 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:07.878 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:07.966 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:08.040 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.206 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 10) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 35
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.419 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10) < -1 && $volume > TS_MEAN($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.488 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 10) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 35
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.640 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10) < -1 && $volume > TS_MEAN($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.713 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 10) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 35
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.865 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10) < -1 && $volume > TS_MEAN($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:15.914 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_RANK($volume, 10) && $return < 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 35
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:16.030 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10) < -1 && $volume > TS_MEAN($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:44:23.300 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Cross_Functions (operate across all stocks on a given day). Error: Failed to parse expression: Expected end of text, found '('  (at char 16), (line:1, col:17)
+2026-06-18 06:44:23.358 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Cross_Functions (operate across all stocks on a given day). Error: Failed to parse expression: Expected end of text, found '('  (at char 16), (line:1, col:17)
+2026-06-18 06:44:23.419 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Cross_Functions (operate across all stocks on a given day). Error: Failed to parse expression: Expected end of text, found '('  (at char 16), (line:1, col:17)
+2026-06-18 06:44:23.473 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Cross_Functions (operate across all stocks on a given day). Error: Failed to parse expression: Expected end of text, found '('  (at char 16), (line:1, col:17)
+2026-06-18 06:44:39.797 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 2) > $open && $return_prev < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:39.824 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 2) > $open && $return_prev < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:39.855 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 2) > $open && $return_prev < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:39.877 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 2) > $open && $return_prev < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:49.469 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 3) > $EMA($volume,3) && $return < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:49.492 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 3) > $EMA($volume,3) && $return < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:49.558 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 3) > $EMA($volume,3) && $return < 0. Error: Invalid operator(s): "`"
+2026-06-18 06:44:49.591 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: `TS_EMA($volume, 3) > $EMA($volume,3) && $return < 0. Error: Invalid operator(s): "`"
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=6
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_optimalisasi__j-git_optimalisasi__p-working/scoreboard.csv

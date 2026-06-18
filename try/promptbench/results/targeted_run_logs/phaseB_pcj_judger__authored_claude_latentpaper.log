@@ -1,0 +1,61 @@
+[bench_chain] chains=['pcj_judger'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'construct': 'git_stepwise_final', 'proposal': 'authored_mixed_scoped', 'judger': 'authored_claude_latentpaper'}
+[bench_chain] total jobs=3 (text=0 latent=3)
+[bench_chain] === LATENT phase (use_realign): 3 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  63%|██████▎   | 250/398 [00:00<00:00, 2496.51it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2247.99it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  61%|██████    | 242/398 [00:00<00:00, 2394.50it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2551.07it/s]
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  66%|██████▌   | 261/398 [00:00<00:00, 2608.01it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2563.50it/s]
+2026-06-18 09:28:43.356 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10) > 0.3 && TS_QUANTILE($high - $low, 0.2, 10) < TS_MEAN($high - $low, 10) && TS_RANK($high - $low, 10) < 4
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 7
+                        # Unique Vars: 3
+                        Symbol Length (SL): 127
+                        # Base Features (ER): 3
+                        
+2026-06-18 09:28:43.824 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10) > 0.3 && TS_QUANTILE($high - $low, 0.2, 10) < TS_MEAN($high - $low, 10) && TS_RANK($high - $low, 10) < 4
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 7
+                        # Unique Vars: 3
+                        Symbol Length (SL): 127
+                        # Base Features (ER): 3
+                        
+2026-06-18 09:28:44.273 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10) > 0.3 && TS_QUANTILE($high - $low, 0.2, 10) < TS_MEAN($high - $low, 10) && TS_RANK($high - $low, 10) < 4
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 7
+                        # Unique Vars: 3
+                        Symbol Length (SL): 127
+                        # Base Features (ER): 3
+                        
+2026-06-18 09:28:44.689 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10) > 0.3 && TS_QUANTILE($high - $low, 0.2, 10) < TS_MEAN($high - $low, 10) && TS_RANK($high - $low, 10) < 4
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 7
+                        # Unique Vars: 3
+                        Symbol Length (SL): 127
+                        # Base Features (ER): 3
+                        
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 3 results, ok=3, err=0, unhealthy=0
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB/scoreboard.csv

@@ -1,0 +1,188 @@
+{
+  "chain": "front_end_full",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.75,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 503,
+      "kv_seq_len": 563,
+      "kv_size_mb": 79.17,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 563,
+      "expected_delta": 563,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1385,
+      "kv_seq_len": 2008,
+      "kv_size_mb": 282.38,
+      "transfer": "chain",
+      "prev_seq_len": 563,
+      "delta": 1445,
+      "expected_delta": 1445,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 158,
+      "kv_seq_len": 2226,
+      "kv_size_mb": 313.03,
+      "transfer": "chain",
+      "prev_seq_len": 2008,
+      "delta": 218,
+      "expected_delta": 218,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 644,
+      "kv_seq_len": 2923,
+      "kv_size_mb": 411.05,
+      "transfer": "chain",
+      "prev_seq_len": 2226,
+      "delta": 697,
+      "expected_delta": 704,
+      "text_len": 638
+    }
+  ],
+  "elapsed_s": 32.3,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When daily volume is sharply rising and the daily range ($high-$low) is narrow, returns reverse the next day.\n\n  \nOBSERVATION::::::::return is higher than the average return of the previous   \nJUSTIFICATION::::return is higher than the average return of the previous day.  \n SPECIFICATION:::return is higher than the average return of the previous day  \n FACTOR 1 $volume $range $return  \n HYPOTHESIS: When $volume is rising rapidly and $high - $low is narrow, $return reverses the next day.",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "cross_sectional",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "RANK($volume) >   2 and TS_ZSCORE($high - $low, 1) < 0.1",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": [
+          "cross_sectional",
+          "time_series"
+        ]
+      },
+      {
+        "expr": "TS_ZSCORE($return, 1) > TS_ZSCORE($return, 2)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.75,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 503,
+          "kv_seq_len": 563,
+          "kv_size_mb": 79.17,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 563,
+          "expected_delta": 563,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1385,
+          "kv_seq_len": 2008,
+          "kv_size_mb": 282.38,
+          "transfer": "chain",
+          "prev_seq_len": 563,
+          "delta": 1445,
+          "expected_delta": 1445,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 158,
+          "kv_seq_len": 2226,
+          "kv_size_mb": 313.03,
+          "transfer": "chain",
+          "prev_seq_len": 2008,
+          "delta": 218,
+          "expected_delta": 218,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 644,
+          "kv_seq_len": 2923,
+          "kv_size_mb": 411.05,
+          "transfer": "chain",
+          "prev_seq_len": 2226,
+          "delta": 697,
+          "expected_delta": 704,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 638,
+        "repetition": 0.167,
+        "longest_run": 1,
+        "output_tokens": 189,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct → consistency → judger (front-end lengkap)"
+}

@@ -1,0 +1,62 @@
+# chain=mut_proposal  config=ls60  rep=2  step=0  agent=mutation  variant=working  transfer=none  mode=kv_only  latent_steps=60  terminal=False
+
+# kv: {"step_idx": 0, "agent": "mutation", "mode": "kv_only", "latent_steps": 60, "n_prompt_tokens": 752, "kv_seq_len": 812, "kv_size_mb": 114.19, "transfer": "none", "prev_seq_len": 0, "delta": 812, "expected_delta": 812}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Mutation Director (EXPLOITATION) in a quantitative alpha-mining
+team. You are given ONE parent factor-mining result (its hypothesis,
+expression(s), backtest metrics, and feedback) as text. Your job is NOT to
+write a new factor — it is to set the DIRECTION for the downstream
+Proposal → Construct → Judger agents, who inherit your latent reasoning and
+will build the actual expression.
+
+This is exploitation: stay INSIDE the parent's theoretical framework and push
+it where it is weakest. Reason concisely and concretely; make ALL of these
+explicit so they shape the latent context the Proposal agent inherits:
+  - DIAGNOSIS = which part of the parent under-performed and WHY (e.g. the
+    volume window is too short; the signal is too volume-heavy and decays
+    under noise; drawdown high → an overfit branch).
+  - KNOWLEDGE = the refined conditional market pattern to pursue.
+  - OBSERVATION = what the parent's metrics / feedback actually showed.
+  - DIRECTION = ONE focused refinement to try (retune a window, swap a single
+    operator family, change a base $variable or normalization, add a
+    conditional gate) — not a pivot to an unrelated mechanism.
+
+Pick ONE concrete mutation type to anchor the DIRECTION (name the exact change,
+never a vague "refine the window"):
+  a. WINDOW SHIFT — window 10 → 5 (faster signal) or → 20 (smoother, less noisy).
+  b. OPERATOR SWAP — same concept, different statistic (TS_CORR ↔ REGBETA).
+  c. VARIABLE SWAP — e.g. $close → ($high-$low)/$close (intraday range), or $volume.
+  d. NORMALIZATION CHANGE — add or remove a RANK / ZSCORE wrapper.
+  e. CONDITIONAL GATE — wrap the signal: (TS_STD($return,n) > k)?(signal):(0).
+  f. SMOOTHING CHANGE — raw → EMA / DECAYLINEAR to cut noise.
+
+Do NOT output any factor expression, and do NOT restate the parent verbatim.
+Reason freely — your reasoning is consumed as latent memory, not decoded.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Parent result to refine (exploitation — set the direction to
+improve it within the same framework):
+[Parent] HYPOTHESIS: elevated 5-day volume z-score with compressed range predicts next-day reversal.
+EXPRESSION 1: TS_ZSCORE($volume,5) - RANK(($high-$low)/$close)  [standalone RankIC=0.031, ICIR=0.41]
+EXPRESSION 2: REGBETA($return, $volume, 20)  [standalone RankIC=0.009, ICIR=0.10]
+METRICS: combined RankIC=0.052, MaxDrawdown=0.17
+FEEDBACK: PARTIALLY supports; factor 2 weak (window too short for beta).
+
+If the parent shows per-factor RankIC numbers, diagnose USING them: target the
+WEAKEST expression (lowest RankIC) and fix its structural weakness — do not
+guess which factor is weak.
+
+Reason toward a sharp diagnosis and ONE focused refinement direction for the
+Proposal agent to build on.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(kv_only — tidak di-decode)

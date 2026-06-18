@@ -1,0 +1,188 @@
+{
+  "chain": "front_end_full",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.75,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 503,
+      "kv_seq_len": 563,
+      "kv_size_mb": 79.17,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 563,
+      "expected_delta": 563,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1385,
+      "kv_seq_len": 2008,
+      "kv_size_mb": 282.38,
+      "transfer": "chain",
+      "prev_seq_len": 563,
+      "delta": 1445,
+      "expected_delta": 1445,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 158,
+      "kv_seq_len": 2226,
+      "kv_size_mb": 313.03,
+      "transfer": "chain",
+      "prev_seq_len": 2008,
+      "delta": 218,
+      "expected_delta": 218,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 603,
+      "kv_seq_len": 2882,
+      "kv_size_mb": 405.28,
+      "transfer": "chain",
+      "prev_seq_len": 2226,
+      "delta": 656,
+      "expected_delta": 663,
+      "text_len": 729
+    }
+  ],
+  "elapsed_s": 40.01,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": ": When the 5-day_volume積 (volume) ranks high and the 10-day_高 (high-low) stays narrow, returns reverse next week  \nOBSERVATION::: Returns show a strong reversal in the following week when volume is high and range is tight  \nJUSTIFICATION::::: Liquidity and volatility clustering create mispricing that reverses in the next period  \nSPECINCLUDE::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: :volume ranks high and range stays narrow, returns reverse next week  \nFACTOR 1 NAME:::: volume | DESC: 5-day volume  \nFACTOR 2 NAME: range | DESC: 10-day high-low range",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "cross_sectional",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "RANK($volume,5) > RANK($volume,1) && TS_RANK($high-$low,10) < RANK($high-$low,1)",
+        "gate_ok": false,
+        "reason": "arity: `RANK` takes 1 argument(s) but got 2 (`RANK($volume, 5.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead. `RANK` takes 1 argument(s) but got 2 (`RANK($volume, 1.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead.",
+        "families": [
+          "cross_sectional",
+          "time_series"
+        ]
+      },
+      {
+        "expr": "TS_ZSCORE($return,10) > 0.5",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.75,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 503,
+          "kv_seq_len": 563,
+          "kv_size_mb": 79.17,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 563,
+          "expected_delta": 563,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1385,
+          "kv_seq_len": 2008,
+          "kv_size_mb": 282.38,
+          "transfer": "chain",
+          "prev_seq_len": 563,
+          "delta": 1445,
+          "expected_delta": 1445,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 158,
+          "kv_seq_len": 2226,
+          "kv_size_mb": 313.03,
+          "transfer": "chain",
+          "prev_seq_len": 2008,
+          "delta": 218,
+          "expected_delta": 218,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 603,
+          "kv_seq_len": 2882,
+          "kv_size_mb": 405.28,
+          "transfer": "chain",
+          "prev_seq_len": 2226,
+          "delta": 656,
+          "expected_delta": 663,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 729,
+        "repetition": 0.067,
+        "longest_run": 1,
+        "output_tokens": 266,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct → consistency → judger (front-end lengkap)"
+}

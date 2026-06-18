@@ -50,7 +50,7 @@ RESULTS_DIR = PROMPTBENCH / "results" / "phaseA"
 CORE = ["proposal", "construct", "consistency", "judger"]
 KV_ONLY = {"proposal", "construct", "consistency"}   # di-force kv_and_text utk skor
 DECODE_TEMPERATURE = 0.7
-DEFAULT_MAX_NEW = 512
+DEFAULT_MAX_NEW = 1536
 
 
 class _Vis(Undefined):
@@ -161,21 +161,19 @@ def run_job(job: dict, *, dry_run: bool, temp: float) -> dict:
 
 
 def _save_artifact(out: dict, system: str, user: str, score_detail: dict) -> None:
-    d = RESULTS_DIR / out["agent"]
-    d.mkdir(parents=True, exist_ok=True)
-    fp = d / f"{out['variant_id']}__ls{out['latent_steps']}__rep{out['rep']}.txt"
-    lines = [
-        f"# agent={out['agent']} variant={out['variant_id']} latent_steps={out['latent_steps']} rep={out['rep']}",
-        f"# score={out.get('score')} ok={out.get('ok')} elapsed_s={out.get('elapsed_s')} kv_tokens={out.get('kv_tokens')}",
-        "=" * 78, "SYSTEM", "=" * 78, system,
-        "", "=" * 78, "USER", "=" * 78, user,
-        "", "=" * 78, "RESPONSE", "=" * 78, (out.get("text") or ""),
-        "", "=" * 78, "SCORE DETAIL", "=" * 78,
-        json.dumps(score_detail, indent=2, ensure_ascii=False),
-    ]
-    if out.get("err"):
-        lines += ["", "ERROR", out["err"], out.get("traceback", "")]
-    fp.write_text("\n".join(lines), encoding="utf-8")
+    # Layout nested & mudah dibaca: phaseA/<agent>/<variant_short>/ls<N>/rep<R>.txt
+    from ..artifacts import phaseA_artifact, write_step_artifact
+    fp = phaseA_artifact(out["agent"], out["variant_id"], out["latent_steps"], out["rep"])
+    write_step_artifact(
+        fp,
+        header={"agent": out["agent"], "variant": out["variant_id"],
+                "latent_steps": out["latent_steps"], "rep": out["rep"],
+                "score": out.get("score"), "ok": out.get("ok"),
+                "elapsed_s": out.get("elapsed_s"), "kv_tokens": out.get("kv_tokens")},
+        system=system, user=user, response=out.get("text") or "",
+        score_detail=score_detail,
+        error=(out["err"] + "\n" + out.get("traceback", "")) if out.get("err") else None,
+    )
 
 
 # ════════════════════════════════════════════════════════════════════════════
@@ -204,20 +202,30 @@ def aggregate_and_write(results: List[dict]) -> Path:
     for r in results:
         groups.setdefault((r["agent"], r["variant_id"], r["latent_steps"]), []).append(r)
 
-    rows = []
+    new_rows: Dict[tuple, dict] = {}
     for (agent, variant, ls), items in sorted(groups.items()):
         details = [it.get("score_detail", {"score": it.get("score", 0.0)}) for it in items]
         agg = scoremod.aggregate(agent, details)
         ok_rate = round(sum(int(it.get("ok", False)) for it in items) / len(items), 3)
-        rows.append({
+        new_rows[(agent, variant, ls)] = {
             "agent": agent, "variant_id": variant, "latent_steps": ls,
             "n": len(items), "ok_rate": ok_rate,
             **{k: v for k, v in agg.items() if k not in ("role", "n_rep", "families_union")},
-        })
+        }
 
-    rows.sort(key=lambda x: (x["agent"], -x.get("score_mean", 0), x["latent_steps"]))
+    # Merge: baca scoreboard lama, update/tambah baris baru saja
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     csv_path = RESULTS_DIR / "scoreboard.csv"
+    existing: Dict[tuple, dict] = {}
+    if csv_path.exists():
+        with csv_path.open(newline="", encoding="utf-8") as f:
+            for row in csv.DictReader(f):
+                key = (row["agent"], row["variant_id"], int(row["latent_steps"]))
+                existing[key] = row
+    existing.update(new_rows)  # new_rows menimpa baris lama yang sama
+
+    rows = sorted(existing.values(),
+                  key=lambda x: (x["agent"], -float(x.get("score_mean") or 0), int(x["latent_steps"])))
     cols = sorted({k for r in rows for k in r.keys()})
     with csv_path.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=["agent", "variant_id", "latent_steps", "n",

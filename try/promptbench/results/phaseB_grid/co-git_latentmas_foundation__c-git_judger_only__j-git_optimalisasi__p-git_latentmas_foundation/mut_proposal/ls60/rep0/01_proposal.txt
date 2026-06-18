@@ -1,0 +1,58 @@
+# chain=mut_proposal  config=ls60  rep=0  step=1  agent=proposal  variant=git_latentmas_foundation  transfer=chain  mode=kv_and_text  latent_steps=60  terminal=True
+
+# kv: {"step_idx": 1, "agent": "proposal", "mode": "kv_and_text", "latent_steps": 60, "n_prompt_tokens": 214, "kv_seq_len": 1079, "kv_size_mb": 151.73, "transfer": "chain", "prev_seq_len": 812, "delta": 267, "expected_delta": 274}
+==============================================================================
+SYSTEM
+==============================================================================
+You are a Proposal Agent in a quantitative alpha-mining team.
+Given a research direction and market context, reason about ONE candidate
+market mechanism (a hypothesis) that could predict next-period cross-sectional
+stock returns. Think about: which economic effect, which price/volume signal,
+what time scale, and why it might persist under noise.
+Do not finalize wording or format — just reason toward a strong hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback to build on:
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+Reason step by step toward one promising hypothesis.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**DIAGNOSIS**: The parent factor's weakness lies in its reliance on a standalone volume z-score without accounting for short-horizon volatility dynamics. While the standalone volume z-score (RankIC=0.018, ICIR=0.22) shows weak but positive performance, it lacks the conditional volatility gate that would make it more robust to noise. The parent's Expression 1 (TS_ZSCORE($volume,5) - RANK(($high-$low)/$close)) is too noisy due to the raw range/price ratio, which is not sufficiently smoothed or gated by volatility.
+
+**KNOWLEDGE**: The refined pattern to pursue is a **volatility-gated volume z-score**, where volume anomalies are weighted by a short-term volatility proxy (e.g., TS_STD($return, 5)), making the signal more resilient to noise and more predictive of next-day returns under liquidity shifts.
+
+**OBSERVATION**: The parent's Expression 1 has a RankIC of 0.031, which is weak compared to the standalone volume z-score (0.018), but the parent's Expression 2 (REGBETA) is even weaker (0.009). This suggests that the beta-based volume signal is too short-windowed and fails to capture the liquidity/volatility dynamic that the standalone z-score (with a 5-day window) partially captures.
+
+**DIRECTION**: **WINDOW SHIFT** — change the volume z-score window from 5 to 20 days (slower, smoother signal), paired with a volatility gate using TS_STD($return, 5), to strengthen the signal’s resilience to noise while retaining its liquidity predictive power.
+
+**MUTATION TYPE**: a. WINDOW SHIFT — window 5 → 20.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [
+    "$close",
+    "$high",
+    "$low",
+    "$return",
+    "$volume"
+  ],
+  "observable": true,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.6,
+  "parser_ok": null
+}

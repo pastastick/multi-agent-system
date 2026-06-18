@@ -1,0 +1,103 @@
+[bench] agents=['construct'] latent_steps=[60] reps=3 workers=3 dry_run=False
+[bench] total jobs=3 (text=0 latent=3)
+[bench] === LATENT phase (use_realign): 3 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  90%|████████▉ | 358/398 [00:00<00:00, 3565.36it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3520.95it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 370/398 [00:00<00:00, 3688.05it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3682.66it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  72%|███████▏  | 286/398 [00:00<00:00, 2841.31it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2887.76it/s]
+2026-06-18 09:20:37.221 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE(DELTA($close, 20), 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 32
+                        # Base Features (ER): 1
+                        
+2026-06-18 09:20:37.371 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: SMA(TS_STD(DELTA($close, 20), 20), 50)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 38
+                        # Base Features (ER): 1
+                        
+2026-06-18 09:20:37.471 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: REGRESI(DELTA($close, 20), SEQUENCE(20), 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 44
+                        # Base Features (ER): 1
+                        
+2026-06-18 09:20:37.684 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - Symbol Length: 129 characters (valid). Error: Failed to parse expression: Expected end of text, found 'Length'  (at char 9), (line:1, col:10)
+2026-06-18 09:20:37.748 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Instead of using division, we can use regression to capture the same mechanism.. Error: Failed to parse expression: Expected end of text, found 'of'  (at char 8), (line:1, col:9)
+2026-06-18 09:20:37.889 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - REGBETA(DELTA($close, 20), TS_STD($volume, 20), 20): Regression coefficient of momentum on volatility. Error: Failed to parse expression: Expected end of text, found ':'  (at char 53), (line:1, col:54)
+2026-06-18 09:20:37.961 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - DELTA($close, 20): Measures the change in closing price over the past 20 periods, capturing recent price momentum.. Error: Failed to parse expression: Expected end of text, found ':'  (at char 19), (line:1, col:20)
+2026-06-18 09:20:38.016 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - DELTA($close, 20): Same as above, captures recent price momentum.. Error: Failed to parse expression: Expected end of text, found ':'  (at char 19), (line:1, col:20)
+2026-06-18 09:20:38.050 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Final Expressions. Error: Failed to parse expression: Expected end of text, found 'Expressions'  (at char 6), (line:1, col:7)
+2026-06-18 09:20:39.796 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Expression 1: TS_MEAN(DELTA($close, 20)). Error: Failed to parse expression: Expected end of text, found '1'  (at char 11), (line:1, col:12)
+2026-06-18 09:20:39.958 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_STD(DELTA($close, 20), 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 29
+                        # Base Features (ER): 1
+                        
+2026-06-18 09:20:40.079 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: DELTA(TS_MEAN(DELTA($close, 20)), 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 37
+                        # Base Features (ER): 1
+                        
+2026-06-18 09:20:40.140 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Use regression to model momentum acceleration. Error: Failed to parse expression: Expected end of text, found 'regression'  (at char 4), (line:1, col:5)
+2026-06-18 09:20:40.260 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: REGBETA(DELTA($close, 20), SEQUENCE(20), 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 44
+                        # Base Features (ER): 1
+                        
+2026-06-18 09:20:40.334 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - TS_MEAN(DELTA($close, 20)): 20-period moving average of price changes. Error: Failed to parse expression: Expected end of text, found ':'  (at char 28), (line:1, col:29)
+2026-06-18 09:20:40.581 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - TS_STD(DELTA($close, 20), 20): 20-period standard deviation of price changes. Error: Failed to parse expression: Expected end of text, found ':'  (at char 31), (line:1, col:32)
+2026-06-18 09:20:40.651 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - DELTA(TS_MEAN(DELTA($close, 20)), 20): 20-period change in moving average of returns. Error: Failed to parse expression: Expected end of text, found ':'  (at char 39), (line:1, col:40)
+2026-06-18 09:20:40.729 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: - REGBETA(DELTA($close, 20), SEQUENCE(20), 20): Regression coefficient of price changes on time. Error: Failed to parse expression: Expected end of text, found ':'  (at char 46), (line:1, col:47)
+2026-06-18 09:20:40.773 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: Final Expressions. Error: Failed to parse expression: Expected end of text, found 'Expressions'  (at char 6), (line:1, col:7)
+2026-06-18 09:20:40.853 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_MEAN(DELTA($close, 20))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 26
+                        # Base Features (ER): 1
+                        
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench] done: 3 results, ok=3, err=0
+[bench] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseA/scoreboard.csv
+[bench] artifacts  → /workspace/project/multi-agent-system/try/promptbench/results/phaseA

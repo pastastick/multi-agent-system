@@ -1,0 +1,73 @@
+# combo: co-git_latentmas_foundation__c-git_judger_only__j-git_optimalisasi__p-working
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_judger_only,judger=git_optimalisasi,proposal=working
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_judger_only', 'judger': 'git_optimalisasi', 'proposal': 'working'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  24%|██▍       | 95/398 [00:00<00:00, 947.24it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  17%|█▋        | 68/398 [00:00<00:00, 669.29it/s]Loading weights:  48%|████▊     | 190/398 [00:00<00:00, 788.44it/s]Loading weights:  52%|█████▏    | 206/398 [00:00<00:00, 1030.52it/s]Loading weights:  44%|████▎     | 174/398 [00:00<00:00, 1603.58it/s]Loading weights:  68%|██████▊   | 271/398 [00:00<00:00, 673.51it/s]Loading weights:  78%|███████▊  | 309/398 [00:00<00:00, 750.14it/s] Loading weights:  86%|████████▌ | 341/398 [00:00<00:00, 658.06it/s]Loading weights:  84%|████████▍ | 335/398 [00:00<00:00, 914.78it/s] Loading weights:  98%|█████████▊| 390/398 [00:00<00:00, 728.71it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 775.45it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 708.10it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 957.02it/s]
+2026-06-18 07:49:04.031 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: $volume > TS_MAX($volume, 5) && $high - $low < TS_STD($high - $low, 5) && $return < 0.01
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 4
+                        Symbol Length (SL): 88
+                        # Base Features (ER): 4
+                        
+2026-06-18 07:49:04.256 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: $volume > TS_MAX($volume, 5) && $high - $low < TS_STD($high - $low, 5) && $return < 0.01
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 4
+                        Symbol Length (SL): 88
+                        # Base Features (ER): 4
+                        
+2026-06-18 07:49:04.470 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: $volume > TS_MAX($volume, 5) && $high - $low < TS_STD($high - $low, 5) && $return < 0.01
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 4
+                        Symbol Length (SL): 88
+                        # Base Features (ER): 4
+                        
+2026-06-18 07:49:04.678 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: $volume > TS_MAX($volume, 5) && $high - $low < TS_STD($high - $low, 5) && $return < 0.01
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 4
+                        Symbol Length (SL): 88
+                        # Base Features (ER): 4
+                        
+2026-06-18 07:49:16.840 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume < TS_RANK($high - $low, 5) && $high - $low > TS_STD($high - $low, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:16.896 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume > TS_RANK($volume, 5) && $close - $open > TS_ZSCORE($close - $open, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:16.950 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume < TS_RANK($high - $low, 5) && $high - $low > TS_STD($high - $low, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:17.022 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume > TS_RANK($volume, 5) && $close - $open > TS_ZSCORE($close - $open, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:17.074 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume < TS_RANK($high - $low, 5) && $high - $low > TS_STD($high - $low, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:17.118 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume > TS_RANK($volume, 5) && $close - $open > TS_ZSCORE($close - $open, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:17.177 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume < TS_RANK($high - $low, 5) && $high - $low > TS_STD($high - $low, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+2026-06-18 07:49:17.220 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: $return < 0 when $volume > TS_RANK($volume, 5) && $close - $open > TS_ZSCORE($close - $open, 5). Error: Failed to parse expression: Expected end of text, found 'when'  (at char 12), (line:1, col:13)
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=15, err=0, unhealthy=8
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_judger_only__j-git_optimalisasi__p-working/scoreboard.csv

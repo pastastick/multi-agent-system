@@ -1,0 +1,365 @@
+# combo: co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_only__p-git_judger_only
+# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_optimalisasi,judger=git_judger_only,proposal=git_judger_only
+
+[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_optimalisasi', 'judger': 'git_judger_only', 'proposal': 'git_judger_only'}
+[bench_chain] total jobs=18 (text=0 latent=18)
+[bench_chain] === LATENT phase (use_realign): 18 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  16%|█▌        | 63/398 [00:00<00:00, 439.98it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  27%|██▋       | 107/398 [00:00<00:01, 198.93it/s]Loading weights:  71%|███████▏  | 284/398 [00:00<00:00, 2194.91it/s]Loading weights:  33%|███▎      | 133/398 [00:00<00:01, 182.12it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 1393.30it/s]
+Loading weights:  96%|█████████▋| 384/398 [00:00<00:00, 714.65it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 523.78it/s]
+Loading weights: 100%|██████████| 398/398 [00:00<00:00, 7289.44it/s]
+2026-06-18 06:04:24.375 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: FILTER(TS_ZSCORE($close, 1), $volume < 50000)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:04:24.702 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: FILTER(TS_ZSCORE($close, 1), $volume < 50000)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:04:24.842 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: FILTER(TS_ZSCORE($close, 1), $volume < 50000)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:04:24.923 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: FILTER(TS_ZSCORE($close, 1), $volume < 50000)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-06-18 06:06:16.616 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($return, 1)  RANK($volume, 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 23), (line:1, col:24)
+2026-06-18 06:06:16.645 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_ZSCORE($return, 1)  RANK($volume, 1))  (TS_ZSCORE($return, 1) > 1.5). Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 06:06:16.678 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($return, 1)  RANK($volume, 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 23), (line:1, col:24)
+2026-06-18 06:06:16.711 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_ZSCORE($return, 1)  RANK($volume, 1))  (TS_ZSCORE($return, 1) > 1.5). Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 06:06:16.756 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($return, 1)  RANK($volume, 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 23), (line:1, col:24)
+2026-06-18 06:06:16.790 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_ZSCORE($return, 1)  RANK($volume, 1))  (TS_ZSCORE($return, 1) > 1.5). Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 06:06:16.830 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($return, 1)  RANK($volume, 1). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 23), (line:1, col:24)
+2026-06-18 06:06:16.864 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_ZSCORE($return, 1)  RANK($volume, 1))  (TS_ZSCORE($return, 1) > 1.5). Error: maximum recursion depth exceeded while calling a Python object
+2026-06-18 06:06:28.375 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 0
+                        # Unique Vars: 1
+                        Symbol Length (SL): 13
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.468 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 21
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.537 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 0
+                        # Unique Vars: 1
+                        Symbol Length (SL): 13
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.617 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 21
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.696 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 0
+                        # Unique Vars: 1
+                        Symbol Length (SL): 13
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.778 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 21
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.837 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK($volume)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 0
+                        # Unique Vars: 1
+                        Symbol Length (SL): 13
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:28.910 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 21
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:33.978 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.077 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_ZSCORE($volume, 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.280 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK(TS_ZSCORE($volume, 10)) > 0.75) ? (RANK(TS_ZSCORE($volume, 10)) - 0.75) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 81
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.330 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.382 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_ZSCORE($volume, 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.556 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK(TS_ZSCORE($volume, 10)) > 0.75) ? (RANK(TS_ZSCORE($volume, 10)) - 0.75) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 81
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.634 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.699 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_ZSCORE($volume, 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.873 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK(TS_ZSCORE($volume, 10)) > 0.75) ? (RANK(TS_ZSCORE($volume, 10)) - 0.75) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 81
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.931 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:34.993 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_ZSCORE($volume, 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:06:35.161 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (RANK(TS_ZSCORE($volume, 10)) > 0.75) ? (RANK(TS_ZSCORE($volume, 10)) - 0.75) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 81
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:03.194 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($return  $volume, 10). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
+2026-06-18 06:07:03.274 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:03.334 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($return  $volume, 10). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
+2026-06-18 06:07:03.419 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:03.483 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($return  $volume, 10). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
+2026-06-18 06:07:03.575 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:03.656 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK($return  $volume, 10). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
+2026-06-18 06:07:03.749 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.430 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.482 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_STD($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 19
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.532 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.593 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_STD($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 19
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.673 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.757 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_STD($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 19
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:09.851 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 22
+                        # Base Features (ER): 1
+                        
+2026-06-18 06:07:10.149 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_STD($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 19
+                        # Base Features (ER): 1
+                        
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 18 results, ok=18, err=0, unhealthy=8
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_optimalisasi__j-git_judger_only__p-git_judger_only/scoreboard.csv

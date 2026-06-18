@@ -1,0 +1,74 @@
+[bench_chain] chains=['pcj_judger'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'construct': 'git_stepwise_final', 'proposal': 'authored_mixed_scoped', 'judger': 'git_judger_only'}
+[bench_chain] total jobs=3 (text=0 latent=3)
+[bench_chain] === LATENT phase (use_realign): 3 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 6529.61it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  73%|███████▎  | 289/398 [00:00<00:00, 2872.83it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2811.24it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 371/398 [00:00<00:00, 3704.52it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3747.28it/s]
+2026-06-18 09:32:39.667 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_MEAN($close,10) > TS_MEAN($open,10) && TS_STD($close,10) < TS_STD($open,10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 2
+                        
+2026-06-18 09:32:40.069 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_MEAN($close,10) > TS_MEAN($open,10) && TS_STD($close,10) < TS_STD($open,10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 2
+                        
+2026-06-18 09:32:40.455 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_MEAN($close,10) > TS_MEAN($open,10) && TS_STD($close,10) < TS_STD($open,10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 2
+                        
+2026-06-18 09:32:40.844 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_MEAN($close,10) > TS_MEAN($open,10) && TS_STD($close,10) < TS_STD($open,10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 2
+                        
+2026-06-18 09:32:44.421 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_MEAN($return, 10)  TS_ZSCORE($volume, 10) > 0. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 22), (line:1, col:23)
+2026-06-18 09:32:44.531 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_MEAN($return, 10)  TS_ZSCORE($volume, 10) > 0. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 22), (line:1, col:23)
+2026-06-18 09:32:44.657 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_MEAN($return, 10)  TS_ZSCORE($volume, 10) > 0. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 22), (line:1, col:23)
+2026-06-18 09:32:44.747 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_MEAN($return, 10)  TS_ZSCORE($volume, 10) > 0. Error: Failed to parse expression: Expected end of text, found 'TS'  (at char 22), (line:1, col:23)
+2026-06-18 09:32:45.724 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 10, 5)  RANK(TS_MEAN($high - $low, 5), 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 27), (line:1, col:28)
+2026-06-18 09:32:45.793 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_CORR($volume, TS_MEAN($high - $low, 5), 10)  RANK($volume, 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 48), (line:1, col:49)
+2026-06-18 09:32:45.856 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 10, 5)  RANK(TS_MEAN($high - $low, 5), 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 27), (line:1, col:28)
+2026-06-18 09:32:45.926 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_CORR($volume, TS_MEAN($high - $low, 5), 10)  RANK($volume, 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 48), (line:1, col:49)
+2026-06-18 09:32:46.008 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 10, 5)  RANK(TS_MEAN($high - $low, 5), 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 27), (line:1, col:28)
+2026-06-18 09:32:46.087 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_CORR($volume, TS_MEAN($high - $low, 5), 10)  RANK($volume, 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 48), (line:1, col:49)
+2026-06-18 09:32:46.158 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 10, 5)  RANK(TS_MEAN($high - $low, 5), 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 27), (line:1, col:28)
+2026-06-18 09:32:46.234 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_CORR($volume, TS_MEAN($high - $low, 5), 10)  RANK($volume, 10). Error: Failed to parse expression: Expected end of text, found 'RANK'  (at char 48), (line:1, col:49)
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 3 results, ok=3, err=0, unhealthy=0
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB/scoreboard.csv

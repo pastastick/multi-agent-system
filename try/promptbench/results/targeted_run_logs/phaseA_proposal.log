@@ -1,0 +1,27 @@
+[bench] agents=['proposal'] latent_steps=[60] reps=3 workers=3 dry_run=False
+[bench] total jobs=3 (text=0 latent=3)
+[bench] === LATENT phase (use_realign): 3 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  80%|███████▉  | 318/398 [00:00<00:00, 3176.98it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2951.19it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 5273.05it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  67%|██████▋   | 265/398 [00:00<00:00, 2638.69it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2579.85it/s]
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench] done: 3 results, ok=3, err=0
+[bench] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseA/scoreboard.csv
+[bench] artifacts  → /workspace/project/multi-agent-system/try/promptbench/results/phaseA

@@ -1,0 +1,108 @@
+{
+  "chain": "mut_proposal",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "proposal",
+  "ok": true,
+  "score": 0.3,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "mutation",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 752,
+      "kv_seq_len": 812,
+      "kv_size_mb": 114.19,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 812,
+      "expected_delta": 812,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "proposal",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 1079,
+      "kv_size_mb": 151.73,
+      "transfer": "chain",
+      "prev_seq_len": 812,
+      "delta": 267,
+      "expected_delta": 274,
+      "text_len": 1626
+    }
+  ],
+  "elapsed_s": 34.36,
+  "score_detail": {
+    "has_text": true,
+    "observable_cols": [],
+    "observable": false,
+    "conditional": false,
+    "cliche": false,
+    "score": 0.3,
+    "parser_ok": null
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "mutation",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 752,
+          "kv_seq_len": 812,
+          "kv_size_mb": 114.19,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 812,
+          "expected_delta": 812,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "proposal",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 1079,
+          "kv_size_mb": 151.73,
+          "transfer": "chain",
+          "prev_seq_len": 812,
+          "delta": 267,
+          "expected_delta": 274,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 1626,
+        "repetition": 0.004,
+        "longest_run": 1,
+        "output_tokens": 369,
+        "runaway": false,
+        "parser_ok": null
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "mutation → proposal (apakah mutation KV mengubah arah hipotesis?)"
+}

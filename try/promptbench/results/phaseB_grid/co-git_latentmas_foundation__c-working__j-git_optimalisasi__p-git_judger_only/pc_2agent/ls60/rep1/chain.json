@@ -1,0 +1,122 @@
+{
+  "chain": "pc_2agent",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.3,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 549,
+      "kv_seq_len": 609,
+      "kv_size_mb": 85.64,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 609,
+      "expected_delta": 609,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 844,
+      "kv_seq_len": 1506,
+      "kv_size_mb": 211.78,
+      "transfer": "chain",
+      "prev_seq_len": 609,
+      "delta": 897,
+      "expected_delta": 904,
+      "text_len": 1932
+    }
+  ],
+  "elapsed_s": 46.98,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When liquidity (volume) abruptly declines relative to historical patterns, the mean reversion of price returns is amplified, suggesting a short-term reversal opportunity.\n\nKnowledge (Knowledge):  \nVolume spikes or drops relative to historical averages signal liquidity shifts, which can trigger mean-reversion in prices. Prior rounds showed that volume-zscore momentum had weak IC, but volatility-gated variants were noisier. This hypothesis refines that by focusing on sudden liquidity changes (volume deviation from historical mean) and their impact on mean-reversion dynamics.\n\n�察 (�察):  \n`TS_ZSCORE($volume, 20) - TS_MEAN($volume, 20)` measures volume deviation from its 20-day mean. `TS_RANK($return, 10)` ranks daily returns over the past 10 days. The difference between these two captures the deviation in liquidity and reversal potential in returns.\n\n根 (根):  \nMean-reversion is stronger when liquidity is unstable (volume deviates from average), as traders adjust quickly to new information. This hypothesis leverages volume z-score (liquidity signal) and return rank (reversal signal) to capture this interaction.\n\n構 specifies (specifies):  \n- Signal variables: `TS_ZSCORE($volume, 20)` (liquidity deviation), `TS_RANK($return, 10)` (return reversal strength)  \n- Time horizon: 20 days for liquidity, 10 days for return ranking  \n- Expected return direction: Positive (mean-reversion amplifies when liquidity is volatile)",
+    "n_expr": 1,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "families": [
+      "time_series"
+    ],
+    "n_families": 1,
+    "per_expr": [
+      {
+        "expr": "(TS_ZSCORE($volume, 20) - TS_MEAN($volume, 20))  TS_RANK($return, 10)",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.3,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 549,
+          "kv_seq_len": 609,
+          "kv_size_mb": 85.64,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 609,
+          "expected_delta": 609,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 844,
+          "kv_seq_len": 1506,
+          "kv_size_mb": 211.78,
+          "transfer": "chain",
+          "prev_seq_len": 609,
+          "delta": 897,
+          "expected_delta": 904,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 1932,
+        "repetition": 0.012,
+        "longest_run": 1,
+        "output_tokens": 454,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct (terminal construct di-decode untuk skor)"
+}

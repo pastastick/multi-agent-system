@@ -1,0 +1,114 @@
+{
+  "chain": "pc_2agent",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.0,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 274,
+      "kv_size_mb": 38.53,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 274,
+      "expected_delta": 274,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1157,
+      "kv_seq_len": 1484,
+      "kv_size_mb": 208.69,
+      "transfer": "chain",
+      "prev_seq_len": 274,
+      "delta": 1210,
+      "expected_delta": 1217,
+      "text_len": 29
+    }
+  ],
+  "elapsed_s": 18.87,
+  "score_detail": {
+    "parse_ok": false,
+    "hypothesis": null,
+    "n_expr": 0,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "n_families": 0,
+    "families": [],
+    "score": 0.0,
+    "parser_ok": false
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 274,
+          "kv_size_mb": 38.53,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 274,
+          "expected_delta": 274,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1157,
+          "kv_seq_len": 1484,
+          "kv_size_mb": 208.69,
+          "transfer": "chain",
+          "prev_seq_len": 274,
+          "delta": 1210,
+          "expected_delta": 1217,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "unparseable: parser struktur gagal"
+      ],
+      "metrics": {
+        "len": 29,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 139,
+        "runaway": false,
+        "parser_ok": false
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "unparseable: parser struktur gagal"
+      ]
+    }
+  },
+  "desc": "proposal → construct (terminal construct di-decode untuk skor)"
+}

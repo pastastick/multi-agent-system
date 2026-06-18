@@ -1,0 +1,34 @@
+[bench_chain] chains=['pcj_judger'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'construct': 'git_stepwise_final', 'proposal': 'authored_mixed_scoped', 'judger': 'git_latentmas_foundation'}
+[bench_chain] total jobs=3 (text=0 latent=3)
+[bench_chain] === LATENT phase (use_realign): 3 jobs ===
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  61%|██████    | 243/398 [00:00<00:00, 2422.98it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2479.00it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  93%|█████████▎| 372/398 [00:00<00:00, 3693.63it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3719.37it/s]
+[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 6542.35it/s]
+2026-06-18 09:36:41.111 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume, 1 TS_RANK($high - $low, 1 TS_MEAN($high - $low, 1 1 1 1 1 10) > TS_RANK($high - $low, 1 10). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:41.130 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume, 1 TS_RANK($high - $low, 1 TS_MEAN($high - $low, 1 1 1 1 1 10) > TS_RANK($high - $low, 1 10). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:41.161 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume, 1 TS_RANK($high - $low, 1 TS_MEAN($high - $low, 1 1 1 1 1 10) > TS_RANK($high - $low, 1 10). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:41.184 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume, 1 TS_RANK($high - $low, 1 TS_MEAN($high - $low, 1 1 1 1 1 10) > TS_RANK($high - $low, 1 10). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:44.111 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($return, 1 TS_RANK($high - $low, 5 1 1 1 1 1 10. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:44.146 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($return, 1 TS_RANK($high - $low, 5 1 1 1 1 1 10. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:44.192 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($return, 1 TS_RANK($high - $low, 5 1 1 1 1 1 10. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-18 09:36:44.232 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($return, 1 TS_RANK($high - $low, 5 1 1 1 1 1 10. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+[common] Latent backend ready.
+[bench_chain] done: 3 results, ok=3, err=0, unhealthy=1
+[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB/scoreboard.csv

@@ -1,0 +1,159 @@
+{
+  "chain": "pcj_judger",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 0,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.75,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 214,
+      "kv_seq_len": 274,
+      "kv_size_mb": 38.53,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 274,
+      "expected_delta": 274,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1385,
+      "kv_seq_len": 1719,
+      "kv_size_mb": 241.73,
+      "transfer": "chain",
+      "prev_seq_len": 274,
+      "delta": 1445,
+      "expected_delta": 1445,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 644,
+      "kv_seq_len": 2416,
+      "kv_size_mb": 339.75,
+      "transfer": "chain",
+      "prev_seq_len": 1719,
+      "delta": 697,
+      "expected_delta": 704,
+      "text_len": 1176
+    }
+  ],
+  "elapsed_s": 40.18,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "Short-term liquidityidity and volatility dynamics in equities drive next-day returns through price discovery mechanisms, where liquidity flow and price dispersion interact to signal information asymmetry.  \nOBSERVATION: Daily volume and high-low range (volatility) show predictive power for the following day's return in liquid markets.  \n_JUSTIFICATION: Liquidity and volatility are proxies for information flow; higher volume and wider price ranges indicate more active price discovery, which may lead to mean-reversion or momentum in the next period.  \n_SPECIFICATION: $volume, $high - $low (volatility), 1-60 days, information asymmetry and price discovery.  \n_FACTOR_1: RANK(ZSCORE($volume, 1-60)) | DESC: Ranked Rank of volume z-score over the past 60 days, capturing liquidity度.  \n_FACTOR_2: TS_ZSCORE($high - $low, 1-60) | DESC: Z-score of daily high-low range over 60 days, volatility signal.  \n_HYPOTH: Short-term liquidity and volatility dynamics predict next-day returns via price discovery, with volume z-score rank and high-low volatility z-score as key signals.  \n_EXPRESSION_1: RANK(ZSCORE($volume, 1-60))  \n_EXPRESSION_2: TS_ZSCORE($high - $low, 1-60)",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "cross_sectional",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "RANK(ZSCORE($volume, 1-60))",
+        "gate_ok": false,
+        "reason": "arity: `ZSCORE` takes 1 argument(s) but got 2 (`ZSCORE($volume, (1.0 - 60.0))`). `ZSCORE` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_ZSCORE(A, n)` instead.",
+        "families": [
+          "cross_sectional"
+        ]
+      },
+      {
+        "expr": "TS_ZSCORE($high - $low, 1-60)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.75,
+    "parser_ok": true
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 214,
+          "kv_seq_len": 274,
+          "kv_size_mb": 38.53,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 274,
+          "expected_delta": 274,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1385,
+          "kv_seq_len": 1719,
+          "kv_size_mb": 241.73,
+          "transfer": "chain",
+          "prev_seq_len": 274,
+          "delta": 1445,
+          "expected_delta": 1445,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 644,
+          "kv_seq_len": 2416,
+          "kv_size_mb": 339.75,
+          "transfer": "chain",
+          "prev_seq_len": 1719,
+          "delta": 697,
+          "expected_delta": 704,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 1176,
+        "repetition": 0.02,
+        "longest_run": 1,
+        "output_tokens": 288,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "proposal → construct → judger (judger decode hypothesis+exprs)"
+}
