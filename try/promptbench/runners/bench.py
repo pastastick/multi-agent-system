@@ -287,6 +287,11 @@ def main():
     n_ok = sum(int(r.get("ok", False)) for r in results)
     n_err = sum(int(bool(r.get("err"))) for r in results)
     print(f"[bench] done: {len(results)} results, ok={n_ok}, err={n_err}")
+    for r in results:
+        if r.get("err"):
+            print(f"  [ERR] {r['agent']} {r['variant_id']} ls={r['latent_steps']} rep={r['rep']}: {r['err']}")
+            if r.get("traceback"):
+                print(r["traceback"])
     csv_path = aggregate_and_write(results)
     print(f"[bench] scoreboard → {csv_path}")
     print(f"[bench] artifacts  → {RESULTS_DIR}")
