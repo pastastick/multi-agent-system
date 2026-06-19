@@ -1,0 +1,138 @@
+# agent=proposal  variant=proposal__authored_mixed_scoped__mix3a1b2c3d  latent_steps=10  rep=0  score=0.3  ok=True  elapsed_s=63.67  kv_tokens=909
+
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal agent in a quantitative alpha-mining team. Given a
+research direction, reason toward ONE strong, original market hypothesis: a
+candidate mechanism that predicts next-period cross-sectional stock returns.
+
+WHAT AN ALPHA FACTOR IS.
+An alpha factor assigns a numeric score to every stock on every day (high
+score → expected out-performer / buy, low score → expected under-performer /
+sell), and the scores are compared cross-sectionally — across all stocks on
+the same day — to rank them. The score is a function computed purely from
+daily price-volume data: $open $high $low $close $volume $return. It is
+built by transforming these columns over time (change, regression, rolling statistics,
+dispersion, correlation, smoothing), normalizing or ranking them across
+stocks, and optionally gating them on a condition. Its quality is measured
+by how well today's score ranks tomorrow's cross-sectional return.
+
+WHAT AN OPTIMAL HYPOTHESIS LOOKS LIKE.
+An optimal hypothesis is a SPECIFIC, measurable conditional pattern of the
+form "when X holds, Y follows in next-period returns" — a
+mechanism, not a theme. It is:
+  - OBSERVABLE — fully derivable from $open/$high/$low/$close/$volume/$return
+    alone, so the pattern can actually be measured from the data on hand.
+  - CONDITIONAL — it ties a measurable market state to a directional move in
+    returns, with a clear sign (out-performance or under-performance).
+  - GROUNDED — it has an economic or behavioral driver (momentum, reversal,
+    microstructure, liquidity, volatility regime, dispersion) that explains
+    why the edge should persist under noise rather than being a fluke.
+  - ORIGINAL — structurally fresh relative to over-mined textbook patterns,
+    so it adds genuine search value.
+Make ALL of these explicit in your reasoning:
+  - KNOWLEDGE   = the conditional market pattern (when X → Y on returns).
+  - OBSERVATION = the data pattern or prior-round result that motivates it.
+  - JUSTIFICATION = the economic / behavioral driver and why it persists.
+  - SPECIFICATION = the factor envelope: which $columns carry the signal
+    (at least one; OHLCV only), the mechanism family, a HORIZON BAND
+    (short ~1-10d / medium ~10-30d / long ~30-60d), the cross-sectional
+    comparison and conditional trigger, and the expected return direction.
+
+LEVEL OF DETAIL.
+State the hypothesis at the level of a MECHANISM, not a formula. Define the
+factor envelope — the columns, the mechanism family, the horizon band, the
+conditional trigger, and the direction — so that every factor consistent
+with the hypothesis stays inside that envelope. Keep the exact windows,
+cutoffs, and the precise composition open, so the envelope still admits a
+range of faithful factor realizations rather than a single fixed one. A
+hypothesis pinned to one exact window or threshold has stopped being a
+hypothesis; one with no columns, mechanism, horizon, or direction is too
+vague to act on. Aim between these.
+
+Note how it names the carrying columns, a mechanism family, a horizon band, a cross-sectional comparison, and a direction — yet fixes no exact window, threshold, or formula.
+
+No look-ahead bias. Your last output is the hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback (refine within the same framework before pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+
+AVOID failed mechanisms from earlier rounds: pure low-volume + volatility-spike mean-reversion (over-mined, unstable).
+
+Reason step by step toward ONE concrete hypothesis, then state it with its KNOWLEDGE / OBSERVATION / JUSTIFICATION / SPECIFICATION / SUMMARY made explicit.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Hypothesis: "Short-Horizon Volatility-Driven Liquidity Momentum"**
+
+---
+
+### **KNOWLEDGE**  
+When short-term volatility (measured by intraday price dispersion) is high relative to historical levels and liquidity (volume/price) is concentrated in a few stocks, those stocks tend to underperform the next day. This is a liquidity-driven reversal mechanism that exploits the mispricing of volatile, illiquid stocks in the short term.
+
+---
+
+### **OBSERVATION**  
+In prior rounds, we saw that volume-zscore momentum had a weak RankIC (0.018), suggesting that the signal was too noisy or not strongly predictive. A volatility-gated variant was even more unstable. However, there is a clear pattern in the data: when volatility is high (e.g., large intra-day range) and liquidity is concentrated (e.g., low volume-to-price ratio), the next-day returns are negatively correlated with those stocks. This suggests that the market overreacts to volatility, leading to a reversal effect in the short term.
+
+---
+
+### **JUSTIFICATION**  
+This mechanism is grounded in behavioral finance and liquidity dynamics. When volatility is high, investors may be overconfident or overtraded, leading to mispriced assets. In such environments, liquidity is often concentrated in a small subset of stocks, which can lead to price corrections or reversals the next day. The combination of high volatility and low liquidity creates a situation where the market’s initial reaction is not sustained, resulting in a negative return the following day. This is a form of “volatility-induced reversal,” distinct from the over-mined mean-reversion patterns.
+
+This effect is likely to persist in liquid equities with daily bars, especially in a market with relatively stable volatility regimes (as in 2018–2021), where short-term price movements are more predictable.
+
+---
+
+### **SPECIFICATION**  
+- **Carrying Columns**:  
+  - `high - low` (intraday price dispersion, proxy for volatility)  
+  - `volume / close` (liquidity, proxy for concentration)  
+  - `return` (next-day return, used for ranking)  
+
+- **Mechanism Family**:  
+  - **Volatility-Liquidity Reversal** (a novel variant of momentum/reversal, not purely based on volume or volatility alone)
+
+- **Horizon Band**:  
+  - **Short** (~1–10 days), as the effect is most pronounced in the immediate next day.
+
+- **Cross-Sectional Comparison**:  
+  - Rank stocks by the ratio of `high - low` to its rolling standard deviation (to normalize volatility).  
+  - Within this rank, further rank by `volume / close` (lower is better, as it indicates lower liquidity).  
+  - The top 10% of stocks in this combined rank (most volatile and least liquid) are expected to underperform the next day.
+
+- **Conditional Trigger**:  
+  - Only consider stocks where `high - low` is above the 75th percentile of the rolling 10-day standard deviation (i.e., high volatility relative to history).  
+  - Only consider stocks where `volume / close` is below the 10th percentile of the rolling 10-day average (i.e., low liquidity relative to history).
+
+- **Expected Return Direction**:  
+  - **Negative** — the top 10% of stocks (highest volatility + lowest liquidity) are expected to have lower next-day returns.
+
+---
+
+### **SUMMARY**  
+This hypothesis identifies a short-horizon alpha factor that exploits the interaction between volatility and liquidity dynamics. It is grounded in behavioral finance, where high volatility and low liquidity lead to price reversals the next day. The factor is constructed using observable, daily OHLCV data and is designed to avoid over-mining by focusing on a novel, conditional pattern that has not been widely exploited before.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": true,
+  "cliche": true,
+  "score": 0.3
+}

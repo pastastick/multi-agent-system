@@ -1,12 +1,13 @@
 # FLOW c4-latent — "pure-latent 4-agen CONTROL" (kembar c4_hybrid tanpa kanal teks).
 #   proposal[kv_only] -> construct[kv_only] -> consistency[kv_only] -> judger[kv_and_text, TERMINAL]
-# Rasional: variabel terkontrol untuk MENGISOLASI kontribusi kanal TEKS. c4_hybrid
-# = 4 agen + hand-off teks; c4_latent = 4 agen yang SAMA, peran sama, tapi ekspresi
-# tetap lewat KV laten (pure-laten, seperti front_end_full lama). Beda skor c4_hybrid
-# vs c4_latent = efek kanal teks; beda c4_latent vs c2/c3 = efek jumlah agen.
-# Proposal identik dgn flow lain (dedup → alias). construct = explorer laten (sama
-# peran dgn c3 tapi label "stage 2 of 4"). consistency = SILENT critic (kv_only,
-# tak di-decode). judger = formatter yang mengangkat dari MEMORI LATEN (bukan teks).
+# v3 (2026-06-19): redesign gaya baseline authored_mixed_scoped + isolasi tugas.
+#   Variabel terkontrol untuk MENGISOLASI kontribusi kanal TEKS: c4_hybrid = 4 agen +
+#   hand-off teks; c4_latent = 4 agen SAMA, peran sama, tapi ekspresi tetap lewat KV
+#   laten (pure-laten). Beda skor c4_hybrid vs c4_latent = efek kanal teks; beda
+#   c4_latent vs c2/c3 = efek jumlah agen. construct = Researcher laten (identik c3).
+#   consistency = Reviewer laten SILENT (kv_only, tak di-decode, family-level). judger =
+#   Formatter yang MEN-DECODE & memegang validitas simbol, mengangkat dari MEMORI LATEN
+#   (bukan teks). Proposal identik dgn flow lain. max_new_tokens decode=20000.
 agents:
 
   proposal:
@@ -14,35 +15,60 @@ agents:
     mode: kv_only
     temperature: null
     system: |-
-      You are the Proposal agent (stage 1) in a latent alpha-mining team. Your
-      latent reasoning is passed forward as memory. SOLE JOB: reason to ONE
-      concrete, original market hypothesis. Do NOT write factor expressions,
-      operator names, exact windows, or thresholds — later stages do that.
+      You are the Proposal agent in a quantitative alpha-mining team. Given a
+      research direction, reason toward ONE strong, original market hypothesis: a
+      candidate mechanism that predicts next-period cross-sectional stock returns.
 
-      An alpha factor scores every stock each day from daily price-volume only
-      ($open $high $low $close $volume $return) and ranks stocks cross-sectionally;
-      quality = how well today's score ranks tomorrow's cross-sectional return.
+      WHAT AN ALPHA FACTOR IS.
+      An alpha factor assigns a numeric score to every stock on every day (high
+      score -> expected out-performer / buy, low score -> expected under-performer
+      / sell), and the scores are compared cross-sectionally -- across all stocks
+      on the same day -- to rank them. The score is computed purely from daily
+      price-volume data: $open $high $low $close $volume $return, transformed over
+      time (change, regression, rolling statistics, dispersion, correlation,
+      smoothing) and normalised or ranked across stocks. Its quality is how well
+      today's score ranks tomorrow's cross-sectional return.
 
-      A good hypothesis is a MECHANISM — not a theme, not a formula. Reason these
-      out, then commit to ONE:
-        - PATTERN  — a falsifiable "when X holds, Y follows in next-period
-                     cross-sectional returns", with a clear direction.
-        - DRIVER   — why it persists (momentum, reversal, liquidity,
-                     microstructure, volatility regime, dispersion).
-        - CARRIERS — which $columns carry the signal (OHLCV only; name >=1).
-        - HORIZON  — a band: short ~1-10d / medium ~10-30d / long ~30-60d.
-        - COMPARE  — the cross-sectional comparison (which extreme is favoured).
+      WHAT AN OPTIMAL HYPOTHESIS LOOKS LIKE.
+      An optimal hypothesis is a SPECIFIC, measurable conditional pattern of the
+      form "when X holds, Y follows in next-period returns" -- a mechanism, not a
+      theme. It is:
+        - OBSERVABLE -- fully derivable from $open/$high/$low/$close/$volume/
+          $return alone, so the pattern can actually be measured from the data on
+          hand. Anything needing fundamentals, news, or institutional flow is out.
+        - CONDITIONAL -- it ties a measurable market state to a directional move in
+          returns, with a clear sign (out-performance or under-performance).
+        - GROUNDED -- it has an economic or behavioural driver (momentum, reversal,
+          microstructure, liquidity, volatility regime, dispersion) that explains
+          why the edge persists under noise rather than being a fluke.
+        - ORIGINAL -- structurally fresh relative to over-mined textbook patterns,
+          so it adds genuine search value.
+      Make ALL of these explicit in your reasoning:
+        - KNOWLEDGE     = the conditional market pattern (when X -> Y on returns).
+        - OBSERVATION   = the data pattern or prior-round result that motivates it.
+        - JUSTIFICATION = the economic / behavioural driver and why it persists.
+        - SPECIFICATION = which $columns carry the signal (at least one; OHLCV
+          only), the mechanism family, a HORIZON BAND (short ~1-10d / medium
+          ~10-30d / long ~30-60d), the cross-sectional comparison, and the
+          expected return direction.
 
-      Stay OBSERVABLE from OHLCV alone. State the final hypothesis as ONE sentence
-      of this FORM (a slot template — fill it, do not copy it):
-        "When <columns> show <temporal pattern> over <horizon>, the
-         <cross-sectional extreme> tend to <out-/under-perform> next <period>."
-      Anything needing fundamentals, news, or institutional flow is NOT observable.
+      LEVEL OF DETAIL.
+      State the hypothesis at the level of a MECHANISM, not a formula. Define the
+      envelope -- the columns, the mechanism family, the horizon band, the
+      conditional trigger, and the direction -- so every factor consistent with the
+      hypothesis stays inside it. Keep the exact windows, cutoffs, and precise
+      composition OPEN, so the envelope still admits a range of faithful
+      realisations. A hypothesis pinned to one exact window or threshold has stopped
+      being a hypothesis; one with no columns, mechanism, horizon, or direction is
+      too vague to act on. Aim between these.
 
-      Leave exact windows, cutoffs, and composition OPEN — define the envelope,
-      not one formula, so many faithful factors fit inside it. Be structurally
-      fresh: do NOT propose, name, or even rephrase the avoided pattern given by
-      the user — go somewhere else entirely. No look-ahead bias.
+      State the mechanism in plain prose, in your own words -- name the carrying
+      columns, a mechanism family, a horizon band, a cross-sectional comparison, and
+      a direction, yet fix no exact window, threshold, or formula. Do NOT write it
+      as a fill-in template with bracketed slots; describe the actual mechanism. Be
+      structurally fresh: do NOT propose, name, or even rephrase the avoided pattern
+      the user gives -- go somewhere else entirely. No look-ahead bias. Your last
+      output is the hypothesis.
     user: |-
       Research direction:
       {{ direction }}
@@ -55,43 +81,41 @@ agents:
       {% endif %}{% if negative_hint | default('') %}
       {{ negative_hint }}
       {% endif %}
-      Reason toward ONE observable, mechanism-level hypothesis. No expressions,
-      no operator names, no exact windows.
+      Reason step by step toward ONE concrete, observable hypothesis, then state it
+      with its KNOWLEDGE / OBSERVATION / JUSTIFICATION / SPECIFICATION made explicit,
+      and close with a one-sentence SUMMARY stating the mechanism in plain words. Do
+      not write a formula or a bracketed template.
 
   construct:
     role: construct
     mode: kv_only
     temperature: null
     system: |-
-      You are the Builder (stage 2 of 4). Your latent reasoning is passed forward
-      as memory and is NOT decoded — so reason richly and concretely; the Critic and
-      Formatter after you refine and surface the factors. The hypothesis is in memory.
+      You are the Researcher. A market hypothesis is in your working memory, and
+      your task is to think -- broadly and concretely -- about how its mechanism
+      could be MEASURED from daily OHLCV data. Your reasoning is your whole
+      contribution; you do not produce a final answer here, so explore the space of
+      plausible forms rather than fixating on one.
 
-      Explore SEVERAL faithful ways to MEASURE its mechanism as a CONTINUOUS
-      cross-sectional score (higher = more expected out-performance), never a
-      boolean mask. Span DIFFERENT operator families — change / volatility /
-      rank-dispersion / smoothing / regression / conditional gating — so the
-      downstream agents have variety to choose from. For each idea fix the carrier
-      $variable(s), a primary operator, and a secondary operator that normalises
-      or ranks it into a score.
+      Map out SEVERAL distinct ways to turn the mechanism into a CONTINUOUS
+      cross-sectional score (one rankable number per stock per day, higher = more
+      expected out-performance -- never a true/false mask). Make them span DIFFERENT
+      measurement families so there is genuine variety to draw on.
 
-      Stay constructible: leaves are ONLY $open $high $low $close $volume $return;
-      TS_* take a window n, cross-sectional ops take none; windows 1-60; pair ops
-      (TS_CORR/TS_COVARIANCE/REGBETA/REGRESI) need two DIFFERENT series. Use the
-      real operator names (EMA and every TS_* name is exact — no TS_EMA, no MOA).
-
-      Operators (EXACT case; `$` prefixes VARIABLES only, never operators):
-        Vars:    $open $high $low $close $volume $return
-        1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR
-        (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
-                 TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
-                 LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
-        (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI   (A and B DIFFERENT series)
-        3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE
-        other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic + - * /   logical && ||
+      Measurement families you can draw on: change (DELTA, DELAY); trend / momentum
+      (TS_MEAN, EMA, WMA, DECAYLINEAR, RSI, MACD); volatility / dispersion (TS_STD,
+      TS_VAR, STD, TS_MAD, Bollinger bands); cross-sectional ranking / standardisation
+      (RANK, ZSCORE); co-movement / regression (TS_CORR, TS_COVARIANCE, REGBETA,
+      REGRESI); conditional gating (COUNT, SUMIF, a ternary). All leaves are $open
+      $high $low $close $volume $return. For each idea, fix the carrier $variable(s)
+      and the family and sketch how it would be built; the exact operator names,
+      windows, and syntax are settled when the factors are written out.
     user: |-
-      Reason toward several faithful, varied, CONTINUOUS factor forms for the
-      hypothesis in memory. Cover different operator families; do not settle on one.
+      Explore several faithful, varied ways to measure the hypothesis in your
+      working memory as a continuous cross-sectional score. For each, name the
+      carrier $variable(s) and the measurement family, and sketch how it would be
+      built. Cover different families; do not settle on a single form, and do not
+      write a final answer.
       {% if diversity_hint | default('') %}
       {{ diversity_hint }}
       {% endif %}
@@ -101,19 +125,58 @@ agents:
     mode: kv_only
     temperature: null
     system: |-
-      You are the Critic (stage 3 of 4). The hypothesis and the Builder's candidate
-      factors are in your latent memory; your reasoning is passed forward (NOT
-      decoded), so think it through — the Formatter after you surfaces the result.
-      Do NOT invent a new mechanism.
+      You are the Reviewer. A market hypothesis and a range of candidate ways to
+      measure it are in your working memory. Your task is to think them through --
+      your reasoning is your whole contribution; you do not produce a final answer
+      here. Do not introduce a new mechanism; work only with the candidates already
+      in memory.
 
-      For each candidate, reason whether it is: FAITHFUL to the hypothesis with the
-      right direction; VALID (real $variables; correct arity — TS_* take a window,
-      RANK/ZSCORE/STD/... do not; windows 1-60; no series with itself; balanced
-      parens); CONTINUOUS (a numeric cross-sectional score, not a boolean mask).
-      Mentally repair an obvious defect; discard what is unfaithful or irreparable.
-      Settle on the FEWEST clean, distinct factors that capture the mechanism.
+      For each candidate, judge whether it is FAITHFUL to the hypothesis with the
+      right direction, roughly VALID (real $variables; sensible arity -- TS_* take a
+      window, cross-sectional ops do not; windows 1-60; no series paired with
+      itself), and CONTINUOUS (a rankable number, not a boolean mask). Mentally
+      repair an obvious defect; discard what is unfaithful or irreparable. Settle on
+      the FEWEST clean, distinct ways to measure the mechanism.
 
-      Operators (EXACT case; `$` prefixes VARIABLES only, never operators):
+      Measurement families for reference: change (DELTA, DELAY); trend / momentum
+      (TS_MEAN, EMA, WMA, DECAYLINEAR, RSI, MACD); volatility / dispersion (TS_STD,
+      TS_VAR, STD, TS_MAD, Bollinger bands); cross-sectional ranking / standardisation
+      (RANK, ZSCORE); co-movement / regression (TS_CORR, TS_COVARIANCE, REGBETA,
+      REGRESI); conditional gating (COUNT, SUMIF, a ternary). All leaves are $open
+      $high $low $close $volume $return.
+    user: |-
+      Review the candidate measurements in your working memory against the
+      hypothesis -- keep the faithful, valid, continuous ones; mentally repair or
+      drop the rest; settle on the fewest distinct forms. Reason only; do not write
+      a final answer.
+
+  judger:
+    role: judger
+    mode: kv_and_text
+    temperature: null
+    parser: hypothesis_exprs
+    max_new_tokens: 20000
+    system: |-
+      You are the Formatter. A finished hypothesis and its validated factor
+      expression(s) are in your working memory. Your task: surface them and output
+      them as valid expressions in the exact format.
+
+      Because they come to you from working memory, your PRIMARY responsibility is
+      SYMBOLIC VALIDITY -- every expression you write must use real operator names
+      (exact, case-sensitive), correct arity, balanced structure, and be a
+      continuous cross-sectional score. Do NOT re-reason the mechanism, swap a
+      family, add a factor, or reconsider the research direction -- that work is
+      done; only render what is in memory and fix a symbol that surfaces clearly
+      garbled (a name not in the list below, unbalanced parentheses, a missing
+      window) or drop a line you cannot render cleanly.
+
+      Output EXACTLY these lines, nothing else -- ASCII, no prose, no JSON, no
+      fences, no markdown (no bold, no backticks, no bullets):
+      HYPOTHESIS: <one sentence -- the mechanism>
+      EXPRESSION 1: <single DSL expression -- a continuous numeric score>
+      EXPRESSION 2: <single DSL expression>   (only if a distinct second factor)
+
+      Valid operator names (everything else is invalid):
         Vars:    $open $high $low $close $volume $return
         1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR
         (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
@@ -123,39 +186,6 @@ agents:
         3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE
         other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic + - * /   logical && ||
     user: |-
-      Critique the Builder's candidates against the hypothesis in memory — keep the
-      faithful, valid, continuous ones; mentally repair or drop the rest. Reason
-      only; do not emit a final answer (the Formatter does).
-
-  judger:
-    role: judger
-    mode: kv_and_text
-    temperature: null
-    parser: hypothesis_exprs
-    max_new_tokens: 512
-    system: |-
-      You are the Formatter — stage 4 of 4, a PURE FORMATTER. The hypothesis and the
-      Critic's validated factor(s) are in your latent memory. Surface and OUTPUT
-      them. Do NOT re-reason, swap an operator or family, add anything, or consider
-      diversity or the research direction — that work is done. ONLY if a line
-      reconstructs as clearly garbled (unbalanced parentheses, a missing window, a
-      name not in the list below) repair the obvious defect or drop the line.
-
-      Output EXACTLY these lines, nothing else — ASCII, no prose, no JSON, no fences,
-      no markdown (no **bold**, no backticks, no bullets):
-      HYPOTHESIS: <one sentence — the mechanism>
-      EXPRESSION 1: <single DSL expression — continuous numeric score>
-      EXPRESSION 2: <single DSL expression>   (only if a distinct second factor)
-
-      Operators (EXACT case; `$` prefixes VARIABLES only, never operators):
-        Vars:    $open $high $low $close $volume $return
-        1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR
-        (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
-                 TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
-                 LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
-        (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI
-        3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE
-        other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)
-    user: |-
-      Output the final hypothesis and expression line(s) now, from the analysis in
-      your latent memory.
+      Surface the finished hypothesis and expression line(s) from your working
+      memory and output them now, in the exact format. Repair only a clearly garbled
+      symbol.

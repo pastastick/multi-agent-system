@@ -1,0 +1,195 @@
+{
+  "chain": "r_c4_hybrid",
+  "config": "ls80",
+  "latent_steps": 80,
+  "rep": 1,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 1.0,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 80,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1048,
+      "kv_size_mb": 147.38,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1048,
+      "expected_delta": 1048,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 80,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2657,
+      "kv_size_mb": 373.64,
+      "transfer": "chain",
+      "prev_seq_len": 1048,
+      "delta": 1609,
+      "expected_delta": 1616,
+      "text_len": 1535
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_and_text",
+      "latent_steps": 80,
+      "n_prompt_tokens": 1454,
+      "kv_seq_len": 4184,
+      "kv_size_mb": 588.38,
+      "transfer": "chain",
+      "prev_seq_len": 2657,
+      "delta": 1527,
+      "expected_delta": 1534,
+      "text_len": 1909
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 80,
+      "n_prompt_tokens": 560,
+      "kv_seq_len": 4817,
+      "kv_size_mb": 677.39,
+      "transfer": "chain",
+      "prev_seq_len": 4184,
+      "delta": 633,
+      "expected_delta": 640,
+      "text_len": 323
+    }
+  ],
+  "elapsed_s": 107.18,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "The mechanism is a liquidity liquidity of liquidity liquidity volume and volatility dynamics, captured in which stocks with high volume and low volatility exhibit a tendency to outperform in the next day.",
+    "n_expr": 2,
+    "gate_pass": 2,
+    "gate_pass_frac": 1.0,
+    "families": [
+      "cross_sectional",
+      "smoothing",
+      "ts_pair"
+    ],
+    "n_families": 3,
+    "per_expr": [
+      {
+        "expr": "RANK(EMA($volume * ($high - $low), 5))",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "cross_sectional",
+          "smoothing"
+        ]
+      },
+      {
+        "expr": "TS_CORR($return, EMA($volume, 5), 5)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "smoothing",
+          "ts_pair"
+        ]
+      }
+    ],
+    "score": 1.0,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 80,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1048,
+          "kv_size_mb": 147.38,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1048,
+          "expected_delta": 1048,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 80,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2657,
+          "kv_size_mb": 373.64,
+          "transfer": "chain",
+          "prev_seq_len": 1048,
+          "delta": 1609,
+          "expected_delta": 1616,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_and_text",
+          "latent_steps": 80,
+          "n_prompt_tokens": 1454,
+          "kv_seq_len": 4184,
+          "kv_size_mb": 588.38,
+          "transfer": "chain",
+          "prev_seq_len": 2657,
+          "delta": 1527,
+          "expected_delta": 1534,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 80,
+          "n_prompt_tokens": 560,
+          "kv_seq_len": 4817,
+          "kv_size_mb": 677.39,
+          "transfer": "chain",
+          "prev_seq_len": 4184,
+          "delta": 633,
+          "expected_delta": 640,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 323,
+        "repetition": 0.0,
+        "longest_run": 2,
+        "output_tokens": 85,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c4: proposal → construct → consistency → judger, HAND-OFF TEKS (prior_factors). Laten=hipotesis, teks=ekspresi."
+}

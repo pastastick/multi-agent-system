@@ -1,0 +1,183 @@
+{
+  "chain": "r_c4_latent",
+  "config": "ls40",
+  "latent_steps": 40,
+  "rep": 2,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.8,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 40,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1008,
+      "kv_size_mb": 141.75,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1008,
+      "expected_delta": 1008,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 40,
+      "n_prompt_tokens": 453,
+      "kv_seq_len": 1501,
+      "kv_size_mb": 211.08,
+      "transfer": "chain",
+      "prev_seq_len": 1008,
+      "delta": 493,
+      "expected_delta": 493,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 40,
+      "n_prompt_tokens": 371,
+      "kv_seq_len": 1912,
+      "kv_size_mb": 268.88,
+      "transfer": "chain",
+      "prev_seq_len": 1501,
+      "delta": 411,
+      "expected_delta": 411,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 40,
+      "n_prompt_tokens": 513,
+      "kv_seq_len": 2458,
+      "kv_size_mb": 345.66,
+      "transfer": "chain",
+      "prev_seq_len": 1912,
+      "delta": 546,
+      "expected_delta": 553,
+      "text_len": 291
+    }
+  ],
+  "elapsed_s": 21.55,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When $return is unusually high and $volume is unusually low, next-day returns are unusually high.",
+    "n_expr": 1,
+    "gate_pass": 1,
+    "gate_pass_frac": 1.0,
+    "families": [
+      "time_series"
+    ],
+    "n_families": 1,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE($return, 20) > 1 && TS_ZSCORE($volume, 20) < -1 && $return > 0",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.8,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 1
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 40,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1008,
+          "kv_size_mb": 141.75,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1008,
+          "expected_delta": 1008,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 40,
+          "n_prompt_tokens": 453,
+          "kv_seq_len": 1501,
+          "kv_size_mb": 211.08,
+          "transfer": "chain",
+          "prev_seq_len": 1008,
+          "delta": 493,
+          "expected_delta": 493,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 40,
+          "n_prompt_tokens": 371,
+          "kv_seq_len": 1912,
+          "kv_size_mb": 268.88,
+          "transfer": "chain",
+          "prev_seq_len": 1501,
+          "delta": 411,
+          "expected_delta": 411,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 40,
+          "n_prompt_tokens": 513,
+          "kv_seq_len": 2458,
+          "kv_size_mb": 345.66,
+          "transfer": "chain",
+          "prev_seq_len": 1912,
+          "delta": 546,
+          "expected_delta": 553,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 291,
+        "repetition": 0.25,
+        "longest_run": 1,
+        "output_tokens": 104,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c4 CONTROL: 4 agen SAMA dgn c4_hybrid tapi PURE-LATEN (middle kv_only, ekspresi lewat KV). Isolasi efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3)."
+}

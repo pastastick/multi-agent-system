@@ -1,0 +1,137 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls80",
+  "latent_steps": 80,
+  "rep": 1,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.75,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 80,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1048,
+      "kv_size_mb": 147.38,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1048,
+      "expected_delta": 1048,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 80,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2657,
+      "kv_size_mb": 373.64,
+      "transfer": "chain",
+      "prev_seq_len": 1048,
+      "delta": 1609,
+      "expected_delta": 1616,
+      "text_len": 1016
+    }
+  ],
+  "elapsed_s": 32.09,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "The mechanism is a liquidity based on the relationship between the volume and return dynamics, capturing of the liquidity, and the volatility regime, with a short horizon. The core signal is the volume-weighted return change, gated by a volatility indicator.",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "cross_sectional",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE( (TS_PCTCHANGE($return, 1) * $volume), 5 )",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "RANK(TS_MEAN($volume, 5), TS_MEAN($volume, 10))",
+        "gate_ok": false,
+        "reason": "arity: `RANK` takes 1 argument(s) but got 2 (`RANK(TS_MEAN($volume, 5.0), TS_MEAN($volume, 10.0))`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead.",
+        "families": [
+          "cross_sectional",
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.75,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 80,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1048,
+          "kv_size_mb": 147.38,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1048,
+          "expected_delta": 1048,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 80,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2657,
+          "kv_size_mb": 373.64,
+          "transfer": "chain",
+          "prev_seq_len": 1048,
+          "delta": 1609,
+          "expected_delta": 1616,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 1016,
+        "repetition": 0.047,
+        "longest_run": 2,
+        "output_tokens": 244,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

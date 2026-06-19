@@ -1,0 +1,136 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls40",
+  "latent_steps": 40,
+  "rep": 0,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 1.0,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 40,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1008,
+      "kv_size_mb": 141.75,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1008,
+      "expected_delta": 1008,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 40,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2577,
+      "kv_size_mb": 362.39,
+      "transfer": "chain",
+      "prev_seq_len": 1008,
+      "delta": 1569,
+      "expected_delta": 1576,
+      "text_len": 944
+    }
+  ],
+  "elapsed_s": 22.32,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "The hypothesis is that stocks with recent price volatility concentrated in the upper end of the daily return distribution, combined with a liquidity signal derived from volume, predict stronger next-day returns due to a liquidity-driven price discovery mechanism.",
+    "n_expr": 2,
+    "gate_pass": 2,
+    "gate_pass_frac": 1.0,
+    "families": [
+      "quantile",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "TS_QUANTILE($return, 0.8, 20) - TS_QUANTILE($return, 0.2, 20)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "quantile"
+        ]
+      },
+      {
+        "expr": "TS_ZSCORE($volume, 20) * TS_ZSCORE($return, 20)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 1.0,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 40,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1008,
+          "kv_size_mb": 141.75,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1008,
+          "expected_delta": 1008,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 40,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2577,
+          "kv_size_mb": 362.39,
+          "transfer": "chain",
+          "prev_seq_len": 1008,
+          "delta": 1569,
+          "expected_delta": 1576,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 944,
+        "repetition": 0.031,
+        "longest_run": 1,
+        "output_tokens": 212,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

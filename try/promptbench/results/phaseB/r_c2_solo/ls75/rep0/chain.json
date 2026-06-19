@@ -1,0 +1,145 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls75",
+  "latent_steps": 75,
+  "rep": 0,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.5,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 75,
+      "n_prompt_tokens": 591,
+      "kv_seq_len": 666,
+      "kv_size_mb": 93.66,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 666,
+      "expected_delta": 666,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 75,
+      "n_prompt_tokens": 781,
+      "kv_seq_len": 1515,
+      "kv_size_mb": 213.05,
+      "transfer": "chain",
+      "prev_seq_len": 666,
+      "delta": 849,
+      "expected_delta": 856,
+      "text_len": 785
+    }
+  ],
+  "elapsed_s": 26.02,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When $close shows a sharp rebound from $low over 3-7 days, the highest $return tend to under-perform next day.",
+    "n_expr": 3,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "families": [
+      "time_series",
+      "ts_pair"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE($close - $low, 3, 7)  TS_RANK($return, 100)",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "TS_CORR($close, $low, 3)  TS_STD($return)",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": [
+          "time_series",
+          "ts_pair"
+        ]
+      },
+      {
+        "expr": "TS_PCTCHANGE($close, $low, 3)  TS_MEDIAN($return)",
+        "gate_ok": false,
+        "reason": "regulator evaluate failed",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.5,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 3
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 75,
+          "n_prompt_tokens": 591,
+          "kv_seq_len": 666,
+          "kv_size_mb": 93.66,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 666,
+          "expected_delta": 666,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 75,
+          "n_prompt_tokens": 781,
+          "kv_seq_len": 1515,
+          "kv_size_mb": 213.05,
+          "transfer": "chain",
+          "prev_seq_len": 666,
+          "delta": 849,
+          "expected_delta": 856,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 785,
+        "repetition": 0.009,
+        "longest_run": 1,
+        "output_tokens": 200,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

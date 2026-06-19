@@ -1,0 +1,106 @@
+# chain=r_c3_finalizer  config=ls10  rep=0  step=2  agent=consistency  variant=authored_redesign_c3_finalizer  transfer=chain  mode=kv_and_text  latent_steps=10  terminal=True
+
+# kv: {"step_idx": 2, "agent": "consistency", "mode": "kv_and_text", "latent_steps": 10, "n_prompt_tokens": 1346, "kv_seq_len": 2790, "kv_size_mb": 392.34, "transfer": "chain", "prev_seq_len": 1441, "delta": 1349, "expected_delta": 1356}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Finalizer. A market hypothesis and a range of candidate ways to
+measure it are in your working memory. Your task: commit the final factor
+set -- choose the most faithful, distinct ways to measure the SAME mechanism,
+render them as expressions, validate them, and output. What you emit is final
+and is scored as-is.
+
+Your PRIMARY responsibility is that every expression you output is SYMBOLICALLY
+VALID -- correct operator names, correct arity, balanced structure -- and is a
+continuous cross-sectional score. A deterministic regulator rejects invalid
+expressions, so spend your care there; do NOT count characters or features.
+
+A factor is a CONTINUOUS cross-sectional score: one real number per stock per
+day, higher = more expected out-performance, used to rank stocks against each
+other. It is NOT a boolean mask -- "$close > $open && $volume > MEAN($volume)"
+is invalid because it returns true/false, not a rankable magnitude. To use a
+condition, gate a magnitude with it:
+  (C) ? (<continuous signal>) : (0)    or    RANK(<A>) - RANK(<B>).
+
+Argument conventions: A, B = any valid expression (a $variable, a numeric
+constant, or a composed sub-expression, like x in f(x)); C = a logical
+condition that evaluates to a boolean (e.g. $close > $open); n, p = integer
+window sizes; q = a quantile in [0, 1].
+
+Variables (the ONLY leaves; `$` prefixes variables only, never operators):
+  $open $high $low $close $volume $return
+
+Cross-sectional functions (operate across all stocks on a given day, NO
+window) -- RANK(A) ZSCORE(A) MEAN(A) STD(A) SKEW(A) KURT(A) MEDIAN(A) MAX(A)
+MIN(A): rank / standardise / take a moment of A across all assets each day.
+
+Time-series functions (each takes a rolling window n; keep distinct from the
+cross-sectional ops above -- TS_STD is rolling, STD is cross-sectional):
+  - DELTA(A, n): change in A over n periods.  DELAY(A, n): A delayed n periods.
+  - TS_MEAN/TS_SUM/TS_STD/TS_VAR/TS_MEDIAN/TS_MIN/TS_MAX(A, n): rolling stat over n days.
+  - TS_RANK(A, n): time-series rank of the latest value over n days.
+  - TS_ZSCORE(A, n): rolling z-score over n days.
+  - TS_PCTCHANGE(A, p): percentage change over p periods.
+  - TS_ARGMAX/TS_ARGMIN(A, n): position of the max/min over the past n days.
+  - TS_MAD(A, n): rolling median-absolute-deviation over n days.
+  - HIGHDAY/LOWDAY(A, n): days since the highest/lowest value over n days.
+  - SUMAC(A, n): cumulative sum over the past n days.
+  - RSI(A, n): relative strength index over n periods.
+  - BB_UPPER/BB_MIDDLE/BB_LOWER(A, n): Bollinger +/-2 sigma / middle band over n.
+Pair time-series (need TWO DIFFERENT series A and B -- never a series with
+itself): TS_CORR(A, B, n) / TS_COVARIANCE(A, B, n): rolling corr / cov over n days.
+Smoothing: SMA(A, n, m) simple MA (modifier m); WMA(A, n) weighted MA;
+  EMA(A, n) exponential MA (decay 2/(n+1)); DECAYLINEAR(A, d) linearly-weighted MA.
+Math: LOG SQRT EXP ABS SIGN FLOOR INV(A)=1/A applied to one arg; POW(A, n);
+  PROD(A, n) product over n; arithmetic + - * /; MAX(A, B) / MIN(A, B) pairwise.
+Conditional / logical (gate a MAGNITUDE -- never output the bare boolean):
+  (C) ? (A) : (B) ternary; (C1)&&(C2) and (C1)||(C2) logical AND / OR;
+  COUNT(C, n) count of periods meeting C in the past n; SUMIF(A, n, C) sum of A
+  over n where C holds; FILTER(A, C) keep A where C holds.
+Quantile / regression: TS_QUANTILE(A, p, q) and PERCENTILE(A, q, p) rolling
+  quantile q over p periods; SEQUENCE(n) the column 1..n (only as arg B of
+  REGBETA/REGRESI); REGBETA(A, B, n) / REGRESI(A, B, n) regression slope /
+  residual of A on B over n samples.
+Technical: MACD(A, short, long) difference of a short and a long EMA.
+
+Every operator name is EXACT and case-sensitive. EMA and each TS_* name is
+literal -- there is NO TS_EMA and NO MOA. Use only the variables and operators
+listed; never invent a symbol or use a bare `=`.
+
+==============================================================================
+USER
+==============================================================================
+From your working memory, commit the final factor set:
+  Step 1 -- Restate the hypothesis in one line (the mechanism, unchanged).
+  Step 2 -- Choose the most faithful candidate measurements, preferring ones
+            that span DIFFERENT operator families over near-duplicates.
+  Step 3 -- Render each as a single expression and validate it: real
+            $variables only; correct arity (TS_* take a window, cross-sectional
+            ops do not); windows 1-60; no series paired with itself; balanced
+            parentheses; a continuous score, not a boolean.
+  Step 4 -- Repair an obvious mechanical defect in place; drop anything you
+            cannot fix without inventing a NEW mechanism. Prefer FEWER clean,
+            distinct factors over many shaky ones.
+Then output this block EXACTLY as the LAST thing -- ASCII, no markdown:
+HYPOTHESIS: <one sentence -- the mechanism, unchanged>
+EXPRESSION 1: <single DSL expression -- a continuous score>
+EXPRESSION 2: <single DSL expression>   (only if a distinct second factor)
+
+==============================================================================
+RESPONSE
+==============================================================================
+HYPOTHESIS: When a stock's recent price volatility is concentrated in the highest 10% of daily returns, and its volume is rising relative to its own historical average, it is more likely to outperform the next day.
+
+EXPRESSION 1: TS_ZSCORE($return, 20) > 0.5 && $volume > TS_MEAN($volume, 20) ? TS_STD($return, 20) : 0
+
+EXPRESSION 2: RANK(TS_ZSCORE($return, 20)) < 10 && $volume > TS_MEAN($volume, 20) ? TS_STD($return, 20) : 0
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 427,
+  "markers_hit": [],
+  "score": 0.5,
+  "parser_ok": null
+}

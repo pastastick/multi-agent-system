@@ -1,0 +1,173 @@
+{
+  "chain": "r_c4_latent",
+  "config": "ls100",
+  "latent_steps": 100,
+  "rep": 2,
+  "terminal_agent": "judger",
+  "ok": false,
+  "score": 0.0,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 100,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1068,
+      "kv_size_mb": 150.19,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1068,
+      "expected_delta": 1068,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 100,
+      "n_prompt_tokens": 453,
+      "kv_seq_len": 1621,
+      "kv_size_mb": 227.95,
+      "transfer": "chain",
+      "prev_seq_len": 1068,
+      "delta": 553,
+      "expected_delta": 553,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 100,
+      "n_prompt_tokens": 371,
+      "kv_seq_len": 2092,
+      "kv_size_mb": 294.19,
+      "transfer": "chain",
+      "prev_seq_len": 1621,
+      "delta": 471,
+      "expected_delta": 471,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 100,
+      "n_prompt_tokens": 513,
+      "kv_seq_len": 2698,
+      "kv_size_mb": 379.41,
+      "transfer": "chain",
+      "prev_seq_len": 2092,
+      "delta": 606,
+      "expected_delta": 613,
+      "text_len": 0
+    }
+  ],
+  "elapsed_s": 31.51,
+  "score_detail": {
+    "parse_ok": false,
+    "hypothesis": null,
+    "n_expr": 0,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "n_families": 0,
+    "families": [],
+    "score": 0.0,
+    "parser_ok": false,
+    "parse_trace": {
+      "primary_ok": false,
+      "fallback_used": null,
+      "n_expr": 0
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 100,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1068,
+          "kv_size_mb": 150.19,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1068,
+          "expected_delta": 1068,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 100,
+          "n_prompt_tokens": 453,
+          "kv_seq_len": 1621,
+          "kv_size_mb": 227.95,
+          "transfer": "chain",
+          "prev_seq_len": 1068,
+          "delta": 553,
+          "expected_delta": 553,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 100,
+          "n_prompt_tokens": 371,
+          "kv_seq_len": 2092,
+          "kv_size_mb": 294.19,
+          "transfer": "chain",
+          "prev_seq_len": 1621,
+          "delta": 471,
+          "expected_delta": 471,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 100,
+          "n_prompt_tokens": 513,
+          "kv_seq_len": 2698,
+          "kv_size_mb": 379.41,
+          "transfer": "chain",
+          "prev_seq_len": 2092,
+          "delta": 606,
+          "expected_delta": 613,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "empty"
+      ],
+      "metrics": {
+        "len": 0,
+        "repetition": 0.0,
+        "longest_run": 0,
+        "runaway": false
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "empty"
+      ]
+    }
+  },
+  "desc": "REDESIGN c4 CONTROL: 4 agen SAMA dgn c4_hybrid tapi PURE-LATEN (middle kv_only, ekspresi lewat KV). Isolasi efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3)."
+}

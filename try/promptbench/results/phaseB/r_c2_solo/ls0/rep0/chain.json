@@ -1,0 +1,40 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls0",
+  "latent_steps": 0,
+  "rep": 0,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 1.0,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step": 0,
+      "agent": "proposal",
+      "variant": "authored_redesign_c2_solo",
+      "mode": "kv_only",
+      "transfer": "none",
+      "latent_steps": 0,
+      "n_prompt_tokens": 624,
+      "kv_seq_len": 624,
+      "prev_seq_len": 0,
+      "missing_vars": false
+    },
+    {
+      "step": 1,
+      "agent": "construct",
+      "variant": "authored_redesign_c2_solo",
+      "mode": "kv_and_text",
+      "transfer": "chain",
+      "latent_steps": 0,
+      "n_prompt_tokens": 887,
+      "kv_seq_len": 1511,
+      "prev_seq_len": 624,
+      "missing_vars": false
+    }
+  ],
+  "elapsed_s": 0.0,
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit.",
+  "dry_run": true
+}

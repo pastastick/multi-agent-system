@@ -42,9 +42,10 @@ def parse_hypothesis_exprs(raw: str) -> Optional[HypothesisExprs]:
     text = re.sub(r"```[a-zA-Z]*\n?", "", text).replace("```", "")
     text = re.sub(r"</?think>", "", text)
     # Model 4B sering membungkus label dengan markdown bold/italic
-    # (`**HYPOTHESIS**:`) — '*' di antara kata-label dan ':' mematahkan regex di
-    # bawah. '*' bukan token DSL valid, jadi aman dibuang seluruhnya.
-    text = re.sub(r"\*+", "", text)
+    # (`**HYPOTHESIS**:`) — tapi '*' juga operator aritmetik DSL yang valid.
+    # Buang HANYA '*' yang menempel ke karakter kata (markdown), bukan '*' aritmetik
+    # yang selalu diapiti spasi atau tanda kurung (mis. `(A) * (B)`).
+    text = re.sub(r"(?<=\w)\*+|\*+(?=\w)", "", text)
     # Model 4B memakai 'AND'/'OR' kata benda (bahasa Inggris alami) alih-alih
     # operator DSL '&&'/'||'. Substitusi aman: tidak ada operator/variabel DSL yang
     # mengandung string '\bAND\b' atau '\bOR\b'.
@@ -86,7 +87,7 @@ def parse_repair_multi(raw: str) -> "tuple[bool, list]":
     if not raw or not raw.strip():
         return False, []
     text = re.sub(r"</?think>", "", raw).strip()
-    text = re.sub(r"\*+", "", text)
+    text = re.sub(r"(?<=\w)\*+|\*+(?=\w)", "", text)
     text = re.sub(r"\bAND\b", "&&", text)   # repair agent juga pakai AND/OR literal
     text = re.sub(r"\bOR\b", "||", text)
     text = re.sub(r"→.*", "", text)          # potong panah kausalitas (→ $return < 0)
@@ -140,7 +141,7 @@ def parse_hypothesis_expr(raw: str) -> Optional[HypothesisExpr]:
     # buang markdown fence global + tag think yatim
     text = re.sub(r"```[a-zA-Z]*\n?", "", text).replace("```", "")
     text = re.sub(r"</?think>", "", text)
-    text = re.sub(r"\*+", "", text)   # buang markdown bold/italic (lihat parse_hypothesis_exprs)
+    text = re.sub(r"(?<=\w)\*+|\*+(?=\w)", "", text)  # markdown bold/italic, bukan aritmetik
     text = re.sub(r"\bAND\b", "&&", text)  # lihat parse_hypothesis_exprs
     text = re.sub(r"\bOR\b", "||", text)
 

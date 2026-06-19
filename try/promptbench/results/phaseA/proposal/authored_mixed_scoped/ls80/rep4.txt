@@ -1,0 +1,128 @@
+# agent=proposal  variant=proposal__authored_mixed_scoped__mix3a1b2c3d  latent_steps=80  rep=4  score=0.3  ok=True  elapsed_s=53.57  kv_tokens=979
+
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Proposal agent in a quantitative alpha-mining team. Given a
+research direction, reason toward ONE strong, original market hypothesis: a
+candidate mechanism that predicts next-period cross-sectional stock returns.
+
+WHAT AN ALPHA FACTOR IS.
+An alpha factor assigns a numeric score to every stock on every day (high
+score → expected out-performer / buy, low score → expected under-performer /
+sell), and the scores are compared cross-sectionally — across all stocks on
+the same day — to rank them. The score is a function computed purely from
+daily price-volume data: $open $high $low $close $volume $return. It is
+built by transforming these columns over time (change, regression, rolling statistics,
+dispersion, correlation, smoothing), normalizing or ranking them across
+stocks, and optionally gating them on a condition. Its quality is measured
+by how well today's score ranks tomorrow's cross-sectional return.
+
+WHAT AN OPTIMAL HYPOTHESIS LOOKS LIKE.
+An optimal hypothesis is a SPECIFIC, measurable conditional pattern of the
+form "when X holds, Y follows in next-period returns" — a
+mechanism, not a theme. It is:
+  - OBSERVABLE — fully derivable from $open/$high/$low/$close/$volume/$return
+    alone, so the pattern can actually be measured from the data on hand.
+  - CONDITIONAL — it ties a measurable market state to a directional move in
+    returns, with a clear sign (out-performance or under-performance).
+  - GROUNDED — it has an economic or behavioral driver (momentum, reversal,
+    microstructure, liquidity, volatility regime, dispersion) that explains
+    why the edge should persist under noise rather than being a fluke.
+  - ORIGINAL — structurally fresh relative to over-mined textbook patterns,
+    so it adds genuine search value.
+Make ALL of these explicit in your reasoning:
+  - KNOWLEDGE   = the conditional market pattern (when X → Y on returns).
+  - OBSERVATION = the data pattern or prior-round result that motivates it.
+  - JUSTIFICATION = the economic / behavioral driver and why it persists.
+  - SPECIFICATION = the factor envelope: which $columns carry the signal
+    (at least one; OHLCV only), the mechanism family, a HORIZON BAND
+    (short ~1-10d / medium ~10-30d / long ~30-60d), the cross-sectional
+    comparison and conditional trigger, and the expected return direction.
+
+LEVEL OF DETAIL.
+State the hypothesis at the level of a MECHANISM, not a formula. Define the
+factor envelope — the columns, the mechanism family, the horizon band, the
+conditional trigger, and the direction — so that every factor consistent
+with the hypothesis stays inside that envelope. Keep the exact windows,
+cutoffs, and the precise composition open, so the envelope still admits a
+range of faithful factor realizations rather than a single fixed one. A
+hypothesis pinned to one exact window or threshold has stopped being a
+hypothesis; one with no columns, mechanism, horizon, or direction is too
+vague to act on. Aim between these.
+
+Note how it names the carrying columns, a mechanism family, a horizon band, a cross-sectional comparison, and a direction — yet fixes no exact window, threshold, or formula.
+
+No look-ahead bias. Your last output is the hypothesis.
+
+==============================================================================
+USER
+==============================================================================
+Research direction:
+Find a cross-sectional alpha factor from daily OHLCV that predicts next-day returns, exploiting short-horizon liquidity and volatility dynamics.
+
+Market context:
+Liquid equities, daily bars, 2018-2021 train segment.
+
+Prior-round feedback (refine within the same framework before pivoting):
+Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0.22) — weak but positive; the volatility-gated variant was noisier.
+
+
+AVOID failed mechanisms from earlier rounds: pure low-volume + volatility-spike mean-reversion (over-mined, unstable).
+
+Reason step by step toward ONE concrete hypothesis, then state it with its KNOWLEDGE / OBSERVATION / JUSTIFICATION / SPECIFICATION / SUMMARY made explicit.
+
+==============================================================================
+RESPONSE
+==============================================================================
+### **Hypothesis: "Liquidity-Driven Volatility Regime Shifts in the Pre-Close"**
+
+---
+
+## **KNOWLEDGE**  
+**When pre-close liquidity (volume) and volatility (range) dynamics show a sharp regime shift from low-liquidity, low-volatility to high-liquidity, high-volatility, next-day returns are significantly positive.**
+
+---
+
+## **OBSERVATION**  
+In the 2018–2021 train segment, there is a pattern where stocks that exhibit a **sharp increase in volume and range (volatility)** in the final 30 minutes of trading (pre-close) tend to outperform the next day. This is distinct from the prior-round volume-Zscore momentum factor, which was too broad and did not isolate the liquidity-volatility regime shift. The regime shift is a **short-horizon, liquidity-driven phenomenon**, not just a momentum or mean-reversion effect.
+
+---
+
+## **JUSTIFICATION**  
+This hypothesis is grounded in **microstructure dynamics** and **behavioral liquidity bias**. In the pre-close, traders often react to **news or earnings surprises**, leading to **sudden spikes in liquidity** (volume) and **volatility** (range). When these two factors rise together, it signals a **regime shift** — a moment when the market is more reactive and less efficient. This creates an **information asymmetry** between the stock and the broader market, allowing the stock to outperform the next day as new information is absorbed.
+
+The regime shift is **not a fluke** because:
+- It is **observable** from OHLCV data alone.
+- It is **conditional** on the co-occurrence of liquidity and volatility spikes.
+- It is **grounded** in behavioral liquidity bias and microstructure dynamics.
+- It is **original** compared to over-mined patterns like pure volume or volatility.
+
+---
+
+## **SPECIFICATION**  
+**Factor Envelope:**
+
+- **Columns**: `volume`, `high - low` (range), `close` (to capture the last price before the regime shift).
+- **Mechanism Family**: **Microstructure + Liquidity-Volatility Regime Shift**.
+- **Horizon Band**: **Short (1–10 days)**.
+- **Cross-sectional Comparison**: Rank stocks by the **magnitude of the volume-range spike in the final 30 minutes of trading**.
+- **Conditional Trigger**: When `volume` and `range` both increase sharply in the final 30 minutes (e.g., volume > 1.5x median, range > 1.5x median).
+- **Direction**: **Positive next-day return**.
+
+---
+
+## **SUMMARY**  
+This hypothesis leverages the **short-horizon liquidity-volatility regime shift** in the pre-close to predict next-day returns. It is **observable**, **conditional**, **grounded**, and **original**, and is built from **OHLCV data alone**. It captures the **microstructure dynamics** of liquidity and volatility in the final moments of trading, which signal a **regime shift** that leads to **positive returns** the next day.
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "has_text": true,
+  "observable_cols": [],
+  "observable": false,
+  "conditional": false,
+  "cliche": false,
+  "score": 0.3
+}

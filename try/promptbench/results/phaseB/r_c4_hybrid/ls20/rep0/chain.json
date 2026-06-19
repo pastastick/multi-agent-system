@@ -1,0 +1,175 @@
+{
+  "chain": "r_c4_hybrid",
+  "config": "ls20",
+  "latent_steps": 20,
+  "rep": 0,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.0,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 20,
+      "n_prompt_tokens": 591,
+      "kv_seq_len": 611,
+      "kv_size_mb": 85.92,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 611,
+      "expected_delta": 611,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 20,
+      "n_prompt_tokens": 633,
+      "kv_seq_len": 1257,
+      "kv_size_mb": 176.77,
+      "transfer": "chain",
+      "prev_seq_len": 611,
+      "delta": 646,
+      "expected_delta": 653,
+      "text_len": 551
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_and_text",
+      "latent_steps": 20,
+      "n_prompt_tokens": 570,
+      "kv_seq_len": 1840,
+      "kv_size_mb": 258.75,
+      "transfer": "chain",
+      "prev_seq_len": 1257,
+      "delta": 583,
+      "expected_delta": 590,
+      "text_len": 601
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 20,
+      "n_prompt_tokens": 552,
+      "kv_seq_len": 2405,
+      "kv_size_mb": 338.2,
+      "transfer": "chain",
+      "prev_seq_len": 1840,
+      "delta": 565,
+      "expected_delta": 572,
+      "text_len": 16
+    }
+  ],
+  "elapsed_s": 31.74,
+  "score_detail": {
+    "parse_ok": false,
+    "hypothesis": null,
+    "n_expr": 0,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "n_families": 0,
+    "families": [],
+    "score": 0.0,
+    "parser_ok": false,
+    "parse_trace": {
+      "primary_ok": false,
+      "fallback_used": null,
+      "n_expr": 0
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 20,
+          "n_prompt_tokens": 591,
+          "kv_seq_len": 611,
+          "kv_size_mb": 85.92,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 611,
+          "expected_delta": 611,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 20,
+          "n_prompt_tokens": 633,
+          "kv_seq_len": 1257,
+          "kv_size_mb": 176.77,
+          "transfer": "chain",
+          "prev_seq_len": 611,
+          "delta": 646,
+          "expected_delta": 653,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_and_text",
+          "latent_steps": 20,
+          "n_prompt_tokens": 570,
+          "kv_seq_len": 1840,
+          "kv_size_mb": 258.75,
+          "transfer": "chain",
+          "prev_seq_len": 1257,
+          "delta": 583,
+          "expected_delta": 590,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 20,
+          "n_prompt_tokens": 552,
+          "kv_seq_len": 2405,
+          "kv_size_mb": 338.2,
+          "transfer": "chain",
+          "prev_seq_len": 1840,
+          "delta": 565,
+          "expected_delta": 572,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "unparseable: parser struktur gagal"
+      ],
+      "metrics": {
+        "len": 16,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 13,
+        "runaway": false,
+        "parser_ok": false
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "unparseable: parser struktur gagal"
+      ]
+    }
+  },
+  "desc": "REDESIGN c4: proposal → construct → consistency → judger, HAND-OFF TEKS (prior_factors). Laten=hipotesis, teks=ekspresi."
+}

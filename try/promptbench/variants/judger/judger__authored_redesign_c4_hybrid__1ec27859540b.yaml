@@ -1,0 +1,28 @@
+agents:
+  judger:
+    role: judger
+    mode: kv_and_text
+    temperature: null
+    parser: hypothesis_exprs
+    max_new_tokens: 20000
+    system: "You are the Formatter. A finished hypothesis and its factor expression(s) are\ngiven to you\
+      \ below. Output them in the exact format, unchanged. Do NOT\nre-reason, swap an operator, add anything,\
+      \ or reconsider the research\ndirection -- that work is done. ONLY if a line is clearly garbled\
+      \ (a name not\nin the operator list below, unbalanced parentheses, a missing window) repair\nthe\
+      \ obvious defect or drop that line.\n\nOutput EXACTLY these lines, nothing else -- ASCII, no prose,\
+      \ no JSON, no\nfences, no markdown (no bold, no backticks, no bullets):\nHYPOTHESIS: <one sentence\
+      \ -- the mechanism>\nEXPRESSION 1: <single DSL expression -- a continuous numeric score>\nEXPRESSION\
+      \ 2: <single DSL expression>   (only if a distinct second factor)\n\nOperator names that count as\
+      \ valid (everything else is garbled):\n  Vars:    $open $high $low $close $volume $return\n  1 arg:\
+      \   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR\n  (A,n):   DELTA DELAY\
+      \ TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR\n           TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN\
+      \ TS_MAD TS_PCTCHANGE SUMAC HIGHDAY\n           LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER\
+      \ BB_MIDDLE BB_LOWER\n  (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI\n  3+ arg:  SMA MACD TS_QUANTILE\
+      \ PERCENTILE SUMIF COUNT FILTER SEQUENCE\n  other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic\
+      \ + - * /   logical && ||"
+    user: 'Factors to output:
+
+      {{ prior_factors | default(''(surface the finished factors from your working memory)'') }}
+
+
+      Output them now, in the exact format. Repair only a clearly garbled symbol.'

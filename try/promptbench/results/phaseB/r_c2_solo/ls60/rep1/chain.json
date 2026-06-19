@@ -1,0 +1,140 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 1,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 1.0,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1028,
+      "kv_size_mb": 144.56,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1028,
+      "expected_delta": 1028,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2617,
+      "kv_size_mb": 368.02,
+      "transfer": "chain",
+      "prev_seq_len": 1028,
+      "delta": 1589,
+      "expected_delta": 1596,
+      "text_len": 339
+    }
+  ],
+  "elapsed_s": 20.19,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When recent volatility spikes are followed by low liquidity stocks with high price dispersion, the next-day return is negative.",
+    "n_expr": 2,
+    "gate_pass": 2,
+    "gate_pass_frac": 1.0,
+    "families": [
+      "conditional",
+      "quantile",
+      "time_series"
+    ],
+    "n_families": 3,
+    "per_expr": [
+      {
+        "expr": "(TS_ZSCORE($high - $low, 5) > 0.5) ? (TS_STD($close, 5) / TS_MEAN($volume, 5)) : (0)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "conditional",
+          "time_series"
+        ]
+      },
+      {
+        "expr": "(TS_QUANTILE($return, 0.75, 5) < 0.01) ? (TS_RANK($volume, 5) - TS_RANK($open, 5)) : (0)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "conditional",
+          "quantile",
+          "time_series"
+        ]
+      }
+    ],
+    "score": 1.0,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1028,
+          "kv_size_mb": 144.56,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1028,
+          "expected_delta": 1028,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2617,
+          "kv_size_mb": 368.02,
+          "transfer": "chain",
+          "prev_seq_len": 1028,
+          "delta": 1589,
+          "expected_delta": 1596,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 339,
+        "repetition": 0.02,
+        "longest_run": 1,
+        "output_tokens": 127,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

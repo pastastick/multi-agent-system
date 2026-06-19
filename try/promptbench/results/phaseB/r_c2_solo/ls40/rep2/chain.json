@@ -1,0 +1,137 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls40",
+  "latent_steps": 40,
+  "rep": 2,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.75,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 40,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1008,
+      "kv_size_mb": 141.75,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1008,
+      "expected_delta": 1008,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 40,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2577,
+      "kv_size_mb": 362.39,
+      "transfer": "chain",
+      "prev_seq_len": 1008,
+      "delta": 1569,
+      "expected_delta": 1576,
+      "text_len": 308
+    }
+  ],
+  "elapsed_s": 15.53,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When a stock shows a sudden drop in bid-ask spread and a sharp increase in volume, it is more likely to experience a reversal in the next day.",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "cross_sectional",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE($high - $low, 5) * (TS_MEAN($volume, 5) - $volume)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "RANK(TS_STD($high - $low, 5), 10) - RANK(TS_MEAN($volume, 5), 10)",
+        "gate_ok": false,
+        "reason": "arity: `RANK` takes 1 argument(s) but got 2 (`RANK(TS_STD(($high - $low), 5.0), 10.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead. `RANK` takes 1 argument(s) but got 2 (`RANK(TS_MEAN($volume, 5.0), 10.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead.",
+        "families": [
+          "cross_sectional",
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.75,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 40,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1008,
+          "kv_size_mb": 141.75,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1008,
+          "expected_delta": 1008,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 40,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2577,
+          "kv_size_mb": 362.39,
+          "transfer": "chain",
+          "prev_seq_len": 1008,
+          "delta": 1569,
+          "expected_delta": 1576,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 308,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 110,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

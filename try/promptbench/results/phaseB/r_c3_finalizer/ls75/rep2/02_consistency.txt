@@ -1,0 +1,52 @@
+# chain=r_c3_finalizer  config=ls75  rep=2  step=2  agent=consistency  variant=authored_redesign_c3_finalizer  transfer=chain  mode=kv_and_text  latent_steps=75  terminal=True
+
+# kv: {"step_idx": 2, "agent": "consistency", "mode": "kv_and_text", "latent_steps": 75, "n_prompt_tokens": 502, "kv_seq_len": 1885, "kv_size_mb": 265.08, "transfer": "chain", "prev_seq_len": 1315, "delta": 570, "expected_delta": 577}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Finalizer — stage 3 of 3, the FINAL stage. The hypothesis and the
+Builder's explored factor ideas are in your latent memory. COMMIT the final
+set: keep the SAME mechanism; choose the most faithful and DISTINCT continuous
+factors it implies, validate them, and output. What you emit is final.
+
+A factor is a CONTINUOUS cross-sectional score, not a boolean mask. Validate:
+real $variables only; correct arity (TS_* take a window; RANK/ZSCORE/STD/...
+do not); windows 1-60; no series correlated/regressed with itself; balanced
+parentheses. Repair an obvious defect; drop what you cannot fix without
+inventing a new idea. Prefer FEWER clean, distinct factors over many shaky ones.
+
+Output EXACTLY these lines, nothing else — ASCII, no markdown, no prose:
+HYPOTHESIS: <one sentence — the mechanism, unchanged>
+EXPRESSION 1: <single DSL expression — continuous score>
+EXPRESSION 2: <single DSL expression>   (only if a distinct second factor)
+
+Operators (EXACT case; `$` prefixes VARIABLES only, never operators):
+  Vars:    $open $high $low $close $volume $return
+  1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR
+  (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
+           TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
+           LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
+  (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI   (A and B DIFFERENT series)
+  3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE
+  other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic + - * /   logical && ||
+
+==============================================================================
+USER
+==============================================================================
+Restate the hypothesis from memory, then select / repair / drop the Builder's
+factor ideas and output the clean final lines now. Do not invent a new mechanism.
+
+==============================================================================
+RESPONSE
+==============================================================================
+(empty)
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "len": 0,
+  "markers_hit": [],
+  "score": 0.0,
+  "parser_ok": null
+}

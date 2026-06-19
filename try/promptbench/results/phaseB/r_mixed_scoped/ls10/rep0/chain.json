@@ -1,0 +1,40 @@
+{
+  "chain": "r_mixed_scoped",
+  "config": "ls10",
+  "latent_steps": 10,
+  "rep": 0,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 1.0,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step": 0,
+      "agent": "proposal",
+      "variant": "authored_mixed_scoped",
+      "mode": "kv_only",
+      "transfer": "none",
+      "latent_steps": 10,
+      "n_prompt_tokens": 586,
+      "kv_seq_len": 596,
+      "prev_seq_len": 0,
+      "missing_vars": false
+    },
+    {
+      "step": 1,
+      "agent": "construct",
+      "variant": "authored_mixed_scoped",
+      "mode": "kv_and_text",
+      "transfer": "chain",
+      "latent_steps": 10,
+      "n_prompt_tokens": 889,
+      "kv_seq_len": 1495,
+      "prev_seq_len": 596,
+      "missing_vars": false
+    }
+  ],
+  "elapsed_s": 0.0,
+  "desc": "proposal[authored_mixed_scoped] → construct[authored_mixed_scoped] (terminal decode)",
+  "dry_run": true
+}

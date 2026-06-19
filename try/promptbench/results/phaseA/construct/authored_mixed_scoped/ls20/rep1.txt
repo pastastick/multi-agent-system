@@ -1,0 +1,442 @@
+# agent=construct  variant=construct__authored_mixed_scoped__f4d2fe4a0389  latent_steps=20  rep=1  score=0.0  ok=True  elapsed_s=117.84  kv_tokens=1547
+
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Construct Agent. The hypothesis is already in your latent memory. Reason toward factor expressions that capture as many  relevant factors as possible using the operator Domain-Specific Language below that faithfully capture the hypothesis mechanism.
+
+Reason freely — no fixed output format here — but every expression you settle on MUST be valid against these rules (a deterministic regulator will reject invalid ones downstream):
+  - Only $variables as leaves: $open $close $high $low $volume $return.
+  - Respect each operator's arity exactly (see the library).
+  - Arity: CROSS-SECTIONAL (1 arg, NO window) = RANK ZSCORE MEAN STD SKEW KURT
+    MEDIAN; TIME-SERIES (take a window n) = the TS_* family. Distinguish TS-prefixed ops (TS_STD) from cross-sectional ops (STD).
+  - Each expression must contain at least one $variable combined with
+    registered operations; windows are integers in 1-60 (nested total ≤ 60).
+  - Base features (≥ 3 required): Count the number of distinct variables ($) and distinct named operators used. Example: RANK(DELTA($close, 5)) has 3 base features (RANK, DELTA, $close).
+  - Symbol Length (SL) : The total number of characters in the expression string as-is, counting operator names, variable names, delimiters, and numeric constants.
+
+Only the following operations are allowed in expressions:
+Argument Conventions
+Throughout this section, the following placeholders are used consistently:
+A, B — any valid expression: a raw variable (e.g. $close), a numeric constant, or a composed sub-expression. Analogous to arguments in standard mathematical function notation f(x).
+C — a logical/conditional expression that evaluates to a boolean, e.g. $close > $open.
+n, p — integer window sizes (number of periods or days).
+q — a quantile value in the range [0, 1].
+
+Functions (operate across all stocks on a given day)=
+  - RANK(A), ZSCORE(A), MEAN(A), STD(A), SKEW(A), KURT(A), MAX(A), MIN(A),
+    MEDIAN(A) of A across all assets at each point in time
+  - DELTA(A, n): change in A over n periods.
+  - DELAY(A, n): A delayed n periods.
+  - TS_MEAN/TS_SUM/TS_STD/TS_VAR/TS_MEDIAN/TS_MIN/TS_MAX(A, n): rolling stat over n days.
+  - TS_RANK(A, n): time-series rank of the last value over n days.
+  - TS_ZSCORE(A, n): rolling z-score over n days.
+  - TS_PCTCHANGE(A, p): percentage change over p periods.
+  - TS_ARGMAX/TS_ARGMIN(A, n): index of the max/min of A over the past n days.
+  - TS_QUANTILE(A, p, q): rolling quantile (q in 0..1) over p periods.
+  - TS_CORR(A, B, n) / TS_COVARIANCE(A, B, n): rolling corr / cov of A,B over n days.
+  - TS_MAD(A, n): rolling median absolute deviation over n days.
+  - PERCENTILE(A, q, p): quantile q of A; rolling over p periods if p given.
+  - HIGHDAY/LOWDAY(A, n): days since the highest/lowest value over n days.
+  - SUMAC(A, n): cumulative sum of A over the past n days.
+Moving Averages and Smoothing=
+  - SMA(A, n, m): simple moving average over n periods, modifier m.
+  - WMA(A, n): weighted MA over n periods.
+  - EMA(A, n): exponential MA, decay 2/(n+1).
+  - DECAYLINEAR(A, d): linearly weighted MA over d periods.
+Mathematical Operations=
+  - PROD(A, n): product of A over n days (use `*` for general multiplication).
+  - LOG(A), SQRT(A), EXP(A), ABS(A), SIGN(A), INV(A)=1/A, FLOOR(A).
+  - POW(A, n): A to the power n.
+  - MAX(A, B) / MIN(A, B): pairwise max/min.
+Conditional and Logical=
+  - COUNT(C, n): count of samples meeting condition C in the past n periods.
+  - SUMIF(A, n, C): sum of A over n periods where condition C holds.
+  - FILTER(A, C): filter multi-column A by condition C (same shape).
+  - (C1)&&(C2), (C1)||(C2): logical AND / OR.   (C1)?(A):(B): ternary.
+    C is a logical expression, e.g. `$close > $open`.
+Regression and Residual=
+  - SEQUENCE(n): single-column 1..n; always nested as arg B of REGBETA/REGRESI.
+  - REGBETA(A, B, n): regression coefficient of A on B over n samples.
+  - REGRESI(A, B, n): regression residual of A on B over n samples.
+Technical Indicators=
+  - RSI(A, n): relative strength index over n periods.
+  - MACD(A, short_window, long_window): difference of short/long EMAs.
+  - BB_MIDDLE/BB_UPPER/BB_LOWER(A, n): Bollinger middle / ±2σ bands over n periods.
+
+Notes: only the $variables above, arithmetic (`+ - * /`), logical (`&& ||`), and the operations above are allowed. Each expression must contain at least one $variable. Do NOT use any undeclared variable (`n`, `w_1`) or undefined symbol (`=`).
+
+==============================================================================
+USER
+==============================================================================
+From the hypothesis in latent memory, derive one or more valid factor
+expressions using the following reasoning steps:
+  Step 1 — Identify the core signal: which $variable(s), what mechanism
+           (momentum / volatility / mean-reversion / etc.), what window length.
+  Step 2 — Build the expression layer by layer (as many layers as needed); each
+           layer must serve a distinct purpose.
+  Step 3 — Validate each expression:
+            · Symbol Length > 80 chars
+            · ≥ 1 unique raw variables
+            · No duplicated sub-tree
+            · Hierarchically nested structure
+  Step 4 — Produce MORE structurally different expression from the same
+           hypothesis: change the operator family (smoothing / regression /
+           conditional / etc.) or the variable family — not just a window value.
+  Step 5 — For each expression: state what each component measures and why their
+           combination captures the hypothesized mechanism.
+  Step 6 — Conclude with a clearly delimited "Final Expressions" block.
+           For each expression, provide:
+            · A numbered header (Expression 1, Expression 2, etc.)
+            · The full expression string
+            · A brief annotation: what each component captures and how
+              they jointly encode the hypothesis mechanism.
+
+Leverage the full OHLCV universe. Consider under-used families if the mechanism fits.
+
+==============================================================================
+RESPONSE
+==============================================================================
+1. 
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+ 100
+ 101
+ 102
+ 103
+ 104
+ 105
+ 106
+ 107
+ 108
+ 109
+ 110
+ 111
+ 112
+ 113
+ 114
+ 115
+ 116
+ 117
+ 118
+ 119
+ 120
+ 121
+ 122
+ 123
+ 124
+ 125
+ 126
+ 127
+ 128
+ 129
+ 130
+ 131
+ 132
+ 133
+ 134
+ 135
+ 136
+ 137
+ 138
+ 139
+ 140
+ 141
+ 142
+ 143
+ 144
+ 145
+ 146
+ 147
+ 148
+ 149
+ 150
+ 151
+ 152
+ 153
+ 154
+ 155
+ 156
+ 157
+ 158
+ 159
+ 160
+ 161
+ 162
+ 163
+ 164
+ 165
+ 166
+ 167
+ 168
+ 169
+ 170
+ 171
+ 172
+ 173
+ 174
+ 175
+ 176
+ 177
+ 178
+ 179
+ 180
+ 181
+ 182
+ 183
+ 184
+ 185
+ 186
+ 187
+ 188
+ 189
+ 190
+ 191
+ 192
+ 193
+ 194
+ 195
+ 196
+ 197
+ 198
+ 199
+ 200
+ 201
+ 202
+ 203
+ 204
+ 205
+ 206
+ 207
+ 208
+ 209
+ 210
+ 211
+ 212
+ 213
+ 214
+ 215
+ 216
+ 217
+ 218
+ 219
+ 220
+ 221
+ 222
+ 223
+ 224
+ 225
+ 226
+ 227
+ 228
+ 229
+ 230
+ 231
+ 232
+ 233
+ 234
+ 235
+ 236
+ 237
+ 238
+ 239
+ 240
+ 241
+ 242
+ 243
+ 244
+ 245
+ 246
+ 247
+ 248
+ 249
+ 250
+ 251
+ 252
+ 253
+ 254
+ 255
+ 256
+ 257
+ 258
+ 259
+ 260
+ 261
+ 262
+ 263
+ 264
+ 265
+ 266
+ 267
+ 268
+ 269
+ 270
+ 271
+ 272
+ 273
+ 274
+ 275
+ 276
+ 277
+ 278
+ 279
+ 280
+ 281
+ 282
+ 283
+ 284
+ 285
+ 286
+ 287
+ 288
+ 289
+ 290
+ 291
+ 292
+ 293
+ 294
+ 295
+ 296
+ 297
+ 298
+ 299
+ 300
+ 301
+ 302
+ 303
+ 304
+ 305
+ 306
+ 307
+ 308
+ 309
+ 310
+ 311
+ 312
+ 313
+ 314
+ 315
+ 316
+ 317
+ 318
+ 319
+ 320
+ 321
+ 322
+ 323
+ 324
+ 325
+ 326
+ 327
+ 328
+ 3
+
+==============================================================================
+SCORE DETAIL
+==============================================================================
+{
+  "parse_ok": false,
+  "hypothesis": null,
+  "n_expr": 0,
+  "gate_pass": 0,
+  "gate_pass_frac": 0.0,
+  "n_families": 0,
+  "families": [],
+  "score": 0.0
+}

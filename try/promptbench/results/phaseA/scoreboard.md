@@ -1,6 +1,6 @@
 # Phase A scoreboard
 
-_generated 2026-06-18 09:23_
+_generated 2026-06-19 04:27_
 
 
 ## consistency
@@ -49,12 +49,16 @@ _generated 2026-06-18 09:23_
 | construct__git_judger_only__c2dab35a4122 | 60 | 5 | 1.0 | 0.48 | 0.169 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '2', 'observable_rate': '', 'parse_rate': '1.0', 'variety_families': '2'} |
 | construct__authored_claude_latentpaper__b35f877d9c40 | 40 | 5 | 1.0 | 0.47 | 0.166 | {'cliche_rate': '', 'gate_pass_rate': '0.1', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '1.0', 'variety_families': '5'} |
 | construct__git_optimalisasi__e9a6a179b181 | 10 | 5 | 1.0 | 0.46 | 0.408 | {'cliche_rate': '', 'gate_pass_rate': '0.4', 'n_distinct_hypotheses': '3', 'observable_rate': '', 'parse_rate': '0.6', 'variety_families': '3'} |
+| construct__authored_mixed_scoped__f4d2fe4a0389 | 20 | 6 | 1.0 | 0.433 | 0.267 | {'parse_rate': 0.833, 'gate_pass_rate': 0.167, 'variety_families': 7, 'n_distinct_hypotheses': 2} |
 | construct__authored_claude_latentpaper__b35f877d9c40 | 0 | 5 | 1.0 | 0.415 | 0.23 | {'cliche_rate': '', 'gate_pass_rate': '0.15', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '1.0', 'variety_families': '3'} |
 | construct__authored_claude_latentpaper__b35f877d9c40 | 10 | 5 | 1.0 | 0.393 | 0.229 | {'cliche_rate': '', 'gate_pass_rate': '0.067', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.8', 'variety_families': '4'} |
 | construct__working__56396e7d44b0 | 20 | 5 | 1.0 | 0.38 | 0.331 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.8', 'variety_families': '4'} |
 | construct__git_judger_only__c2dab35a4122 | 40 | 5 | 1.0 | 0.37 | 0.248 | {'cliche_rate': '', 'gate_pass_rate': '0.1', 'n_distinct_hypotheses': '2', 'observable_rate': '', 'parse_rate': '0.8', 'variety_families': '3'} |
+| construct__authored_mixed_scoped__f4d2fe4a0389 | 10 | 6 | 1.0 | 0.367 | 0.094 | {'parse_rate': 1.0, 'gate_pass_rate': 0.0, 'variety_families': 4, 'n_distinct_hypotheses': 1} |
 | construct__git_judger_only__c2dab35a4122 | 20 | 5 | 1.0 | 0.353 | 0.224 | {'cliche_rate': '', 'gate_pass_rate': '0.067', 'n_distinct_hypotheses': '1', 'observable_rate': '', 'parse_rate': '0.8', 'variety_families': '4'} |
+| construct__authored_mixed_scoped__f4d2fe4a0389 | 60 | 6 | 1.0 | 0.333 | 0.236 | {'parse_rate': 0.833, 'gate_pass_rate': 0.167, 'variety_families': 1, 'n_distinct_hypotheses': 0} |
 | construct__git_latentmas_foundation__747a96fc92c8 | 80 | 5 | 1.0 | 0.32 | 0.392 | {'cliche_rate': '', 'gate_pass_rate': '0.4', 'n_distinct_hypotheses': '1', 'observable_rate': '', 'parse_rate': '0.4', 'variety_families': '2'} |
+| construct__authored_mixed_scoped__f4d2fe4a0389 | 80 | 6 | 1.0 | 0.317 | 0.286 | {'parse_rate': 0.667, 'gate_pass_rate': 0.167, 'variety_families': 3, 'n_distinct_hypotheses': 0} |
 | construct__git_judger_only__c2dab35a4122 | 10 | 5 | 1.0 | 0.273 | 0.151 | {'cliche_rate': '', 'gate_pass_rate': '0.067', 'n_distinct_hypotheses': '1', 'observable_rate': '', 'parse_rate': '0.8', 'variety_families': '0'} |
 | construct__git_judger_only__c2dab35a4122 | 80 | 5 | 1.0 | 0.27 | 0.275 | {'cliche_rate': '', 'gate_pass_rate': '0.1', 'n_distinct_hypotheses': '1', 'observable_rate': '', 'parse_rate': '0.6', 'variety_families': '2'} |
 | construct__git_optimalisasi__e9a6a179b181 | 80 | 5 | 1.0 | 0.26 | 0.388 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '2', 'observable_rate': '', 'parse_rate': '0.4', 'variety_families': '2'} |
@@ -64,6 +68,7 @@ _generated 2026-06-18 09:23_
 | construct__working__56396e7d44b0 | 60 | 5 | 1.0 | 0.22 | 0.312 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.4', 'variety_families': '0'} |
 | construct__git_gate_deterministik__5b2d525ce336 | 10 | 5 | 1.0 | 0.2 | 0.4 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.2', 'variety_families': '2'} |
 | construct__git_gate_deterministik__5b2d525ce336 | 20 | 5 | 1.0 | 0.2 | 0.4 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.2', 'variety_families': '4'} |
+| construct__authored_mixed_scoped__f4d2fe4a0389 | 40 | 6 | 1.0 | 0.2 | 0.141 | {'parse_rate': 0.667, 'gate_pass_rate': 0.0, 'variety_families': 0, 'n_distinct_hypotheses': 2} |
 | construct__git_latentmas_foundation__747a96fc92c8 | 0 | 5 | 1.0 | 0.18 | 0.147 | {'cliche_rate': '', 'gate_pass_rate': '0.0', 'n_distinct_hypotheses': '3', 'observable_rate': '', 'parse_rate': '0.6', 'variety_families': '0'} |
 | construct__authored_claude_latentpaper__b35f877d9c40 | 80 | 5 | 1.0 | 0.18 | 0.147 | {'cliche_rate': '', 'gate_pass_rate': '0.0', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.6', 'variety_families': '1'} |
 | construct__git_latentmas_foundation__747a96fc92c8 | 40 | 5 | 1.0 | 0.16 | 0.32 | {'cliche_rate': '', 'gate_pass_rate': '0.2', 'n_distinct_hypotheses': '0', 'observable_rate': '', 'parse_rate': '0.2', 'variety_families': '1'} |
@@ -144,27 +149,31 @@ _generated 2026-06-18 09:23_
 | proposal__git_negative_memory__28c5ff48db7a | 40 | 5 | 1.0 | 0.54 | 0.12 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_gate_deterministik__f7ae36f32f36 | 60 | 5 | 1.0 | 0.54 | 0.12 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_negative_memory__28c5ff48db7a | 60 | 5 | 1.0 | 0.54 | 0.12 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
-| proposal__authored_mixed_scoped__mix3a1b2c3d | 60 | 3 | 1.0 | 0.5 | 0.374 | {'observable_rate': 0.667, 'cliche_rate': 0.667} |
 | proposal__git_gate_deterministik__f7ae36f32f36 | 0 | 5 | 1.0 | 0.48 | 0.147 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_negative_memory__28c5ff48db7a | 10 | 5 | 1.0 | 0.48 | 0.147 | {'cliche_rate': '0.4', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_negative_memory__28c5ff48db7a | 80 | 5 | 1.0 | 0.48 | 0.147 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
+| proposal__authored_mixed_scoped__mix3a1b2c3d | 60 | 6 | 1.0 | 0.45 | 0.15 | {'observable_rate': 0.167, 'cliche_rate': 0.167} |
 | proposal__git_gate_deterministik__f7ae36f32f36 | 10 | 5 | 1.0 | 0.42 | 0.24 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_retry_fix__23293d0f02bf | 20 | 5 | 1.0 | 0.42 | 0.24 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_retry_fix__23293d0f02bf | 60 | 5 | 1.0 | 0.42 | 0.147 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
+| proposal__authored_mixed_scoped__mix3a1b2c3d | 80 | 6 | 1.0 | 0.4 | 0.141 | {'observable_rate': 0.0, 'cliche_rate': 0.333} |
 | proposal__git_judger_retry_fix__23293d0f02bf | 0 | 5 | 1.0 | 0.36 | 0.224 | {'cliche_rate': '0.4', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_retry_fix__23293d0f02bf | 10 | 5 | 1.0 | 0.36 | 0.12 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_retry_fix__23293d0f02bf | 40 | 5 | 1.0 | 0.36 | 0.12 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_retry_fix__23293d0f02bf | 80 | 5 | 1.0 | 0.36 | 0.12 | {'cliche_rate': '0.2', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
+| proposal__authored_mixed_scoped__mix3a1b2c3d | 10 | 6 | 1.0 | 0.35 | 0.112 | {'observable_rate': 0.0, 'cliche_rate': 0.667} |
 | proposal__git_latentmas_foundation__f3263c479f4d | 0 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_latentmas_foundation__f3263c479f4d | 10 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_only__a82fbd3a73c5 | 20 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.4', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_latentmas_foundation__f3263c479f4d | 20 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_only__a82fbd3a73c5 | 40 | 5 | 1.0 | 0.3 | 0.19 | {'cliche_rate': '0.8', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_latentmas_foundation__f3263c479f4d | 40 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
+| proposal__authored_mixed_scoped__mix3a1b2c3d | 40 | 6 | 1.0 | 0.3 | 0.173 | {'observable_rate': 0.0, 'cliche_rate': 0.667} |
 | proposal__git_latentmas_foundation__f3263c479f4d | 60 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_latentmas_foundation__f3263c479f4d | 80 | 5 | 1.0 | 0.3 | 0.0 | {'cliche_rate': '0.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_only__a82fbd3a73c5 | 10 | 5 | 1.0 | 0.24 | 0.12 | {'cliche_rate': '1.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_only__a82fbd3a73c5 | 0 | 5 | 1.0 | 0.18 | 0.147 | {'cliche_rate': '0.8', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_gate_deterministik__f7ae36f32f36 | 80 | 5 | 1.0 | 0.18 | 0.147 | {'cliche_rate': '0.8', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
+| proposal__authored_mixed_scoped__mix3a1b2c3d | 20 | 6 | 1.0 | 0.15 | 0.15 | {'observable_rate': 0.0, 'cliche_rate': 1.0} |
 | proposal__git_judger_only__a82fbd3a73c5 | 60 | 5 | 1.0 | 0.12 | 0.147 | {'cliche_rate': '1.0', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |
 | proposal__git_judger_only__a82fbd3a73c5 | 80 | 5 | 1.0 | 0.12 | 0.147 | {'cliche_rate': '0.8', 'gate_pass_rate': '', 'n_distinct_hypotheses': '', 'observable_rate': '0.0', 'parse_rate': '', 'variety_families': ''} |

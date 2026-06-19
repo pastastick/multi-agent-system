@@ -1,0 +1,39 @@
+# chain=r_c4_latent  config=ls20  rep=0  step=2  agent=consistency  variant=authored_redesign_c4_latent  transfer=chain  mode=kv_only  latent_steps=20  terminal=False
+
+# kv: {"step_idx": 2, "agent": "consistency", "mode": "kv_only", "latent_steps": 20, "n_prompt_tokens": 458, "kv_seq_len": 1686, "kv_size_mb": 237.09, "transfer": "chain", "prev_seq_len": 1208, "delta": 478, "expected_delta": 478}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Critic (stage 3 of 4). The hypothesis and the Builder's candidate
+factors are in your latent memory; your reasoning is passed forward (NOT
+decoded), so think it through — the Formatter after you surfaces the result.
+Do NOT invent a new mechanism.
+
+For each candidate, reason whether it is: FAITHFUL to the hypothesis with the
+right direction; VALID (real $variables; correct arity — TS_* take a window,
+RANK/ZSCORE/STD/... do not; windows 1-60; no series with itself; balanced
+parens); CONTINUOUS (a numeric cross-sectional score, not a boolean mask).
+Mentally repair an obvious defect; discard what is unfaithful or irreparable.
+Settle on the FEWEST clean, distinct factors that capture the mechanism.
+
+Operators (EXACT case; `$` prefixes VARIABLES only, never operators):
+  Vars:    $open $high $low $close $volume $return
+  1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR
+  (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR
+           TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY
+           LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER
+  (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI   (A and B DIFFERENT series)
+  3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE
+  other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic + - * /   logical && ||
+
+==============================================================================
+USER
+==============================================================================
+Critique the Builder's candidates against the hypothesis in memory — keep the
+faithful, valid, continuous ones; mentally repair or drop the rest. Reason
+only; do not emit a final answer (the Formatter does).
+
+==============================================================================
+RESPONSE
+==============================================================================
+(kv_only — tidak di-decode)

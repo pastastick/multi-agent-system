@@ -1,24 +1,24 @@
 consistency:
 - aliases: []
-  hash: 7589ba6dca2a
+  hash: 17e655145ba4
   mode: kv_and_text
   orig_name: consistency
-  path: variants/consistency/consistency__authored_redesign_c3_finalizer__7589ba6dca2a.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c3_finalizer.yaml
-    source_id: authored_redesign_c3_finalizer
-  variant_id: consistency__authored_redesign_c3_finalizer__7589ba6dca2a
-- aliases: []
-  hash: 78bd7b48b3cf
-  mode: kv_and_text
-  orig_name: consistency
-  path: variants/consistency/consistency__authored_redesign_c4_hybrid__78bd7b48b3cf.yaml
+  path: variants/consistency/consistency__authored_redesign_c4_hybrid__17e655145ba4.yaml
   source:
     kind: authored
     ref: variants/_authored/redesign_c4_hybrid.yaml
     source_id: authored_redesign_c4_hybrid
-  variant_id: consistency__authored_redesign_c4_hybrid__78bd7b48b3cf
+  variant_id: consistency__authored_redesign_c4_hybrid__17e655145ba4
+- aliases: []
+  hash: 2ed160a25619
+  mode: kv_only
+  orig_name: consistency
+  path: variants/consistency/consistency__authored_redesign_c4_latent__2ed160a25619.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  variant_id: consistency__authored_redesign_c4_latent__2ed160a25619
 - aliases: []
   hash: 88133558d50d
   mode: kv_only
@@ -30,15 +30,15 @@ consistency:
     source_id: authored_claude_latentpaper
   variant_id: consistency__authored_claude_latentpaper__88133558d50d
 - aliases: []
-  hash: b09ae18a0aa9
-  mode: kv_only
+  hash: 8f816d66d185
+  mode: kv_and_text
   orig_name: consistency
-  path: variants/consistency/consistency__authored_redesign_c4_latent__b09ae18a0aa9.yaml
+  path: variants/consistency/consistency__authored_redesign_c3_finalizer__8f816d66d185.yaml
   source:
     kind: authored
-    ref: variants/_authored/redesign_c4_latent.yaml
-    source_id: authored_redesign_c4_latent
-  variant_id: consistency__authored_redesign_c4_latent__b09ae18a0aa9
+    ref: variants/_authored/redesign_c3_finalizer.yaml
+    source_id: authored_redesign_c3_finalizer
+  variant_id: consistency__authored_redesign_c3_finalizer__8f816d66d185
 - aliases:
   - kind: git
     label: current_newEvol
@@ -96,11 +96,6 @@ consistency:
     orig_name: consistency
     ref: c5fb7fe
     source_id: git_judger_retry_fix
-  - kind: git
-    label: branch_rework
-    orig_name: consistency
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: e3954dbf4776
   mode: kv_only
   orig_name: consistency
@@ -112,6 +107,20 @@ consistency:
     source_id: git_judger_only
   variant_id: consistency__git_judger_only__e3954dbf4776
 construct:
+- aliases:
+  - kind: authored
+    orig_name: construct
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  hash: 39759a3e16eb
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__authored_redesign_c3_finalizer__39759a3e16eb.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c3_finalizer.yaml
+    source_id: authored_redesign_c3_finalizer
+  variant_id: construct__authored_redesign_c3_finalizer__39759a3e16eb
 - aliases:
   - kind: git
     label: current_newEvol
@@ -144,16 +153,6 @@ construct:
     source_id: git_gate_deterministik
   variant_id: construct__git_gate_deterministik__5b2d525ce336
 - aliases: []
-  hash: 67587970e246
-  mode: kv_and_text
-  orig_name: construct
-  path: variants/construct/construct__authored_redesign_c2_solo__67587970e246.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c2_solo.yaml
-    source_id: authored_redesign_c2_solo
-  variant_id: construct__authored_redesign_c2_solo__67587970e246
-- aliases: []
   hash: 747a96fc92c8
   mode: kv_only
   orig_name: construct
@@ -165,16 +164,6 @@ construct:
     source_id: git_latentmas_foundation
   variant_id: construct__git_latentmas_foundation__747a96fc92c8
 - aliases: []
-  hash: 90c459736258
-  mode: kv_only
-  orig_name: construct
-  path: variants/construct/construct__authored_redesign_c3_finalizer__90c459736258.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c3_finalizer.yaml
-    source_id: authored_redesign_c3_finalizer
-  variant_id: construct__authored_redesign_c3_finalizer__90c459736258
-- aliases: []
   hash: b35f877d9c40
   mode: kv_only
   orig_name: construct
@@ -184,6 +173,20 @@ construct:
     ref: variants/_authored/claude_latentpaper.yaml
     source_id: authored_claude_latentpaper
   variant_id: construct__authored_claude_latentpaper__b35f877d9c40
+- aliases:
+  - kind: authored
+    orig_name: construct
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  hash: b6dfc7822b7a
+  mode: kv_and_text
+  orig_name: construct
+  path: variants/construct/construct__authored_redesign_c2_solo__b6dfc7822b7a.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c2_solo.yaml
+    source_id: authored_redesign_c2_solo
+  variant_id: construct__authored_redesign_c2_solo__b6dfc7822b7a
 - aliases:
   - kind: git
     label: guidance_reentry
@@ -200,11 +203,6 @@ construct:
     orig_name: construct
     ref: c5fb7fe
     source_id: git_judger_retry_fix
-  - kind: git
-    label: branch_rework
-    orig_name: construct
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: c2dab35a4122
   mode: kv_only
   orig_name: construct
@@ -226,26 +224,6 @@ construct:
     ref: e63bd08
     source_id: git_optimalisasi
   variant_id: construct__git_optimalisasi__e9a6a179b181
-- aliases: []
-  hash: f4696b222487
-  mode: kv_and_text
-  orig_name: construct
-  path: variants/construct/construct__authored_redesign_c4_hybrid__f4696b222487.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c4_hybrid.yaml
-    source_id: authored_redesign_c4_hybrid
-  variant_id: construct__authored_redesign_c4_hybrid__f4696b222487
-- aliases: []
-  hash: fb9d9a33e628
-  mode: kv_only
-  orig_name: construct
-  path: variants/construct/construct__authored_redesign_c4_latent__fb9d9a33e628.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c4_latent.yaml
-    source_id: authored_redesign_c4_latent
-  variant_id: construct__authored_redesign_c4_latent__fb9d9a33e628
 crossover:
 - aliases:
   - kind: git
@@ -315,12 +293,7 @@ crossover:
     ref: 117540a
     source_id: git_latentmas_foundation
   variant_id: crossover__git_latentmas_foundation__b9df8c72a21e
-- aliases:
-  - kind: git
-    label: branch_rework
-    orig_name: crossover_judger
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
+- aliases: []
   hash: f936a1f55cc3
   mode: kv_only
   orig_name: crossover_judger
@@ -348,11 +321,6 @@ feedback:
     orig_name: feedback
     ref: c5fb7fe
     source_id: git_judger_retry_fix
-  - kind: git
-    label: branch_rework
-    orig_name: feedback
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: 2ad57f94fcd5
   mode: kv_and_text
   orig_name: feedback
@@ -463,11 +431,6 @@ introspect:
     orig_name: introspect
     ref: 66b3768
     source_id: git_negative_memory
-  - kind: git
-    label: branch_rework
-    orig_name: introspect
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: 6615b1077062
   mode: kv_and_text
   orig_name: introspect
@@ -517,15 +480,15 @@ judger:
     source_id: working
   variant_id: judger__working__158c662151be
 - aliases: []
-  hash: 1e22ef0332c7
+  hash: 1ec27859540b
   mode: kv_and_text
   orig_name: judger
-  path: variants/judger/judger__authored_redesign_c4_latent__1e22ef0332c7.yaml
+  path: variants/judger/judger__authored_redesign_c4_hybrid__1ec27859540b.yaml
   source:
     kind: authored
-    ref: variants/_authored/redesign_c4_latent.yaml
-    source_id: authored_redesign_c4_latent
-  variant_id: judger__authored_redesign_c4_latent__1e22ef0332c7
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  variant_id: judger__authored_redesign_c4_hybrid__1ec27859540b
 - aliases: []
   hash: 495844e659b3
   mode: kv_and_text
@@ -536,16 +499,6 @@ judger:
     ref: variants/_authored/claude_latentpaper.yaml
     source_id: authored_claude_latentpaper
   variant_id: judger__authored_claude_latentpaper__495844e659b3
-- aliases: []
-  hash: 587369edba93
-  mode: kv_and_text
-  orig_name: judger
-  path: variants/judger/judger__authored_redesign_c4_hybrid__587369edba93.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c4_hybrid.yaml
-    source_id: authored_redesign_c4_hybrid
-  variant_id: judger__authored_redesign_c4_hybrid__587369edba93
 - aliases:
   - kind: git
     label: negative_memory
@@ -584,11 +537,6 @@ judger:
     orig_name: judger
     ref: 82cf925
     source_id: git_qa_style_redesign
-  - kind: git
-    label: branch_rework
-    orig_name: judger
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: 831dfc8c17d3
   mode: kv_and_text
   orig_name: judger
@@ -610,6 +558,16 @@ judger:
     ref: e63bd08
     source_id: git_optimalisasi
   variant_id: judger__git_optimalisasi__d5a65cd21336
+- aliases: []
+  hash: efca26f910e0
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__authored_redesign_c4_latent__efca26f910e0.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  variant_id: judger__authored_redesign_c4_latent__efca26f910e0
 mutation:
 - aliases:
   - kind: git
@@ -668,12 +626,7 @@ mutation:
     ref: 117540a
     source_id: git_latentmas_foundation
   variant_id: mutation__git_latentmas_foundation__89ea1ceab2b5
-- aliases:
-  - kind: git
-    label: branch_rework
-    orig_name: mutation_judger
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
+- aliases: []
   hash: 91b81d9e729d
   mode: kv_and_text
   orig_name: mutation_judger
@@ -695,12 +648,7 @@ mutation:
     ref: 117540a
     source_id: git_latentmas_foundation
   variant_id: mutation__git_latentmas_foundation__9652251695ae
-- aliases:
-  - kind: git
-    label: branch_rework
-    orig_name: mutation_reflection
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
+- aliases: []
   hash: bae0f91ef6be
   mode: kv_only
   orig_name: mutation_reflection
@@ -723,6 +671,28 @@ mutation:
     source_id: git_judger_only
   variant_id: mutation__git_judger_only__c472b1e75da1
 proposal:
+- aliases:
+  - kind: authored
+    orig_name: proposal
+    ref: variants/_authored/redesign_c3_finalizer.yaml
+    source_id: authored_redesign_c3_finalizer
+  - kind: authored
+    orig_name: proposal
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  - kind: authored
+    orig_name: proposal
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  hash: 0c805e675084
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__authored_redesign_c2_solo__0c805e675084.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c2_solo.yaml
+    source_id: authored_redesign_c2_solo
+  variant_id: proposal__authored_redesign_c2_solo__0c805e675084
 - aliases: []
   hash: 23293d0f02bf
   mode: kv_only
@@ -766,28 +736,6 @@ proposal:
     source_id: git_negative_memory
   variant_id: proposal__git_negative_memory__28c5ff48db7a
 - aliases:
-  - kind: authored
-    orig_name: proposal
-    ref: variants/_authored/redesign_c3_finalizer.yaml
-    source_id: authored_redesign_c3_finalizer
-  - kind: authored
-    orig_name: proposal
-    ref: variants/_authored/redesign_c4_hybrid.yaml
-    source_id: authored_redesign_c4_hybrid
-  - kind: authored
-    orig_name: proposal
-    ref: variants/_authored/redesign_c4_latent.yaml
-    source_id: authored_redesign_c4_latent
-  hash: 53cb52b86234
-  mode: kv_only
-  orig_name: proposal
-  path: variants/proposal/proposal__authored_redesign_c2_solo__53cb52b86234.yaml
-  source:
-    kind: authored
-    ref: variants/_authored/redesign_c2_solo.yaml
-    source_id: authored_redesign_c2_solo
-  variant_id: proposal__authored_redesign_c2_solo__53cb52b86234
-- aliases:
   - kind: git
     label: guidance_reentry
     orig_name: proposal
@@ -798,11 +746,6 @@ proposal:
     orig_name: proposal
     ref: 82cf925
     source_id: git_qa_style_redesign
-  - kind: git
-    label: branch_rework
-    orig_name: proposal
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: a82fbd3a73c5
   mode: kv_only
   orig_name: proposal
@@ -877,11 +820,6 @@ repair:
     orig_name: repair
     ref: 66b3768
     source_id: git_negative_memory
-  - kind: git
-    label: branch_rework
-    orig_name: repair
-    ref: feat/latentmas-rework
-    source_id: git_branch_rework
   hash: 7fd898c91784
   mode: kv_and_text
   orig_name: repair

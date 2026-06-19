@@ -334,49 +334,81 @@ chain.json: `delta` vs `expected_delta`). KNN auto-OFF saat latent_steps>0
 
 ---
 
-## 11. REDESIGN PROMPT v2 — ABLATION ALUR WORKFLOW (2026-06-19)
+## 11. REDESIGN PROMPT — ABLATION ALUR WORKFLOW (2026-06-19)
 
 > Dibuat SETELAH user menganalisa output Phase A/B nyata + diskusi dengan Claude.
 > Belum di-run GPU (prompt + chain + dry-run SAJA). Branch `feat/prompt-redesign-v2`.
 
-**Diagnosis inti (dari artefak `results/phaseA` + `results/phaseB/{pc_2agent,pcj_judger}`):**
+### 11a. Diagnosis (dari artefak phaseA + phaseB)
+
 KV laten **lossy untuk payload SIMBOLIK, bukan untuk gist**. Hipotesis (gist)
 selamat melintasi hop laten; EKSPRESI (string presisi) TIDAK — judger
 menghalusinasi operator (`TS_EMA`, `MOA`) → gate 0/2. 4 agen = 3 hop = error
-menumpuk (*compound failure*). Bukti pendukung: (a) contoh di system-prompt
-proposal DISALIN verbatim → `cliche=true`; (b) `diversity_hint` di user-prompt
-judger lama menyuruh "ganti family" → judger MALAH re-derive (smoking gun);
-(c) construct meng-emit BOOLEAN MASK, bukan skor kontinu; (d) ls60 = glitch/
-repetisi (`smoothedoothed`, `2,2,2,5,5`); (e) 4 varian consistency identik,
-SILENT (kv_only), inert. **Prinsip desain**: begitu ekspresi jadi simbol, jangan
-biarkan ia melintasi hop laten lagi → kurangi agen pasca-commit ATAU oper sebagai
-TEKS.
+menumpuk (*compound failure*). Bukti dari artefak nyata:
+- (a) slot-template di system-prompt proposal (e.g. `"When <columns> show <temporal
+  pattern> over <horizon>"`) **DIPARROT verbatim** oleh 4B alih-alih diisi → respons
+  construct berisi `"temporal pattern>"` mentah, tidak pernah mencapai blok EXPRESSION.
+- (b) `diversity_hint` di user-prompt judger lama menyuruh "ganti family" → judger
+  MALAH re-derive dari nol (smoking gun: `r_c4_hybrid ls20 rep0` judger output looping
+  `"the final lines::"`, `"Hesis:"`, token rusak).
+- (c) construct meng-emit BOOLEAN MASK (`$close > $open && ...`), bukan skor kontinu.
+- (d) ls60 = glitch/repetisi (`smoothedoothed`, `2,2,2,5,5`).
+- (e) `max_new_tokens: 512` terlalu sempit — model kehabisan token sebelum menulis
+  blok HYPOTHESIS/EXPRESSION (truncation root cause).
 
-**Keputusan user**: "build all, benchmark decides" + WAJIB prompt berbeda per
-skenario (tugas role berbeda per alur). PROPOSAL sengaja IDENTIK lintas alur
-(variabel terkontrol). Perbaikan prompt yang ditanam di semua alur: contoh
-non-copyable (slot template `<...>`), anti-cliché ("jangan parafrase avoided
-pattern"), WAJIB skor kontinu (bukan boolean mask), BUANG self-counting
-(SL/feature → biar regulator), judger di-strip dari `diversity_hint`+`direction`,
-read-back hipotesis 1 baris (anti-drift, angkat laten→token).
+**Prinsip desain**: begitu ekspresi jadi simbol, jangan biarkan ia melintasi hop
+laten lagi → kurangi agen pasca-commit ATAU oper sebagai TEKS. Agen yang men-DECODE
+ekspresi memegang tanggung jawab validitas simbol; agen yang tidak men-decode tidak
+perlu tahu bahwa akan ada agen lain yang membuat ekspresi (isolasi tugas).
+
+### 11b. Versi prompt dan keputusan desain
+
+**v2** (sebelumnya): perbaikan awal — slot template non-copyable `<...>`, anti-cliché,
+skor kontinu wajib, buang self-counting, judger di-strip dari `diversity_hint`.
+Ditemukan masih gagal karena: (i) slot template `<...>` TETAP diparrot 4B; (ii)
+`max_new_tokens: 512` menyebabkan truncation sebelum blok final; (iii) agen tahu
+tugas agen lain → cross-contamination instruksi.
+
+**v3 (2026-06-19 — CURRENT)**: full redesign mengikuti struktur/format/style/tone
+baseline `authored_mixed_scoped` yang TERBUKTI stabil (`r_mixed_scoped` score 1.0).
+Perubahan utama dari v2:
+- **Proposal**: adopsi kerangka prosa baseline (WHAT AN ALPHA FACTOR IS / WHAT AN
+  OPTIMAL HYPOTHESIS LOOKS LIKE / KNOWLEDGE–OBSERVATION–JUSTIFICATION–SPECIFICATION /
+  LEVEL OF DETAIL). Slot template `<...>` DIHAPUS total — diganti instruksi prosa
+  ("describe the actual mechanism in your own words; do not write a template").
+- **Agen decode (Builder/Finalizer/Validator/Formatter)**: adopsi pustaka operator
+  DESKRIPTIF baseline (`Argument conventions A/B/C/n/p/q` + tiap op dijelaskan) dan
+  pola penalaran bertahap `Step 1..N` dari user-prompt baseline construct. Setiap agen
+  dipimpin dengan "your PRIMARY responsibility is symbolic validity."
+- **Isolasi tugas ketat**: proposal tidak tahu DSL/operator sama sekali. Agen
+  kv_only (Researcher/Reviewer/Critic) hanya berpikir di tingkat mekanisme/family —
+  "exact operator names, windows, and syntax are settled when factors are written out."
+  Tidak ada lintas-referensi antar agen dalam prompt.
+- **`max_new_tokens: 512 → 20000`** di semua decoded agents (akar truncation).
+- Invariant §11 dipertahankan: continuous-score rule, no self-counting (→ regulator),
+  parser contract `HYPOTHESIS:`/`EXPRESSION N:`, text hand-off `prior_factors`.
 
 **Sumber prompt**: `variants/_authored/redesign_c{2_solo,3_finalizer,4_hybrid,4_latent}.yaml`
 (multi-agen; `collect_variants` → per-agen `authored_redesign_c*`). **4 chain** di
 `chains/chain_manifest.yaml`:
 
-| chain | topologi | medium ekspresi | mengisolasi |
-|---|---|---|---|
-| `r_c2_solo` | proposal[kv_only] → construct[kv_and_text, TERMINAL] | pure-laten, commit @terminal | builder serba-bisa; 0 hop pasca-commit (paling robust) |
-| `r_c3_finalizer` | proposal → construct[kv_only] → consistency[kv_and_text, TERMINAL] | pure-laten, commit @terminal | apakah refinement laten > c2? |
-| `r_c4_hybrid` | proposal → construct → consistency → judger (semua kv_and_text) | **TEKS** (`prior_factors`) | full division-of-labor + kanal simbolik anti-korupsi |
-| `r_c4_latent` | idem c4_hybrid tapi middle **kv_only** | pure-laten (lewat KV) | CONTROL: efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3) |
+| chain | topologi | peran agen | medium ekspresi | mengisolasi |
+|---|---|---|---|---|
+| `r_c2_solo` | proposal[kv_only] → construct[kv_and_text, TERMINAL] | Proposal → Builder | pure-laten, commit @terminal | builder serba-bisa; 0 hop pasca-commit (paling robust) |
+| `r_c3_finalizer` | proposal → construct[kv_only] → consistency[kv_and_text, TERMINAL] | Proposal → Researcher → Finalizer | pure-laten, commit @terminal | apakah eksplorasi laten (Researcher) menambah nilai di atas c2? |
+| `r_c4_hybrid` | proposal → construct → consistency → judger (semua kv_and_text) | Proposal → Builder → Validator → Formatter | **TEKS** (`prior_factors`) | full division-of-labor + kanal simbolik anti-korupsi (anti-lossy) |
+| `r_c4_latent` | idem c4_hybrid tapi middle **kv_only** | Proposal → Researcher → Reviewer → Formatter | pure-laten (lewat KV) | CONTROL: efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3) |
+
+Dedup content: proposal identik di semua alur (1 file, 3 alias — variabel terkontrol).
+Builder (c2/c4_hybrid) identik. Researcher (c3/c4_latent) identik. Resolusi manifest
+via `source_id` → 0 ambiguitas, dry-run 8/8 ok.
 
 **Mekanisme hand-off TEKS (hanya c4_hybrid)**: `runners/bench_chain.py` —
 helper `_factor_block()` + dict `carried`; tiap langkah yang DI-DECODE menyuntik
-blok `HYPOTHESIS:`/`EXPRESSION N:` (hasil `parse_hypothesis_exprs`, sama dgn
-scorer) ke var `prior_factors` langkah berikut. **Backward-compatible**: chain
-lain tak mereferensikan var itu → no-op (Jinja `default('')`). Langkah `kv_only`
-tak meng-update `carried` → alur pure-laten tak pernah pakai teks.
+blok `HYPOTHESIS:`/`EXPRESSION N:` (hasil `parse_hypothesis_exprs`) ke var
+`prior_factors` langkah berikut. Chain lain tak mereferensikan var itu → no-op
+(`default('')`). Langkah `kv_only` tak meng-update `carried` → alur pure-laten
+tak pernah pakai teks.
 
 **Cara run (GPU)**:
 ```bash
@@ -388,5 +420,5 @@ Bandingkan di `results/phaseB/scoreboard.{csv,md}`: `parse_rate`, `gate_pass_rat
 `variety_families`, `n_distinct_hypotheses`, `score_std`. Knob: ls rendah (10-20)
 mungkin jaga fidelity simbolik > ls60 (glitch ls60 sebagian murni degradasi 4B).
 
-**Status**: dry-run 8/8 ok (4 chain × ls{0,60}), chain lama tak regresi, py_compile
-ok. **Hasil & keputusan: PENDING GPU.**
+**Status**: v3 prompt selesai (2026-06-19). dry-run 8/8 ok (4 chain × ls{0,60}),
+chain lama tak regresi. **Hasil & keputusan: PENDING GPU.**

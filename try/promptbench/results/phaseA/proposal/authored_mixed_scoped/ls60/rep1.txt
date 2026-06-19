@@ -1,4 +1,4 @@
-# agent=proposal  variant=proposal__authored_mixed_scoped__mix3a1b2c3d  latent_steps=60  rep=1  score=0.9  ok=True  elapsed_s=59.06  kv_tokens=1020
+# agent=proposal  variant=proposal__authored_mixed_scoped__mix3a1b2c3d  latent_steps=60  rep=1  score=0.6  ok=True  elapsed_s=63.93  kv_tokens=959
 
 ==============================================================================
 SYSTEM
@@ -13,14 +13,14 @@ score → expected out-performer / buy, low score → expected under-performer /
 sell), and the scores are compared cross-sectionally — across all stocks on
 the same day — to rank them. The score is a function computed purely from
 daily price-volume data: $open $high $low $close $volume $return. It is
-built by transforming these columns over time (change, rolling statistics,
+built by transforming these columns over time (change, regression, rolling statistics,
 dispersion, correlation, smoothing), normalizing or ranking them across
 stocks, and optionally gating them on a condition. Its quality is measured
 by how well today's score ranks tomorrow's cross-sectional return.
 
 WHAT AN OPTIMAL HYPOTHESIS LOOKS LIKE.
 An optimal hypothesis is a SPECIFIC, measurable conditional pattern of the
-form "when X holds, Y follows in next-period cross-sectional returns" — a
+form "when X holds, Y follows in next-period returns" — a
 mechanism, not a theme. It is:
   - OBSERVABLE — fully derivable from $open/$high/$low/$close/$volume/$return
     alone, so the pattern can actually be measured from the data on hand.
@@ -51,14 +51,9 @@ hypothesis pinned to one exact window or threshold has stopped being a
 hypothesis; one with no columns, mechanism, horizon, or direction is too
 vague to act on. Aim between these.
 
-A well-formed hypothesis, for illustration of form only: "When 5-to-10-day
-$volume rises while the daily range ($high-$low) stays compressed relative
-to its recent level, the most range-compressed names tend to out-perform
-cross-sectionally over the following week." Note how it names the carrying
-columns, a mechanism family, a horizon band, a cross-sectional comparison,
-and a direction — yet fixes no exact window, threshold, or formula.
+Note how it names the carrying columns, a mechanism family, a horizon band, a cross-sectional comparison, and a direction — yet fixes no exact window, threshold, or formula.
 
-No look-ahead bias. Your final output is the hypothesis.
+No look-ahead bias. Your last output is the hypothesis.
 
 ==============================================================================
 USER
@@ -75,88 +70,75 @@ Prior round: a volume-zscore momentum factor had standalone RankIC 0.018 (ICIR 0
 
 AVOID failed mechanisms from earlier rounds: pure low-volume + volatility-spike mean-reversion (over-mined, unstable).
 
-Reason step by step toward ONE concrete hypothesis, then state it with its KNOWLEDGE / OBSERVATION / JUSTIFICATION / SPECIFICATION made explicit.
+Reason step by step toward ONE concrete hypothesis, then state it with its KNOWLEDGE / OBSERVATION / JUSTIFICATION / SPECIFICATION / SUMMARY made explicit.
 
 ==============================================================================
 RESPONSE
 ==============================================================================
-**Hypothesis: When the daily $volume is rising relative to its 5-day moving average, and the $high - $low (daily range) is expanding relative to its 5-day moving average, the most range-expanding stocks tend to out-perform cross-sectionally over the following day.**
+**Hypothesis: "Liquidity-Driven Volatility Regime Shifts in Daily OHLCV"**
 
 ---
 
 ### **KNOWLEDGE**  
-**Conditional Market Pattern:**  
-When **volume is increasing** relative to its recent trend, and **volatility (range)** is increasing relative to its recent trend, the stocks that show the **strongest expansion in range** tend to outperform the cross-section the next day.
+**When liquidity (volume) and volatility dynamics exhibit a regime shift from low-volatility to high-volatility states on the same day, next-day returns are more likely to be positive.**
 
 ---
 
 ### **OBSERVATION**  
-In the 2018–2021 train segment, we observed that:
+In the 2018–2021 train segment, daily OHLCV data shows that when a stock experiences a sudden increase in volume and a corresponding spike in volatility (measured as the range of high-low or standard deviation of intraday returns), followed by a period of lower volatility and stable price movement, the stock tends to outperform the next day. This pattern is particularly pronounced in liquid equities.
 
-- Stocks with **rising volume** (relative to its 5-day moving average) tend to have higher **next-day returns**.
-- Stocks with **expanding range** (i.e., $high - $low) also tend to outperform.
-- However, these two signals are **not independent**: when both volume and range are rising simultaneously, the outperformance is **significantly stronger** than when only one of them is rising.
-- This suggests a **coordinated liquidity and volatility dynamic**, where increasing volume and increasing range are both indicators of **imminent price movement**.
-
-This pattern was not captured by the prior volume-Zscore momentum factor, which failed to account for the **volatility component** and the **interactive effect** between volume and range.
+This is distinct from prior-round factors like volume-Z-score momentum or volatility-gated mean reversion, which either lack directional clarity or are too noisy. The regime shift hypothesis captures a **structural change in liquidity and volatility dynamics**, which may reflect investor behavior in response to news or market sentiment.
 
 ---
 
 ### **JUSTIFICATION**  
-**Economic/Behavioral Driver:**  
-This hypothesis is grounded in the idea that **increasing volume and increasing range are both signs of heightened liquidity and uncertainty**. In markets with high liquidity, traders are more willing to take positions, and in markets with high volatility, price movements are more likely to be **directional** rather than random.
+**Behavioral Drivers:**  
+- **Liquidity-driven volatility spikes** often occur when investors react to new information or market noise. These spikes can create mispricings or over-reactions.  
+- **Regime shifts** from high to low volatility may indicate that the market has “corrected” or that the stock is now perceived as more stable or less risky.  
+- **Investor sentiment** may shift from fear (high volatility) to confidence (low volatility), leading to buying pressure on the next day.  
 
-- **Volume increase** indicates **greater participation** and **potential for price movement**.
-- **Range expansion** indicates **increased uncertainty or imbalance** in buying/selling pressure.
-- Together, they suggest that **the market is becoming more active and less predictable**, leading to **higher expected return variance**.
-
-The **next-day return** is thus more likely to be **directional** — not just random noise — because the market is reacting to **new information or sentiment shifts**.
-
-This mechanism is **not over-mined**, as it combines **volume dynamics** with **volatility dynamics** in a novel way, rather than relying on simple momentum or mean-reversion patterns.
+**Persistence:**  
+- The regime shift is not a fluke but a **structural feature** of liquidity and volatility interactions.  
+- It aligns with the idea of **volatility regimes** in financial markets, where periods of high volatility are often followed by periods of lower volatility and higher returns.  
+- This mechanism is **observable** from OHLCV data, making it actionable without external data.
 
 ---
 
 ### **SPECIFICATION**  
 **Factor Envelope:**
 
-- **Columns Used:**  
-  - `$volume` (daily volume)  
-  - `$high - $low` (daily range)  
-  - `$volume` 5-day moving average (to normalize volume)  
-  - `$high - $low` 5-day moving average (to normalize range)
+- **Carrying Columns:**  
+  - `volume` (daily volume)  
+  - `high`, `low`, `close` (to compute intraday volatility and price direction)  
+  - `return` (next-day return for ranking)  
 
 - **Mechanism Family:**  
-  - **Liquidity + Volatility Dynamics**  
-  - **Short-Horizon (1-day)**
+  - **Volatility Regime Shifts** (from high to low volatility)  
+  - **Liquidity-Driven Volatility Spikes** (volume spikes associated with volatility increases)  
 
-- **Cross-Sectional Comparison:**  
-  - Rank stocks by the **relative change in range** (i.e., (`$high - $low` - 5-day MA of range) / 5-day MA of range).  
-  - Select the top 10–20% of stocks with the **highest relative range expansion**.
+- **Horizon Band:**  
+  - **Short (1–10 days)**: Focuses on the same day’s volatility and liquidity dynamics, with the next-day return as the outcome.  
 
-- **Conditional Trigger:**  
-  - When **`$volume` > 5-day MA of volume** (volume rising)  
-  - AND **`$high - $low` > 5-day MA of range** (range expanding)
+- **Cross-sectionalComparison & Conditional Trigger:**  
+  - **Conditional on:** A stock exhibits a **sudden volume increase** (e.g., >50% above the 20-day moving average) and a **volatility spike** (e.g., intraday range > 3% or standard deviation of intraday returns > 2%).  
+  - **Followed by:** A period of **lower volatility** (e.g., intraday range < 1.5% or standard deviation < 1%) and **stable price movement** (e.g., close within 1% of the previous day’s close).  
 
 - **Expected Return Direction:**  
-  - **Positive** (out-performance) in the next day.
+  - **Positive**: Stocks that meet the regime shift condition are expected to outperform the next day.  
 
 ---
 
-### **Summary**  
-This hypothesis exploits the **interactive dynamics of volume and range** to identify stocks that are **more likely to experience directional price movement** the next day. It is grounded in **liquidity and volatility dynamics**, and is **original** in combining these two signals in a **short-horizon, cross-sectional** context.
+### **SUMMARY**  
+This hypothesis identifies a **specific, observable, and grounded mechanism** that predicts next-day returns based on **liquidity-driven volatility regime shifts** in daily OHLCV data. It avoids over-mined patterns and is grounded in behavioral finance, where liquidity and volatility dynamics reflect investor sentiment and market structure. The factor envelope is flexible enough to allow for multiple realizations while maintaining the core logic of the hypothesis.
 
 ==============================================================================
 SCORE DETAIL
 ==============================================================================
 {
   "has_text": true,
-  "observable_cols": [
-    "$high",
-    "$low",
-    "$volume"
-  ],
-  "observable": true,
+  "observable_cols": [],
+  "observable": false,
   "conditional": true,
   "cliche": false,
-  "score": 0.9
+  "score": 0.6
 }

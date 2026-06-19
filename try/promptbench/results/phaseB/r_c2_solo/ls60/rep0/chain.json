@@ -1,0 +1,119 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 0,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.0,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1028,
+      "kv_size_mb": 144.56,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1028,
+      "expected_delta": 1028,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2617,
+      "kv_size_mb": 368.02,
+      "transfer": "chain",
+      "prev_seq_len": 1028,
+      "delta": 1589,
+      "expected_delta": 1596,
+      "text_len": 3938
+    }
+  ],
+  "elapsed_s": 95.26,
+  "score_detail": {
+    "parse_ok": false,
+    "hypothesis": null,
+    "n_expr": 0,
+    "gate_pass": 0,
+    "gate_pass_frac": 0.0,
+    "n_families": 0,
+    "families": [],
+    "score": 0.0,
+    "parser_ok": false,
+    "parse_trace": {
+      "primary_ok": false,
+      "fallback_used": null,
+      "n_expr": 0
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1028,
+          "kv_size_mb": 144.56,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1028,
+          "expected_delta": 1028,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2617,
+          "kv_size_mb": 368.02,
+          "transfer": "chain",
+          "prev_seq_len": 1028,
+          "delta": 1589,
+          "expected_delta": 1596,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "unparseable: parser struktur gagal"
+      ],
+      "metrics": {
+        "len": 3938,
+        "repetition": 0.029,
+        "longest_run": 1,
+        "output_tokens": 1127,
+        "runaway": false,
+        "parser_ok": false
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "unparseable: parser struktur gagal"
+      ]
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

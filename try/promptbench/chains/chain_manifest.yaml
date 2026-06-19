@@ -40,6 +40,13 @@ chains:
       - { agent: proposal,  variant: winner, transfer: none }
       - { agent: construct, variant: winner, transfer: chain }
 
+  # ── 2-agent: mixed_scoped variant (user-authored) ─────────────────────────
+  r_mixed_scoped:
+    desc: "proposal[authored_mixed_scoped] → construct[authored_mixed_scoped] (terminal decode)"
+    steps:
+      - { agent: proposal,  variant: authored_mixed_scoped, transfer: none }
+      - { agent: construct, variant: authored_mixed_scoped, transfer: chain }
+
   # ── 2-agent: evolution seed → proposal ────────────────────────────────────
   mut_proposal:
     desc: "mutation → proposal (apakah mutation KV mengubah arah hipotesis?)"

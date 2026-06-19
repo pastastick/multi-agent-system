@@ -1,0 +1,191 @@
+{
+  "chain": "r_c4_hybrid",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 2,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.55,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1028,
+      "kv_size_mb": 144.56,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1028,
+      "expected_delta": 1028,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2617,
+      "kv_size_mb": 368.02,
+      "transfer": "chain",
+      "prev_seq_len": 1028,
+      "delta": 1589,
+      "expected_delta": 1596,
+      "text_len": 298
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 1174,
+      "kv_seq_len": 3844,
+      "kv_size_mb": 540.56,
+      "transfer": "chain",
+      "prev_seq_len": 2617,
+      "delta": 1227,
+      "expected_delta": 1234,
+      "text_len": 1326
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 545,
+      "kv_seq_len": 4442,
+      "kv_size_mb": 624.66,
+      "transfer": "chain",
+      "prev_seq_len": 3844,
+      "delta": 598,
+      "expected_delta": 605,
+      "text_len": 293
+    }
+  ],
+  "elapsed_s": 71.79,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When recent price declines are followed by a sudden increase in volume, it signals a potential reversal in returns.",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "time_series"
+    ],
+    "n_families": 1,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE(TS_20DAY($volume), 20) - TS_ZSCORE(TS_20DAY($close), 20)",
+        "gate_ok": false,
+        "reason": "arity: `TS_20DAY` is not a known function. Use only functions from the allowed list. `TS_20DAY` is not a known function. Use only functions from the allowed list.",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "(TS_ARGMAX($volume, 20) - TS_ARGMAX($close, 20)) / TS_STD($volume, 20)",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.55,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1028,
+          "kv_size_mb": 144.56,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1028,
+          "expected_delta": 1028,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2617,
+          "kv_size_mb": 368.02,
+          "transfer": "chain",
+          "prev_seq_len": 1028,
+          "delta": 1589,
+          "expected_delta": 1596,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 1174,
+          "kv_seq_len": 3844,
+          "kv_size_mb": 540.56,
+          "transfer": "chain",
+          "prev_seq_len": 2617,
+          "delta": 1227,
+          "expected_delta": 1234,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 545,
+          "kv_seq_len": 4442,
+          "kv_size_mb": 624.66,
+          "transfer": "chain",
+          "prev_seq_len": 3844,
+          "delta": 598,
+          "expected_delta": 605,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 293,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 102,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c4: proposal → construct → consistency → judger, HAND-OFF TEKS (prior_factors). Laten=hipotesis, teks=ekspresi."
+}

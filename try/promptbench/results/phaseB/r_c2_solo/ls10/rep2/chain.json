@@ -1,0 +1,137 @@
+{
+  "chain": "r_c2_solo",
+  "config": "ls10",
+  "latent_steps": 10,
+  "rep": 2,
+  "terminal_agent": "construct",
+  "ok": true,
+  "score": 0.75,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 10,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 978,
+      "kv_size_mb": 137.53,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 978,
+      "expected_delta": 978,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "latent_steps": 10,
+      "n_prompt_tokens": 1536,
+      "kv_seq_len": 2517,
+      "kv_size_mb": 353.95,
+      "transfer": "chain",
+      "prev_seq_len": 978,
+      "delta": 1539,
+      "expected_delta": 1546,
+      "text_len": 328
+    }
+  ],
+  "elapsed_s": 18.62,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "A liquidity-driven volatility regime where stocks with sudden drops in bid-ask spread and high volume reactivity outperform the next day.",
+    "n_expr": 2,
+    "gate_pass": 1,
+    "gate_pass_frac": 0.5,
+    "families": [
+      "cross_sectional",
+      "time_series"
+    ],
+    "n_families": 2,
+    "per_expr": [
+      {
+        "expr": "TS_ZSCORE($close - $open, 5) * (TS_STD($high - $low, 5) / TS_MEAN($volume, 5))",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      },
+      {
+        "expr": "RANK(TS_PCTCHANGE($return, 1), 50) - RANK(TS_ZSCORE($volume, 5), 50)",
+        "gate_ok": false,
+        "reason": "arity: `RANK` takes 1 argument(s) but got 2 (`RANK(TS_PCTCHANGE($return, 1.0), 50.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead. `RANK` takes 1 argument(s) but got 2 (`RANK(TS_ZSCORE($volume, 5.0), 50.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead.",
+        "families": [
+          "cross_sectional",
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.75,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 2
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 10,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 978,
+          "kv_size_mb": 137.53,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 978,
+          "expected_delta": 978,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "latent_steps": 10,
+          "n_prompt_tokens": 1536,
+          "kv_seq_len": 2517,
+          "kv_size_mb": 353.95,
+          "transfer": "chain",
+          "prev_seq_len": 978,
+          "delta": 1539,
+          "expected_delta": 1546,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 328,
+        "repetition": 0.0,
+        "longest_run": 1,
+        "output_tokens": 112,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+}

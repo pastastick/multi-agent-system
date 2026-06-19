@@ -1,0 +1,135 @@
+{
+  "chain": "r_c3_finalizer",
+  "config": "ls75",
+  "latent_steps": 75,
+  "rep": 1,
+  "terminal_agent": "consistency",
+  "ok": false,
+  "score": 0.0,
+  "healthy": false,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 75,
+      "n_prompt_tokens": 591,
+      "kv_seq_len": 666,
+      "kv_size_mb": 93.66,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 666,
+      "expected_delta": 666,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 75,
+      "n_prompt_tokens": 574,
+      "kv_seq_len": 1315,
+      "kv_size_mb": 184.92,
+      "transfer": "chain",
+      "prev_seq_len": 666,
+      "delta": 649,
+      "expected_delta": 649,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_and_text",
+      "latent_steps": 75,
+      "n_prompt_tokens": 502,
+      "kv_seq_len": 1885,
+      "kv_size_mb": 265.08,
+      "transfer": "chain",
+      "prev_seq_len": 1315,
+      "delta": 570,
+      "expected_delta": 577,
+      "text_len": 0
+    }
+  ],
+  "elapsed_s": 20.85,
+  "score_detail": {
+    "len": 0,
+    "markers_hit": [],
+    "score": 0.0,
+    "parser_ok": null
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 75,
+          "n_prompt_tokens": 591,
+          "kv_seq_len": 666,
+          "kv_size_mb": 93.66,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 666,
+          "expected_delta": 666,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 75,
+          "n_prompt_tokens": 574,
+          "kv_seq_len": 1315,
+          "kv_size_mb": 184.92,
+          "transfer": "chain",
+          "prev_seq_len": 666,
+          "delta": 649,
+          "expected_delta": 649,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_and_text",
+          "latent_steps": 75,
+          "n_prompt_tokens": 502,
+          "kv_seq_len": 1885,
+          "kv_size_mb": 265.08,
+          "transfer": "chain",
+          "prev_seq_len": 1315,
+          "delta": 570,
+          "expected_delta": 577,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": true,
+      "reasons": [
+        "empty"
+      ],
+      "metrics": {
+        "len": 0,
+        "repetition": 0.0,
+        "longest_run": 0,
+        "runaway": false
+      }
+    },
+    "health": {
+      "healthy": false,
+      "kv_ok": true,
+      "text_collapsed": true,
+      "kv_flags": [],
+      "text_reasons": [
+        "empty"
+      ]
+    }
+  },
+  "desc": "REDESIGN c3: proposal → construct[eksplor laten] → consistency[finalizer, terminal]. 3 agen, pure-laten."
+}

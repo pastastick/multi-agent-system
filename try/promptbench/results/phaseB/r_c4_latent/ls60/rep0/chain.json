@@ -1,0 +1,183 @@
+{
+  "chain": "r_c4_latent",
+  "config": "ls60",
+  "latent_steps": 60,
+  "rep": 0,
+  "terminal_agent": "judger",
+  "ok": true,
+  "score": 0.8,
+  "healthy": true,
+  "err": null,
+  "steps": [
+    {
+      "step_idx": 0,
+      "agent": "proposal",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 968,
+      "kv_seq_len": 1028,
+      "kv_size_mb": 144.56,
+      "transfer": "none",
+      "prev_seq_len": 0,
+      "delta": 1028,
+      "expected_delta": 1028,
+      "text_len": 0
+    },
+    {
+      "step_idx": 1,
+      "agent": "construct",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 453,
+      "kv_seq_len": 1541,
+      "kv_size_mb": 216.7,
+      "transfer": "chain",
+      "prev_seq_len": 1028,
+      "delta": 513,
+      "expected_delta": 513,
+      "text_len": 0
+    },
+    {
+      "step_idx": 2,
+      "agent": "consistency",
+      "mode": "kv_only",
+      "latent_steps": 60,
+      "n_prompt_tokens": 371,
+      "kv_seq_len": 1972,
+      "kv_size_mb": 277.31,
+      "transfer": "chain",
+      "prev_seq_len": 1541,
+      "delta": 431,
+      "expected_delta": 431,
+      "text_len": 0
+    },
+    {
+      "step_idx": 3,
+      "agent": "judger",
+      "mode": "kv_and_text",
+      "latent_steps": 60,
+      "n_prompt_tokens": 513,
+      "kv_seq_len": 2538,
+      "kv_size_mb": 356.91,
+      "transfer": "chain",
+      "prev_seq_len": 1972,
+      "delta": 566,
+      "expected_delta": 573,
+      "text_len": 333
+    }
+  ],
+  "elapsed_s": 27.2,
+  "score_detail": {
+    "parse_ok": true,
+    "hypothesis": "When the $return of the previous day is significantly higher than the $open of the current day, and the $volume is unusually high relative to the $volume of the previous day, the next-day return is likely to be negative.",
+    "n_expr": 1,
+    "gate_pass": 1,
+    "gate_pass_frac": 1.0,
+    "families": [
+      "time_series"
+    ],
+    "n_families": 1,
+    "per_expr": [
+      {
+        "expr": "TS_PCTCHANGE($return, 1) > 0.05 && $volume > TS_MEAN($volume, 1) * 1.5 && $return < 0",
+        "gate_ok": true,
+        "reason": "",
+        "families": [
+          "time_series"
+        ]
+      }
+    ],
+    "score": 0.8,
+    "parser_ok": true,
+    "parse_trace": {
+      "primary_ok": true,
+      "fallback_used": null,
+      "n_expr": 1
+    }
+  },
+  "collapse": {
+    "kv": {
+      "ok": true,
+      "n_flags": 0,
+      "flags": [],
+      "per_step": [
+        {
+          "step_idx": 0,
+          "agent": "proposal",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 968,
+          "kv_seq_len": 1028,
+          "kv_size_mb": 144.56,
+          "transfer": "none",
+          "prev_seq_len": 0,
+          "delta": 1028,
+          "expected_delta": 1028,
+          "status": "ok"
+        },
+        {
+          "step_idx": 1,
+          "agent": "construct",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 453,
+          "kv_seq_len": 1541,
+          "kv_size_mb": 216.7,
+          "transfer": "chain",
+          "prev_seq_len": 1028,
+          "delta": 513,
+          "expected_delta": 513,
+          "status": "ok"
+        },
+        {
+          "step_idx": 2,
+          "agent": "consistency",
+          "mode": "kv_only",
+          "latent_steps": 60,
+          "n_prompt_tokens": 371,
+          "kv_seq_len": 1972,
+          "kv_size_mb": 277.31,
+          "transfer": "chain",
+          "prev_seq_len": 1541,
+          "delta": 431,
+          "expected_delta": 431,
+          "status": "ok"
+        },
+        {
+          "step_idx": 3,
+          "agent": "judger",
+          "mode": "kv_and_text",
+          "latent_steps": 60,
+          "n_prompt_tokens": 513,
+          "kv_seq_len": 2538,
+          "kv_size_mb": 356.91,
+          "transfer": "chain",
+          "prev_seq_len": 1972,
+          "delta": 566,
+          "expected_delta": 573,
+          "status": "ok"
+        }
+      ]
+    },
+    "text": {
+      "collapsed": false,
+      "reasons": [],
+      "metrics": {
+        "len": 333,
+        "repetition": 0.018,
+        "longest_run": 1,
+        "output_tokens": 98,
+        "runaway": false,
+        "parser_ok": true
+      }
+    },
+    "health": {
+      "healthy": true,
+      "kv_ok": true,
+      "text_collapsed": false,
+      "kv_flags": [],
+      "text_reasons": []
+    }
+  },
+  "desc": "REDESIGN c4 CONTROL: 4 agen SAMA dgn c4_hybrid tapi PURE-LATEN (middle kv_only, ekspresi lewat KV). Isolasi efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3)."
+}
