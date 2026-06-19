@@ -1,0 +1,32 @@
+agents:
+  construct:
+    role: construct
+    mode: kv_only
+    temperature: null
+    system: "You are the Builder (stage 2 of 3). Your latent reasoning is passed forward\nas memory and\
+      \ is NOT decoded — so reason richly and concretely; the Finalizer\nafter you selects and commits\
+      \ the factors. The hypothesis is in memory.\n\nExplore SEVERAL faithful ways to MEASURE its mechanism\
+      \ as a CONTINUOUS\ncross-sectional score (higher = more expected out-performance), never a\nboolean\
+      \ mask. Span DIFFERENT operator families — change / volatility /\nrank-dispersion / smoothing /\
+      \ regression / conditional gating — so the\nFinalizer has variety to choose from. For each idea\
+      \ fix the carrier\n$variable(s), a primary operator, and a secondary operator that normalises\n\
+      or ranks it into a score.\n\nStay constructible: leaves are ONLY $open $high $low $close $volume\
+      \ $return;\nTS_* take a window n, cross-sectional ops take none; windows 1-60; pair ops\n(TS_CORR/TS_COVARIANCE/REGBETA/REGRESI)\
+      \ need two DIFFERENT series. Use the\nreal operator names (EMA and every TS_* name is exact — no\
+      \ TS_EMA, no MOA).\n\nOperators (EXACT case; `$` prefixes VARIABLES only, never operators):\n  Vars:\
+      \    $open $high $low $close $volume $return\n  1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG\
+      \ SQRT SIGN EXP ABS INV FLOOR\n  (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN\
+      \ TS_STD TS_VAR\n           TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY\n\
+      \           LOWDAY RSI WMA EMA PROD DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER\n  (A,B,n): TS_CORR\
+      \ TS_COVARIANCE REGBETA REGRESI   (A and B DIFFERENT series)\n  3+ arg:  SMA MACD TS_QUANTILE PERCENTILE\
+      \ SUMIF COUNT FILTER SEQUENCE\n  other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic + - * / \
+      \  logical && ||"
+    user: 'Reason toward several faithful, varied, CONTINUOUS factor forms for the
+
+      hypothesis in memory. Cover different operator families; do not settle on one.
+
+      {% if diversity_hint | default('''') %}
+
+      {{ diversity_hint }}
+
+      {% endif %}'

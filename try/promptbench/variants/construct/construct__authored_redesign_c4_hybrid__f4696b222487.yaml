@@ -1,0 +1,36 @@
+agents:
+  construct:
+    role: construct
+    mode: kv_and_text
+    temperature: null
+    parser: hypothesis_exprs
+    max_new_tokens: 512
+    system: "You are the Builder (stage 2 of 4). The hypothesis is in your latent memory.\nProduce 1-3\
+      \ CANDIDATE factor expressions; the Checker after you reads your\nOUTPUT AS TEXT, so emit them cleanly.\n\
+      \nA factor is a CONTINUOUS cross-sectional score (higher = more expected\nout-performance), NOT\
+      \ a boolean mask. \"A > B && C < D\" is invalid; gate a\nmagnitude: (<condition>) ? (<continuous\
+      \ signal>) : (0)  or  RANK(<A>) - RANK(<B>).\n\nStay constructible: leaves ONLY $open $high $low\
+      \ $close $volume $return; TS_*\ntake a window n, cross-sectional ops (RANK/ZSCORE/STD/...) take\
+      \ none; windows\n1-60; compose >=2 operators; pair ops (TS_CORR/TS_COVARIANCE/REGBETA/REGRESI)\n\
+      need two DIFFERENT series. Real operator names only (no TS_EMA, no MOA). Make\nthe candidates span\
+      \ DIFFERENT operator families.\n\nEnd with EXACTLY these lines, ASCII, no markdown:\nHYPOTHESIS:\
+      \ <one sentence — the mechanism, from memory>\nEXPRESSION 1: <single DSL expression — continuous\
+      \ score>\nEXPRESSION 2: <single DSL expression>   (only if a distinct second factor)\n\nOperators\
+      \ (EXACT case; `$` prefixes VARIABLES only, never operators):\n  Vars:    $open $high $low $close\
+      \ $volume $return\n  1 arg:   RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN EXP ABS INV FLOOR\n\
+      \  (A,n):   DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_STD TS_VAR\n           TS_MIN\
+      \ TS_MAX TS_ARGMAX TS_ARGMIN TS_MAD TS_PCTCHANGE SUMAC HIGHDAY\n           LOWDAY RSI WMA EMA PROD\
+      \ DECAYLINEAR POW BB_UPPER BB_MIDDLE BB_LOWER\n  (A,B,n): TS_CORR TS_COVARIANCE REGBETA REGRESI\
+      \   (A and B DIFFERENT series)\n  3+ arg:  SMA MACD TS_QUANTILE PERCENTILE SUMIF COUNT FILTER SEQUENCE\n\
+      \  other:   MAX(A,B) MIN(A,B)   (C)?(A):(B)   arithmetic + - * /   logical && ||"
+    user: 'Build the candidate factor(s) for the hypothesis in memory: restate it, pick
+
+      carrier $variable(s), a primary and a secondary operator (continuous score),
+
+      and switch operator FAMILY for a 2nd/3rd. End with the final lines.
+
+      {% if diversity_hint | default('''') %}
+
+      {{ diversity_hint }}
+
+      {% endif %}'

@@ -1,5 +1,25 @@
 consistency:
 - aliases: []
+  hash: 7589ba6dca2a
+  mode: kv_and_text
+  orig_name: consistency
+  path: variants/consistency/consistency__authored_redesign_c3_finalizer__7589ba6dca2a.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c3_finalizer.yaml
+    source_id: authored_redesign_c3_finalizer
+  variant_id: consistency__authored_redesign_c3_finalizer__7589ba6dca2a
+- aliases: []
+  hash: 78bd7b48b3cf
+  mode: kv_and_text
+  orig_name: consistency
+  path: variants/consistency/consistency__authored_redesign_c4_hybrid__78bd7b48b3cf.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  variant_id: consistency__authored_redesign_c4_hybrid__78bd7b48b3cf
+- aliases: []
   hash: 88133558d50d
   mode: kv_only
   orig_name: consistency
@@ -9,6 +29,16 @@ consistency:
     ref: variants/_authored/claude_latentpaper.yaml
     source_id: authored_claude_latentpaper
   variant_id: consistency__authored_claude_latentpaper__88133558d50d
+- aliases: []
+  hash: b09ae18a0aa9
+  mode: kv_only
+  orig_name: consistency
+  path: variants/consistency/consistency__authored_redesign_c4_latent__b09ae18a0aa9.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  variant_id: consistency__authored_redesign_c4_latent__b09ae18a0aa9
 - aliases:
   - kind: git
     label: current_newEvol
@@ -114,6 +144,16 @@ construct:
     source_id: git_gate_deterministik
   variant_id: construct__git_gate_deterministik__5b2d525ce336
 - aliases: []
+  hash: 67587970e246
+  mode: kv_and_text
+  orig_name: construct
+  path: variants/construct/construct__authored_redesign_c2_solo__67587970e246.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c2_solo.yaml
+    source_id: authored_redesign_c2_solo
+  variant_id: construct__authored_redesign_c2_solo__67587970e246
+- aliases: []
   hash: 747a96fc92c8
   mode: kv_only
   orig_name: construct
@@ -124,6 +164,16 @@ construct:
     ref: 117540a
     source_id: git_latentmas_foundation
   variant_id: construct__git_latentmas_foundation__747a96fc92c8
+- aliases: []
+  hash: 90c459736258
+  mode: kv_only
+  orig_name: construct
+  path: variants/construct/construct__authored_redesign_c3_finalizer__90c459736258.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c3_finalizer.yaml
+    source_id: authored_redesign_c3_finalizer
+  variant_id: construct__authored_redesign_c3_finalizer__90c459736258
 - aliases: []
   hash: b35f877d9c40
   mode: kv_only
@@ -177,16 +227,25 @@ construct:
     source_id: git_optimalisasi
   variant_id: construct__git_optimalisasi__e9a6a179b181
 - aliases: []
-  hash: f4d2fe4a0389
+  hash: f4696b222487
+  mode: kv_and_text
+  orig_name: construct
+  path: variants/construct/construct__authored_redesign_c4_hybrid__f4696b222487.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  variant_id: construct__authored_redesign_c4_hybrid__f4696b222487
+- aliases: []
+  hash: fb9d9a33e628
   mode: kv_only
   orig_name: construct
-  path: variants/construct/construct__git_stepwise_final__f4d2fe4a0389.yaml
+  path: variants/construct/construct__authored_redesign_c4_latent__fb9d9a33e628.yaml
   source:
-    kind: git
-    label: stepwise_final
-    ref: f4d2fe4a0389
-    source_id: git_stepwise_final
-  variant_id: construct__git_stepwise_final__f4d2fe4a0389
+    kind: authored
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  variant_id: construct__authored_redesign_c4_latent__fb9d9a33e628
 crossover:
 - aliases:
   - kind: git
@@ -458,6 +517,16 @@ judger:
     source_id: working
   variant_id: judger__working__158c662151be
 - aliases: []
+  hash: 1e22ef0332c7
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__authored_redesign_c4_latent__1e22ef0332c7.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  variant_id: judger__authored_redesign_c4_latent__1e22ef0332c7
+- aliases: []
   hash: 495844e659b3
   mode: kv_and_text
   orig_name: judger
@@ -467,6 +536,16 @@ judger:
     ref: variants/_authored/claude_latentpaper.yaml
     source_id: authored_claude_latentpaper
   variant_id: judger__authored_claude_latentpaper__495844e659b3
+- aliases: []
+  hash: 587369edba93
+  mode: kv_and_text
+  orig_name: judger
+  path: variants/judger/judger__authored_redesign_c4_hybrid__587369edba93.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  variant_id: judger__authored_redesign_c4_hybrid__587369edba93
 - aliases:
   - kind: git
     label: negative_memory
@@ -687,6 +766,28 @@ proposal:
     source_id: git_negative_memory
   variant_id: proposal__git_negative_memory__28c5ff48db7a
 - aliases:
+  - kind: authored
+    orig_name: proposal
+    ref: variants/_authored/redesign_c3_finalizer.yaml
+    source_id: authored_redesign_c3_finalizer
+  - kind: authored
+    orig_name: proposal
+    ref: variants/_authored/redesign_c4_hybrid.yaml
+    source_id: authored_redesign_c4_hybrid
+  - kind: authored
+    orig_name: proposal
+    ref: variants/_authored/redesign_c4_latent.yaml
+    source_id: authored_redesign_c4_latent
+  hash: 53cb52b86234
+  mode: kv_only
+  orig_name: proposal
+  path: variants/proposal/proposal__authored_redesign_c2_solo__53cb52b86234.yaml
+  source:
+    kind: authored
+    ref: variants/_authored/redesign_c2_solo.yaml
+    source_id: authored_redesign_c2_solo
+  variant_id: proposal__authored_redesign_c2_solo__53cb52b86234
+- aliases:
   - kind: git
     label: guidance_reentry
     orig_name: proposal
@@ -744,16 +845,6 @@ proposal:
     ref: f4b53b1
     source_id: git_gate_deterministik
   variant_id: proposal__git_gate_deterministik__f7ae36f32f36
-- aliases: []
-  hash: mix3a1b2c3d
-  mode: kv_only
-  orig_name: proposal
-  path: variants/proposal/proposal__authored_mixed_scoped__mix3a1b2c3d.yaml
-  source:
-    kind: authored
-    ref: manual
-    source_id: authored_mixed_scoped
-  variant_id: proposal__authored_mixed_scoped__mix3a1b2c3d
 repair:
 - aliases:
   - kind: git

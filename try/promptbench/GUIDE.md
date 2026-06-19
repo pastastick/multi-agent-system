@@ -331,3 +331,62 @@ bench_chain SELALU `kv_deepcopy()` sebelum mengoper ke langkah berikutnya — ou
 tiap langkah membeku, pertumbuhan KV murni = prompt+latent_steps (terlihat di
 chain.json: `delta` vs `expected_delta`). KNN auto-OFF saat latent_steps>0
 (RoPE desync guard), jadi panjang KV tidak berubah diam-diam.
+
+---
+
+## 11. REDESIGN PROMPT v2 — ABLATION ALUR WORKFLOW (2026-06-19)
+
+> Dibuat SETELAH user menganalisa output Phase A/B nyata + diskusi dengan Claude.
+> Belum di-run GPU (prompt + chain + dry-run SAJA). Branch `feat/prompt-redesign-v2`.
+
+**Diagnosis inti (dari artefak `results/phaseA` + `results/phaseB/{pc_2agent,pcj_judger}`):**
+KV laten **lossy untuk payload SIMBOLIK, bukan untuk gist**. Hipotesis (gist)
+selamat melintasi hop laten; EKSPRESI (string presisi) TIDAK — judger
+menghalusinasi operator (`TS_EMA`, `MOA`) → gate 0/2. 4 agen = 3 hop = error
+menumpuk (*compound failure*). Bukti pendukung: (a) contoh di system-prompt
+proposal DISALIN verbatim → `cliche=true`; (b) `diversity_hint` di user-prompt
+judger lama menyuruh "ganti family" → judger MALAH re-derive (smoking gun);
+(c) construct meng-emit BOOLEAN MASK, bukan skor kontinu; (d) ls60 = glitch/
+repetisi (`smoothedoothed`, `2,2,2,5,5`); (e) 4 varian consistency identik,
+SILENT (kv_only), inert. **Prinsip desain**: begitu ekspresi jadi simbol, jangan
+biarkan ia melintasi hop laten lagi → kurangi agen pasca-commit ATAU oper sebagai
+TEKS.
+
+**Keputusan user**: "build all, benchmark decides" + WAJIB prompt berbeda per
+skenario (tugas role berbeda per alur). PROPOSAL sengaja IDENTIK lintas alur
+(variabel terkontrol). Perbaikan prompt yang ditanam di semua alur: contoh
+non-copyable (slot template `<...>`), anti-cliché ("jangan parafrase avoided
+pattern"), WAJIB skor kontinu (bukan boolean mask), BUANG self-counting
+(SL/feature → biar regulator), judger di-strip dari `diversity_hint`+`direction`,
+read-back hipotesis 1 baris (anti-drift, angkat laten→token).
+
+**Sumber prompt**: `variants/_authored/redesign_c{2_solo,3_finalizer,4_hybrid,4_latent}.yaml`
+(multi-agen; `collect_variants` → per-agen `authored_redesign_c*`). **4 chain** di
+`chains/chain_manifest.yaml`:
+
+| chain | topologi | medium ekspresi | mengisolasi |
+|---|---|---|---|
+| `r_c2_solo` | proposal[kv_only] → construct[kv_and_text, TERMINAL] | pure-laten, commit @terminal | builder serba-bisa; 0 hop pasca-commit (paling robust) |
+| `r_c3_finalizer` | proposal → construct[kv_only] → consistency[kv_and_text, TERMINAL] | pure-laten, commit @terminal | apakah refinement laten > c2? |
+| `r_c4_hybrid` | proposal → construct → consistency → judger (semua kv_and_text) | **TEKS** (`prior_factors`) | full division-of-labor + kanal simbolik anti-korupsi |
+| `r_c4_latent` | idem c4_hybrid tapi middle **kv_only** | pure-laten (lewat KV) | CONTROL: efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3) |
+
+**Mekanisme hand-off TEKS (hanya c4_hybrid)**: `runners/bench_chain.py` —
+helper `_factor_block()` + dict `carried`; tiap langkah yang DI-DECODE menyuntik
+blok `HYPOTHESIS:`/`EXPRESSION N:` (hasil `parse_hypothesis_exprs`, sama dgn
+scorer) ke var `prior_factors` langkah berikut. **Backward-compatible**: chain
+lain tak mereferensikan var itu → no-op (Jinja `default('')`). Langkah `kv_only`
+tak meng-update `carried` → alur pure-laten tak pernah pakai teks.
+
+**Cara run (GPU)**:
+```bash
+.venv/bin/python -m try.promptbench.runners.bench_chain \
+    --chains r_c2_solo,r_c3_finalizer,r_c4_hybrid,r_c4_latent \
+    --latent-steps 10,20,40,60 --reps 5 --workers 3
+```
+Bandingkan di `results/phaseB/scoreboard.{csv,md}`: `parse_rate`, `gate_pass_rate`,
+`variety_families`, `n_distinct_hypotheses`, `score_std`. Knob: ls rendah (10-20)
+mungkin jaga fidelity simbolik > ls60 (glitch ls60 sebagian murni degradasi 4B).
+
+**Status**: dry-run 8/8 ok (4 chain × ls{0,60}), chain lama tak regresi, py_compile
+ok. **Hasil & keputusan: PENDING GPU.**

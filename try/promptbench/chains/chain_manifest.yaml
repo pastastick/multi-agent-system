@@ -79,3 +79,38 @@ chains:
       - { agent: consistency, variant: winner, transfer: chain }
       - { agent: judger,      variant: winner, transfer: chain }
       - { agent: feedback,    variant: winner, transfer: chain }
+
+  # ── REDESIGN v2 — 3 alur untuk dibandingkan (benchmark decides) ───────────
+  # Proposal IDENTIK di ketiga alur (variabel terkontrol). Yang berbeda: jumlah
+  # agen, peran tiap agen, dan MEDIUM hand-off ekspresi (laten murni vs teks).
+  # Prinsip: begitu ekspresi jadi simbol, jangan biarkan ia melintasi hop laten
+  # lossy lagi → c2 commit di terminal; c3 commit di terminal; c4 oper via teks.
+
+  r_c2_solo:
+    desc: "REDESIGN c2: proposal → construct[solo builder, terminal]. 2 agen, pure-laten, 0 hop pasca-commit."
+    steps:
+      - { agent: proposal,  variant: authored_redesign_c2_solo, transfer: none }
+      - { agent: construct, variant: authored_redesign_c2_solo, transfer: chain }
+
+  r_c3_finalizer:
+    desc: "REDESIGN c3: proposal → construct[eksplor laten] → consistency[finalizer, terminal]. 3 agen, pure-laten."
+    steps:
+      - { agent: proposal,    variant: authored_redesign_c3_finalizer, transfer: none }
+      - { agent: construct,   variant: authored_redesign_c3_finalizer, transfer: chain }
+      - { agent: consistency, variant: authored_redesign_c3_finalizer, transfer: chain }
+
+  r_c4_hybrid:
+    desc: "REDESIGN c4: proposal → construct → consistency → judger, HAND-OFF TEKS (prior_factors). Laten=hipotesis, teks=ekspresi."
+    steps:
+      - { agent: proposal,    variant: authored_redesign_c4_hybrid, transfer: none }
+      - { agent: construct,   variant: authored_redesign_c4_hybrid, transfer: chain }
+      - { agent: consistency, variant: authored_redesign_c4_hybrid, transfer: chain }
+      - { agent: judger,      variant: authored_redesign_c4_hybrid, transfer: chain }
+
+  r_c4_latent:
+    desc: "REDESIGN c4 CONTROL: 4 agen SAMA dgn c4_hybrid tapi PURE-LATEN (middle kv_only, ekspresi lewat KV). Isolasi efek kanal TEKS (vs c4_hybrid) & efek jumlah agen (vs c2/c3)."
+    steps:
+      - { agent: proposal,    variant: authored_redesign_c4_latent, transfer: none }
+      - { agent: construct,   variant: authored_redesign_c4_latent, transfer: chain }
+      - { agent: consistency, variant: authored_redesign_c4_latent, transfer: chain }
+      - { agent: judger,      variant: authored_redesign_c4_latent, transfer: chain }

@@ -103,6 +103,27 @@ def _render(spec: dict, fixtures: dict) -> tuple[str, str]:
 # eksekusi satu rantai
 # ════════════════════════════════════════════════════════════════════════════
 
+def _factor_block(text: Optional[str]) -> str:
+    """Ringkas teks decode satu langkah → blok HYPOTHESIS/EXPRESSION bersih untuk
+    di-hand-off sebagai TEKS ke langkah berikut (alur hybrid c4). Fallback: teks
+    mentah. Memakai parser produksi (sama dgn scorer) → konsisten dgn yang dinilai."""
+    if not text or not text.strip():
+        return ""
+    try:
+        from latent_mas.parsers import parse_hypothesis_exprs
+        p = parse_hypothesis_exprs(text)
+    except Exception:  # noqa: BLE001
+        p = None
+    if not p:
+        return text.strip()
+    lines = []
+    if p.hypothesis:
+        lines.append(f"HYPOTHESIS: {p.hypothesis}")
+    for i, e in enumerate(p.expressions, 1):
+        lines.append(f"EXPRESSION {i}: {e}")
+    return "\n".join(lines) if lines else text.strip()
+
+
 def run_chain_job(job: dict, *, dry_run: bool, temp: float) -> dict:
     """Jalankan satu (chain × ls × rep). Lazy-import backend → dry-run bebas GPU."""
     from ..chains import resolve_chain
@@ -181,6 +202,7 @@ def run_chain_job(job: dict, *, dry_run: bool, temp: float) -> dict:
         boundaries: List[BoundaryRecord] = []
         terminal_text: Optional[str] = None
         terminal_out_tokens = 0
+        carried: Dict[str, str] = {}        # hand-off TEKS: blok faktor decode → langkah berikut
         t0 = time.time()
 
         for st in chain.steps:
@@ -214,8 +236,10 @@ def run_chain_job(job: dict, *, dry_run: bool, temp: float) -> dict:
                     ag.spec.max_new_tokens = DEFAULT_MAX_NEW
 
             # ── run (engine meng-crop answer-token utk kv_and_text) ─────────
+            # `carried` menyuntik prior_factors (alur hybrid); chain lain tak
+            # mereferensikannya → render mengabaikannya (no-op, backward-compatible).
             with open(os.devnull, "w") as dn, redirect_stdout(dn):
-                res = ag.run(past_kv=input_kv, **FIXTURES)
+                res = ag.run(past_kv=input_kv, **FIXTURES, **carried)
             out_kv = res.kv_cache
             kv_by_step[st.idx] = out_kv               # frozen (next step deepcopy-nya)
 
@@ -230,9 +254,10 @@ def run_chain_job(job: dict, *, dry_run: bool, temp: float) -> dict:
             )
             boundaries.append(rec)
 
-            # ── artifact per langkah ────────────────────────────────────────
+            # ── artifact per langkah (render dgn carried agar artefak menampilkan
+            #    prior_factors yang benar-benar dilihat langkah ini) ───────────
             spec = _load_spec(st.variant_path, st.agent)
-            system, user = _render(spec, FIXTURES)
+            system, user = _render(spec, {**FIXTURES, **carried})
             step_detail = None
             step_text = res.text if res.text is not None else "(kv_only — tidak di-decode)"
             if st.is_terminal:
@@ -251,6 +276,13 @@ def run_chain_job(job: dict, *, dry_run: bool, temp: float) -> dict:
                 system=system, user=user, response=step_text,
                 kv_report=rec.to_dict(), score_detail=step_detail,
             )
+
+            # ── hand-off TEKS: blok faktor langkah-decode ini → langkah berikut.
+            # Langkah kv_only (res.text None) tidak meng-update → carried tetap dari
+            # decode terakhir. Alur pure-laten (c2/c3) tak pernah membaca carried.
+            if res.text is not None:
+                carried["prior_factors"] = _factor_block(res.text)
+
             out["steps"].append({**rec.to_dict(),
                                  "text_len": len(res.text) if res.text else 0})
 
