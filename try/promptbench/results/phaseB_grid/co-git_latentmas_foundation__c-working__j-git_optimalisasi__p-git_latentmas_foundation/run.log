@@ -1,41 +1,0 @@
-# combo: co-git_latentmas_foundation__c-working__j-git_optimalisasi__p-git_latentmas_foundation
-# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=working,judger=git_optimalisasi,proposal=git_latentmas_foundation
-
-[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'working', 'judger': 'git_optimalisasi', 'proposal': 'git_latentmas_foundation'}
-[bench_chain] total jobs=18 (text=0 latent=18)
-[bench_chain] === LATENT phase (use_realign): 18 jobs ===
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  30%|███       | 120/398 [00:00<00:00, 1138.74it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  49%|████▉     | 195/398 [00:00<00:00, 1663.14it/s]Loading weights:  59%|█████▉    | 234/398 [00:00<00:00, 501.86it/s] Loading weights:  76%|███████▌  | 302/398 [00:00<00:00, 413.98it/s]Loading weights:  91%|█████████ | 362/398 [00:00<00:00, 590.04it/s] Loading weights: 100%|██████████| 398/398 [00:00<00:00, 717.65it/s]
-Loading weights: 100%|██████████| 398/398 [00:00<00:00, 551.46it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  67%|██████▋   | 265/398 [00:00<00:00, 2647.58it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2435.49it/s]
-2026-06-18 08:45:39.896 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE(TS_STD( $high - $low ), n=5 ) / TS_ZSCORE( $volume  $return_1d, n=5 ). Error: Invalid operator(s): "="
-2026-06-18 08:45:39.939 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE(TS_STD( $high - $low ), n=5 ) / TS_ZSCORE( $volume  $return_1d, n=5 ). Error: Invalid operator(s): "="
-2026-06-18 08:45:39.982 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE(TS_STD( $high - $low ), n=5 ) / TS_ZSCORE( $volume  $return_1d, n=5 ). Error: Invalid operator(s): "="
-2026-06-18 08:45:40.021 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE(TS_STD( $high - $low ), n=5 ) / TS_ZSCORE( $volume  $return_1d, n=5 ). Error: Invalid operator(s): "="
-2026-06-18 08:47:10.872 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_ZSCORE($volume, n=1)  SIGN($return_1d < 0:: TS_CORR($volume, $return_1d, n=1). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:47:10.908 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_ZSCORE($volume, n=1)  SIGN($return_1d < 0:: TS_CORR($volume, $return_1d, n=1). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:47:10.952 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_ZSCORE($volume, n=1)  SIGN($return_1d < 0:: TS_CORR($volume, $return_1d, n=1). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:47:10.987 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_ZSCORE($volume, n=1)  SIGN($return_1d < 0:: TS_CORR($volume, $return_1d, n=1). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:47:20.059 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ::: $volume / TS_STD($volume, 60)  RANK($volume, 60). Error: Invalid operator(s): ":::"
-2026-06-18 08:47:20.076 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ::: $volume / TS_STD($volume, 60)  RANK($volume, 60). Error: Invalid operator(s): ":::"
-2026-06-18 08:47:20.102 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ::: $volume / TS_STD($volume, 60)  RANK($volume, 60). Error: Invalid operator(s): ":::"
-2026-06-18 08:47:20.127 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ::: $volume / TS_STD($volume, 60)  RANK($volume, 60). Error: Invalid operator(s): ":::"
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[bench_chain] done: 18 results, ok=18, err=0, unhealthy=10
-[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-working__j-git_optimalisasi__p-git_latentmas_foundation/scoreboard.csv

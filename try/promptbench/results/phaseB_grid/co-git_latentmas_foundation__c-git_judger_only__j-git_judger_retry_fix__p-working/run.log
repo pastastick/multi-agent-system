@@ -1,33 +1,0 @@
-# combo: co-git_latentmas_foundation__c-git_judger_only__j-git_judger_retry_fix__p-working
-# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=git_judger_only,judger=git_judger_retry_fix,proposal=working
-
-[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'git_judger_only', 'judger': 'git_judger_retry_fix', 'proposal': 'working'}
-[bench_chain] total jobs=18 (text=0 latent=18)
-[bench_chain] === LATENT phase (use_realign): 18 jobs ===
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  67%|██████▋   | 266/398 [00:00<00:00, 2654.75it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2182.76it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  54%|█████▎    | 213/398 [00:00<00:00, 2107.66it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2209.78it/s]
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  69%|██████▊   | 273/398 [00:00<00:00, 2708.44it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2371.88it/s]
-2026-06-18 07:00:55.082 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: DELTA($volume, 1 , $high - $low,,    week. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 07:00:55.121 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: DELTA($volume, 1 , $high - $low,,    week. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 07:00:55.166 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: DELTA($volume, 1 , $high - $low,,    week. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 07:00:55.205 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: DELTA($volume, 1 , $high - $low,,    week. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[bench_chain] done: 18 results, ok=18, err=0, unhealthy=8
-[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-git_judger_only__j-git_judger_retry_fix__p-working/scoreboard.csv

@@ -1,93 +1,0 @@
-# combo: co-git_latentmas_foundation__c-working__j-git_judger_retry_fix__p-git_latentmas_foundation
-# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=working,judger=git_judger_retry_fix,proposal=git_latentmas_foundation
-
-[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'working', 'judger': 'git_judger_retry_fix', 'proposal': 'git_latentmas_foundation'}
-[bench_chain] total jobs=18 (text=0 latent=18)
-[bench_chain] === LATENT phase (use_realign): 18 jobs ===
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  38%|███▊      | 151/398 [00:00<00:00, 1396.31it/s]Loading weights:   4%|▍         | 15/398 [00:00<00:03, 101.36it/s]Loading weights:  16%|█▋        | 65/398 [00:00<00:01, 282.97it/s]Loading weights:  29%|██▉       | 115/398 [00:00<00:00, 350.43it/s]Loading weights:  38%|███▊      | 152/398 [00:00<00:00, 354.35it/s]Loading weights:  73%|███████▎  | 291/398 [00:00<00:00, 419.35it/s] Loading weights: 100%|██████████| 398/398 [00:00<00:00, 630.34it/s]
-Loading weights: 100%|██████████| 398/398 [00:00<00:00, 753.68it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  83%|████████▎ | 332/398 [00:00<00:00, 3275.36it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3316.25it/s]
-2026-06-18 07:59:21.415 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ---. Error: Invalid operator(s): "---"
-2026-06-18 07:59:21.461 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK(TS_ZSCORE($volume, n=1)) - RANK(TS_MEAN($return, n=1)). Error: Invalid operator(s): "="
-2026-06-18 07:59:21.486 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ---. Error: Invalid operator(s): "---"
-2026-06-18 07:59:21.512 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK(TS_ZSCORE($volume, n=1)) - RANK(TS_MEAN($return, n=1)). Error: Invalid operator(s): "="
-2026-06-18 07:59:21.546 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ---. Error: Invalid operator(s): "---"
-2026-06-18 07:59:21.569 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK(TS_ZSCORE($volume, n=1)) - RANK(TS_MEAN($return, n=1)). Error: Invalid operator(s): "="
-2026-06-18 07:59:21.592 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: ---. Error: Invalid operator(s): "---"
-2026-06-18 07:59:21.623 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK(TS_ZSCORE($volume, n=1)) - RANK(TS_MEAN($return, n=1)). Error: Invalid operator(s): "="
-2026-06-18 07:59:23.025 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE($volume, 1), TS_STD($high - $low, 1 1)). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
-2026-06-18 07:59:23.165 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE($volume, 1), TS_STD($high - $low, 1 1)). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
-2026-06-18 07:59:23.290 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE($volume, 1), TS_STD($high - $low, 1 1)). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
-2026-06-18 07:59:23.587 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE($volume, 1), TS_STD($high - $low, 1 1)). Error: Failed to parse expression: Expected end of text, found '('  (at char 4), (line:1, col:5)
-2026-06-18 08:01:03.847 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1)  TS_MEAN($return, 1 1 1 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:01:03.874 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 2 1 1 1 250 chars.. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:01:03.931 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1)  TS_MEAN($return, 1 1 1 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:01:03.960 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 2 1 1 1 250 chars.. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:01:04.031 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1)  TS_MEAN($return, 1 1 1 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:01:04.064 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 2 1 1 1 250 chars.. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:01:04.133 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1)  TS_MEAN($return, 1 1 1 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:01:04.168 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 2 1 1 1 1 1 1 1 2 1 1 1 250 chars.. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:01:44.113 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_MEAN($volume,3) - $volume
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 1
-                        # Unique Vars: 1
-                        Symbol Length (SL): 28
-                        # Base Features (ER): 1
-                        
-2026-06-18 08:01:44.248 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_MEAN($volume,3) - $volume
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 1
-                        # Unique Vars: 1
-                        Symbol Length (SL): 28
-                        # Base Features (ER): 1
-                        
-2026-06-18 08:01:44.353 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_MEAN($volume,3) - $volume
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 1
-                        # Unique Vars: 1
-                        Symbol Length (SL): 28
-                        # Base Features (ER): 1
-                        
-2026-06-18 08:01:44.440 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_MEAN($volume,3) - $volume
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 1
-                        # Unique Vars: 1
-                        Symbol Length (SL): 28
-                        # Base Features (ER): 1
-                        
-2026-06-18 08:02:15.813 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : $RANK($volume) - $RANK($return_1d). Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:02:15.839 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: $TS_ZSCORE($volume, 2 $TS_ZSCORE($return_1d, 6). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:02:15.880 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : $RANK($volume) - $RANK($return_1d). Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:02:15.907 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: $TS_ZSCORE($volume, 2 $TS_ZSCORE($return_1d, 6). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:02:15.977 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : $RANK($volume) - $RANK($return_1d). Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:02:16.013 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: $TS_ZSCORE($volume, 2 $TS_ZSCORE($return_1d, 6). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:02:16.065 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : $RANK($volume) - $RANK($return_1d). Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:02:16.102 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: $TS_ZSCORE($volume, 2 $TS_ZSCORE($return_1d, 6). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[bench_chain] done: 18 results, ok=18, err=0, unhealthy=8
-[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-working__j-git_judger_retry_fix__p-git_latentmas_foundation/scoreboard.csv

@@ -1,38 +1,0 @@
-[bench_chain] chains=['pcj_judger'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'construct': 'git_stepwise_final', 'proposal': 'authored_mixed_scoped', 'judger': 'git_optimalisasi'}
-[bench_chain] total jobs=3 (text=0 latent=3)
-[bench_chain] === LATENT phase (use_realign): 3 jobs ===
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  86%|████████▌ | 342/398 [00:00<00:00, 3419.07it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3334.53it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  95%|█████████▍| 377/398 [00:00<00:00, 3758.81it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3746.65it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  73%|███████▎  | 290/398 [00:00<00:00, 2897.03it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 2685.92it/s]
-2026-06-18 09:38:45.121 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: FILTER( [TS_EMA($volume, 5), TS_EMA($return, 5), TS_STD($high - $low, 5), TS_MEAN($high - $low, 5)], TS_QUANTILE(TS_CORR(TS_EMA($volume, 5), TS_EMA($return, 5), 5), 0.75) ). Error: Invalid operator(s): "]["
-2026-06-18 09:38:45.340 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: FILTER( [TS_EMA($volume, 5), TS_EMA($return, 5), TS_STD($high - $low, 5), TS_MEAN($high - $low, 5)], TS_QUANTILE(TS_CORR(TS_EMA($volume, 5), TS_EMA($return, 5), 5), 0.75) ). Error: Invalid operator(s): "]["
-2026-06-18 09:38:45.571 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: FILTER( [TS_EMA($volume, 5), TS_EMA($return, 5), TS_STD($high - $low, 5), TS_MEAN($high - $low, 5)], TS_QUANTILE(TS_CORR(TS_EMA($volume, 5), TS_EMA($return, 5), 5), 0.75) ). Error: Invalid operator(s): "]["
-2026-06-18 09:38:45.753 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: FILTER( [TS_EMA($volume, 5), TS_EMA($return, 5), TS_STD($high - $low, 5), TS_MEAN($high - $low, 5)], TS_QUANTILE(TS_CORR(TS_EMA($volume, 5), TS_EMA($return, 5), 5), 0.75) ). Error: Invalid operator(s): "]["
-2026-06-18 09:38:51.413 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE(DELTA($high - $low, 5), 5) - TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 78), (line:1, col:79)
-2026-06-18 09:38:51.666 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: FILTER(DELTA($high - $low, 5), TS_ZSCORE(DELTA($high - $low, 5), 5) > TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 104), (line:1, col:105)
-2026-06-18 09:38:51.833 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE(DELTA($high - $low, 5), 5) - TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 78), (line:1, col:79)
-2026-06-18 09:38:52.068 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: FILTER(DELTA($high - $low, 5), TS_ZSCORE(DELTA($high - $low, 5), 5) > TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 104), (line:1, col:105)
-2026-06-18 09:38:52.255 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE(DELTA($high - $low, 5), 5) - TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 78), (line:1, col:79)
-2026-06-18 09:38:52.484 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: FILTER(DELTA($high - $low, 5), TS_ZSCORE(DELTA($high - $low, 5), 5) > TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 104), (line:1, col:105)
-2026-06-18 09:38:52.657 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: RANK(TS_ZSCORE(DELTA($high - $low, 5), 5) - TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 78), (line:1, col:79)
-2026-06-18 09:38:53.079 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: FILTER(DELTA($high - $low, 5), TS_ZSCORE(DELTA($high - $low, 5), 5) > TS_ZSCORE(DELTA($return, 5), 5))  (TS_DECAYLINEAR($volume, 5) > TS_MEAN($volume, 20)). Error: Failed to parse expression: Expected end of text, found '('  (at char 104), (line:1, col:105)
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[bench_chain] done: 3 results, ok=3, err=0, unhealthy=0
-[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB/scoreboard.csv

@@ -1,41 +1,0 @@
-# combo: co-git_latentmas_foundation__c-working__j-git_judger_only__p-working
-# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=working,judger=git_judger_only,proposal=working
-
-[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'working', 'judger': 'git_judger_only', 'proposal': 'working'}
-[bench_chain] total jobs=18 (text=0 latent=18)
-[bench_chain] === LATENT phase (use_realign): 18 jobs ===
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   8%|▊         | 33/398 [00:00<00:01, 329.23it/s]Loading weights:  35%|███▌      | 141/398 [00:00<00:00, 1285.15it/s]Loading weights:  18%|█▊        | 73/398 [00:00<00:00, 368.04it/s][common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  32%|███▏      | 126/398 [00:00<00:00, 434.55it/s]Loading weights:  68%|██████▊   | 270/398 [00:00<00:00, 598.46it/s] Loading weights:  68%|██████▊   | 272/398 [00:00<00:00, 2107.17it/s]Loading weights:  50%|████▉     | 198/398 [00:00<00:00, 493.88it/s]Loading weights:  66%|██████▌   | 263/398 [00:00<00:00, 542.06it/s]Loading weights:  87%|████████▋ | 348/398 [00:00<00:00, 528.54it/s]Loading weights:  84%|████████▍ | 334/398 [00:00<00:00, 592.95it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 1073.87it/s]
-Loading weights: 100%|██████████| 398/398 [00:00<00:00, 589.79it/s]
-Loading weights: 100%|██████████| 398/398 [00:00<00:00, 590.33it/s]
-2026-06-18 08:31:45.174 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,  TS_MEAN($high - $low,,       $return. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:31:45.202 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,  TS_MEAN($high - $low,,       $return. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:31:45.251 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,  TS_MEAN($high - $low,,       $return. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:31:45.286 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: TS_ZSCORE($volume,,,,,,  TS_MEAN($high - $low,,       $return. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:32:06.430 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - TS_RANK($volume, 5, 0.25) && TS_RANK($high - $low,, 1, 0. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:32:06.480 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - TS_RANK($volume, 5, 0.25) && TS_RANK($high - $low,, 1, 0. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:32:06.542 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - TS_RANK($volume, 5, 0.25) && TS_RANK($high - $low,, 1, 0. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:32:06.584 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: - TS_RANK($volume, 5, 0.25) && TS_RANK($high - $low,, 1, 0. Error: Unclosed parentheses  (at char 0), (line:1, col:1)
-2026-06-18 08:32:07.849 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:32:08.118 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:32:08.193 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
-2026-06-18 08:32:08.260 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: :. Error: maximum recursion depth exceeded while calling a Python object
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[bench_chain] done: 18 results, ok=18, err=0, unhealthy=9
-[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-working__j-git_judger_only__p-working/scoreboard.csv

@@ -71,6 +71,38 @@ from latent_mas.parsers import HypothesisExprs, parse_hypothesis_exprs  # noqa: 
 _PRENORMALIZERS: List[Tuple[str, Callable[[str], Optional[str]]]] = []
 
 
+# ─── v4 JSON format prenormalizer ────────────────────────────────────────────
+# Construct v4 outputs:
+#   { "hypothesis": "...", "factors": [{"name": "...", "expression": "...", "explanation": "..."}, ...] }
+# Prenormalizer flattens this to HYPOTHESIS: / EXPRESSION N: lines that
+# parse_hypothesis_exprs already handles.
+
+def _json_construct_v4(text: str) -> Optional[str]:
+    """Convert v4 JSON construct output to HYPOTHESIS/EXPRESSION flat text."""
+    import json, re as _re
+    # Extract JSON object — tolerant of leading/trailing prose
+    m = _re.search(r'\{.*\}', text, flags=_re.DOTALL)
+    if not m:
+        return None
+    try:
+        data = json.loads(m.group(0))
+    except json.JSONDecodeError:
+        return None
+    hypothesis = data.get("hypothesis", "")
+    factors = data.get("factors", [])
+    if not factors:
+        return None
+    lines = [f"HYPOTHESIS: {hypothesis}"]
+    for i, f in enumerate(factors, 1):
+        expr = f.get("expression", "").strip()
+        if expr:
+            lines.append(f"EXPRESSION {i}: {expr}")
+    return "\n".join(lines) if len(lines) > 1 else None
+
+
+_PRENORMALIZERS.append(("json_construct_v4", _json_construct_v4))
+
+
 def register_prenormalizer(name: str, fn: Callable[[str], Optional[str]]) -> None:
     """Daftarkan pre-normalizer fallback. Idempoten by name."""
     global _PRENORMALIZERS

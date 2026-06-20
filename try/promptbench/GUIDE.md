@@ -422,3 +422,71 @@ mungkin jaga fidelity simbolik > ls60 (glitch ls60 sebagian murni degradasi 4B).
 
 **Status**: v3 prompt selesai (2026-06-19). dry-run 8/8 ok (4 chain × ls{0,60}),
 chain lama tak regresi. **Hasil & keputusan: PENDING GPU.**
+
+---
+
+## 12. REDESIGN v4 — PIPELINE PENUH + EVALUASI KV-vs-TEKS (2026-06-20)
+
+> Branch `exp/v4-eval` (dicabang dari `experiment/prompt-bench`). MULAI-ULANG:
+> semua output LLM lama dihapus (`results/`, `try/outputs/`, `backend/debug/
+> llm_outputs/`) + driver eksperimen standalone lama (`try/test_*` kecuali
+> `test_kv_probe_v2`) dibuang. Infra reuse (common/config/fixtures/probe/
+> prompt_ab/run) DIPERTAHANKAN. Belum di-run GPU (dry-run saja, di local).
+
+### 12a. Pipeline v4 (6 agent; consistency & judger DIBUANG)
+
+```
+front-end (buat faktor):   proposal -> design -> construct[TERMINAL decode]
+loop evolusi (perbaiki):   [backtest] -> feedback -> mutation/crossover -> proposal
+```
+- **design** = role BARU (Architect): perkecil ruang → pilih variable+function
+  (rentang argumen) jadi "palette" untuk construct. `load_agent` membaca `role`
+  sebagai string bebas (`cfg.get("role", name)`), jadi role baru TIDAK perlu
+  registrasi enum — cukup ada di YAML.
+- **construct** output JSON `{hypothesis, factors:[{name,expression,explanation}]}`;
+  prenormalizer `_json_construct_v4` di `scoring/parsing_hook.py` mem-flatten ke
+  `HYPOTHESIS:`/`EXPRESSION N:` (fallback; parser produksi tak disentuh).
+- Prompt = `variants/_authored/redesign_v4.yaml` (SATU file, 6 agent). DSL ditulis
+  sekali; medium hand-off dipilih var Jinja `handoff` (kv|text) — SYSTEM
+  medium-agnostic, hanya USER yang bercabang.
+
+### 12b. Eksperimen KV-vs-TEKS (runner bespoke `runners/v4_eval.py`)
+
+Topologi FAN-OUT (bukan chain linear, jadi runner sendiri):
+```
+feedback x4   (1 per seed backtest)
+mutation x4   (1 per parent feedback, exploitation)
+crossover x2  (gabung 2 parent, seeds_v4.CROSS_PAIRS)
+arah = 2 mutation (MUT_FORWARD, default idx 1,2) + 2 crossover
+proposal->design->construct x4 (1 front-end independen per arah; construct di-skor)
+```
+Dua medium dijalankan & dibandingkan:
+- **kv**   : mutation/crossover/proposal/design tetap `kv_only`; KV di-clone &
+  dioper (crossover = `kv_concat` 2 parent). Hanya feedback (entry) + construct
+  (terminal) yang decode. USER prompt: "sudah ada di latent memory".
+- **text** : SEMUA agen decode (`kv_and_text`), KV tak dioper (transfer none),
+  output teks upstream disuntik ke USER prompt (target_text/parents_text/
+  direction/hypothesis_text/prior_factors).
+feedback IDENTIK di kedua medium → selisih skor = murni efek medium pada hop
+mutation/crossover → … → construct.
+
+**Seed backtest** = `seeds_v4.py` (4 scenario DIPANEN dari `try/outputs/`
+evolution_rekayasa + proposal_feedback SEBELUM dihapus; diterjemahkan ke format
+metrik v4 Block A/B/C). Berbeda mekanisme DAN beda jenis kelemahan struktural.
+
+**Run**:
+```bash
+# dry-run (local, tanpa GPU): render tiap node + cek wiring + var lengkap
+.venv/bin/python -m try.promptbench.runners.v4_eval \
+    --media kv,text --latent-steps 20 --reps 1 --dry-run
+# runpod (GPU):
+.venv/bin/python -m try.promptbench.runners.v4_eval \
+    --media kv,text --latent-steps 20 --reps 3
+```
+→ `results/v4_eval/<medium>/ls<N>/rep<R>/{NN_<node>.txt, run.json}` +
+  `results/v4_eval/scoreboard.{csv,md}` (skor terminal per arah, kv vs text).
+
+**Status**: dry-run OK (2026-06-20) — 22 node/tree, kv+text, 0 var hilang,
+wiring terverifikasi (kv: feedback=none, mutation=chain, crossover=concat,
+proposal/design=chain, construct=chain+decode; text: semua none+decode).
+**Hasil & keputusan: PENDING GPU.**

@@ -1,53 +1,0 @@
-# combo: co-git_latentmas_foundation__c-working__j-git_judger_only__p-git_latentmas_foundation
-# cmd: /workspace/project/multi-agent-system/.venv/bin/python -m try.promptbench.runners.bench_chain --chains pc_2agent,mut_proposal,cross_proposal,pcj_judger,front_end_full,front_end_feedback --latent-steps 60 --reps 3 --workers 3 --temp 0.7 --pick consistency=git_latentmas_foundation,construct=working,judger=git_judger_only,proposal=git_latentmas_foundation
-
-[bench_chain] chains=['pc_2agent', 'mut_proposal', 'cross_proposal', 'pcj_judger', 'front_end_full', 'front_end_feedback'] latent_steps=[60] reps=3 workers=3 dry_run=False overrides={'consistency': 'git_latentmas_foundation', 'construct': 'working', 'judger': 'git_judger_only', 'proposal': 'git_latentmas_foundation'}
-[bench_chain] total jobs=18 (text=0 latent=18)
-[bench_chain] === LATENT phase (use_realign): 18 jobs ===
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  79%|███████▉  | 316/398 [00:00<00:00, 3136.24it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3051.78it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 5320.60it/s]
-[common] Loading LATENT LocalLLMBackend (use_realign=True) ...
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  87%|████████▋ | 348/398 [00:00<00:00, 3447.27it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 3474.03it/s]
-2026-06-18 08:21:44.053 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_STD($volume, n=5) - TS_MEAN($volume, n=5)) / TS_STD($volume, n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.093 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK_ZSCORE(TS_MEAN($volume, n=5), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.147 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_STD($volume, n=5) - TS_MEAN($volume, n=5)) / TS_STD($volume, n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.194 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK_ZSCORE(TS_MEAN($volume, n=5), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.244 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_STD($volume, n=5) - TS_MEAN($volume, n=5)) / TS_STD($volume, n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.287 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK_ZSCORE(TS_MEAN($volume, n=5), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.327 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_STD($volume, n=5) - TS_MEAN($volume, n=5)) / TS_STD($volume, n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:44.363 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK_ZSCORE(TS_MEAN($volume, n=5), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:21:48.419 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1) - TS_ZSCORE($return, 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:21:48.558 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: REGBETA($return, TS_MEAN($volume, 1 1 1), 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 7), (line:1, col:8)
-2026-06-18 08:21:48.655 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1) - TS_ZSCORE($return, 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:21:48.754 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: REGBETA($return, TS_MEAN($volume, 1 1 1), 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 7), (line:1, col:8)
-2026-06-18 08:21:48.874 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1) - TS_ZSCORE($return, 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:21:48.972 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: REGBETA($return, TS_MEAN($volume, 1 1 1), 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 7), (line:1, col:8)
-2026-06-18 08:21:49.041 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: TS_ZSCORE($volume, 1 1) - TS_ZSCORE($return, 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 9), (line:1, col:10)
-2026-06-18 08:21:49.133 | ERROR    | factors.regulator.factor_regulator:evaluate:407 - Failed to evaluate expression: REGBETA($return, TS_MEAN($volume, 1 1 1), 1). Error: Failed to parse expression: Expected end of text, found '('  (at char 7), (line:1, col:8)
-2026-06-18 08:22:05.994 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_RANK($volume, n=10) - TS_RANK($open, n=10))  SIGN(TS_STD($return, n=10)). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.043 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, n=10), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.087 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_RANK($volume, n=10) - TS_RANK($open, n=10))  SIGN(TS_STD($return, n=10)). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.129 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, n=10), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.173 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_RANK($volume, n=10) - TS_RANK($open, n=10))  SIGN(TS_STD($return, n=10)). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.231 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, n=10), n=5). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.275 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: (TS_RANK($volume, n=10) - TS_RANK($open, n=10))  SIGN(TS_STD($return, n=10)). Error: Invalid operator(s): "="
-2026-06-18 08:22:06.310 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: : TS_CORR($return, TS_ZSCORE($volume, n=10), n=5). Error: Invalid operator(s): "="
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-[common] Latent backend ready.
-[bench_chain] done: 18 results, ok=18, err=0, unhealthy=8
-[bench_chain] scoreboard → /workspace/project/multi-agent-system/try/promptbench/results/phaseB_grid/co-git_latentmas_foundation__c-working__j-git_judger_only__p-git_latentmas_foundation/scoreboard.csv
