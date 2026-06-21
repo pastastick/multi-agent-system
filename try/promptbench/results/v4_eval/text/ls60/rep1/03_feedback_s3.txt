@@ -1,0 +1,110 @@
+# medium=text  ls=60  rep=1  node=feedback_s3  agent=feedback  transfer=none  decode=True  terminal=False
+
+# kv: {"transfer": "none", "kv_seq_len": 1042}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Feedback agent in an evolutionary alpha-mining loop. You receive a
+set of factors, their backtest results, and a replace-best decision that has
+ALREADY been made deterministically — echo that decision.
+
+PIPELINE CONTEXT. Your output is read next by a Director agent (Mutation or
+Crossover) that turns it into a research direction for the next round. Your
+primary value is a PRECISE, STRUCTURAL naming of what each factor got wrong and
+why, at a level where the Director can immediately see what to target, not just
+that something is weak. The more specific your weakness breakdown, the sharper
+the next direction.
+
+HOW TO READ THE METRICS. Two blocks arrive:
+  Block A = standalone RankIC and ICIR per factor: each factor's own predictive
+    power, model-free. RankIC measures signal strength (Spearman correlation with
+    next-day cross-sectional returns): about 0.02 is meaningful, about 0.05 is
+    strong. ICIR measures stability (mean divided by standard deviation of the
+    daily IC series): about 0.3 is reliable, about 0.5 is strong. A factor with
+    high RankIC but low ICIR is unstable noise — treat as weak. Block A is the
+    deciding metric.
+  Block B = combined-model RankIC: a LightGBM trained on all factors plus four
+    fixed baseline features. It sits near a 95 to 103 percent baseline floor and
+    cannot rank the mined factors against each other. Read it for drawdown and
+    interaction context only.
+
+STRUCTURAL WEAKNESS AXES. For each factor, diagnose along these dimensions:
+  - Variable choice: is the signal carried by a single raw variable when a ratio,
+    difference, or transform would be more informative and less noisy?
+  - Normalization: is the signal in raw price or volume units (scale-sensitive)
+    when a cross-sectional rank or z-score would remove that noise?
+  - Window length: is the window too short (catching noise) or too long (signal
+    has decayed by the time the factor fires)?
+  - Composition depth: is the expression a single-step function when the
+    hypothesis calls for a two-step structure, such as a time-series statistic
+    followed by cross-sectional standardisation?
+  - Function family: does the chosen family actually measure what the hypothesis
+    claims (for example a smoothing function when a regression slope would better
+    capture the direction of trend)?
+  - Conditional structure: is a regime gate missing when the hypothesis says the
+    signal only holds under a specific market state?
+
+Diagnose only the factors you are actually given: if there is a single factor,
+write about that one factor and do not say "every factor" or invent factors that
+were not provided. Write in plain prose with clearly labelled parts, in your own
+words.
+
+==============================================================================
+USER
+==============================================================================
+[A] Standalone per-factor metrics:
+  Factor 1: TS_ZSCORE($volume, 5) - RANK(($high - $low) / $close)  [standalone RankIC=0.031, ICIR=0.41]
+  Factor 2: REGBETA($return, $volume, 20)  [standalone RankIC=0.009, ICIR=0.10]
+
+[B] Combined LightGBM RankIC=0.052, MaxDrawdown=0.170 (near baseline floor; supplementary only).
+
+Replace-best decision (already final — echo it): [C] SOTA FactorIC_mean=0.025; this round FactorIC_mean=0.020 -> Replace Best Result: no (deterministic).
+
+Diagnose in five parts, in plain words:
+  OBSERVATION = what Block A shows for each factor (RankIC and ICIR), ranked
+    from strongest to weakest. Note Block B drawdown as context only.
+  FACTOR DIAGNOSIS = for each factor in order: one clause naming it strong,
+    weak, or noise, followed by the structural reason along the weakness axes
+    above (variable choice, window, normalization, composition, function family,
+    conditional gate).
+  WEAKNESS BREAKDOWN = a short numbered list of the most actionable weaknesses
+    across all factors, stated concretely (for example "every factor uses a
+    single raw variable with no normalization" or "window of five days is too
+    short for a medium-horizon mechanism"). This list is what Mutation and
+    Crossover will act on directly.
+  HYPOTHESIS VERDICT = supports, partially, or refutes. State whether the
+    mechanism is sound but the construction is weak (the expressions need
+    refinement) or the mechanism itself is not visible in the data (a different
+    direction is needed).
+  REPLACE BEST = yes or no, echoing the decision above.
+
+==============================================================================
+RESPONSE
+==============================================================================
+**OBSERVATION**  
+Factor 1 is the strongest with a RankIC of 0.031 and ICIR of 0.41, indicating moderate predictive power and reasonable stability. Factor 2 is the weakest with a RankIC of 0.009 and ICIR of 0.10, showing very low predictive power and high instability. Block B shows a combined model with a RankIC near baseline (0.052), with a MaxDrawdown of 0.170, indicating poor performance in context.
+
+---
+
+**FACTOR DIAGNOSIS**  
+- **Factor 1**: Strong. The factor combines a time-series z-score of volume with a ranked difference between high and low relative to close. However, it uses a single raw variable ($volume) for the z-score without proper normalization, and the ranking is done on a raw price difference, which may not capture the intended signal. The window length of 5 days is too short for a medium-horizon mechanism.  
+- **Factor 2**: Weak. The factor uses a regression beta of return against volume over a 20-day window. It is based on a single raw variable ($return) with no cross-sectional normalization. The window length of 20 days is too long, leading to signal decay and instability. The function family (regression beta) may not be the right measure of the hypothesized relationship.
+
+---
+
+**WEAKNESS BREAKDOWN**  
+1. Every factor uses a single raw variable without proper normalization or cross-sectional rank/z-score transformation.  
+2. Factor 1 uses a 5-day window, which is too short for a medium-horizon mechanism.  
+3. Factor 2 uses a 20-day window, which is too long, leading to signal decay and instability.  
+4. Both factors lack a conditional structure (regime gate) that would isolate the signal under specific market states.  
+5. Factor 1’s ranking is based on a raw price difference, which is scale-sensitive and less informative than a normalized or transformed version.
+
+---
+
+**HYPOTHESIS VERDICT**  
+Partially supports. The mechanisms (time-series z-score, regression beta) are sound in theory, but their construction is weak. The factors fail to properly normalize signals, use inappropriate window lengths, and lack conditional structures that would isolate the hypothesized effects. Refinement of these components is needed before the hypothesis can be validated.
+
+---
+
+**REPLACE BEST**  
+No

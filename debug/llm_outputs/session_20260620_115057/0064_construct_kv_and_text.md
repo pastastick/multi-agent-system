@@ -1,0 +1,490 @@
+# Call 0064 — `construct` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-20 13:28:52
+- conv_id: `e69fcd78`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 4794
+- output_tokens: 2918
+- duration_s: 127.4353
+- text_len: 10419
+
+## System Prompt
+
+```text
+You are the Builder in a quantitative alpha-mining team. A market hypothesis and
+a candidate-function palette reach you either through shared latent memory or as
+text in the task below. Your task is to write the finished factor expressions and
+output them.
+
+PIPELINE CONTEXT. Proposal set the mechanism; the Design agent shortlisted the
+functions and variables. You make the final decision and write the expressions.
+You hold FINAL responsibility for symbolic validity: a deterministic regulator
+checks every expression and rejects any that is illegal, so spend your care on
+correct names, correct argument counts, balanced brackets, and faithfulness to
+the hypothesis. Do not count characters or features.
+
+WHAT YOU MUST PRODUCE. Each factor is a CONTINUOUS cross-sectional score: one
+real number per stock per day, where higher means more expected out-performance.
+It must NOT be a true-or-false mask. A bare condition such as "close greater than
+open and volume above its average" returns true or false, which cannot be ranked;
+to use a condition, gate a magnitude with it — take the signal when the condition
+holds and zero otherwise, or subtract one cross-sectional rank from another.
+
+WORDS USED IN THIS TASK (one meaning each, so nothing is ambiguous):
+  - VARIABLE = one of the six data columns. The only data leaves ($open $high $low $close $volume $return).
+  - FUNCTION = a named operation from the library below, written as NAME(...).
+  - OPERATOR = an arithmetic or logical symbol: plus, minus, times, divide, and,
+    or, and the conditional question-mark / colon pair.
+  - EXPRESSION = one complete formula built from variables, functions, and
+    operators that produces one number per stock per day.
+  - FACTOR = a named signal: a short name, a one-line description, and the single
+    expression that computes it.
+
+VARIABLES (the only data leaves). Case does not matter — $close and $CLOSE read
+the same: $open  $high  $low  $close  $volume  $return
+
+ARITHMETIC OPERATORS, written out so there is no doubt. Inside an expression use
+the symbol + to add, - to subtract, * to multiply, and / to divide. Use these
+symbols ONLY inside an expression; in your prose write the word ("add", "divide",
+"and", "or") so a symbol always means arithmetic and nothing else.
+
+FUNCTIONS — each is written NAME(arguments). Argument letters: A and B are any
+sub-expression (a variable, a number, or another function call); C is a
+condition that is true or false, such as "$close is greater than $open"; n and p
+are whole-number windows of days; q is a fraction between 0 and 1.
+
+ARITY IS STRICT — each function takes exactly the arguments shown. CROSS-SECTIONAL
+functions take exactly ONE argument with no window. RANK(A) takes one argument;
+for a rolling rank over n days, use TS_RANK(A, n) instead. Always match argument
+count to the signature above.
+
+Cross-sectional functions = one argument, no window; they compare one stock
+against all other stocks on the same day:
+  RANK(A) rank of A across all stocks today.
+  ZSCORE(A) standardise A across all stocks today.
+  MEAN(A) mean across the cross-section of A.
+  STD(A) standard deviation across the cross-section of A.
+  SKEW(A) skewness across the cross-section of A.
+  KURT(A) kurtosis across the cross-section of A.
+  MAX(A) maximum across the cross-section of A.
+  MIN(A) minimum across the cross-section of A.
+  MEDIAN(A) median across the cross-section of A.
+
+Time-series functions = take a series A and a window n; they look back over the
+past n days of each stock on its own:
+  DELTA(A, n) change in A over n periods.
+  DELAY(A, n) A delayed by n periods.
+  TS_MEAN(A, n) mean of A over the past n days.
+  TS_SUM(A, n) sum of A over the past n days.
+  TS_RANK(A, n) time-series rank of the last value of A in the past n days.
+  TS_ZSCORE(A, n) rolling z-score of A over the past n days.
+  TS_MEDIAN(A, n) median of A over the past n days.
+  TS_PCTCHANGE(A, p) percentage change in A over p periods.
+  TS_MIN(A, n) minimum of A in the past n days.
+  TS_MAX(A, n) maximum of A in the past n days.
+  TS_ARGMAX(A, n) index of the maximum of A over the past n days.
+  TS_ARGMIN(A, n) index of the minimum of A over the past n days.
+  TS_QUANTILE(A, p, q) rolling quantile q of A over the past p periods.
+  TS_STD(A, n) standard deviation of A over the past n days.
+  TS_VAR(A, p) rolling variance of A over the past p periods.
+  TS_CORR(A, B, n) correlation between A and B over the past n days.
+  TS_COVARIANCE(A, B, n) covariance between A and B over the past n days.
+  TS_MAD(A, n) rolling median absolute deviation of A over the past n days.
+  PERCENTILE(A, q, p) quantile q of A; rolling over the past p periods if p given.
+  HIGHDAY(A, n) days since the highest value of A in the past n days.
+  LOWDAY(A, n) days since the lowest value of A in the past n days.
+  SUMAC(A, n) cumulative sum of A over the past n days.
+
+Moving-average and smoothing functions:
+  SMA(A, n, m) simple moving average of A over n periods with modifier m.
+  WMA(A, n) weighted moving average of A over n periods.
+  EMA(A, n) exponential moving average of A over n periods (decay 2/(n+1)).
+  DECAYLINEAR(A, d) linearly weighted moving average of A over d periods.
+
+Mathematical operations — one argument unless noted:
+  PROD(A, n) product of A over the past n days. Use * for general multiplication.
+  LOG(A) natural logarithm of A.
+  SQRT(A) square root of A.
+  POW(A, n) raise A to the power of n.
+  SIGN(A) sign of A, one of 1, 0, or -1.
+  EXP(A) exponential of A.
+  ABS(A) absolute value of A.
+  MAX(A, B) pairwise maximum of A and B.
+  MIN(A, B) pairwise minimum of A and B.
+  INV(A) reciprocal, one divided by A.
+  FLOOR(A) floor of A.
+
+Conditional and logical functions, which turn a condition into a number:
+  (C) ? (A) : (B)  if condition C holds then A, otherwise B. C is a logical
+    expression such as $close > $open.
+  (C1) && (C2)  both C1 and C2 true.
+  (C1) || (C2)  C1 or C2 true.
+  COUNT(C, n) count of periods meeting condition C in the past n.
+  SUMIF(A, n, C) sum of A over the past n periods where C holds.
+  FILTER(A, C) keep A where condition C holds.
+
+Regression and residual functions:
+  SEQUENCE(n) a single-column sequence 1..n; only valid nested in REGBETA or
+    REGRESI as argument B.
+  REGBETA(A, B, n) regression slope of A on B over the past n samples.
+  REGRESI(A, B, n) regression residual of A on B over the past n samples.
+
+Technical indicators:
+  RSI(A, n) relative strength index of A over n periods.
+  MACD(A, short, long) difference of a short and a long EMA of A.
+  BB_MIDDLE(A, n) middle Bollinger band (n-period SMA of A).
+  BB_UPPER(A, n) middle band plus two standard deviations over n periods.
+  BB_LOWER(A, n) middle band minus two standard deviations over n periods.
+
+RULES FOR A LEGAL EXPRESSION:
+  - Use only the six variables and the exact function names above.
+  - Mind the TS_ prefix: TS_STD is rolling over time, STD is cross-sectional
+    today — different functions. The same holds for every TS_ name.
+  - Match every opening bracket with a closing one.
+  - Every expression contains at least one variable.
+```
+
+## User Prompt
+
+```text
+The hypothesis and the candidate-function palette from
+the Proposal and Design agents:
+<hypothesis>in the liquid equities market from 2018 to 2021, i observe that when a stock’s time-series mean price is high and its volume change is positive, it tends to outperform others in the next period. this pattern suggests a momentum-driven trend with volume confirmation.</hypothesis>
+
+<func>TS_MEAN($close, 10): variables $close, $volume, window 10-30 days, purpose computes average price over past 10-30 days</func>
+<func>TS_PCTCHANGE($volume, 10): variables $volume, window 10-30 days, purpose computes percentage change in volume over past 10-30 days</func>
+<func>RANK(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose ranks stocks by their average price</func>
+<func>ZSCORE(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose standardizes average price across stocks</func>
+<func>TS_RANK($volume, 10): variables $volume, window 10-30 days, purpose ranks volume over past 10-30 days</func>
+<func>TS_ZSCORE($volume, 10): variables $volume, window 10-30 days, purpose standardizes volume across stocks</func>
+<func>DELTA(TS_MEAN($close, 10), 1): variables $close, window 10-30 days, purpose computes change in average price one period ahead</func>
+<func>DELTA(TS_PCTCHANGE($volume, 10), 1): variables $volume, window 10-30 days, purpose computes change in volume change one period ahead</func>
+<func>REGRESI(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10): variables $close, $volume, window 10-30 days, purpose computes regression residual of average price on volume change</func>
+<func>REGBETA(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10): variables $close, $volume, window 10-30 days, purpose computes regression slope of average price on volume change</func>
+<func>TS_CORR(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10): variables $close, $volume, window 10-30 days, purpose computes correlation between average price and volume change</func>
+<func>TS_COVARIANCE(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10): variables $close, $volume, window 10-30 days, purpose computes covariance between average price and volume change</func>
+<func>TS_STD(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes standard deviation of average price over past 10-30 days</func>
+<func>TS_VAR(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes variance of average price over past 10-30 days</func>
+<func>TS_MEDIAN(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes median of average price over past 10-30 days</func>
+<func>TS_MIN(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes minimum of average price over past 10-30 days</func>
+<func>TS_MAX(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes maximum of average price over past 10-30 days</func>
+<func>TS_ARGMAX(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes index of maximum average price over past 10-30 days</func>
+<func>TS_ARGMIN(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes index of minimum average price over past 10-30 days</func>
+<func>TS_QUANTILE(TS_MEAN($close, 10), 0.5, 10): variables $close, window 10-30 days, purpose computes median of average price over past 10-30 days</func>
+<func>TS_PCTCHANGE(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes percentage change in average price over past 10-30 days</func>
+<func>TS_MAD(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes median absolute deviation of average price over past 10-30 days</func>
+<func>PERCENTILE(TS_MEAN($close, 10), 0.5, 10): variables $close, window 10-30 days, purpose computes median of average price over past 10-30 days</func>
+<func>HIGHDAY(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes days since highest average price in past 10-30 days</func>
+<func>LOWDAY(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes days since lowest average price in past 10-30 days</func>
+<func>SMA(TS_MEAN($close, 10), 10, 0.5): variables $close, window 10-30 days, purpose computes simple moving average of average price with modifier</func>
+<func>WMA(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes weighted moving average of average price</func>
+<func>EMA(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes exponential moving average of average price</func>
+<func>DECAYLINEAR(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes linearly weighted moving average of average price</func>
+<func>PROD(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes product of average price over past 10-30 days</func>
+<func>LOG(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes natural logarithm of average price</func>
+<func>SQRT(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes square root of average price</func>
+<func>POW(TS_MEAN($close, 10), 2): variables $close, window 10-30 days, purpose computes average price squared</func>
+<func>SIGN(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes sign of average price</func>
+<func>EXP(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes exponential of average price</func>
+<func>ABS(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes absolute value of average price</func>
+<func>MAX(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10)): variables $close, $volume, window 10-30 days, purpose computes pairwise maximum of average price and volume change</func>
+<func>MIN(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10)): variables $close, $volume, window 10-30 days, purpose computes pairwise minimum of average price and volume change</func>
+<func>INV(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes reciprocal of average price</func>
+<func>FLOOR(TS_MEAN($close, 10)): variables $close, window 10-30 days, purpose computes floor of average price</func>
+<func>(TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10)) ? 1 : 0: variables $close, $volume, window 10-30 days, purpose computes binary signal when average price is higher than volume change</func>
+<func>(TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10)) && (TS_PCTCHANGE($volume, 10) > 0): variables $close, $volume, window 10-30 days, purpose computes logical conjunction of conditions</func>
+<func>COUNT(TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10), 10): variables $close, $volume, window 10-30 days, purpose counts periods where average price is higher than volume change</func>
+<func>SUMIF(TS_MEAN($close, 10), 10, TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10)): variables $close, $volume, window 10-30 days, purpose sums average price where average price is higher than volume change</func>
+<func>FILTER(TS_MEAN($close, 10), TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10)): variables $close, $volume, window 10-30 days, purpose filters average price where average price is higher than volume change</func>
+<func>RSI(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes relative strength index of average price</func>
+<func>MACD(TS_MEAN($close, 10), 10, 20): variables $close, window 10-30 days, purpose computes MACD of average price</func>
+<func>BB_MIDDLE(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes middle Bollinger band of average price</func>
+<func>BB_UPPER(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes upper Bollinger band of average price</func>
+<func>BB_LOWER(TS_MEAN($close, 10), 10): variables $close, window 10-30 days, purpose computes lower Bollinger band of average price</func>
+
+Your task is to write as many valid factor expressions as the palette supports —
+each one a different realisation of the same hypothesis. Many factors are better
+than few: some will be rejected by the regulator after you write them, so the
+more you produce, the more survive.
+
+For each candidate function in the palette:
+  Step 1 — Take the candidate function and the variables it uses from the palette.
+  Step 2 — Build the expression in layers: the candidate function as the inner
+           computation, then a cross-sectional step (rank, standardise, gate a
+           magnitude on a condition, or contrast two ranks) that turns it into a
+           continuous score.
+  Step 3 — Check it: only real variables from the six listed; correct argument
+           counts (time-series functions take a window, cross-sectional functions
+           take no window); windows between one and sixty days; no series paired
+           with itself; brackets balanced; the result a rankable number.
+  Step 4 — Give it a short descriptive name and one sentence on what it captures.
+  Step 5 — Repeat Steps 1 to 4 for the next candidate function in the palette.
+Then, as the LAST thing you write, output this JSON block exactly — no text
+before or after it, no markdown fences, no trailing commas:
+{
+  "hypothesis": "<the hypothesis from your latent memory, in one sentence>",
+  "factors": [
+    {
+      "name": "<short factor name>",
+      "expression": "<single DSL expression>",
+      "explanation": "<one sentence on what it measures>"
+    }
+  ]
+}
+The factors array must contain one object for every candidate function worked
+through in Steps 1 to 5. Include all of them.
+```
+
+## Response
+
+```text
+{
+  "hypothesis": "in the liquid equities market from 2018 to 2021, when a stock’s time-series mean price is high and its volume change is positive, it tends to outperform others in the next period.",
+  "factors": [
+    {
+      "name": "MeanPriceZScore",
+      "expression": "ZSCORE(TS_MEAN($close, 10))",
+      "explanation": "Standardized average price across stocks, capturing momentum in price trends."
+    },
+    {
+      "name": "VolumeChangePct",
+      "expression": "TS_PCTCHANGE($volume, 10)",
+      "explanation": "Percentage change in volume over the past 10 days, indicating volume confirmation."
+    },
+    {
+      "name": "MeanPriceRank",
+      "expression": "RANK(TS_MEAN($close, 10))",
+      "explanation": "Rank of average price across stocks, highlighting stocks with higher prices."
+    },
+    {
+      "name": "VolumeRank",
+      "expression": "TS_RANK($volume, 10)",
+      "explanation": "Rank of volume over the past 10 days, identifying stocks with higher trading activity."
+    },
+    {
+      "name": "MeanPriceDelta",
+      "expression": "DELTA(TS_MEAN($close, 10), 1)",
+      "explanation": "Change in average price one period ahead, capturing momentum in price trends."
+    },
+    {
+      "name": "VolumeChangeDelta",
+      "expression": "DELTA(TS_PCTCHANGE($volume, 10), 1)",
+      "explanation": "Change in volume change one period ahead, indicating volume confirmation trends."
+    },
+    {
+      "name": "RegresiResidual",
+      "expression": "REGRESI(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10)",
+      "explanation": "Regression residual of average price on volume change, capturing unexplained price movement."
+    },
+    {
+      "name": "RegresiBeta",
+      "expression": "REGBETA(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10)",
+      "explanation": "Regression slope of average price on volume change, measuring the strength of the relationship."
+    },
+    {
+      "name": "Correlation",
+      "expression": "TS_CORR(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10)",
+      "explanation": "Correlation between average price and volume change, indicating the strength of the momentum-volume relationship."
+    },
+    {
+      "name": "Covariance",
+      "expression": "TS_COVARIANCE(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10), 10)",
+      "explanation": "Covariance between average price and volume change, measuring how they move together."
+    },
+    {
+      "name": "StdDevMeanPrice",
+      "expression": "TS_STD(TS_MEAN($close, 10), 10)",
+      "explanation": "Standard deviation of average price over the past 10 days, capturing price volatility."
+    },
+    {
+      "name": "VarMeanPrice",
+      "expression": "TS_VAR(TS_MEAN($close, 10), 10)",
+      "explanation": "Variance of average price over the past 10 days, measuring price dispersion."
+    },
+    {
+      "name": "MedianMeanPrice",
+      "expression": "TS_MEDIAN(TS_MEAN($close, 10), 10)",
+      "explanation": "Median of average price over the past 10 days, highlighting central tendency."
+    },
+    {
+      "name": "MinMeanPrice",
+      "expression": "TS_MIN(TS_MEAN($close, 10), 10)",
+      "explanation": "Minimum average price over the past 10 days, identifying stocks with the lowest prices."
+    },
+    {
+      "name": "MaxMeanPrice",
+      "expression": "TS_MAX(TS_MEAN($close, 10), 10)",
+      "explanation": "Maximum average price over the past 10 days, highlighting stocks with the highest prices."
+    },
+    {
+      "name": "ArgMaxMeanPrice",
+      "expression": "TS_ARGMAX(TS_MEAN($close, 10), 10)",
+      "explanation": "Index of the maximum average price over the past 10 days, identifying the top-performing stock."
+    },
+    {
+      "name": "ArgMinMeanPrice",
+      "expression": "TS_ARGMIN(TS_MEAN($close, 10), 10)",
+      "explanation": "Index of the minimum average price over the past 10 days, identifying the bottom-performing stock."
+    },
+    {
+      "name": "QuantileMeanPrice",
+      "expression": "TS_QUANTILE(TS_MEAN($close, 10), 0.5, 10)",
+      "explanation": "Median of average price over the past 10 days, capturing central tendency."
+    },
+    {
+      "name": "PctChangeMeanPrice",
+      "expression": "TS_PCTCHANGE(TS_MEAN($close, 10), 10)",
+      "explanation": "Percentage change in average price over the past 10 days, indicating momentum."
+    },
+    {
+      "name": "MADMeanPrice",
+      "expression": "TS_MAD(TS_MEAN($close, 10), 10)",
+      "explanation": "Median absolute deviation of average price over the past 10 days, measuring price dispersion."
+    },
+    {
+      "name": "PercentileMeanPrice",
+      "expression": "PERCENTILE(TS_MEAN($close, 10), 0.5, 10)",
+      "explanation": "Median of average price over the past 10 days, highlighting central tendency."
+    },
+    {
+      "name": "HighDayMeanPrice",
+      "expression": "HIGHDAY(TS_MEAN($close, 10), 10)",
+      "explanation": "Days since the highest average price in the past 10 days, capturing price momentum."
+    },
+    {
+      "name": "LowDayMeanPrice",
+      "expression": "LOWDAY(TS_MEAN($close, 10), 10)",
+      "explanation": "Days since the lowest average price in the past 10 days, indicating price recovery."
+    },
+    {
+      "name": "SMAMeanPrice",
+      "expression": "SMA(TS_MEAN($close, 10), 10, 0.5)",
+      "explanation": "Simple moving average of average price with modifier, smoothing price trends."
+    },
+    {
+      "name": "WMAMeanPrice",
+      "expression": "WMA(TS_MEAN($close, 10), 10)",
+      "explanation": "Weighted moving average of average price, emphasizing recent price movements."
+    },
+    {
+      "name": "EMA_mean_price",
+      "expression": "EMA(TS_MEAN($close, 10), 10)",
+      "explanation": "Exponential moving average of average price, giving more weight to recent prices."
+    },
+    {
+      "name": "DecayLinearMeanPrice",
+      "expression": "DECAYLINEAR(TS_MEAN($close, 10), 10)",
+      "explanation": "Linearly weighted moving average of average price, emphasizing recent prices."
+    },
+    {
+      "name": "ProdMeanPrice",
+      "expression": "PROD(TS_MEAN($close, 10), 10)",
+      "explanation": "Product of average price over the past 10 days, capturing cumulative price trends."
+    },
+    {
+      "name": "LogMeanPrice",
+      "expression": "LOG(TS_MEAN($close, 10))",
+      "explanation": "Natural logarithm of average price, transforming price data for analysis."
+    },
+    {
+      "name": "SqrtMeanPrice",
+      "expression": "SQRT(TS_MEAN($close, 10))",
+      "explanation": "Square root of average price, normalizing price data for analysis."
+    },
+    {
+      "name": "PowMeanPrice",
+      "expression": "POW(TS_MEAN($close, 10), 2)",
+      "explanation": "Average price squared, capturing price magnitude in a non-linear way."
+    },
+    {
+      "name": "SignMeanPrice",
+      "expression": "SIGN(TS_MEAN($close, 10))",
+      "explanation": "Sign of average price, indicating whether prices are positive or negative."
+    },
+    {
+      "name": "ExpMeanPrice",
+      "expression": "EXP(TS_MEAN($close, 10))",
+      "explanation": "Exponential of average price, transforming price data for analysis."
+    },
+    {
+      "name": "AbsMeanPrice",
+      "expression": "ABS(TS_MEAN($close, 10))",
+      "explanation": "Absolute value of average price, capturing magnitude without sign."
+    },
+    {
+      "name": "MaxMeanPriceVol",
+      "expression": "MAX(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10))",
+      "explanation": "Pairwise maximum of average price and volume change, capturing dominant trend."
+    },
+    {
+      "name": "MinMeanPriceVol",
+      "expression": "MIN(TS_MEAN($close, 10), TS_PCTCHANGE($volume, 10))",
+      "explanation": "Pairwise minimum of average price and volume change, capturing contrasting trends."
+    },
+    {
+      "name": "InvMeanPrice",
+      "expression": "INV(TS_MEAN($close, 10))",
+      "explanation": "Reciprocal of average price, capturing inverse relationships."
+    },
+    {
+      "name": "FloorMeanPrice",
+      "expression": "FLOOR(TS_MEAN($close, 10))",
+      "explanation": "Floor of average price, capturing the greatest integer less than or equal to the price."
+    },
+    {
+      "name": "BinarySignal",
+      "expression": "(TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10)) ? 1 : 0",
+      "explanation": "Binary signal when average price is higher than volume change, indicating momentum."
+    },
+    {
+      "name": "LogicalConjunction",
+      "expression": "(TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10)) && (TS_PCTCHANGE($volume, 10) > 0)",
+      "explanation": "Logical conjunction of conditions where average price is higher than volume change and volume change is positive."
+    },
+    {
+      "name": "CountCondition",
+      "expression": "COUNT(TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10), 10)",
+      "explanation": "Count of periods where average price is higher than volume change, indicating momentum."
+    },
+    {
+      "name": "SumIfCondition",
+      "expression": "SUMIF(TS_MEAN($close, 10), 10, TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10))",
+      "explanation": "Sum of average price where average price is higher than volume change, capturing momentum."
+    },
+    {
+      "name": "FilterMeanPrice",
+      "expression": "FILTER(TS_MEAN($close, 10), TS_MEAN($close, 10) > TS_PCTCHANGE($volume, 10))",
+      "explanation": "Filtered average price where average price is higher than volume change, highlighting momentum stocks."
+    },
+    {
+      "name": "RSI_mean_price",
+      "expression": "RSI(TS_MEAN($close, 10), 10)",
+      "explanation": "Relative strength index of average price, measuring momentum over time."
+    },
+    {
+      "name": "MACD_mean_price",
+      "expression": "MACD(TS_MEAN($close, 10), 10, 20)",
+      "explanation": "MACD of average price, capturing momentum and trend changes."
+    },
+    {
+      "name": "BB_middle_mean_price",
+      "expression": "BB_MIDDLE(TS_MEAN($close, 10), 10)",
+      "explanation": "Middle Bollinger band of average price, indicating price stability."
+    },
+    {
+      "name": "BB_upper_mean_price",
+      "expression": "BB_UPPER(TS_MEAN($close, 10), 10)",
+      "explanation": "Upper Bollinger band of average price, indicating potential overbought conditions."
+    },
+    {
+      "name": "BB_lower_mean_price",
+      "expression": "BB_LOWER(TS_MEAN($close, 10), 10)",
+      "explanation": "Lower Bollinger band of average price, indicating potential oversold conditions."
+    }
+  ]
+}
+```

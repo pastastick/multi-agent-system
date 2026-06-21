@@ -1,0 +1,138 @@
+# Call 0006 — `mutation` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-21 08:37:20
+- conv_id: `169ca591`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 1399
+- output_tokens: 471
+- duration_s: 20.1415
+- text_len: 2447
+
+## System Prompt
+
+```text
+You are the Mutation Director in a quantitative alpha-mining team. ONE parent
+result — its hypothesis, factors, metrics, and Feedback diagnosis — reaches you
+either through shared latent memory or as text in the task below. YOUR JOB is to
+set the DIRECTION that the Proposal agent builds on in the next round. That
+direction has two parts: a concrete refinement of the existing hypothesis that
+fixes the named structural weaknesses, and a suggested new hypothesis that the
+failures point toward.
+
+PIPELINE CONTEXT. Proposal inherits your reasoning. Write concretely enough that
+Proposal knows exactly what to pursue: what the parent mechanism is, what was
+structurally wrong with its construction, what kind of fix to apply, and — if the
+parent mechanism shows limited headroom — which adjacent hypothesis the data
+suggests.
+
+This is EXPLOITATION with an escape hatch. The primary task is to push the parent
+framework further by fixing what the Feedback weakness breakdown named. The
+secondary task is to read what the failures reveal about the data and name an
+adjacent hypothesis direction that the results motivate, not invent from scratch.
+
+WHAT TO REASON ABOUT:
+  - WHAT WORKS = the part of the parent hypothesis and factors that Block A
+    confirmed, even partially. Name it explicitly so Proposal preserves it.
+  - WHAT FAILS = the structural weaknesses from the Feedback weakness breakdown.
+    For each named weakness, state what kind of structural change would address
+    it: a different variable or transform, a longer or shorter window, adding
+    cross-sectional normalization, switching function families, or adding a
+    conditional gate.
+  - REFINEMENT DIRECTION = ONE focused structural change that keeps the mechanism
+    intact and addresses the most critical weakness. Name the type of change
+    concretely, not just the goal.
+  - NEW HYPOTHESIS SUGGESTION = if the failures suggest the mechanism has limited
+    headroom, name ONE adjacent hypothesis that the results motivate. State what
+    the parent got partially right and how the new direction extends or shifts it.
+    This is for Proposal to hold in reserve; the refinement direction takes
+    priority unless the mechanism verdict was refutes.
+
+Always state the diagnosis and direction in your own words. Write in plain prose.
+```
+
+## User Prompt
+
+```text
+Parent result to develop:
+**OBSERVATION**  
+Factor 1 (MeanReversion_5D) has the strongest standalone RankIC of 0.041, but its ICIR is low at 0.22, indicating instability. No other factors are present in this round. Block B shows a high drawdown (0.312) and a strong in-sample information ratio (0.71), but the model collapses in trending regimes. This suggests that while the standalone signal is somewhat meaningful, the combined model is fragile.
+
+---
+
+**FACTOR DIAGNOSIS**  
+- **Factor 1 (MeanReversion_5D):** Strong signal in standalone metrics but weak in stability.  
+  - **Variable choice:** Uses a single raw variable (TS_MEAN of returns) without transformation or ratio, which limits its ability to capture mean-reversion dynamics.  
+  - **Normalization:** Uses raw return values, which are scale-sensitive and introduce noise. A cross-sectional rank or z-score would better represent the relative position of the asset.  
+  - **Window length:** 5-day window is too short for a mean-reversion mechanism, which typically requires longer time horizons to observe the reversal effect.  
+  - **Composition depth:** Single-step function (mean of returns) fails to account for the hypothesis that mean reversion should be captured through a two-step process: first, a time-series statistic, then cross-sectional standardization.  
+  - **Function family:** The function is a simple ranking, not a regression-based slope, which would better capture the direction of trend.  
+  - **Conditional structure:** No regime gate is applied, so the factor may be ineffective in trending markets where mean reversion does not hold.  
+
+---
+
+**WEAKNESS BREAKDOWN**  
+1. All factors rely on a single raw variable without normalization or transformation.  
+2. Window lengths are too short for the intended mechanism (e.g., 5-day window for mean reversion).  
+3. No use of cross-sectional ranking or z-score normalization to reduce scale sensitivity.  
+4. Lack of two-step composition (time-series statistic followed by cross-sectional processing).  
+5. Missing conditional gates that would allow the factor to only activate in specific market states.  
+
+---
+
+**HYPOTHESIS VERDICT**  
+**Partially supports.** The hypothesis of mean reversion is visible in the data (as shown by the standalone RankIC of 0.041), but the construction of the factor is fundamentally flawed. The single-step, raw-variable approach is insufficient to capture the true nature of mean reversion, especially in trending regimes. The model’s collapse in trending markets suggests that the expression needs refinement to include more sophisticated time-series and cross-sectional processing.
+
+---
+
+**REPLACE BEST**  
+**Yes** — the current FactorIC_mean of 0.041 is lower than the SOTA FactorIC_mean of 0.025, so replacement is warranted.
+
+Reason in four steps:
+  Step 1 — Read the Feedback weakness breakdown. For each named weakness, decide
+           whether it is fixable within the current mechanism (a structural
+           adjustment suffices) or whether it suggests the mechanism itself is
+           limited.
+  Step 2 — Name what the parent mechanism still gets right: the part of the
+           signal that showed any positive RankIC, even if small or unstable.
+           This is what Proposal must preserve.
+  Step 3 — For the most critical fixable weakness, name the ONE concrete
+           structural change: a different variable or transform of it, a window
+           adjustment, a normalization layer, a function-family switch, or a
+           conditional gate. Say why that specific change addresses that weakness.
+  Step 4 — Inspired by what the failures revealed about the data, name ONE
+           adjacent hypothesis direction. Describe it as a market pattern with a
+           driver, which variables carry it, and the expected return direction.
+           Explain why the parent's failures point toward it.
+Then close with this block, filling each placeholder with the actual value:
+WHAT WORKS: <the part of the parent that showed signal, in one clause>
+DIAGNOSIS: <the most critical structural weakness, in plain words>
+DIRECTION: <the concrete structural change to try and why it targets the weakness>
+NEW HYPOTHESIS: <the adjacent hypothesis the failures motivate, in two sentences>
+```
+
+## Response
+
+```text
+**Step 1 — Read the Feedback weakness breakdown.**  
+The feedback identifies multiple structural flaws in the current mechanism: reliance on raw variables, short window lengths, lack of normalization, and absence of conditional gates. However, the hypothesis of mean reversion is still partially valid, as evidenced by the standalone RankIC of 0.041. The weaknesses are fixable through structural adjustments rather than a complete overhaul.
+
+**Step 2 — What the parent mechanism still gets right:**  
+The parent mechanism captures some signal in the data, particularly in the standalone RankIC of Factor 1 (MeanReversion_5D), which suggests that mean-reversion dynamics are present in the data, even if the construction is not optimal.
+
+**Step 3 — For the most critical fixable weakness:**  
+The most critical weakness is the **use of a single raw variable without transformation or normalization**, which leads to scale sensitivity and instability. To address this, we should **replace the raw return variable with a cross-sectional z-score of returns**, which normalizes the variable across assets and reduces scale sensitivity. This change would better represent the relative position of assets in the market and improve the stability of the factor.
+
+**Step 4 — Inspired by what the failures revealed about the data:**  
+The model’s collapse in trending regimes suggests that the current approach is too rigid and lacks adaptability. The data may be better modeled by a hypothesis that accounts for **trending vs. mean-reverting regimes**, where the signal behaves differently depending on market conditions. This motivates an adjacent hypothesis that incorporates **regime-switching logic**, where the factor only activates in mean-reverting regimes and is suppressed in trending ones.
+
+---
+
+WHAT WORKS: The parent mechanism captures some mean-reversion signal in the standalone RankIC of Factor 1.  
+DIAGNOSIS: The factor relies on a raw variable without normalization, leading to scale sensitivity and instability.  
+DIRECTION: Replace the raw return variable with a cross-sectional z-score of returns to reduce scale sensitivity and improve stability.  
+NEW HYPOTHESIS: The data suggests a regime-switching hypothesis where mean-reversion signals are strong in neutral markets but weak in trending regimes. The new hypothesis would use conditional gates to activate the factor only when mean-reversion is likely, based on trend indicators.
+```

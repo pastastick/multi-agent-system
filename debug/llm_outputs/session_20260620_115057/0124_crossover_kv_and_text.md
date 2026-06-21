@@ -1,0 +1,170 @@
+# Call 0124 — `crossover` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-20 14:24:03
+- conv_id: `b3387d43`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 1661
+- output_tokens: 682
+- duration_s: 26.1343
+- text_len: 3324
+
+## System Prompt
+
+```text
+You are the Crossover Director in a quantitative alpha-mining team. SEVERAL
+parent results — each with its hypothesis, factors, metrics, and Feedback
+diagnosis — reach you either through shared latent memory or as text in the task
+below. YOUR JOB is to set a BOLD exploratory DIRECTION that fuses the
+complementary strengths of the parents into something none of them reached, and
+to name a new hypothesis that the fusion motivates.
+
+PIPELINE CONTEXT. Proposal inherits your reasoning. Write concretely enough that
+Proposal knows: what each parent contributed distinctly, what each parent failed
+at according to Feedback, how the fusion combines strengths while avoiding the
+named failures, and what new hypothesis the fusion collectively points toward.
+
+This is EXPLORATION. The parents each explored a different region of the
+mechanism space and each hit a different structural ceiling. Your task is to map
+the territory between them, find the complementary fit, describe the unexplored
+region, and point Proposal toward it.
+
+WHAT TO REASON ABOUT:
+  - PER-PARENT CONTRIBUTION = for each parent, name its ONE distinct strength
+    (a specific market driver, a construction style, a horizon, or a data
+    dimension) AND the most critical structural weakness Feedback named for it.
+  - COMPLEMENTARY FIT = which parent's strength directly addresses another
+    parent's named weakness? Name the specific pairing: parent A is strong at X
+    where parent B is weak, and parent B is strong at Y where parent A is weak.
+  - FUSION MECHANISM = the concrete way to combine the complementary strengths:
+    apply one parent's normalisation to another parent's driver, use one parent's
+    conditional gate to filter another parent's signal, or combine horizons across
+    parents. Describe the fused mechanism as a market pattern with a driver,
+    the variables it involves, the horizon, and the predicted return direction.
+  - NEW HYPOTHESIS = what does the fusion reveal about an adjacent, unexplored
+    mechanism? The parents collectively mapped a region; the fusion points beyond
+    it. Name ONE new hypothesis that the combined evidence motivates, stated as
+    a market pattern with a driver, variables, horizon, and return direction.
+
+Always combine at least two parents. Write in plain prose.
+```
+
+## User Prompt
+
+```text
+Parent results to recombine:
+**OBSERVATION**  
+Factor 1 (Momentum_Raw_3D) has the only standalone RankIC of 0.005, which is near baseline, and an ICIR of 0.08, indicating very low stability. It is the weakest factor in Block A. No other factors are present in this round. Block B shows a combined model with a RankIC of 0.041, close to the baseline floor, and a drawdown of 0.185, which suggests the model is not performing well in terms of risk-adjusted returns.
+
+---
+
+**FACTOR DIAGNOSIS**  
+- **Factor 1 (Momentum_Raw_3D):** Weak  
+  The signal is based on a raw variable (TS_MEAN of returns over 3 days) without normalization or transformation. The window length is too short to capture meaningful momentum, and the lack of cross-sectional standardization makes the signal noisy and unstable. The function family is a simple moving average, which does not align with the hypothesis of capturing momentum in a meaningful way.
+
+---
+
+**WEAKNESS BREAKDOWN**  
+1. Every factor uses a single raw variable with no normalization or cross-sectional rank/z-score transformation.  
+2. The window length is too short (3 days) for a medium-horizon momentum mechanism.  
+3. There is no composition depth: the expression is a single-step function, not a two-step structure involving time-series statistics followed by cross-sectional standardization.  
+4. The function family is a simple moving average, which does not capture the directional trend implied by the hypothesis.  
+5. No conditional gate is applied, suggesting the signal may be present in all market states, including noise or non-momentum periods.
+
+---
+
+**HYPOTHESIS VERDICT**  
+Partially refutes. The mechanism of momentum is present in the data, but the construction is fundamentally weak. The factors do not properly capture or refine the momentum hypothesis through appropriate variable choice, normalization, window length, or function family. A more sophisticated construction is needed to extract meaningful signals.
+
+---
+
+**REPLACE BEST**  
+No
+---
+**OBSERVATION**  
+Factor 1 is the strongest (RankIC=0.031, ICIR=0.41), followed by Factor 2 (RankIC=0.009, ICIR=0.10). Factor 2 is weak and unstable, while Factor 1 is moderate in predictive power but shows some stability. Block B shows a combined model with a RankIC near baseline (0.052) and a drawdown of 0.170, indicating that the factors do not outperform a simple baseline.
+
+---
+
+**FACTOR DIAGNOSIS**  
+- **Factor 1**: Strong, but with structural limitations. It uses a two-step construction: a time-series z-score on volume and a cross-sectional rank on price range. However, the signal is still noisy and not robust enough to be considered strong.  
+- **Factor 2**: Weak. It uses a regression beta on return and volume, which is a single-variable function. The low ICIR and RankIC suggest that the signal is unstable and not predictive. The function family may not capture the intended mechanism.
+
+---
+
+**WEAKNESS BREAKDOWN**  
+1. **All factors use raw variables without proper normalization**, leading to scale sensitivity and noise.  
+2. **Window length is too short (5 days)** for meaningful time-series statistics.  
+3. **Composition depth is insufficient**—Factor 1 uses two steps but doesn’t fully leverage cross-sectional standardization.  
+4. **Function family mismatch** in Factor 2: regression beta may not capture the intended trend or relationship.  
+5. **No conditional gate or regime-aware structure** in either factor, missing potential market states where signals might be stronger or weaker.
+
+---
+
+**HYPOTHESIS VERDICT**  
+**Partially supports**. The mechanisms (time-series z-score, regression beta) are plausible in theory, but the construction is weak. The factors fail to generate consistent, reliable signals across different market conditions. The expressions need refinement in terms of normalization, window length, and conditional logic.
+
+---
+
+**REPLACE BEST**  
+No
+
+Reason in four steps:
+  Step 1 — For each parent: name its distinct strength (driver, construction
+           style, horizon, or variable dimension) and the most critical weakness
+           the Feedback named for it.
+  Step 2 — Find the complementary pairing: which parent's strength addresses
+           another parent's named weakness? State the specific fit.
+  Step 3 — Describe the fused mechanism: how do the complementary strengths
+           combine into a market pattern that none of the parents reached?
+           State the driver, the variables it involves, the horizon, and the
+           predicted return direction.
+  Step 4 — From the fusion, name ONE new hypothesis that the combined evidence
+           motivates. It should go beyond the fusion itself — what adjacent
+           mechanism do the parents collectively point toward? State it as a
+           market pattern with a driver, variables, horizon, and return direction.
+Then close with this block, filling each placeholder with the actual value:
+STRENGTHS: <each parent's distinct strength and critical weakness, one clause per parent>
+FUSION: <the fused mechanism as a market pattern, in two sentences>
+DIRECTION: <what Proposal should pursue in the next round, in one to two sentences>
+NEW HYPOTHESIS: <the adjacent hypothesis the fusion motivates, in two sentences>
+```
+
+## Response
+
+```text
+**Step 1 — For each parent: name its distinct strength and critical weakness**
+
+- **Parent 1 (Momentum_Raw_3D):** Strength: Uses a simple moving average as a raw momentum signal. Weakness: Short window length (3 days) and lacks normalization or cross-sectional standardization, leading to instability and noise.  
+- **Parent 2 (Factor 1 in Block B):** Strength: Uses a two-step construction with time-series z-score on volume and cross-sectional rank on price range. Weakness: Still noisy and not robust enough, with insufficient composition depth and function family mismatch.
+
+**Step 2 — Complementary pairing**
+
+Parent 2’s strength in using a two-step construction (time-series z-score + cross-sectional rank) directly addresses Parent 1’s weakness of lacking normalization and cross-sectional standardization. Conversely, Parent 1’s simple moving average (a single-variable function) is a weak construction that doesn’t capture the directional trend implied by the hypothesis, which Parent 2’s two-step approach could better handle.
+
+**Step 3 — Fused mechanism**
+
+The fusion combines Parent 2’s two-step construction with Parent 1’s raw momentum signal. The new mechanism applies a time-series z-score on volume (from Parent 2) to normalize the raw momentum signal (from Parent 1), creating a more stable and directional momentum indicator. This approach leverages the cross-sectional ranking from Parent 2 to filter out noise, while maintaining the momentum driver from Parent 1. The predicted return direction is positive in trending markets, with a medium horizon of 5–10 days, as the combination aims to capture both short-term momentum and cross-sectional divergence.
+
+**Step 4 — New hypothesis**
+
+The fusion suggests an adjacent mechanism where momentum is not just a raw signal but a refined version of it, incorporating cross-sectional ranking and time-series normalization. This leads to a new hypothesis: a momentum-driven strategy that uses a time-series z-score on volume and a cross-sectional rank on price range, applied over a 5–10 day horizon, to capture both directional trends and structural shifts in liquidity and price dispersion.
+
+---
+
+**STRENGTHS:**  
+Parent 1’s strength: Simple moving average as a raw momentum signal. Weakness: Short window length and lack of normalization.  
+Parent 2’s strength: Two-step construction with time-series z-score and cross-sectional rank. Weakness: Still noisy and not robust enough.  
+
+**FUSION:**  
+The fused mechanism applies a time-series z-score on volume to normalize the raw momentum signal, combining it with a cross-sectional rank on price range. This creates a more stable and directional momentum indicator with a medium horizon of 5–10 days, aiming to capture both short-term momentum and cross-sectional divergence.  
+
+**DIRECTION:**  
+Proposal should pursue a refined momentum strategy that normalizes raw momentum signals using time-series z-scores and applies cross-sectional ranking to filter out noise, targeting a medium horizon of 5–10 days.  
+
+**NEW HYPOTHESIS:**  
+The fusion motivates a new hypothesis: a momentum-driven strategy that uses a time-series z-score on volume and a cross-sectional rank on price range, applied over a 5–10 day horizon, to capture both directional trends and structural shifts in liquidity and price dispersion.
+```

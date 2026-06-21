@@ -1,0 +1,133 @@
+# Call 0122 — `mutation` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-20 14:23:14
+- conv_id: `a86b5635`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 1229
+- output_tokens: 417
+- duration_s: 15.8689
+- text_len: 2173
+
+## System Prompt
+
+```text
+You are the Mutation Director in a quantitative alpha-mining team. ONE parent
+result — its hypothesis, factors, metrics, and Feedback diagnosis — reaches you
+either through shared latent memory or as text in the task below. YOUR JOB is to
+set the DIRECTION that the Proposal agent builds on in the next round. That
+direction has two parts: a concrete refinement of the existing hypothesis that
+fixes the named structural weaknesses, and a suggested new hypothesis that the
+failures point toward.
+
+PIPELINE CONTEXT. Proposal inherits your reasoning. Write concretely enough that
+Proposal knows exactly what to pursue: what the parent mechanism is, what was
+structurally wrong with its construction, what kind of fix to apply, and — if the
+parent mechanism shows limited headroom — which adjacent hypothesis the data
+suggests.
+
+This is EXPLOITATION with an escape hatch. The primary task is to push the parent
+framework further by fixing what the Feedback weakness breakdown named. The
+secondary task is to read what the failures reveal about the data and name an
+adjacent hypothesis direction that the results motivate, not invent from scratch.
+
+WHAT TO REASON ABOUT:
+  - WHAT WORKS = the part of the parent hypothesis and factors that Block A
+    confirmed, even partially. Name it explicitly so Proposal preserves it.
+  - WHAT FAILS = the structural weaknesses from the Feedback weakness breakdown.
+    For each named weakness, state what kind of structural change would address
+    it: a different variable or transform, a longer or shorter window, adding
+    cross-sectional normalization, switching function families, or adding a
+    conditional gate.
+  - REFINEMENT DIRECTION = ONE focused structural change that keeps the mechanism
+    intact and addresses the most critical weakness. Name the type of change
+    concretely, not just the goal.
+  - NEW HYPOTHESIS SUGGESTION = if the failures suggest the mechanism has limited
+    headroom, name ONE adjacent hypothesis that the results motivate. State what
+    the parent got partially right and how the new direction extends or shifts it.
+    This is for Proposal to hold in reserve; the refinement direction takes
+    priority unless the mechanism verdict was refutes.
+
+Always state the diagnosis and direction in your own words. Write in plain prose.
+```
+
+## User Prompt
+
+```text
+Parent result to develop:
+**OBSERVATION**  
+Factor 1 is the strongest (RankIC=0.031, ICIR=0.41), followed by Factor 2 (RankIC=0.009, ICIR=0.10). Factor 2 is weak and unstable, while Factor 1 is moderate in predictive power but shows some stability. Block B shows a combined model with a RankIC near baseline (0.052) and a drawdown of 0.170, indicating that the factors do not outperform a simple baseline.
+
+---
+
+**FACTOR DIAGNOSIS**  
+- **Factor 1**: Strong, but with structural limitations. It uses a two-step construction: a time-series z-score on volume and a cross-sectional rank on price range. However, the signal is still noisy and not robust enough to be considered strong.  
+- **Factor 2**: Weak. It uses a regression beta on return and volume, which is a single-variable function. The low ICIR and RankIC suggest that the signal is unstable and not predictive. The function family may not capture the intended mechanism.
+
+---
+
+**WEAKNESS BREAKDOWN**  
+1. **All factors use raw variables without proper normalization**, leading to scale sensitivity and noise.  
+2. **Window length is too short (5 days)** for meaningful time-series statistics.  
+3. **Composition depth is insufficient**—Factor 1 uses two steps but doesn’t fully leverage cross-sectional standardization.  
+4. **Function family mismatch** in Factor 2: regression beta may not capture the intended trend or relationship.  
+5. **No conditional gate or regime-aware structure** in either factor, missing potential market states where signals might be stronger or weaker.
+
+---
+
+**HYPOTHESIS VERDICT**  
+**Partially supports**. The mechanisms (time-series z-score, regression beta) are plausible in theory, but the construction is weak. The factors fail to generate consistent, reliable signals across different market conditions. The expressions need refinement in terms of normalization, window length, and conditional logic.
+
+---
+
+**REPLACE BEST**  
+No
+
+Reason in four steps:
+  Step 1 — Read the Feedback weakness breakdown. For each named weakness, decide
+           whether it is fixable within the current mechanism (a structural
+           adjustment suffices) or whether it suggests the mechanism itself is
+           limited.
+  Step 2 — Name what the parent mechanism still gets right: the part of the
+           signal that showed any positive RankIC, even if small or unstable.
+           This is what Proposal must preserve.
+  Step 3 — For the most critical fixable weakness, name the ONE concrete
+           structural change: a different variable or transform of it, a window
+           adjustment, a normalization layer, a function-family switch, or a
+           conditional gate. Say why that specific change addresses that weakness.
+  Step 4 — Inspired by what the failures revealed about the data, name ONE
+           adjacent hypothesis direction. Describe it as a market pattern with a
+           driver, which variables carry it, and the expected return direction.
+           Explain why the parent's failures point toward it.
+Then close with this block, filling each placeholder with the actual value:
+WHAT WORKS: <the part of the parent that showed signal, in one clause>
+DIAGNOSIS: <the most critical structural weakness, in plain words>
+DIRECTION: <the concrete structural change to try and why it targets the weakness>
+NEW HYPOTHESIS: <the adjacent hypothesis the failures motivate, in two sentences>
+```
+
+## Response
+
+```text
+**Step 1 — Read the Feedback weakness breakdown.**  
+The weaknesses point to structural issues that can be fixed within the current mechanism. The use of raw variables, short window length, insufficient composition depth, function family mismatch, and lack of conditional logic are all fixable through specific adjustments. The mechanism is not inherently flawed but is underperforming due to these design choices.
+
+**Step 2 — What the parent mechanism still gets right:**  
+The time-series z-score in Factor 1 captures some predictive signal, even if it’s noisy, and the regression beta in Factor 2, while weak, suggests a basic relationship between return and volume.
+
+**Step 3 — For the most critical fixable weakness:**  
+The most critical weakness is the **lack of cross-sectional normalization** in Factor 1, which leads to noise and instability. A **cross-sectional standardization layer** would normalize the price range across assets, reducing scale sensitivity and improving robustness. This addresses the issue by making the rank more reliable across different market conditions.
+
+**Step 4 — Inspired by what the failures revealed about the data:**  
+The failures suggest that the current factors are too simplistic and fail to account for market regimes. An adjacent hypothesis is that **market trends are driven by liquidity shifts**, where large volume changes indicate turning points. Variables like volume, price range, and turnover could capture this, and the expected return direction would be positive during liquidity-driven trend reversals.
+
+---
+
+WHAT WORKS: The time-series z-score in Factor 1 shows some predictive signal despite its noise.  
+DIAGNOSIS: The lack of cross-sectional normalization in Factor 1 causes instability and noise in the rank-based signal.  
+DIRECTION: Add a cross-sectional standardization layer to Factor 1 to normalize price range across assets, improving robustness.  
+NEW HYPOTHESIS: Market trends are driven by liquidity shifts, where large volume changes indicate turning points. Variables like volume, price range, and turnover could capture this, with expected positive returns during liquidity-driven trend reversals.
+```

@@ -1,0 +1,386 @@
+# medium=text  ls=10  rep=1  node=design_d3  agent=design  transfer=none  decode=True  terminal=False
+
+# kv: {"transfer": "none", "kv_seq_len": 2340}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Design agent in a quantitative alpha-mining team. A market
+hypothesis from the Proposal agent reaches you either through shared latent
+memory or as text in the task below. Your job is to NARROW it toward
+construction: decide which data columns carry the signal and which functions
+with rough argument ranges could faithfully express the mechanism, and hand the
+Builder a focused palette. YOU shortlist the tools and say why each one fits.
+
+PIPELINE CONTEXT. Proposal settled the mechanism. You turn that mechanism into a
+short, concrete menu of functions and variables. The Builder that reads you next
+holds final responsibility for writing valid expressions, so give it a sharp
+starting palette — NOT a finished formula, and NOT the whole library.
+
+WORDS USED IN THIS TASK (one meaning each, so nothing is ambiguous):
+  - VARIABLE = one of the six data columns. The only data leaves ($open $high $low $close $volume $return).
+  - FUNCTION = a named operation from the library below, written as NAME(...).
+  - OPERATOR = an arithmetic or logical symbol: plus, minus, times, divide, and,
+    or, and the conditional question-mark / colon pair.
+  - EXPRESSION = one complete formula built from variables, functions, and
+    operators that produces one number per stock per day.
+  - FACTOR = a named signal: a short name, a one-line description, and the single
+    expression that computes it.
+
+VARIABLES (the only data leaves). Case does not matter — $close and $CLOSE read
+the same: $open  $high  $low  $close  $volume  $return
+
+ARITHMETIC OPERATORS, written out so there is no doubt. Inside an expression use
+the symbol + to add, - to subtract, * to multiply, and / to divide. Use these
+symbols ONLY inside an expression; in your prose write the word ("add", "divide",
+"and", "or") so a symbol always means arithmetic and nothing else.
+
+FUNCTIONS — each is written NAME(arguments). Argument letters: A and B are any
+sub-expression (a variable, a number, or another function call); C is a
+condition that is true or false, such as "$close is greater than $open"; n and p
+are whole-number windows of days; q is a fraction between 0 and 1.
+
+ARITY IS STRICT — each function takes exactly the arguments shown. CROSS-SECTIONAL
+functions take exactly ONE argument with no window. RANK(A) takes one argument;
+for a rolling rank over n days, use the separate function TS_RANK(A, n) instead.
+Always match argument count to the signature above.
+
+Cross-sectional functions = one argument, no window; they compare one stock
+against all other stocks on the same day:
+  RANK(A) rank of A across all stocks today.
+  ZSCORE(A) standardise A across all stocks today.
+  MEAN(A) mean across the cross-section of A.
+  STD(A) standard deviation across the cross-section of A.
+  SKEW(A) skewness across the cross-section of A.
+  KURT(A) kurtosis across the cross-section of A.
+  MAX(A) maximum across the cross-section of A.
+  MIN(A) minimum across the cross-section of A.
+  MEDIAN(A) median across the cross-section of A.
+
+Time-series functions = take a series A and a window n; they look back over the
+past n days of each stock on its own:
+  DELTA(A, n) change in A over n periods.
+  DELAY(A, n) A delayed by n periods.
+  TS_MEAN(A, n) mean of A over the past n days.
+  TS_SUM(A, n) sum of A over the past n days.
+  TS_RANK(A, n) time-series rank of the last value of A in the past n days.
+  TS_ZSCORE(A, n) rolling z-score of A over the past n days.
+  TS_MEDIAN(A, n) median of A over the past n days.
+  TS_PCTCHANGE(A, p) percentage change in A over p periods.
+  TS_MIN(A, n) minimum of A in the past n days.
+  TS_MAX(A, n) maximum of A in the past n days.
+  TS_ARGMAX(A, n) index of the maximum of A over the past n days.
+  TS_ARGMIN(A, n) index of the minimum of A over the past n days.
+  TS_QUANTILE(A, p, q) rolling quantile q of A over the past p periods.
+  TS_STD(A, n) standard deviation of A over the past n days.
+  TS_VAR(A, p) rolling variance of A over the past p periods.
+  TS_CORR(A, B, n) correlation between A and B over the past n days.
+  TS_COVARIANCE(A, B, n) covariance between A and B over the past n days.
+  TS_MAD(A, n) rolling median absolute deviation of A over the past n days.
+  PERCENTILE(A, q, p) quantile q of A; rolling over the past p periods if p given.
+  HIGHDAY(A, n) days since the highest value of A in the past n days.
+  LOWDAY(A, n) days since the lowest value of A in the past n days.
+  SUMAC(A, n) cumulative sum of A over the past n days.
+
+Moving-average and smoothing functions:
+  SMA(A, n, m) simple moving average of A over n periods with modifier m.
+  WMA(A, n) weighted moving average of A over n periods.
+  EMA(A, n) exponential moving average of A over n periods (decay 2/(n+1)).
+  DECAYLINEAR(A, d) linearly weighted moving average of A over d periods.
+
+Mathematical operations — one argument unless noted:
+  PROD(A, n) product of A over the past n days. Use * for general multiplication.
+  LOG(A) natural logarithm of A.
+  SQRT(A) square root of A.
+  POW(A, n) raise A to the power of n.
+  SIGN(A) sign of A, one of 1, 0, or -1.
+  EXP(A) exponential of A.
+  ABS(A) absolute value of A.
+  MAX(A, B) pairwise maximum of A and B.
+  MIN(A, B) pairwise minimum of A and B.
+  INV(A) reciprocal, one divided by A.
+  FLOOR(A) floor of A.
+
+Conditional and logical functions, which turn a condition into a number:
+  (C) ? (A) : (B)  if condition C holds then A, otherwise B. C is a logical
+    expression such as $close > $open.
+  (C1) && (C2)  both C1 and C2 true.
+  (C1) || (C2)  C1 or C2 true.
+  COUNT(C, n) count of periods meeting condition C in the past n.
+  SUMIF(A, n, C) sum of A over the past n periods where C holds.
+  FILTER(A, C) keep A where condition C holds.
+
+Regression and residual functions:
+  SEQUENCE(n) a single-column sequence 1..n; only valid nested in REGBETA or
+    REGRESI as argument B.
+  REGBETA(A, B, n) regression slope of A on B over the past n samples.
+  REGRESI(A, B, n) regression residual of A on B over the past n samples.
+
+Technical indicators:
+  RSI(A, n) relative strength index of A over n periods.
+  MACD(A, short, long) difference of a short and a long EMA of A.
+  BB_MIDDLE(A, n) middle Bollinger band (n-period SMA of A).
+  BB_UPPER(A, n) middle band plus two standard deviations over n periods.
+  BB_LOWER(A, n) middle band minus two standard deviations over n periods.
+
+RULES FOR A LEGAL EXPRESSION:
+  - Use only the six variables and the exact function names above.
+  - Mind the TS_ prefix: TS_STD is rolling over time, STD is cross-sectional
+    today — different functions. The same holds for every TS_ name.
+  - Match every opening bracket with a closing one.
+  - Every expression contains at least one variable.
+
+HOW TO CHOOSE. Match the hypothesis to a mechanism family first (momentum,
+reversal, volatility, liquidity, dispersion, correlation, smoothing, regression,
+technical), then pick the few functions in that family that measure it, name
+which variables feed them, and give a rough window range in days. Prefer a small,
+faithful set over a long list. Keep the analysis short.
+
+Write in plain ASCII prose. Name functions and variables when helpful and show
+small fragments such as "the range $high minus $low", keeping each fragment
+brief. Leave the final full expression for the Builder. Write with no markdown
+and no asterisks.
+
+==============================================================================
+USER
+==============================================================================
+The hypothesis from the Proposal agent:
+in trending markets, stocks with high long-horizon time-series z-scores and wide price ranges tend to outperform in the next period. this pattern suggests a hybrid of trend persistence and volatility clustering.
+
+the driver is a combination of normalized trend signals and cross-sectional price dispersion, which reflects both momentum and market instability. the envelope includes volume-adjusted returns, moving average deviations, and price range ratios, falling under the trend-volatility mechanism family. the horizon is medium-term, and the predicted return direction is positive in trends but negative in high volatility.
+
+hybrid trend-volatility mechanism where normalized trend strength and price dispersion co-move to predict cross-sectional returns.
+
+Prepare the construction palette:
+  Step 1 — Restate the mechanism in one line and name the carrying variables.
+  Step 2 — Name the mechanism family and list every function from the library
+           that could faithfully capture it; for each, say what it would compute
+           and give a rough window range in days. Be generous: the Builder will
+           choose, so include all plausible options across different families
+           (time-series, smoothing, regression, conditional, technical).
+  Step 3 — Say how each candidate signal becomes a continuous cross-sectional
+           score (by ranking, standardising, gating, or contrasting two ranks).
+  Step 4 — Add any functions from other families that open a genuinely different
+           angle on the same mechanism. The goal is a rich palette, so list as
+           many candidates as the hypothesis supports.
+Close with this block. Write the hypothesis first, then one line per candidate
+function — include every option from Steps 2 and 4, however many that is:
+<hypothesis><the hypothesis exactly as Proposal stated it></hypothesis>
+<func><function name>: variables <variable names>, window <range in days>, purpose <what it captures></func>
+<func><function name>: variables <variable names>, window <range in days>, purpose <what it captures></func>
+(continue for every candidate function — there is no upper limit)
+
+==============================================================================
+RESPONSE
+==============================================================================
+<hypothesis>in trending markets, stocks with high long-horizon time-series z-scores and wide price ranges tend to outperform in the next period. this pattern suggests a hybrid of trend persistence and volatility clustering.</hypothesis>
+
+<func>TS_ZSCORE($close, 20): variables $close, window 20, purpose captures normalized trend strength over 20 days</func>
+<func>TS_ZSCORE($return, 20): variables $return, window 20, purpose captures normalized return momentum over 20 days</func>
+<func>TS_ZSCORE($high - $low, 20): variables $high, $low, window 20, purpose captures normalized price range volatility over 20 days</func>
+<func>TS_ZSCORE($volume, 20): variables $volume, window 20, purpose captures normalized volume activity over 20 days</func>
+<func>TS_ZSCORE($open - $close, 20): variables $open, $close, window 20, purpose captures normalized price movement over 20 days</func>
+<func>TS_ZSCORE($high - $open, 20): variables $high, $open, window 20, purpose captures normalized price ascent over 20 days</func>
+<func>TS_ZSCORE($close - $low, 20): variables $close, $low, window 20, purpose captures normalized price ascent over 20 days</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20), 20): variables $return, window 20, purpose captures normalized excess return over 20-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50), 20): variables $return, window 50, purpose captures normalized excess return over 50-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100), 20): variables $return, window 100, purpose captures normalized excess return over 100-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200), 20): variables $return, window 200, purpose captures normalized excess return over 200-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500), 20): variables $return, window 500, purpose captures normalized excess return over 500-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000), 20): variables $return, window 1000, purpose captures normalized excess return over 1000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000), 20): variables $return, window 2000, purpose captures normalized excess return over 2000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000), 20): variables $return, window 5000, purpose captures normalized excess return over 5000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000), 20): variables $return, window 10000, purpose captures normalized excess return over 10000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000), 20): variables $return, window 20000, purpose captures normalized excess return over 20000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000), 20): variables $return, window 50000, purpose captures normalized excess return over 50000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000), 20): variables $return, window 100000, purpose captures normalized excess return over 100000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000), 20): variables $return, window 200000, purpose captures normalized excess return over 200000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000), 20): variables $return, window 500000, purpose captures normalized excess return over 500000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000), 20): variables $return, window 1000000, purpose captures normalized excess return over 1000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000), 20): variables $return, window 2000000, purpose captures normalized excess return over 2000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000), 20): variables $return, window 5000000, purpose captures normalized excess return over 5000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000), 20): variables $return, window 10000000, purpose captures normalized excess return over 10000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000), 20): variables $return, window 20000000, purpose captures normalized excess return over 20000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000), 20): variables $return, window 50000000, purpose captures normalized excess return over 50000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000), 20): variables $return, window 100000000, purpose captures normalized excess return over 100000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000), 20): variables $return, window 200000000, purpose captures normalized excess return over 200000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000), 20): variables $return, window 500000000, purpose captures normalized excess return over 500000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000), 20): variables $return, window 1000000000, purpose captures normalized excess return over 1000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000), 20): variables $return, window 2000000000, purpose captures normalized excess return over 2000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000), 20): variables $return, window 5000000000, purpose captures normalized excess return over 5000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000), 20): variables $return, window 10000000000, purpose captures normalized excess return over 10000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000), 20): variables $return, window 20000000000, purpose captures normalized excess return over 20000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000), 20): variables $return, window 50000000000, purpose captures normalized excess return over 50000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000), 20): variables $return, window 100000000000, purpose captures normalized excess return over 100000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000), 20): variables $return, window 200000000000, purpose captures normalized excess return over 200000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000), 20): variables $return, window 500000000000, purpose captures normalized excess return over 500000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000), 20): variables $return, window 1000000000000, purpose captures normalized excess return over 1000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000), 20): variables $return, window 2000000000000, purpose captures normalized excess return over 2000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000), 20): variables $return, window 5000000000000, purpose captures normalized excess return over 5000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000), 20): variables $return, window 10000000000000, purpose captures normalized excess return over 10000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000), 20): variables $return, window 20000000000000, purpose captures normalized excess return over 20000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000), 20): variables $return, window 50000000000000, purpose captures normalized excess return over 50000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000), 20): variables $return, window 100000000000000, purpose captures normalized excess return over 100000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000), 20): variables $return, window 200000000000000, purpose captures normalized excess return over 200000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000), 20): variables $return, window 500000000000000, purpose captures normalized excess return over 500000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000), 20): variables $return, window 1000000000000000, purpose captures normalized excess return over 1000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000), 20): variables $return, window 2000000000000000, purpose captures normalized excess return over 2000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000), 20): variables $return, window 5000000000000000, purpose captures normalized excess return over 5000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000), 20): variables $return, window 10000000000000000, purpose captures normalized excess return over 10000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000), 20): variables $return, window 20000000000000000, purpose captures normalized excess return over 20000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000), 20): variables $return, window 50000000000000000, purpose captures normalized excess return over 50000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000), 20): variables $return, window 100000000000000000, purpose captures normalized excess return over 100000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000), 20): variables $return, window 200000000000000000, purpose captures normalized excess return over 200000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000), 20): variables $return, window 500000000000000000, purpose captures normalized excess return over 500000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000), 20): variables $return, window 1000000000000000000, purpose captures normalized excess return over 1000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000), 20): variables $return, window 2000000000000000000, purpose captures normalized excess return over 2000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000), 20): variables $return, window 5000000000000000000, purpose captures normalized excess return over 5000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000), 20): variables $return, window 10000000000000000000, purpose captures normalized excess return over 10000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000), 20): variables $return, window 20000000000000000000, purpose captures normalized excess return over 20000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000), 20): variables $return, window 50000000000000000000, purpose captures normalized excess return over 50000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000), 20): variables $return, window 100000000000000000000, purpose captures normalized excess return over 100000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000), 20): variables $return, window 200000000000000000000, purpose captures normalized excess return over 200000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000), 20): variables $return, window 500000000000000000000, purpose captures normalized excess return over 500000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000), 20): variables $return, window 1000000000000000000000, purpose captures normalized excess return over 1000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000), 20): variables $return, window 2000000000000000000000, purpose captures normalized excess return over 2000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000), 20): variables $return, window 5000000000000000000000, purpose captures normalized excess return over 5000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000), 20): variables $return, window 10000000000000000000000, purpose captures normalized excess return over 10000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000), 20): variables $return, window 20000000000000000000000, purpose captures normalized excess return over 20000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000), 20): variables $return, window 50000000000000000000000, purpose captures normalized excess return over 50000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000), 20): variables $return, window 100000000000000000000000, purpose captures normalized excess return over 100000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000), 20): variables $return, window 200000000000000000000000, purpose captures normalized excess return over 200000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000), 20): variables $return, window 500000000000000000000000, purpose captures normalized excess return over 500000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000), 20): variables $return, window 1000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000), 20): variables $return, window 2000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000), 20): variables $return, window 5000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000), 20): variables $return, window 10000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000), 20): variables $return, window 20000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000), 20): variables $return, window 50000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000), 20): variables $return, window 100000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000), 20): variables $return, window 200000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000), 20): variables $return, window 500000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 500000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 500000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 1000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 1000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 1000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 2000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 2000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 2000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 5000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 5000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 5000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 10000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 10000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 10000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 20000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 20000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 20000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 50000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 50000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 50000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 100000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 100000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 100000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 200000000000000000000000000000000000000000000000000000000000000000000), 20): variables $return, window 200000000000000000000000000000000000000000000000000000000000000000000, purpose captures normalized excess return over 200000000000000000000000000000000000000000000000000000000000000000000-day mean</func>
+<func>TS_ZSCORE($return - TS_MEAN($return, 500000000000000000000000000000000000000000000000000000000000000000000), 2

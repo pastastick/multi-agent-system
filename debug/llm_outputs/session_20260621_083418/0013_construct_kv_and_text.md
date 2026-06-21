@@ -1,0 +1,441 @@
+# Call 0013 — `construct` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-21 08:41:16
+- conv_id: `e3d75ed4`
+- step: 0
+- temperature: 0.7
+- has_past_kv: False
+- input_tokens: 3733
+- output_tokens: 2249
+- duration_s: 88.7307
+- text_len: 8885
+
+## System Prompt
+
+```text
+You are the Builder in a quantitative alpha-mining team. A market hypothesis and
+a candidate-function palette reach you either through shared latent memory or as
+text in the task below. Your task is to write the finished factor expressions and
+output them.
+
+PIPELINE CONTEXT. Proposal set the mechanism; the Design agent shortlisted the
+functions and variables. You make the final decision and write the expressions.
+You hold FINAL responsibility for symbolic validity: a deterministic regulator
+checks every expression and rejects any that is illegal, so spend your care on
+correct names, correct argument counts, balanced brackets, and faithfulness to
+the hypothesis. Do not count characters or features.
+
+WHAT YOU MUST PRODUCE. Each factor is a CONTINUOUS cross-sectional score: one
+real number per stock per day, where higher means more expected out-performance.
+It must NOT be a true-or-false mask. A bare condition such as "close greater than
+open and volume above its average" returns true or false, which cannot be ranked;
+to use a condition, gate a magnitude with it — take the signal when the condition
+holds and zero otherwise, or subtract one cross-sectional rank from another.
+
+WORDS USED IN THIS TASK (one meaning each, so nothing is ambiguous):
+  - VARIABLE = one of the six data columns. The only data leaves ($open $high $low $close $volume $return).
+  - FUNCTION = a named operation from the library below, written as NAME(...).
+  - OPERATOR = an arithmetic or logical symbol: plus, minus, times, divide, and,
+    or, and the conditional question-mark / colon pair.
+  - EXPRESSION = one complete formula built from variables, functions, and
+    operators that produces one number per stock per day.
+  - FACTOR = a named signal: a short name, a one-line description, and the single
+    expression that computes it.
+
+VARIABLES (the only data leaves). Case does not matter — $close and $CLOSE read
+the same: $open  $high  $low  $close  $volume  $return
+
+ARITHMETIC OPERATORS, written out so there is no doubt. Inside an expression use
+the symbol + to add, - to subtract, * to multiply, and / to divide. Use these
+symbols ONLY inside an expression; in your prose write the word ("add", "divide",
+"and", "or") so a symbol always means arithmetic and nothing else.
+
+FUNCTIONS — each is written NAME(arguments). Argument letters: A and B are any
+sub-expression (a variable, a number, or another function call); C is a
+condition that is true or false, such as "$close is greater than $open"; n and p
+are whole-number windows of days; q is a fraction between 0 and 1.
+
+ARITY IS STRICT — each function takes exactly the arguments shown. CROSS-SECTIONAL
+functions take exactly ONE argument with no window. RANK(A) takes one argument;
+for a rolling rank over n days, use TS_RANK(A, n) instead. Always match argument
+count to the signature above.
+
+Cross-sectional functions = one argument, no window; they compare one stock
+against all other stocks on the same day:
+  RANK(A) rank of A across all stocks today.
+  ZSCORE(A) standardise A across all stocks today.
+  MEAN(A) mean across the cross-section of A.
+  STD(A) standard deviation across the cross-section of A.
+  SKEW(A) skewness across the cross-section of A.
+  KURT(A) kurtosis across the cross-section of A.
+  MAX(A) maximum across the cross-section of A.
+  MIN(A) minimum across the cross-section of A.
+  MEDIAN(A) median across the cross-section of A.
+
+Time-series functions = take a series A and a window n; they look back over the
+past n days of each stock on its own:
+  DELTA(A, n) change in A over n periods.
+  DELAY(A, n) A delayed by n periods.
+  TS_MEAN(A, n) mean of A over the past n days.
+  TS_SUM(A, n) sum of A over the past n days.
+  TS_RANK(A, n) time-series rank of the last value of A in the past n days.
+  TS_ZSCORE(A, n) rolling z-score of A over the past n days.
+  TS_MEDIAN(A, n) median of A over the past n days.
+  TS_PCTCHANGE(A, p) percentage change in A over p periods.
+  TS_MIN(A, n) minimum of A in the past n days.
+  TS_MAX(A, n) maximum of A in the past n days.
+  TS_ARGMAX(A, n) index of the maximum of A over the past n days.
+  TS_ARGMIN(A, n) index of the minimum of A over the past n days.
+  TS_QUANTILE(A, p, q) rolling quantile q of A over the past p periods.
+  TS_STD(A, n) standard deviation of A over the past n days.
+  TS_VAR(A, p) rolling variance of A over the past p periods.
+  TS_CORR(A, B, n) correlation between A and B over the past n days.
+  TS_COVARIANCE(A, B, n) covariance between A and B over the past n days.
+  TS_MAD(A, n) rolling median absolute deviation of A over the past n days.
+  PERCENTILE(A, q, p) quantile q of A; rolling over the past p periods if p given.
+  HIGHDAY(A, n) days since the highest value of A in the past n days.
+  LOWDAY(A, n) days since the lowest value of A in the past n days.
+  SUMAC(A, n) cumulative sum of A over the past n days.
+
+Moving-average and smoothing functions:
+  SMA(A, n, m) simple moving average of A over n periods with modifier m.
+  WMA(A, n) weighted moving average of A over n periods.
+  EMA(A, n) exponential moving average of A over n periods (decay 2/(n+1)).
+  DECAYLINEAR(A, d) linearly weighted moving average of A over d periods.
+
+Mathematical operations — one argument unless noted:
+  PROD(A, n) product of A over the past n days. Use * for general multiplication.
+  LOG(A) natural logarithm of A.
+  SQRT(A) square root of A.
+  POW(A, n) raise A to the power of n.
+  SIGN(A) sign of A, one of 1, 0, or -1.
+  EXP(A) exponential of A.
+  ABS(A) absolute value of A.
+  MAX(A, B) pairwise maximum of A and B.
+  MIN(A, B) pairwise minimum of A and B.
+  INV(A) reciprocal, one divided by A.
+  FLOOR(A) floor of A.
+
+Conditional and logical functions, which turn a condition into a number:
+  (C) ? (A) : (B)  if condition C holds then A, otherwise B. C is a logical
+    expression such as $close > $open.
+  (C1) && (C2)  both C1 and C2 true.
+  (C1) || (C2)  C1 or C2 true.
+  COUNT(C, n) count of periods meeting condition C in the past n.
+  SUMIF(A, n, C) sum of A over the past n periods where C holds.
+  FILTER(A, C) keep A where condition C holds.
+
+Regression and residual functions:
+  SEQUENCE(n) a single-column sequence 1..n; only valid nested in REGBETA or
+    REGRESI as argument B.
+  REGBETA(A, B, n) regression slope of A on B over the past n samples.
+  REGRESI(A, B, n) regression residual of A on B over the past n samples.
+
+Technical indicators:
+  RSI(A, n) relative strength index of A over n periods.
+  MACD(A, short, long) difference of a short and a long EMA of A.
+  BB_MIDDLE(A, n) middle Bollinger band (n-period SMA of A).
+  BB_UPPER(A, n) middle band plus two standard deviations over n periods.
+  BB_LOWER(A, n) middle band minus two standard deviations over n periods.
+
+RULES FOR A LEGAL EXPRESSION:
+  - Use only the six variables and the exact function names above.
+  - Mind the TS_ prefix: TS_STD is rolling over time, STD is cross-sectional
+    today — different functions. The same holds for every TS_ name.
+  - Match every opening bracket with a closing one.
+  - Every expression contains at least one variable.
+```
+
+## User Prompt
+
+```text
+The hypothesis and the candidate-function palette from
+the Proposal and Design agents:
+<hypothesis>in neutral markets, cross-sectional returns tend to mean-revert, but this effect weakens when the market is trending. the z-score of returns across assets captures this relative position and is more stable than raw returns. when trend indicators suggest a neutral regime, the z-score of returns predicts lower future returns for assets with high z-scores and higher returns for assets with low z-scores.</hypothesis>
+
+<func>ZSCORE($return): variables $return, window 1, purpose standardise returns across assets today</func>
+<func>TS_ZSCORE($return, 10): variables $return, window 10, purpose rolling z-score of returns over 10 days</func>
+<func>MEAN($return): variables $return, window 1, purpose mean of returns across assets today</func>
+<func>TS_MEAN($return, 10): variables $return, window 10, purpose mean of returns over past 10 days</func>
+<func>STD($return): variables $return, window 1, purpose standard deviation of returns across assets today</func>
+<func>TS_STD($return, 10): variables $return, window 10, purpose rolling standard deviation of returns over 10 days</func>
+<func>RANK($return): variables $return, window 1, purpose rank of returns across assets today</func>
+<func>TS_RANK($return, 10): variables $return, window 10, purpose time-series rank of returns over past 10 days</func>
+<func>TS_CORR($return, $volume, 10): variables $return, $volume, window 10, purpose correlation between returns and volume over past 10 days</func>
+<func>TS_COVARIANCE($return, $volume, 10): variables $return, $volume, window 10, purpose covariance between returns and volume over past 10 days</func>
+<func>TS_PCTCHANGE($return, 10): variables $return, window 10, purpose percentage change in returns over 10 periods</func>
+<func>TS_MIN($return, 10): variables $return, window 10, purpose minimum of returns in past 10 days</func>
+<func>TS_MAX($return, 10): variables $return, window 10, purpose maximum of returns in past 10 days</func>
+<func>TS_ARGMAX($return, 10): variables $return, window 10, purpose index of maximum return in past 10 days</func>
+<func>TS_ARGMIN($return, 10): variables $return, window 10, purpose index of minimum return in past 10 days</func>
+<func>TS_QUANTILE($return, 0.5, 10): variables $return, window 10, purpose median of returns over past 10 days</func>
+<func>TS_MEDIAN($return, 10): variables $return, window 10, purpose median of returns over past 10 days</func>
+<func>TS_MAD($return, 10): variables $return, window 10, purpose rolling median absolute deviation of returns over 10 days</func>
+<func>PERCENTILE($return, 0.5, 10): variables $return, window 10, purpose median of returns over past 10 days</func>
+<func>RSI($return, 10): variables $return, window 10, purpose relative strength index of returns over 10 periods</func>
+<func>MACD($return, 12, 26): variables $return, window 12, 26, purpose moving average convergence divergence of returns</func>
+<func>BB_MIDDLE($return, 10): variables $return, window 10, purpose middle Bollinger band of returns over 10 days</func>
+<func>BB_UPPER($return, 10): variables $return, window 10, purpose upper Bollinger band of returns over 10 days</func>
+<func>BB_LOWER($return, 10): variables $return, window 10, purpose lower Bollinger band of returns over 10 days</func>
+<func>DELAY($return, 10): variables $return, window 10, purpose delay of returns by 10 periods</func>
+<func>DELTA($return, 10): variables $return, window 10, purpose change in returns over 10 periods</func>
+<func>TS_SUM($return, 10): variables $return, window 10, purpose sum of returns over past 10 days</func>
+<func>TS_PROD($return, 10): variables $return, window 10, purpose product of returns over past 10 days</func>
+<func>LOG($return): variables $return, window 1, purpose natural logarithm of returns today</func>
+<func>SQRT($return): variables $return, window 1, purpose square root of returns today</func>
+<func>POW($return, 2): variables $return, window 1, purpose square of returns today</func>
+<func>SIGN($return): variables $return, window 1, purpose sign of returns today</func>
+<func>ABS($return): variables $return, window 1, purpose absolute value of returns today</func>
+<func>INV($return): variables $return, window 1, purpose reciprocal of returns today</func>
+<func>FLOOR($return): variables $return, window 1, purpose floor of returns today</func>
+<func>COUNT($return > $close, 10): variables $return, $close, window 10, purpose count of periods where returns exceed close over 10 days</func>
+<func>SUMIF($return, 10, $return > $close): variables $return, $close, window 10, purpose sum of returns where returns exceed close over 10 days</func>
+<func>FILTER($return, $return > $close): variables $return, $close, window 1, purpose filter returns where returns exceed close today</func>
+<func>REGRESI($return, $volume, 10): variables $return, $volume, window 10, purpose regression residual of returns on volume over 10 samples</func>
+<func>REGBETA($return, $volume, 10): variables $return, $volume, window 10, purpose regression slope of returns on volume over 10 samples</func>
+<func>SEQUENCE(10): variables none, window 10, purpose sequence 1..10; only valid nested in REGBETA or REGRESI</func>
+
+Your task is to write as many valid factor expressions as the palette supports —
+each one a different realisation of the same hypothesis. Many factors are better
+than few: some will be rejected by the regulator after you write them, so the
+more you produce, the more survive.
+
+For each candidate function in the palette:
+  Step 1 — Take the candidate function and the variables it uses from the palette.
+  Step 2 — Build the expression in layers: the candidate function as the inner
+           computation, then a cross-sectional step (rank, standardise, gate a
+           magnitude on a condition, or contrast two ranks) that turns it into a
+           continuous score.
+  Step 3 — Check it: only real variables from the six listed; correct argument
+           counts (time-series functions take a window, cross-sectional functions
+           take no window); windows between one and sixty days; no series paired
+           with itself; brackets balanced; the result a rankable number.
+  Step 4 — Give it a short descriptive name and one sentence on what it captures.
+  Step 5 — Repeat Steps 1 to 4 for the next candidate function in the palette.
+Then, as the LAST thing you write, output this JSON block exactly — no text
+before or after it, no markdown fences, no trailing commas:
+{
+  "hypothesis": "<the hypothesis from your latent memory, in one sentence>",
+  "factors": [
+    {
+      "name": "<short factor name>",
+      "expression": "<single DSL expression>",
+      "explanation": "<one sentence on what it measures>"
+    }
+  ]
+}
+The factors array must contain one object for every candidate function worked
+through in Steps 1 to 5. Include all of them.
+```
+
+## Response
+
+```text
+{
+  "hypothesis": "in neutral markets, cross-sectional returns tend to mean-revert, but this effect weakens when the market is trending. the z-score of returns across assets captures this relative position and is more stable than raw returns. when trend indicators suggest a neutral regime, the z-score of returns predicts lower future returns for assets with high z-scores and higher returns for assets with low z-scores.",
+  "factors": [
+    {
+      "name": "ZScoreReturnToday",
+      "expression": "ZSCORE($return)",
+      "explanation": "Standardized returns across assets today, capturing the relative position of each asset's return."
+    },
+    {
+      "name": "ZScoreReturnRolling10Days",
+      "expression": "TS_ZSCORE($return, 10)",
+      "explanation": "Rolling z-score of returns over 10 days, indicating how far returns are from their historical average."
+    },
+    {
+      "name": "MeanReturnToday",
+      "expression": "MEAN($return)",
+      "explanation": "Mean of returns across assets today, representing the average performance of all assets."
+    },
+    {
+      "name": "MeanReturnRolling10Days",
+      "expression": "TS_MEAN($return, 10)",
+      "explanation": "Mean of returns over the past 10 days, showing the average performance trend."
+    },
+    {
+      "name": "StdReturnToday",
+      "expression": "STD($return)",
+      "explanation": "Standard deviation of returns across assets today, measuring the volatility of returns."
+    },
+    {
+      "name": "StdReturnRolling10Days",
+      "expression": "TS_STD($return, 10)",
+      "explanation": "Rolling standard deviation of returns over 10 days, indicating the volatility trend."
+    },
+    {
+      "name": "RankReturnToday",
+      "expression": "RANK($return)",
+      "explanation": "Rank of returns across assets today, identifying the relative performance of each asset."
+    },
+    {
+      "name": "RankReturnRolling10Days",
+      "expression": "TS_RANK($return, 10)",
+      "explanation": "Time-series rank of returns over the past 10 days, showing the relative performance trend."
+    },
+    {
+      "name": "CorrReturnVolume10Days",
+      "expression": "TS_CORR($return, $volume, 10)",
+      "explanation": "Correlation between returns and volume over the past 10 days, indicating the relationship between trading activity and price movement."
+    },
+    {
+      "name": "CovReturnVolume10Days",
+      "expression": "TS_COVARIANCE($return, $volume, 10)",
+      "explanation": "Covariance between returns and volume over the past 10 days, measuring the linear relationship between trading activity and price movement."
+    },
+    {
+      "name": "PctChangeReturn10Days",
+      "expression": "TS_PCTCHANGE($return, 10)",
+      "explanation": "Percentage change in returns over 10 periods, showing the rate of change in performance."
+    },
+    {
+      "name": "MinReturn10Days",
+      "expression": "TS_MIN($return, 10)",
+      "explanation": "Minimum of returns in the past 10 days, identifying the lowest performance observed."
+    },
+    {
+      "name": "MaxReturn10Days",
+      "expression": "TS_MAX($return, 10)",
+      "explanation": "Maximum of returns in the past 10 days, identifying the highest performance observed."
+    },
+    {
+      "name": "ArgMaxReturn10Days",
+      "expression": "TS_ARGMAX($return, 10)",
+      "explanation": "Index of the maximum return in the past 10 days, indicating the period when the highest return occurred."
+    },
+    {
+      "name": "ArgMinReturn10Days",
+      "expression": "TS_ARGMIN($return, 10)",
+      "explanation": "Index of the minimum return in the past 10 days, indicating the period when the lowest return occurred."
+    },
+    {
+      "name": "QuantileReturn10Days",
+      "expression": "TS_QUANTILE($return, 0.5, 10)",
+      "explanation": "Median of returns over the past 10 days, representing the middle value of returns."
+    },
+    {
+      "name": "MedianReturn10Days",
+      "expression": "TS_MEDIAN($return, 10)",
+      "explanation": "Median of returns over the past 10 days, showing the central tendency of returns."
+    },
+    {
+      "name": "MADReturn10Days",
+      "expression": "TS_MAD($return, 10)",
+      "explanation": "Rolling median absolute deviation of returns over 10 days, measuring the spread of returns around the median."
+    },
+    {
+      "name": "PercentileReturn10Days",
+      "expression": "PERCENTILE($return, 0.5, 10)",
+      "explanation": "Median of returns over the past 10 days, indicating the middle value of returns."
+    },
+    {
+      "name": "RSIReturn10Days",
+      "expression": "RSI($return, 10)",
+      "explanation": "Relative strength index of returns over 10 periods, measuring the strength of recent price movements."
+    },
+    {
+      "name": "MACDReturn",
+      "expression": "MACD($return, 12, 26)",
+      "explanation": "Moving average convergence divergence of returns, indicating potential changes in momentum."
+    },
+    {
+      "name": "BBMiddleReturn10Days",
+      "expression": "BB_MIDDLE($return, 10)",
+      "explanation": "Middle Bollinger band of returns over 10 days, representing the simple moving average of returns."
+    },
+    {
+      "name": "BBUpperReturn10Days",
+      "expression": "BB_UPPER($return, 10)",
+      "explanation": "Upper Bollinger band of returns over 10 days, indicating the level above the moving average plus two standard deviations."
+    },
+    {
+      "name": "BBLowerReturn10Days",
+      "expression": "BB_LOWER($return, 10)",
+      "explanation": "Lower Bollinger band of returns over 10 days, indicating the level below the moving average minus two standard deviations."
+    },
+    {
+      "name": "DelayReturn10Days",
+      "expression": "DELAY($return, 10)",
+      "explanation": "Delay of returns by 10 periods, showing the return from 10 days ago."
+    },
+    {
+      "name": "DeltaReturn10Days",
+      "expression": "DELTA($return, 10)",
+      "explanation": "Change in returns over 10 periods, indicating the difference in performance over time."
+    },
+    {
+      "name": "SumReturn10Days",
+      "expression": "TS_SUM($return, 10)",
+      "explanation": "Sum of returns over the past 10 days, showing the total performance over the period."
+    },
+    {
+      "name": "ProdReturn10Days",
+      "expression": "TS_PROD($return, 10)",
+      "explanation": "Product of returns over the past 10 days, indicating the compounded performance."
+    },
+    {
+      "name": "LogReturnToday",
+      "expression": "LOG($return)",
+      "explanation": "Natural logarithm of returns today, used in financial modeling and analysis."
+    },
+    {
+      "name": "SqrtReturnToday",
+      "expression": "SQRT($return)",
+      "explanation": "Square root of returns today, often used to reduce volatility in financial calculations."
+    },
+    {
+      "name": "PowReturnSquared",
+      "expression": "POW($return, 2)",
+      "explanation": "Square of returns today, amplifying the effect of large returns."
+    },
+    {
+      "name": "SignReturnToday",
+      "expression": "SIGN($return)",
+      "explanation": "Sign of returns today, indicating whether returns are positive or negative."
+    },
+    {
+      "name": "AbsReturnToday",
+      "expression": "ABS($return)",
+      "explanation": "Absolute value of returns today, removing the sign to focus on magnitude."
+    },
+    {
+      "name": "InvReturnToday",
+      "expression": "INV($return)",
+      "explanation": "Reciprocal of returns today, useful in certain financial ratios and calculations."
+    },
+    {
+      "name": "FloorReturnToday",
+      "expression": "FLOOR($return)",
+      "explanation": "Floor of returns today, rounding down to the nearest integer."
+    },
+    {
+      "name": "CountReturnExceedClose10Days",
+      "expression": "COUNT($return > $close, 10)",
+      "explanation": "Count of periods where returns exceed close over 10 days, indicating the frequency of outperformance."
+    },
+    {
+      "name": "SumIfReturnExceedClose10Days",
+      "expression": "SUMIF($return, 10, $return > $close)",
+      "explanation": "Sum of returns where returns exceed close over 10 days, highlighting the total performance in outperforming periods."
+    },
+    {
+      "name": "FilterReturnExceedCloseToday",
+      "expression": "FILTER($return, $return > $close)",
+      "explanation": "Filter returns where returns exceed close today, isolating the performance in outperforming scenarios."
+    },
+    {
+      "name": "RegresiReturnVolume10Days",
+      "expression": "REGRESI($return, $volume, 10)",
+      "explanation": "Regression residual of returns on volume over 10 samples, indicating the portion of returns not explained by volume."
+    },
+    {
+      "name": "RegbetaReturnVolume10Days",
+      "expression": "REGBETA($return, $volume, 10)",
+      "explanation": "Regression slope of returns on volume over 10 samples, showing the relationship between volume and returns."
+    }
+  ]
+}
+```
