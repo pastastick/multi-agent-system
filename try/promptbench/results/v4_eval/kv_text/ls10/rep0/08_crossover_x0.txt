@@ -1,0 +1,103 @@
+# medium=kv_text  ls=10  rep=0  node=crossover_x0  agent=crossover  transfer=concat  decode=True  terminal=False
+
+# kv: {"transfer": "concat", "kv_seq_len": 2876}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Crossover Director in a quantitative alpha-mining team. SEVERAL
+parent results — each with its hypothesis, factors, metrics, and Feedback
+diagnosis — reach you either through shared latent memory or as text in the task
+below. YOUR JOB is to set a BOLD exploratory DIRECTION that fuses the
+complementary strengths of the parents into something none of them reached, and
+to name a new hypothesis that the fusion motivates.
+
+PIPELINE CONTEXT. Proposal inherits your reasoning. Write concretely enough that
+Proposal knows: what each parent contributed distinctly, what each parent failed
+at according to Feedback, how the fusion combines strengths while avoiding the
+named failures, and what new hypothesis the fusion collectively points toward.
+
+This is EXPLORATION. The parents each explored a different region of the
+mechanism space and each hit a different structural ceiling. Your task is to map
+the territory between them, find the complementary fit, describe the unexplored
+region, and point Proposal toward it.
+
+WHAT TO REASON ABOUT:
+  - PER-PARENT CONTRIBUTION = for each parent, name its ONE distinct strength
+    (a specific market driver, a construction style, a horizon, or a data
+    dimension) AND the most critical structural weakness Feedback named for it.
+  - COMPLEMENTARY FIT = which parent's strength directly addresses another
+    parent's named weakness? Name the specific pairing: parent A is strong at X
+    where parent B is weak, and parent B is strong at Y where parent A is weak.
+  - FUSION MECHANISM = the concrete way to combine the complementary strengths:
+    apply one parent's normalisation to another parent's driver, use one parent's
+    conditional gate to filter another parent's signal, or combine horizons across
+    parents. Describe the fused mechanism as a market pattern with a driver,
+    the variables it involves, the horizon, and the predicted return direction.
+  - NEW HYPOTHESIS = what does the fusion reveal about an adjacent, unexplored
+    mechanism? The parents collectively mapped a region; the fusion points beyond
+    it. Name ONE new hypothesis that the combined evidence motivates, stated as
+    a market pattern with a driver, variables, horizon, and return direction.
+
+Always combine at least two parents. Write in plain prose.
+
+==============================================================================
+USER
+==============================================================================
+The parent results — each with its hypothesis, factors, metrics, and
+Feedback diagnosis — are already in your shared latent memory. Read them from
+there.
+
+Reason in four steps:
+  Step 1 — For each parent: name its distinct strength (driver, construction
+           style, horizon, or variable dimension) and the most critical weakness
+           the Feedback named for it.
+  Step 2 — Find the complementary pairing: which parent's strength addresses
+           another parent's named weakness? State the specific fit.
+  Step 3 — Describe the fused mechanism: how do the complementary strengths
+           combine into a market pattern that none of the parents reached?
+           State the driver, the variables it involves, the horizon, and the
+           predicted return direction.
+  Step 4 — From the fusion, name ONE new hypothesis that the combined evidence
+           motivates. It should go beyond the fusion itself — what adjacent
+           mechanism do the parents collectively point toward? State it as a
+           market pattern with a driver, variables, horizon, and return direction.
+Then close with this block, filling each placeholder with the actual value:
+STRENGTHS: <each parent's distinct strength and critical weakness, one clause per parent>
+FUSION: <the fused mechanism as a market pattern, in two sentences>
+DIRECTION: <what Proposal should pursue in the next round, in one to two sentences>
+NEW HYPOTHESIS: <the adjacent hypothesis the fusion motivates, in two sentences>
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Step 1 — For each parent:**
+
+- **Parent A (Factor 1):**  
+  Strength: Uses a time-series mean of returns (TS_MEAN) as a momentum signal, capturing medium-term price trends.  
+  Weakness: Window length of 5 days is too short for a medium-horizon mechanism, leading to noise and instability.
+
+ - **Parent B (Combined LightGBM Model):**  
+  Strength: Combines multiple factors into a robust model with strong risk control and high information ratio in trending regimes.  
+  Weakness: Lacks a clear hypothesis about the underlying market driver, relying on a black-box model without transparency.
+
+**Step 2 — Complementary Pairing:**  
+ Parent A’s strength (medium-term momentum via TS_MEAN) directly addresses Parent B’s weakness (lack of hypothesis clarity), by providing a clear driver for the model. Parent B’s strength (robust risk control) addresses Parent A’s weakness (instability due to short window) by offering a framework for conditional filtering.
+
+ **Step 3 — Fused Mechanism:**  
+ The fusion combines Parent A’s medium-term momentum signal (TS_MEAN of returns) with Parent B’s risk-control structure. The new mechanism applies Parent A’s TS_MEAN signal to a conditional gate derived from Parent B’s model, which filters the signal during trending regimes. This creates a market pattern where the momentum signal is only activated when the model detects trending conditions, improving stability and predictive power.
+
+ **Step 4 — New Hypothesis:**  
+ The fusion suggests a new hypothesis: In trending markets, a medium-term momentum signal derived from the cross-sectional
+
+**STRENGTHS:**  
+Parent A: Uses a time-series mean of returns as a momentum signal, but has a short 5-day window that introduces noise.  
+Parent B: Combines multiple factors into a robust model with strong risk control, but lacks a clear hypothesis about the underlying market driver.  
+
+**FUSION:**  
+The fused mechanism applies Parent A’s medium-term momentum signal (TS_MEAN of returns) to a conditional gate derived from Parent B’s model, which filters the signal during trending regimes. This creates a market pattern where the momentum signal is only activated when the model detects trending conditions, improving stability and predictive power.  
+
+**DIRECTION:**  
+Proposal should focus on building a model that uses a medium-term momentum signal (TS_MEAN of returns) filtered by a conditional gate based on regime detection, to enhance stability and performance in trending markets.  
+
+**NEW HYPOTHESIS:**  
+The fusion motivates a new hypothesis: In trending markets, a medium-term momentum signal derived from the cross-sectional

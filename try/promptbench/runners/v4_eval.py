@@ -13,16 +13,23 @@ TOPOLOGI (per medium, per latent_steps, per rep)
   proposal->design->construct x4 : satu front-end independen per arah; construct
                                    TERMINAL di-decode & diskor.
 
-DUA MEDIUM
-----------
-  kv   : agen tengah (mutation/crossover/proposal/design) tetap kv_only; KV
-         output di-CLONE lalu dioper ke agen berikut (crossover = kv_concat 2
-         parent). USER prompt cuma bilang "sudah ada di latent memory".
-         Hanya feedback (entry, kv_and_text) & construct (terminal) yang decode.
-  text : SETIAP agen di-decode (kv_and_text); KV TIDAK dioper (transfer none).
-         Output teks agen sebelumnya disuntik ke USER prompt agen berikut
-         (var: target_text / parents_text / direction / hypothesis_text /
-         prior_factors). Persis filosofi c4_hybrid, tapi utk loop evolusi penuh.
+TIGA MEDIUM
+-----------
+  kv      : agen tengah (mutation/crossover/proposal/design) tetap kv_only; KV
+            output di-CLONE lalu dioper ke agen berikut (crossover = kv_concat 2
+            parent). USER prompt cuma bilang "sudah ada di latent memory".
+            Hanya feedback (entry, kv_and_text) & construct (terminal) yang decode.
+  text    : SETIAP agen di-decode (kv_and_text); KV TIDAK dioper (transfer none).
+            Output teks agen sebelumnya disuntik ke USER prompt agen berikut
+            (var: target_text / parents_text / direction / hypothesis_text /
+            prior_factors). Persis filosofi c4_hybrid, tapi utk loop evolusi penuh.
+  kv_text : HYBRID — KV di-chain persis seperti medium 'kv' (latent memory dioper
+            antar agen), DAN semua agen di-decode ke teks (seperti 'text'). USER
+            prompt memakai cabang 'kv' (handoff='kv': "read from latent memory")
+            karena informasi MEMANG ada di KV, bukan disuntik sebagai teks.
+            Berguna untuk: (a) inspeksi output setiap agen hop sambil tetap
+            memanfaatkan KV context, (b) membandingkan apakah decode membantu
+            atau mengganggu alignment laten.
 
 feedback IDENTIK di kedua medium (titik masuk; backtest+faktor selalu teks).
 Jadi perbedaan skor murni efek medium pada hop mutation/crossover->...->construct.
@@ -62,7 +69,7 @@ V4_YAML = PROMPTBENCH / "variants" / "_authored" / "redesign_v4.yaml"
 RESULTS = PROMPTBENCH / "results" / "v4_eval"
 
 DECODE_TEMPERATURE = 0.7
-DEFAULT_MAX_NEW = 30000
+DEFAULT_MAX_NEW = 10000
 MARKET_CONTEXT = "Liquid equities, daily bars, 2018-2021 train segment."
 
 # Dua mutation yang diteruskan jadi arah front-end (default: dua parent
@@ -130,10 +137,15 @@ def build_nodes(mut_forward: Tuple[int, int]) -> List[dict]:
 
 def node_vars(node: dict, medium: str, text_by_id: Dict[str, str]) -> Dict[str, str]:
     """Var Jinja untuk satu node, sesuai medium. Pada medium 'text' var upstream
-    diisi dari `text_by_id` (output decode parent); pada 'kv' tidak perlu."""
+    diisi dari `text_by_id` (output decode parent); pada 'kv'/'kv_text' tidak perlu
+    (upstream lewat KV-cache, user prompt bilang 'read from latent memory').
+    kv_text = KV chained (seperti kv) + semua agen di-decode (seperti text);
+    handoff disetel ke 'kv' agar user prompt tak minta injeksi teks."""
     from ..seeds_v4 import SEEDS, feedback_vars, parent_text, parents_text
 
-    v: Dict[str, str] = {"handoff": medium, "market_context": MARKET_CONTEXT}
+    # kv_text menggunakan USER prompt cabang KV (upstream via KV-cache)
+    handoff_val = "kv" if medium == "kv_text" else medium
+    v: Dict[str, str] = {"handoff": handoff_val, "market_context": MARKET_CONTEXT}
     stage = node["stage"]
 
     if stage == "feedback":
@@ -141,7 +153,7 @@ def node_vars(node: dict, medium: str, text_by_id: Dict[str, str]) -> Dict[str, 
         return v
 
     if medium != "text":
-        return v  # kv: upstream lewat KV, tak ada var teks
+        return v  # kv / kv_text: upstream lewat KV, tak ada var teks
 
     # ── medium text: suntik teks upstream ──
     if stage == "mutation":
@@ -184,6 +196,8 @@ def _render(spec: dict, fixtures: dict) -> Tuple[str, str]:
 
 
 def _transfer_for(node: dict, medium: str) -> str:
+    # text: tidak ada KV transfer (teks disuntik via var).
+    # kv / kv_text: KV di-chain atau di-concat antar agen.
     if medium == "text":
         return "none"
     if not node["parents"]:
@@ -239,7 +253,7 @@ def run_medium(medium: str, ls: int, rep: int, nodes: List[dict], *,
         from latent_mas.kv_ops import kv_deepcopy, kv_concat, kv_seq_len
         from ..scoring import score_chain
 
-        use_latent = ls > 0 and medium == "kv"
+        use_latent = ls > 0 and medium in ("kv", "kv_text")
         backend = get_latent_backend(latent_steps_init=max(ls, 10)) if use_latent \
             else get_backend()
 
@@ -248,20 +262,22 @@ def run_medium(medium: str, ls: int, rep: int, nodes: List[dict], *,
 
         for n in nodes:
             transfer = _transfer_for(n, medium)
-            # ── transfer KV (kv medium saja) ──
-            if medium == "kv" and transfer == "chain":
+            # ── transfer KV (kv dan kv_text: chain/concat; text: none) ──
+            if medium in ("kv", "kv_text") and transfer == "chain":
                 input_kv = kv_deepcopy(kv_by_id.get(n["parents"][0]))
-            elif medium == "kv" and transfer == "concat":
+            elif medium in ("kv", "kv_text") and transfer == "concat":
                 srcs = [kv_deepcopy(kv_by_id[p]) for p in n["parents"]
                         if p in kv_by_id]
                 input_kv = kv_concat(srcs) if srcs else None
             else:
                 input_kv = None
 
-            decode = (medium == "text") or n["stage"] in ("feedback", "construct")
+            # kv_text: semua agen di-decode (bukan hanya terminal); KV tetap
+            # di-chain. Hasilnya: output teks terbaca + komunikasi via KV.
+            decode = (medium in ("text", "kv_text")) or n["stage"] in ("feedback", "construct")
 
             ag = load_agent(n["agent"], backend, strict_vars=False, path=V4_YAML)
-            ag.spec.latent_steps = ls if medium == "kv" else 0
+            ag.spec.latent_steps = ls if medium in ("kv", "kv_text") else 0
             if decode and ag.spec.mode == "kv_only":
                 ag.spec.mode = "kv_and_text"
             if ag.spec.mode == "kv_and_text":
@@ -274,7 +290,7 @@ def run_medium(medium: str, ls: int, rep: int, nodes: List[dict], *,
             with open(os.devnull, "w") as dn, redirect_stdout(dn):
                 res = ag.run(past_kv=input_kv, **vars_)
 
-            if medium == "kv":
+            if medium in ("kv", "kv_text"):
                 kv_by_id[n["id"]] = res.kv_cache
             if res.text is not None:
                 text_by_id[n["id"]] = res.text
@@ -366,7 +382,8 @@ def aggregate(results: List[dict]) -> Path:
 # ════════════════════════════════════════════════════════════════════════════
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--media", default="kv,text", help="kv,text")
+    ap.add_argument("--media", default="kv,text",
+                    help="kv,text,kv_text  (kv_text = KV chained + semua agen decode)")
     ap.add_argument("--latent-steps", default="20", help="mis. 0,20,40 (kv saja yg pakai)")
     ap.add_argument("--reps", type=int, default=1)
     ap.add_argument("--workers", type=int, default=1)

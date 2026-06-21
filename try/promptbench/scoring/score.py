@@ -56,6 +56,74 @@ def _gate():
 _CLICHE = re.compile(r"low[- ]?volume.*volatilit|volatilit.*spike.*mean[- ]?revers", re.I)
 _DOLLAR_COL = re.compile(r"\$(open|high|low|close|volume|return)\b", re.I)
 
+# ── faithfulness (construct): apakah ekspresi MELAYANI mekanisme hipotesis ────
+# Tujuan: menghukum "library dump" — construct yang meng-enumerasi seluruh
+# palette tanpa mengikat ke hipotesis. DETERMINISTIK, tanpa GPU.
+#   - keyword hipotesis -> mekanisme yang dimaksud (_HYP_MECH)
+#   - mekanisme -> tanda-tangan operator/variabel yang benar-benar mengukurnya
+#     (_MECH_SIG); family struktural (time_series dll.) tak membedakan
+#     momentum vs reversal, jadi dicocokkan pada nama fungsi, bukan family.
+_HYP_MECH = {
+    "momentum":    r"\bmomentum|\btrend|persist|continu\w*|\bdrift|follow[- ]?through",
+    "reversal":    r"revers|mean[- ]?revert|overbought|oversold|rebound|over[- ]?react|snap[- ]?back|correct\w*",
+    "volatility":  r"volatil|turbulen|\brisk\b|dispersion",
+    "volume":      r"volume|liquid|turnover|trading activity|participation|\bflow\b",
+    "correlation": r"correlat|covar|co[- ]?move|comove|relationship|lead[- ]?lag|\bbeta\b",
+    "seasonal":    r"season|calendar|day[- ]?of|recurr",
+}
+_MECH_SIG = {
+    "momentum":    r"\b(DELTA|TS_MEAN|TS_SUM|SUMAC|EMA|WMA|SMA|DECAYLINEAR|MACD|RSI|TS_PCTCHANGE|TS_RANK|REGBETA|DELAY)\b",
+    "reversal":    r"\b(TS_ZSCORE|ZSCORE|RANK|TS_RANK|BB_UPPER|BB_MIDDLE|BB_LOWER|RSI|TS_MIN|TS_MAX|HIGHDAY|LOWDAY|PERCENTILE|TS_QUANTILE|TS_MEDIAN)\b",
+    "volatility":  r"\b(TS_STD|TS_VAR|TS_MAD|STD|BB_UPPER|BB_LOWER)\b|\$high|\$low",
+    "volume":      r"\$volume|\b(TS_CORR|TS_COVARIANCE|REGBETA|REGRESI|SUMIF|SUMAC)\b",
+    "correlation": r"\b(TS_CORR|TS_COVARIANCE|REGBETA|REGRESI)\b",
+    "seasonal":    r"\b(TS_ARGMAX|TS_ARGMIN|HIGHDAY|LOWDAY|DELAY|COUNT)\b",
+}
+# hipotesis menyebut keadaan/regime -> butuh gate kondisional di minimal 1 ekspresi
+_COND_HYP = re.compile(
+    r"\bwhen\b|\bregime|\bonly\b|condition|gate|during|\bwhile\b|provided|\bif\b|\bstate\b|trending",
+    re.I)
+_COND_EXPR = re.compile(r"\?|&&|\|\||\bCOUNT\(|\bSUMIF\(|\bFILTER\(", re.I)
+_WS = re.compile(r"\s+")
+
+
+def score_faithfulness(hypothesis: Optional[str], exprs: List[str]) -> Dict[str, Any]:
+    """Faithfulness ∈ [0,1] = seberapa setia kumpulan ekspresi pada mekanisme
+    hipotesis. Tiga sub-cek (alignment dominan):
+      alignment   : fraksi ekspresi yang memuat operator/variabel penanda
+                    mekanisme yang disebut hipotesis (anti library-dump).
+      conditional : bila hipotesis menyebut keadaan/regime, minimal 1 ekspresi
+                    harus punya gate kondisional; jika tak disebut, netral (1.0).
+      distinct    : fraksi ekspresi unik (anti duplikat).
+    faithfulness = 0.6*alignment + 0.2*conditional + 0.2*distinct.
+    """
+    n = len(exprs)
+    if n == 0:
+        return {"faithfulness": 0.0, "mech_detected": [], "alignment_frac": 0.0,
+                "conditional_required": False, "conditional_present": False,
+                "distinct_frac": 0.0}
+    h = hypothesis or ""
+    mechs = [m for m, pat in _HYP_MECH.items() if re.search(pat, h, re.I)]
+    if mechs:
+        sig = re.compile("|".join(_MECH_SIG[m] for m in mechs), re.I)
+        on = sum(1 for e in exprs if e and sig.search(e))
+        alignment = on / n
+    else:
+        alignment = 0.5  # mekanisme tak terdeteksi → tak bisa dinilai, netral
+    cond_req = bool(_COND_HYP.search(h))
+    cond_present = any(e and _COND_EXPR.search(e) for e in exprs)
+    conditional = 1.0 if (not cond_req or cond_present) else 0.0
+    distinct = len({_WS.sub("", (e or "")).upper() for e in exprs}) / n
+    faith = 0.6 * alignment + 0.2 * conditional + 0.2 * distinct
+    return {
+        "faithfulness": round(faith, 3),
+        "mech_detected": mechs,
+        "alignment_frac": round(alignment, 3),
+        "conditional_required": cond_req,
+        "conditional_present": cond_present,
+        "distinct_frac": round(distinct, 3),
+    }
+
 
 # ════════════════════════════════════════════════════════════════════════════
 # per-output scorers
@@ -95,12 +163,19 @@ def score_construct_judger(text: str, parsed: Any = None) -> Dict[str, Any]:
                 "gate_pass": 0, "gate_pass_frac": 0.0, "n_families": 0,
                 "families": [], "score": 0.0}
     ex = score_expressions(parsed.expressions)
-    # skor 0..1: parse(0.3) + gate(0.5*frac) + variety(0.2 bila >=2 family)
-    score = 0.3 + 0.5 * ex["gate_pass_frac"] + (0.2 if ex["n_families"] >= 2 else 0.0)
+    fa = score_faithfulness(parsed.hypothesis, parsed.expressions)
+    # skor 0..1: parse(0.2) + gate(0.4*frac) + variety(0.1 bila >=2 family)
+    #            + faithfulness(0.3). Faithfulness menghukum library-dump yang
+    #            lolos gate tapi tak melayani hipotesis (lihat score_faithfulness).
+    score = (0.2
+             + 0.4 * ex["gate_pass_frac"]
+             + (0.1 if ex["n_families"] >= 2 else 0.0)
+             + 0.3 * fa["faithfulness"])
     return {
         "parse_ok": True,
         "hypothesis": parsed.hypothesis,
         **ex,
+        **fa,
         "score": round(score, 3),
     }
 
@@ -180,6 +255,8 @@ def aggregate(role: str, per_rep: List[Dict[str, Any]]) -> Dict[str, Any]:
         out["variety_families"] = len(fams)          # breadth lintas rep
         out["families_union"] = sorted(fams)
         out["n_distinct_hypotheses"] = len(hyps)      # diversitas hipotesis
+        fa = [r.get("faithfulness", 0.0) for r in per_rep]
+        out["faithfulness_mean"] = round(statistics.fmean(fa), 3)
     elif role == "proposal":
         out["observable_rate"] = round(sum(int(r.get("observable", False)) for r in per_rep) / len(per_rep), 3)
         out["cliche_rate"] = round(sum(int(r.get("cliche", False)) for r in per_rep) / len(per_rep), 3)

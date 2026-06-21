@@ -1,0 +1,122 @@
+# Call 0008 — `mutation` (kv_and_text)
+
+## Meta
+
+- ts: 2026-06-21 12:00:00
+- conv_id: `8c21063a`
+- step: 0
+- temperature: 0.7
+- has_past_kv: True
+- input_tokens: 821
+- output_tokens: 652
+- duration_s: 23.9054
+- text_len: 3191
+
+## System Prompt
+
+```text
+You are the Mutation Director in a quantitative alpha-mining team. ONE parent
+result — its hypothesis, factors, metrics, and Feedback diagnosis — reaches you
+either through shared latent memory or as text in the task below. YOUR JOB is to
+set the DIRECTION that the Proposal agent builds on in the next round. That
+direction has two parts: a concrete refinement of the existing hypothesis that
+fixes the named structural weaknesses, and a suggested new hypothesis that the
+failures point toward.
+
+PIPELINE CONTEXT. Proposal inherits your reasoning. Write concretely enough that
+Proposal knows exactly what to pursue: what the parent mechanism is, what was
+structurally wrong with its construction, what kind of fix to apply, and — if the
+parent mechanism shows limited headroom — which adjacent hypothesis the data
+suggests.
+
+This is EXPLOITATION with an escape hatch. The primary task is to push the parent
+framework further by fixing what the Feedback weakness breakdown named. The
+secondary task is to read what the failures reveal about the data and name an
+adjacent hypothesis direction that the results motivate — grounded in what the
+data already showed.
+
+WHAT TO REASON ABOUT:
+  - WHAT WORKS = the part of the parent hypothesis and factors that Block A
+    confirmed, even partially. Name it explicitly so Proposal preserves it.
+  - WHAT FAILS = the structural weaknesses from the Feedback weakness breakdown.
+    For each named weakness, state what kind of structural change would address
+    it: a different variable or transform, a longer or shorter window, adding
+    cross-sectional normalization, switching function families, or adding a
+    conditional gate.
+  - REFINEMENT DIRECTION = ONE focused structural change that keeps the mechanism
+    intact and addresses the most critical weakness. Name the type of change
+    concretely, not just the goal.
+  - NEW HYPOTHESIS SUGGESTION = if the failures suggest the mechanism has limited
+    headroom, name ONE adjacent hypothesis that the results motivate. State what
+    the parent got partially right and how the new direction extends or shifts it.
+    This is for Proposal to hold in reserve; the refinement direction takes
+    priority unless the mechanism verdict was refutes.
+
+Always state the diagnosis and direction in your own words. Write in plain prose.
+```
+
+## User Prompt
+
+```text
+The parent result — its hypothesis, factors, metrics, and Feedback
+diagnosis — is already in your shared latent memory. Read it from there.
+
+Reason in four steps:
+  Step 1 — Read the Feedback weakness breakdown. For each named weakness, decide
+           whether it is fixable within the current mechanism (a structural
+           adjustment suffices) or whether it suggests the mechanism itself is
+           limited.
+  Step 2 — Name what the parent mechanism still gets right: the part of the
+           signal that showed any positive RankIC, even if small or unstable.
+           This is what Proposal must preserve.
+  Step 3 — For the most critical fixable weakness, name the ONE concrete
+           structural change: a different variable or transform of it, a window
+           adjustment, a normalization layer, a function-family switch, or a
+           conditional gate. Say why that specific change addresses that weakness.
+  Step 4 — Inspired by what the failures revealed about the data, name ONE
+           adjacent hypothesis direction. Describe it as a market pattern with a
+           driver, which variables carry it, and the expected return direction.
+           Explain why the parent's failures point toward it.
+Then close with this block, filling each placeholder with the actual value:
+WHAT WORKS: <the part of the parent that showed signal, in one clause>
+DIAGNOSIS: <the most critical structural weakness, in plain words>
+DIRECTION: <the concrete structural change to try and why it targets the weakness>
+NEW HYPOTHESIS: <the adjacent hypothesis the failures motivate, in two sentences>
+```
+
+## Response
+
+```text
+**Step 1 — Read the Feedback weakness breakdown:**  
+The Feedback identified several structural issues:  
+- **Variable choice**: Factor 1 uses raw variables (volume, high/low, close) without transformation or ratio.  
+- **Normalization**: Both factors use raw price/volume units, not cross-sectional ranks or z-scores.  
+- **Window length**: Factor 1 uses a 5-day window, which is too short for meaningful signal decay.  
+- **Composition depth**: Factor 1 is a single-step function (TS_ZSCORE and RANK), but the hypothesis likely requires a two-step process (e.g., time-series statistic + cross-sectional standardization).  
+- **Function family**: Factor 1 uses Z-score, which may not capture the directional trend implied by the hypothesis.  
+- **Conditional structure**: No regime gate is present, suggesting the signal may be unstable in certain market states.  
+
+Most of these weaknesses are fixable within the current mechanism with structural adjustments.
+
+---
+
+**Step 2 — What the parent mechanism still gets right:**  
+The parent mechanism retains some signal in the form of Factor 1’s small but positive RankIC (0.031), even though it is unstable (ICIR = 0.41). This suggests that the underlying hypothesis may still have some validity, albeit weakly.
+
+---
+
+**Step 3 — Most critical fixable weakness and direction:**  
+The most critical weakness is **normalization** — both factors use raw price/volume units instead of cross-sectional ranks or z-scores. This leads to noise and poor stability. To fix this, we should **add a cross-sectional rank or z-score normalization layer** to the signal. This would reduce scale sensitivity and make the factor more robust to market conditions. The specific change is to apply a cross-sectional rank to the output of Factor 1 before using it in the model.
+
+---
+
+**Step 4 — Adjacent hypothesis direction inspired by failures:**  
+The failures suggest that the current mechanism is too sensitive to short-term noise and lacks robustness in different market regimes. An adjacent hypothesis is: **a long-horizon momentum pattern driven by institutional buying pressure**, where the signal is derived from cross-sectional ranks of institutional trade volume over a 60-day window, and the expected return direction is positive in trending markets. The parent’s failure to capture this suggests that the current factors are too short-term and lack the institutional filter needed for longer-term signals.
+
+---
+
+**WHAT WORKS:** The parent mechanism still shows some signal in Factor 1’s small but positive RankIC, indicating that the underlying hypothesis may have some validity.  
+**DIAGNOSIS:** The biggest issue is that the factors use raw price/volume units instead of cross-sectional ranks or z-scores, leading to noise and instability.  
+**DIRECTION:** Add a cross-sectional rank or z-score normalization layer to the signal to reduce scale sensitivity and improve stability.  
+**NEW HYPOTHESIS:** A long-horizon momentum pattern driven by institutional buying pressure, where the signal is derived from cross-sectional ranks of institutional trade volume over a 60-day window, and the expected return direction is positive in trending markets.
+```

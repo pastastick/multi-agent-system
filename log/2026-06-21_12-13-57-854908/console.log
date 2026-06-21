@@ -1,0 +1,199 @@
+2026-06-21 12:14:02.953 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_MEAN($return,  5)) * SIGN(TS_PCTCHANGE($volume,  5))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:14:02.985 | ERROR    | factors.regulator.factor_regulator:is_parsable:335 - Failed to parse expression: RANK(TS_MEAN($volume, 5) / TS_RANK($volume, 5). Error: Unclosed parentheses  (at char 0), (line:1, col:1)
+2026-06-21 12:14:03.087 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($return, 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 21
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:14:03.181 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 21
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:14:03.280 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_CORR($return, $volume, 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 28
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:14:03.826 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (TS_MEAN($volume, 5) > TS_MEAN($volume, 20)) ? 1 : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:22:08.537 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_QUANTILE($volume, 10, 0.9) ? TS_QUANTILE($high - $low, 10, 0.9) : (TS_QUANTILE($high - $low, 10, 0.9) * 0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 7
+                        # Unique Vars: 3
+                        Symbol Length (SL): 109
+                        # Base Features (ER): 3
+                        
+2026-06-21 12:22:08.759 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE(TS_MEAN($volume, 10), 10) * TS_ZSCORE(TS_MEAN($high - $low, 10), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 3
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 3
+                        
+2026-06-21 12:22:08.929 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: MAX(TS_ZSCORE(TS_MEAN($volume, 10), 10), TS_ZSCORE(TS_MEAN($high - $low, 10), 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 3
+                        Symbol Length (SL): 82
+                        # Base Features (ER): 3
+                        
+2026-06-21 12:22:09.126 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_CORR($volume, $high - $low, 10) * TS_ZSCORE(TS_MEAN($volume, 10), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 3
+                        Symbol Length (SL): 72
+                        # Base Features (ER): 3
+                        
+2026-06-21 12:22:09.355 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE(TS_MEAN($volume, 10), 10) + TS_ZSCORE(TS_MEAN($high - $low, 10), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 3
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 3
+                        
+2026-06-21 12:22:09.697 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_MEAN(TS_ZSCORE(TS_MEAN($volume, 10), 10), 10) * TS_MEAN(TS_ZSCORE(TS_MEAN($high - $low, 10), 10), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 6
+                        # Unique Vars: 3
+                        Symbol Length (SL): 104
+                        # Base Features (ER): 3
+                        
+2026-06-21 12:27:47.925 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_PCTCHANGE(TS_MEAN($return, 5), 5) * TS_ZSCORE($volume, 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:27:48.048 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (TS_PCTCHANGE(TS_MEAN($return, 5), 5) > 0.02) ? TS_ZSCORE($volume, 5) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 2
+                        Symbol Length (SL): 73
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:27:48.156 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 5) / TS_PCTCHANGE(TS_MEAN($return, 5), 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:27:48.284 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_PCTCHANGE(TS_MEAN($return, 5), 5) * RANK(TS_ZSCORE($volume, 5))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 66
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:27:48.425 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_PCTCHANGE(TS_MEAN($return, 5), 5) * TS_RANK(TS_ZSCORE($volume, 5), 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 72
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:27:48.570 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($volume, 5) * TS_RANK(TS_PCTCHANGE(TS_MEAN($return, 5), 5), 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 72
+                        # Base Features (ER): 2
+                        
+2026-06-21 12:29:44.359 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_ZSCORE($volume, 3))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:29:44.497 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (TS_ZSCORE($volume, 3) > 1.5) ? 1 : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 37
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:29:44.597 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: SKEW(TS_ZSCORE($volume, 3))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:29:44.679 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: MEDIAN(TS_ZSCORE($volume, 3))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 29
+                        # Base Features (ER): 1
+                        
+2026-06-21 12:29:44.791 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: REGBETA(TS_ZSCORE($volume, 3), $return, 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 43
+                        # Base Features (ER): 2
+                        

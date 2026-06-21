@@ -1,0 +1,12 @@
+{"n": 1, "ts": "2026-06-21 09:13:55", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "e8538dfb", "text_len": 1604, "duration_s": 19.5102, "file": "0001_feedback_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-06-21 09:14:13", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "f3a8f789", "text_len": 1699, "duration_s": 17.681, "file": "0002_feedback_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-06-21 09:14:29", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "aaf69d82", "text_len": 1404, "duration_s": 15.959, "file": "0003_feedback_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-06-21 09:14:50", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "456d2e6d", "text_len": 2010, "duration_s": 20.2303, "file": "0004_feedback_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-06-21 09:15:15", "role": "mutation", "mode": "kv_and_text", "step": 0, "conv_id": "d13851cc", "text_len": 3258, "duration_s": 25.4578, "file": "0005_mutation_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-06-21 09:15:39", "role": "mutation", "mode": "kv_and_text", "step": 0, "conv_id": "af4e22aa", "text_len": 3097, "duration_s": 24.1533, "file": "0006_mutation_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-06-21 09:16:28", "role": "mutation", "mode": "kv_and_text", "step": 0, "conv_id": "55bfb96d", "text_len": 2634, "duration_s": 48.1865, "file": "0007_mutation_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-06-21 09:16:37", "role": "mutation", "mode": "kv_and_text", "step": 0, "conv_id": "7d4d3ec2", "text_len": 1159, "duration_s": 9.383, "file": "0008_mutation_kv_and_text.md", "vars": []}
+{"n": 9, "ts": "2026-06-21 09:16:49", "role": "crossover", "mode": "kv_and_text", "step": 0, "conv_id": "0107af14", "text_len": 1253, "duration_s": 11.319, "file": "0009_crossover_kv_and_text.md", "vars": []}
+{"n": 10, "ts": "2026-06-21 09:17:03", "role": "crossover", "mode": "kv_and_text", "step": 0, "conv_id": "0d9804ea", "text_len": 1568, "duration_s": 14.2229, "file": "0010_crossover_kv_and_text.md", "vars": []}
+{"n": 11, "ts": "2026-06-21 09:17:09", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "2dc472ed", "text_len": 492, "duration_s": 6.0465, "file": "0011_proposal_kv_and_text.md", "vars": []}
+{"n": 12, "ts": "2026-06-21 09:37:46", "role": "design", "mode": "kv_and_text", "step": 0, "conv_id": "ddff65ca", "text_len": 82663, "duration_s": 1237.3078, "file": "0012_design_kv_and_text.md", "vars": []}

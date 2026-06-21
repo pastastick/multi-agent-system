@@ -5,10 +5,18 @@ Maps alphaagent.log to rdagent.log so all alphaagent.log imports work.
 Provides AlphaAgent-specific APIs: log_trace_path, set_trace_path.
 """
 
+import os
 import pickle
 from pathlib import Path
+from loguru import logger as _loguru_logger
 from rdagent.log import rdagent_logger as _rdagent_logger
 from rdagent.log.utils import LogColors
+
+#* Nama file sink untuk menangkap log konsol (mis. "Evaluated expr" dari regulator).
+#* rdagent.log.logger hanya memasang sink konsol (stderr) tanpa sink file, jadi baris
+#* logger.info/.warning/.error bersifat ephemeral. Sink ini mempersistenkannya ke disk
+#* dengan FORMAT DEFAULT loguru — sama persis dengan yang tampil di terminal.
+_CONSOLE_LOG_FILENAME = "console.log"
 
 
 class _AlphaAgentLoggerWrapper:
@@ -18,6 +26,33 @@ class _AlphaAgentLoggerWrapper:
 
     def __init__(self, inner):
         object.__setattr__(self, "_inner", inner) #* simpan rdagent_logger asli
+        object.__setattr__(self, "_console_file_sink_id", None) #* id sink file loguru aktif
+        self._attach_console_file(inner.storage.path) #* pasang sink awal di trace path saat ini
+
+    # ---------- Console-format file sink ----------
+    def _attach_console_file(self, trace_path) -> None:
+        """(Re)arahkan satu sink file loguru ke <trace_path>/console.log.
+
+        Memakai format DEFAULT loguru (tanpa argumen format) sehingga isi file
+        identik dengan output konsol. Override lokasi via env LOG_CONSOLE_FILE
+        (path tetap; tidak ikut berpindah saat set_trace_path)."""
+        fixed = os.getenv("LOG_CONSOLE_FILE")
+        target = Path(fixed) if fixed else Path(trace_path) / _CONSOLE_LOG_FILENAME
+
+        prev_id = object.__getattribute__(self, "_console_file_sink_id")
+        if fixed and prev_id is not None:
+            return  #* path tetap: sink sudah terpasang, jangan dipindah
+
+        if prev_id is not None:
+            try:
+                _loguru_logger.remove(prev_id) #* lepas sink lama sebelum pindah
+            except ValueError:
+                pass
+
+        target.parent.mkdir(parents=True, exist_ok=True)
+        #* level DEBUG agar semua baris (info/warning/error) tertangkap; format default = format konsol
+        sink_id = _loguru_logger.add(str(target), level="DEBUG", encoding="utf-8")
+        object.__setattr__(self, "_console_file_sink_id", sink_id)
 
     # ---------- AlphaAgent extension ----------
     @property
@@ -29,6 +64,7 @@ class _AlphaAgentLoggerWrapper:
         """Set new log trace path."""
         from rdagent.log.storage import FileStorage
         self._inner.storage = FileStorage(Path(path)) #*ubah path penyimpanan log
+        self._attach_console_file(path) #* ikutkan sink file konsol ke trace path baru
 
     # ---------- Safe log_object (skip unpicklable) ----------
     def log_object(self, obj, *, tag: str = "") -> None:

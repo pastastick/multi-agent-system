@@ -1,0 +1,114 @@
+# medium=kv_text  ls=40  rep=0  node=crossover_x1  agent=crossover  transfer=concat  decode=True  terminal=False
+
+# kv: {"transfer": "concat", "kv_seq_len": 2956}
+==============================================================================
+SYSTEM
+==============================================================================
+You are the Crossover Director in a quantitative alpha-mining team. SEVERAL
+parent results — each with its hypothesis, factors, metrics, and Feedback
+diagnosis — reach you either through shared latent memory or as text in the task
+below. YOUR JOB is to set a BOLD exploratory DIRECTION that fuses the
+complementary strengths of the parents into something none of them reached, and
+to name a new hypothesis that the fusion motivates.
+
+PIPELINE CONTEXT. Proposal inherits your reasoning. Write concretely enough that
+Proposal knows: what each parent contributed distinctly, what each parent failed
+at according to Feedback, how the fusion combines strengths while avoiding the
+named failures, and what new hypothesis the fusion collectively points toward.
+
+This is EXPLORATION. The parents each explored a different region of the
+mechanism space and each hit a different structural ceiling. Your task is to map
+the territory between them, find the complementary fit, describe the unexplored
+region, and point Proposal toward it.
+
+WHAT TO REASON ABOUT:
+  - PER-PARENT CONTRIBUTION = for each parent, name its ONE distinct strength
+    (a specific market driver, a construction style, a horizon, or a data
+    dimension) AND the most critical structural weakness Feedback named for it.
+  - COMPLEMENTARY FIT = which parent's strength directly addresses another
+    parent's named weakness? Name the specific pairing: parent A is strong at X
+    where parent B is weak, and parent B is strong at Y where parent A is weak.
+  - FUSION MECHANISM = the concrete way to combine the complementary strengths:
+    apply one parent's normalisation to another parent's driver, use one parent's
+    conditional gate to filter another parent's signal, or combine horizons across
+    parents. Describe the fused mechanism as a market pattern with a driver,
+    the variables it involves, the horizon, and the predicted return direction.
+  - NEW HYPOTHESIS = what does the fusion reveal about an adjacent, unexplored
+    mechanism? The parents collectively mapped a region; the fusion points beyond
+    it. Name ONE new hypothesis that the combined evidence motivates, stated as
+    a market pattern with a driver, variables, horizon, and return direction.
+
+Always combine at least two parents. Write in plain prose.
+
+==============================================================================
+USER
+==============================================================================
+The parent results — each with its hypothesis, factors, metrics, and
+Feedback diagnosis — are already in your shared latent memory. Read them from
+there.
+
+Reason in four steps:
+  Step 1 — For each parent: name its distinct strength (driver, construction
+           style, horizon, or variable dimension) and the most critical weakness
+           the Feedback named for it.
+  Step 2 — Find the complementary pairing: which parent's strength addresses
+           another parent's named weakness? State the specific fit.
+  Step 3 — Describe the fused mechanism: how do the complementary strengths
+           combine into a market pattern that none of the parents reached?
+           State the driver, the variables it involves, the horizon, and the
+           predicted return direction.
+  Step 4 — From the fusion, name ONE new hypothesis that the combined evidence
+           motivates. It should go beyond the fusion itself — what adjacent
+           mechanism do the parents collectively point toward? State it as a
+           market pattern with a driver, variables, horizon, and return direction.
+Then close with this block, filling each placeholder with the actual value:
+STRENGTHS: <each parent's distinct strength and critical weakness, one clause per parent>
+FUSION: <the fused mechanism as a market pattern, in two sentences>
+DIRECTION: <what Proposal should pursue in the next round, in one to two sentences>
+NEW HYPOTHESIS: <the adjacent hypothesis the fusion motivates, in two sentences>
+
+==============================================================================
+RESPONSE
+==============================================================================
+**Step 1 — For each parent:**
+
+- **Parent 1 (Factor 1):**  
+  **Strength:** Uses a time-series mean of volume over 3 days to capture short-term liquidity dynamics.  
+  **Critical Weakness:** The signal is in raw volume units without normalization, making it scale-sensitive and noisy.
+
+- **Parent 2 (Factor 2):**  
+  **Strength:** Uses regression beta to measure the sensitivity of returns to volume, capturing market trend exposure.  
+  **Critical Weakness:** The window of 20 days is too long for a medium-horizon mechanism, leading to decayed signal strength.
+
+---
+
+**Step 2 — Complementary Pairing:**
+
+Parent 1’s strength (short-term liquidity dynamics) directly addresses Parent 2’s weakness (long window). Parent 2’s strength (market trend exposure via beta) addresses Parent 1’s weakness (lack of normalization).
+
+---
+
+**Step 3 — Fused Mechanism:**
+
+The fusion combines Parent 1’s short-term liquidity signal with Parent 2’s trend exposure, but applies Parent 2’s normalized beta to Parent 1’s liquidity factor. This creates a market pattern where short-term liquidity changes (measured as TS_MEAN of volume) are weighted by their sensitivity to volume-driven trends. The horizon is medium (3 days for liquidity, 20 days for trend), and the predicted return direction is positive in liquidation-driven markets and negative in trend-reversal scenarios.
+
+---
+
+**Step 4 — New Hypothesis:**
+
+The fusion reveals an adjacent mechanism where liquidity shifts in the short term interact with longer-term trend reversals. A new hypothesis is that short-term liquidity changes (e.g., TS_MEAN of volume) predict the onset of trend reversals in the medium term (20-day beta), with returns positive during liquidity-induced trends and negative during liquidity-induced reversals.
+
+---
+
+**STRENGTHS:**  
+Parent 1: Strength in short-term liquidity dynamics; weakness in lack of normalization.  
+Parent 2: Strength in market trend exposure; weakness in long window length.
+
+**FUSION:**  
+A fused mechanism where short-term liquidity changes (TS_MEAN of volume) are weighted by their sensitivity to volume-driven trends (beta), creating a medium-horizon signal that captures both liquidity and trend dynamics. The signal is positive in liquidation-driven markets and negative in trend-reversal scenarios.
+
+**DIRECTION:**  
+Proposal should explore a hybrid factor that normalizes short-term liquidity signals using cross-sectional rank and applies them to medium-term trend exposure metrics to capture the interaction between liquidity shifts and trend reversals.
+
+**NEW HYPOTHESIS:**  
+A new hypothesis is that short-term liquidity changes (e.g., TS_MEAN of volume) predict the onset of trend reversals in the medium term (20-day beta), with returns positive during liquidity-induced trends and negative during liquidity-induced reversals.
