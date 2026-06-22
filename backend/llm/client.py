@@ -515,6 +515,8 @@ class LLMResult:
     hidden_last : Optional[torch.Tensor]  = None   # [1, d]
     latent_vecs : Optional[torch.Tensor]  = None   # [steps, d]
     mode        : OutputMode              = "text_only"
+    latent_s    : float                   = 0.0    # durasi latent_pass ("berpikir")
+    gen_s       : float                   = 0.0    # durasi generate teks
 
     @property
     def has_text(self) -> bool:
@@ -784,6 +786,25 @@ class _CoreEngine:
             # [B, seq, d] -> ambil posisi terakhir -> [B, d]
             last_hidden = out.hidden_states[-1][:, -1, :]
         return out.past_key_values, last_hidden
+
+    @torch.no_grad()
+    def _close_open_turn(self, past_kv: KVCache) -> None:
+        """Tutup turn asisten yang menggantung dengan <|im_end|>\\n (path NO-CROP).
+
+        model.generate berhenti DI token EOS (<|im_end|>) tanpa men-cache K/V-nya,
+        jadi setelah generate tanpa-crop turn asisten tidak punya penutup di KV.
+        Mem-forward <|im_end|>\\n menjaga struktur chat tetap valid untuk agent
+        berikutnya yang di-chain (DESIGN.md prod/ §2.2). KV (DynamicCache) dimutasi
+        in-place."""
+        end_ids, _ = self.tokenize("<|im_end|>\n")
+        if end_ids is None or end_ids.shape[-1] == 0:
+            return
+        past_len = _past_length(past_kv)
+        mask = torch.ones(
+            (end_ids.shape[0], past_len + end_ids.shape[-1]),
+            dtype=torch.long, device=self.device,
+        )
+        self._forward(end_ids, mask, past_kv, need_hidden=False)
 
     # ── Latent pass ──────────────────────────────────────────────────────────
 
@@ -1240,10 +1261,15 @@ class LocalLLMBackend:
         mode           : Optional[OutputMode] = None,
         latent_steps   : Optional[int] = None,
         json_schema    : Optional[Dict[str, Any]] = None,
+        crop_after_generate: bool = True,
     ) -> LLMResult:
         """
         Sama seperti build_messages_and_create_chat_completion, tapi return
         LLMResult lengkap (termasuk kv_cache, hidden_last, latent_vecs).
+
+        crop_after_generate : bila True (default infra), buang token jawaban dari
+            KV setelah generate (anti-contamination). Set False untuk NO-CROP
+            (pipeline produksi) agar jawaban asli ikut di-chain ke agent berikut.
 
         Dipakai oleh Latent pipeline classes (LatentHypothesisGen, dsb.)
         yang butuh akses ke KV-cache output untuk di-chain ke step berikutnya.
@@ -1261,6 +1287,7 @@ class LocalLLMBackend:
             max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p,
             json_mode=json_mode, conv_id=conv_id, step=step, role=role,
             latent_steps=latent_steps, json_schema=json_schema,
+            crop_after_generate=crop_after_generate,
         )
 
     # ── Titik masuk fleksibel ──────────────────────────────────────────────
@@ -1281,6 +1308,7 @@ class LocalLLMBackend:
         kv_n_selective     : int  = 64,
         latent_steps       : Optional[int] = None,
         json_schema        : Optional[Dict[str, Any]] = None,
+        crop_after_generate: bool = True,
     ) -> LLMResult:
         """
         Titik masuk tunggal untuk semua mode.
@@ -1430,11 +1458,13 @@ class LocalLLMBackend:
                 # Step 1: Latent pass TANPA assistant prefix.
                 #   KV berisi: [prompt tokens + latent virtual tokens]
                 #   Model "berpikir diam" di ruang latent sebelum menjawab.
+                _t_latent = time.time()
                 kv, last_hidden, latent_vecs = self._engine.latent_pass(
                     messages, past_key_values, record_vecs=record_latent_vecs,
                     latent_steps=latent_steps,
                     add_generation_prompt=False,
                 )
+                result.latent_s = round(time.time() - _t_latent, 3)
 
                 # Step 2: Generate teks dari KV TANPA re-encode pesan.
                 #   Hanya kirim assistant prefix tokens (e.g. <|im_start|>assistant\n)
@@ -1454,16 +1484,27 @@ class LocalLLMBackend:
                 #   latent reasoning (virtual tokens), bukan discrete
                 #   answer tokens.
                 _latent_kv_len = _past_length(kv)
+                _t_gen = time.time()
                 text, prefix_ids, out_ids, _ = self._engine.generate_from_kv(
                     past_kv=kv, messages=messages,
                     max_new_tokens=_max_tok, temperature=_temp, top_p=_top_p,
                     return_kv=False,
                     prefix_allowed_tokens_fn=_prefix_fn,
                 )
-                try:
-                    kv.crop(_latent_kv_len)
-                except AttributeError:
-                    pass
+                result.gen_s = round(time.time() - _t_gen, 3)
+                if crop_after_generate:
+                    # Perilaku infra default: buang token jawaban → hanya
+                    # [prompt + N latent virtual tokens] yang di-chain (anti-
+                    # contamination, filosofi Latent-MAS).
+                    try:
+                        kv.crop(_latent_kv_len)
+                    except AttributeError:
+                        pass
+                else:
+                    # NO-CROP (prod): pertahankan jawaban di KV agar agent berikut
+                    # membaca output ASLI (hipotesis/palette), bukan cuma vektor
+                    # laten. Tutup turn asisten yang menggantung. (DESIGN.md §2.2)
+                    self._engine._close_open_turn(kv)
                 if json_mode:
                     text = self._fix_json(text)
 

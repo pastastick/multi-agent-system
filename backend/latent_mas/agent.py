@@ -65,6 +65,10 @@ class AgentSpec:
     max_new_tokens: Optional[int] = None
     parser: Optional[Callable[[str], Any]] = None
     json_mode: bool = False
+    # NO-CROP default (prod): pertahankan jawaban yang di-generate di KV agar
+    # agent berikut membaca output ASLI, bukan cuma vektor laten yang lossy.
+    # Set False (di YAML) untuk perilaku lama (crop, anti-contamination).
+    keep_answer_in_kv: bool = True
 
 
 @dataclass
@@ -83,6 +87,8 @@ class AgentResult:
     latent_vecs: Any = None
     input_ids: Any = None
     output_ids: Any = None
+    latent_s: float = 0.0   # durasi "berpikir" (latent_pass)
+    gen_s: float = 0.0      # durasi generate teks
 
     @property
     def ok(self) -> bool:
@@ -159,6 +165,7 @@ class LatentAgent:
                 temperature=self.spec.temperature,
                 max_new_tokens=self.spec.max_new_tokens,
                 json_mode=self.spec.json_mode,
+                crop_after_generate=not self.spec.keep_answer_in_kv,
             )
         dur = time.time() - t0
 
@@ -190,6 +197,8 @@ class LatentAgent:
             latent_vecs=res.latent_vecs,
             input_ids=res.input_ids,
             output_ids=res.output_ids,
+            latent_s=getattr(res, "latent_s", 0.0),
+            gen_s=getattr(res, "gen_s", 0.0),
         )
         if rl is not None:
             rl.event("agent_done", **out.describe())
@@ -216,6 +225,7 @@ def _load_specs(path: Path = _PROMPTS_PATH) -> Dict[str, AgentSpec]:
             max_new_tokens=cfg.get("max_new_tokens"),
             parser=PARSERS.get(parser_name),
             json_mode=cfg.get("json_mode", False),
+            keep_answer_in_kv=cfg.get("keep_answer_in_kv", True),
         )
     return specs
 
