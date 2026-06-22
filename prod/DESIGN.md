@@ -221,4 +221,16 @@ Reuse (tidak ditulis ulang): `backend/llm/client.py` (LocalLLMBackend),
     Backend ditambah `LLMResult.latent_s/gen_s` + propagasi ke `AgentResult`.
   - Sisa F3: jalankan GPU + wire `real` backtest ke data Qlib + populasi ≥2
     lineage untuk crossover sejati.
-- **F4** — Harness validasi §7 + A/B `kv` (no-crop) vs `text` (full-text, ls=0).
+- **F4 — HARNESS SELESAI ✅ (A/B numbers butuh GPU)** `prod/analyze.py` (tanpa GPU):
+  mengukur dari artifacts (prod ATAU legacy) per rantai proposal→design→construct:
+  `fidelity_pd/dc` (Jaccard kata-isi hipotesis antar hop), `mech_pd/dc` (overlap
+  kata-mekanisme), `drift` flag, `corruption_hits` (heuristik token sampah),
+  `gate_pass_frac` (via runner). CLI multi-dir → tabel A/B + `analysis.json`.
+  - **Tervalidasi** pada legacy `v4_eval/kv_text/ls10/rep0` (crop baseline):
+    `drift_rate=1.0`, `fidelity_pd=0.112`, `corruption=12`, `gate=0.417` —
+    mengkuantifikasi drift yang didiagnosis.
+  - **Caveat**: heuristik korupsi kasar (false-positive pada output verbose);
+    A/B bermakna = run **prod** `kv` vs `text` (prompt & format identik), bukan
+    legacy (prompt lama + format beda → angka confounded).
+  - Sisa: jalankan prod GPU `kv` (no-crop) & `text` (ls=0) lalu
+    `python -m prod.analyze prod/results/kv/ls10 prod/results/text/ls0`.
