@@ -157,32 +157,65 @@ def _repair_brackets(expr: str) -> str:
     return expr
 
 
-def gate_and_repair(factors: List[Dict[str, str]], log=None) -> List[Dict[str, Any]]:
-    """Gate tiap faktor; coba repair ringan (balance kurung) bila gagal.
+RepairFn = Callable[..., Optional[str]]  # (name, broken_expr, reason, explanation, hypothesis)->expr|None
 
-    Mengembalikan list diperkaya: {name, expression, ok, reason, families,
-    repaired(bool), original}. ALASAN penolakan gate di-LOG (permintaan F3).
+
+def parse_repair_output(text: str) -> Optional[str]:
+    """Ambil ekspresi dari output repair agent (JSON {expression, note})."""
+    obj = _extract_json(text)
+    if obj and isinstance(obj.get("expression"), str):
+        return obj["expression"].strip() or None
+    return None
+
+
+def gate_and_repair(factors: List[Dict[str, str]], *, repair_fn: Optional[RepairFn] = None,
+                    hypothesis: Optional[str] = None, log=None) -> List[Dict[str, Any]]:
+    """Gate tiap faktor; bila gagal: (1) repair kurung murah, lalu (2) AGENT repair
+    yang sadar-intent (mengganti fungsi/argumen agar sesuai, tanpa ubah maksud yang
+    ditulis Builder di explanation). Re-gate tiap perbaikan.
+
+    Return list: {name, expression, ok, reason, families, repaired_by, original}.
+    repaired_by ∈ {None, 'brackets', 'agent'}. Alasan gate menolak di-LOG.
     """
     out: List[Dict[str, Any]] = []
     for f in factors:
-        expr = f["expression"]
+        original = f["expression"]
+        expr = original
         ok, reason = _gate_one(expr)
-        repaired = False
-        original = expr
+        repaired_by: Optional[str] = None
+
+        # 1) repair kurung (gratis, tanpa LLM)
         if not ok and expr:
             fixed = _repair_brackets(expr)
             if fixed != expr:
                 ok2, reason2 = _gate_one(fixed)
                 if ok2:
-                    expr, ok, reason, repaired = fixed, True, reason2, True
+                    expr, ok, reason, repaired_by = fixed, True, reason2, "brackets"
+
+        # 2) AGENT repair (sadar-intent) untuk yang masih ilegal
+        if not ok and expr and repair_fn is not None:
+            try:
+                cand = repair_fn(name=f["name"], broken_expr=expr, reason=reason,
+                                 explanation=f.get("explanation", ""), hypothesis=hypothesis)
+            except Exception as e:  # noqa: BLE001
+                cand = None
+                if log is not None:
+                    log.line(f"  REPAIR-AGENT error {f['name']}: {e}")
+            if cand and cand.strip() and cand.strip() != expr:
+                ok3, reason3 = _gate_one(cand.strip())
+                if ok3:
+                    expr, ok, reason, repaired_by = cand.strip(), True, reason3, "agent"
+                else:
+                    reason = f"agent repair still illegal: {reason3}"
+
         rec = {"name": f["name"], "expression": expr, "ok": ok, "reason": reason,
-               "families": _families(expr), "repaired": repaired, "original": original}
+               "families": _families(expr), "repaired_by": repaired_by, "original": original}
         out.append(rec)
         if log is not None:
             if not ok:
                 log.line(f"  GATE REJECT  {f['name']}: {original}  -> {reason}")
-            elif repaired:
-                log.line(f"  GATE REPAIR  {f['name']}: {original}  ->  {expr}")
+            elif repaired_by:
+                log.line(f"  GATE REPAIR[{repaired_by}]  {f['name']}: {original}  ->  {expr}")
     return out
 
 
@@ -227,16 +260,21 @@ def backtest(legal: List[Dict[str, Any]], mode: str = "mock") -> Dict[str, Any]:
 # ── orkestrasi: construct text → var feedback ────────────────────────────────
 
 def run_construct(construct_text: str, *, sota_rankic: Optional[float] = None,
-                  mode: str = "mock", log=None) -> Dict[str, Any]:
+                  mode: str = "mock", repair_fn: Optional[RepairFn] = None,
+                  log=None) -> Dict[str, Any]:
     """Gate+repair+backtest sebuah output construct → var untuk agent feedback.
+
+    repair_fn: callback ke AGENT repair (disuntik pipeline; butuh backend). None →
+    hanya repair kurung deterministik.
 
     Return: {hypothesis, factor_block, backtest_results, sota_block, _score, _best_rankic}
     """
     hypothesis, factors = parse_construct(construct_text)
     if log is not None:
         log.line(f"construct parse: hypothesis={'yes' if hypothesis else 'NO'} "
-                 f"factors={len(factors)} gate={gate_kind()}")
-    graded = gate_and_repair(factors, log=log)
+                 f"factors={len(factors)} gate={gate_kind()} "
+                 f"repair={'agent' if repair_fn else 'brackets-only'}")
+    graded = gate_and_repair(factors, repair_fn=repair_fn, hypothesis=hypothesis, log=log)
     legal = [r for r in graded if r["ok"]]
     n_total, n_legal = len(graded), len(legal)
 
@@ -279,8 +317,8 @@ def _fmt_factor_block(graded: List[Dict[str, Any]], bt: Dict[str, Any]) -> str:
     for r in graded:
         if not r["ok"]:
             tag = f"REJECTED: {r['reason']}"
-        elif r["repaired"]:
-            tag = f"legal (repaired from: {r['original']})"
+        elif r["repaired_by"]:
+            tag = f"legal (repaired[{r['repaired_by']}] from: {r['original']})"
         else:
             tag = "legal"
         lines.append(f"- {r['name']}: {r['expression']}  [{tag}]")

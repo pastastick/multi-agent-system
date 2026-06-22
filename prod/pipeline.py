@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 from jinja2 import Environment, Undefined
 
-from .config import PROMPTS_YAML, RunConfig
+from .config import FUNCTION_LIB, PROMPTS_YAML, RunConfig
 from . import transfer as T
 from . import runner as R
 from .runlog import RunLog
@@ -160,6 +160,7 @@ class EvolutionPipeline:
         self.run_dir = cfg.out_dir / cfg.transfer_mode / f"ls{cfg.effective_latent_steps}"
         self.log = RunLog(enabled=cfg.verbose)
         self.sota_rankic: Optional[float] = None  # best standalone RankIC sejauh ini
+        self._repair_agent = None                 # agent repair (lazy; butuh backend)
 
     # -- dry-run: render + cek wiring tanpa GPU --------------------------------
     def dry_run(self) -> dict:
@@ -289,13 +290,37 @@ class EvolutionPipeline:
             json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
         return out
 
+    def _make_repair_fn(self):
+        """Closure ke AGENT repair (standalone, NON-chained). Memperbaiki SATU
+        ekspresi ilegal agar lolos gate tanpa mengubah intent (explanation Builder).
+        Di-cache; mengembalikan None bila tak ada backend."""
+        if self.backend is None:
+            return None
+        from .agents import load_prod_agent
+        if self._repair_agent is None:
+            self._repair_agent = load_prod_agent("repair", self.backend, self.cfg)
+
+        def _repair(*, name, broken_expr, reason, explanation, hypothesis):
+            res = self._repair_agent.run(
+                past_kv=None, function_lib=FUNCTION_LIB, factor_name=name,
+                broken_expr=broken_expr, reason=reason,
+                explanation=explanation or "", hypothesis=hypothesis or "")
+            fixed = R.parse_repair_output(res.text or "")
+            self.log.line(
+                f"  REPAIR-AGENT {name}: think={res.latent_s:.2f}s gen={res.gen_s:.2f}s "
+                f"out={res.n_output_tokens} -> {fixed or '(no fix)'}")
+            return fixed
+
+        return _repair
+
     def _score_and_prepare_feedback(self, node: dict, construct_text: str,
                                     feedback_inputs: Dict[str, Dict[str, str]]) -> dict:
         """Gate+repair+backtest construct (runner), simpan var feedback gen berikut.
 
         SOTA RankIC di-track lintas generasi (replace-best deterministik)."""
         fb_vars = R.run_construct(construct_text, sota_rankic=self.sota_rankic,
-                                  mode=self.cfg.backtest_mode, log=self.log)
+                                  mode=self.cfg.backtest_mode,
+                                  repair_fn=self._make_repair_fn(), log=self.log)
         best = fb_vars.get("_best_rankic")
         if best is not None and (self.sota_rankic is None or best > self.sota_rankic):
             self.sota_rankic = best

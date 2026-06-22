@@ -203,9 +203,15 @@ Reuse (tidak ditulis ulang): `backend/llm/client.py` (LocalLLMBackend),
 - **F3 — SELESAI ✅ (kecuali real-backtest & GPU)** `runner.py` ter-wire ke
   `pipeline._score_and_prepare_feedback` + tracking SOTA RankIC lintas generasi:
   - **gate** = regulator ASLI `latent_mas.pipeline._build_regulator_gate` (impor
-    langsung, BUKAN dari `try/`); rejection reason di-LOG. **repair** ringan
-    (trim junk + tutup kurung menggantung). Teruji standalone (4 faktor:
-    legal/arity-reject/repaired/trivial-reject).
+    langsung, BUKAN dari `try/`); rejection reason di-LOG.
+  - **repair = AGENT** (`prompts.yaml: repair`, standalone/non-chained): memperbaiki
+    SATU ekspresi ilegal agar lolos gate TANPA mengubah intent — mengganti fungsi
+    agar arity cocok, menyederhanakan argumen, menamai ulang fungsi, dll. Memakai
+    `explanation` per-faktor dari construct (intent) + reason gate + library DSL
+    (`config.FUNCTION_LIB` via `{{ function_lib }}`). Alur: gate → repair kurung
+    murah (gratis) → AGENT repair (sadar-intent) → re-gate. Disuntik pipeline via
+    `_make_repair_fn` (butuh backend). Teruji standalone dgn stub: arity-reject→
+    agent-fix, unbalanced→bracket-fix, trivial→tetap reject.
   - **backtest** dua mode: `mock` (metrik deterministik hash → loop+log penuh
     tanpa Qlib) dan `real` (adapter ke `factors.QlibFactorRunner._compute_factor_ic`
     — BELUM diuji, butuh env Qlib).

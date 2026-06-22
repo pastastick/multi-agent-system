@@ -10,6 +10,34 @@ PROMPTS_YAML = PROD_DIR / "prompts.yaml"
 
 MARKET_CONTEXT = "Liquid equities, daily bars, 2018-2021 train segment."
 
+# DSL library untuk agent repair (disuntik sbg {{ function_lib }}). Sumber tunggal
+# nama+arity fungsi agar repair bisa mengganti fungsi/argumen yang tak sesuai.
+FUNCTION_LIB = """\
+VARIABLES (the only data leaves, case-insensitive): $open $high $low $close $volume $return
+ARITY IS STRICT — each function takes exactly the arguments shown. Cross-sectional
+functions take exactly ONE argument with no window; for a rolling rank use TS_RANK(A,n)
+not RANK. A,B = sub-expression; C = condition; n,p = whole-number day windows; q = 0..1.
+
+Cross-sectional (1 arg, no window): RANK(A) ZSCORE(A) MEAN(A) STD(A) SKEW(A) KURT(A)
+  MAX(A) MIN(A) MEDIAN(A)
+Time-series (series + window): DELTA(A,n) DELAY(A,n) TS_MEAN(A,n) TS_SUM(A,n)
+  TS_RANK(A,n) TS_ZSCORE(A,n) TS_MEDIAN(A,n) TS_PCTCHANGE(A,p) TS_MIN(A,n) TS_MAX(A,n)
+  TS_ARGMAX(A,n) TS_ARGMIN(A,n) TS_QUANTILE(A,p,q) TS_STD(A,n) TS_VAR(A,p)
+  TS_CORR(A,B,n) TS_COVARIANCE(A,B,n) TS_MAD(A,n) PERCENTILE(A,q,p) HIGHDAY(A,n)
+  LOWDAY(A,n) SUMAC(A,n)
+Moving-average/smoothing: SMA(A,n,m) WMA(A,n) EMA(A,n) DECAYLINEAR(A,d)
+Math (1 arg unless noted): PROD(A,n) LOG(A) SQRT(A) POW(A,n) SIGN(A) EXP(A) ABS(A)
+  MAX(A,B) MIN(A,B) INV(A) FLOOR(A)
+Conditional/logical: (C) ? (A) : (B) ; (C1) && (C2) ; (C1) || (C2) ; COUNT(C,n)
+  SUMIF(A,n,C) FILTER(A,C)
+Regression/residual: SEQUENCE(n) [only inside REGBETA/REGRESI as B] ; REGBETA(A,B,n)
+  REGRESI(A,B,n)
+Technical: RSI(A,n) MACD(A,short,long) BB_MIDDLE(A,n) BB_UPPER(A,n) BB_LOWER(A,n)
+
+LEGAL EXPRESSION: only the six variables + exact function names above; mind TS_ prefix
+(TS_STD rolling vs STD cross-sectional); balanced brackets; at least one variable.
+Arithmetic ONLY inside expressions: + - * / (division only '/')."""
+
 # Seed/command gen-0 (root KV belum punya direction → diberi sebagai teks).
 DEFAULT_SEED_DIRECTION = (
     "Open exploration: propose one original, conditional cross-sectional return "

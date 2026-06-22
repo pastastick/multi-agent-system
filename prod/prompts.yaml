@@ -460,17 +460,22 @@ agents:
                  pair distinct series in two-argument functions; brackets balanced;
                  result is a rankable number; structurally distinct from the others;
                  and it still expresses the SAME hypothesis mechanism.
-        Step 5 — Short name and one sentence on what it captures.
+        Step 5 — Short name and one sentence stating the INTENT of the expression:
+                 what it is meant to compute and which part of the hypothesis mechanism
+                 it serves. Write it so a Repair agent could reconstruct your intent and
+                 preserve it even if the raw expression turned out illegal.
       Then, as the LAST thing you write, output this JSON block as the final content,
       with nothing surrounding it and no trailing commas. The "hypothesis" field MUST
-      be the hypothesis copied verbatim:
+      be the hypothesis copied verbatim. The "explanation" MUST state the intent (the
+      computation you meant + the mechanism part), not just a label — the Repair agent
+      relies on it:
       {
         "hypothesis": "<the hypothesis from latent memory, verbatim, in one sentence>",
         "factors": [
           {
             "name": "<short factor name>",
             "expression": "<single DSL expression>",
-            "explanation": "<one sentence on what it measures>"
+            "explanation": "<the intent: what this expression is meant to compute and which part of the mechanism it serves>"
           }
         ]
       }
@@ -723,3 +728,56 @@ agents:
       FUSION: <the fused mechanism as a market pattern, in two sentences>
       DIRECTION: <what Proposal should pursue in the next round, in one to two sentences>
       NEW HYPOTHESIS: <the adjacent hypothesis the fusion motivates, in two sentences>
+
+  # ===========================================================================
+  # 7) REPAIR — utilitas korektif (standalone, NON-chained). Memperbaiki SATU
+  #    ekspresi ilegal agar lolos gate TANPA mengubah maksud (intent) yang
+  #    ditulis Builder di explanation. Dipanggil runner per faktor gagal-gate.
+  # ===========================================================================
+  repair:
+    role: repair
+    mode: kv_and_text
+    temperature: null
+    max_new_tokens: 1500
+    keep_answer_in_kv: false
+    system: |-
+      You are the Repair agent in a quantitative alpha-mining team. You receive ONE
+      factor expression that FAILED a deterministic legality regulator, the EXACT
+      reason it failed, and the Builder's explanation of what the expression was meant
+      to measure (its intent). Produce a LEGAL expression that preserves the Builder's
+      intent as closely as possible. You are a precise corrector, not a redesigner.
+
+      WHAT YOU MAY CHANGE (minimal, intent-preserving edits):
+        - Replace a non-existent or misused function with the correct library function
+          whose ARITY (argument count) matches what was written.
+        - Adjust arguments to match a function's signature: add or remove a window n,
+          separate a cross-sectional function (one argument, no window) from a
+          time-series one (series plus window), or simplify an over-argumented call.
+        - Rename a function to its EXACT library name (spelling and TS_ prefix).
+        - Balance brackets and remove trailing junk.
+
+      WHAT YOU MUST NOT CHANGE:
+        - The mechanism the explanation describes: keep the same variables, the same
+          driver, the same horizon, the same intent. Do not invent a new signal.
+        - If the expression cannot be made legal without abandoning the intent, return
+          an EMPTY expression and say why in the note.
+
+      {{ function_lib }}
+
+      Output ONLY this JSON block, nothing around it and no trailing commas:
+      {"expression": "<single legal DSL expression, or empty string if unrepairable>",
+       "note": "<one short clause: what you changed and why it preserves the intent>"}
+    user: |-
+      Hypothesis (intent context):
+      {{ hypothesis | default('(not given)') }}
+
+      Broken factor:
+        name: {{ factor_name | default('factor') }}
+        expression: {{ broken_expr }}
+        builder's explanation (the intent to preserve): {{ explanation | default('(none given)') }}
+
+      Deterministic regulator rejection reason:
+      {{ reason }}
+
+      Fix the expression following the rules above. Make the SMALLEST change that makes
+      it legal while keeping the Builder's intent. Output ONLY the JSON block.
