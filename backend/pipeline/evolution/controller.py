@@ -208,6 +208,18 @@ class EvolutionController:
         """Wrapper: dispatch task berikutnya lalu suntik negative_hint (memori
         kegagalan mekanisme lintas-generasi) ke task sebelum dikembalikan."""
         task = self._dispatch_next_task()
+        # Guard overshoot max_rounds: metode transisi-fase (_get_mutation_task /
+        # _get_crossover_task) menaikkan _current_round LALU langsung mengembalikan
+        # task ronde baru dalam SATU call — melewati guard `>= max_rounds` yang hanya
+        # dicek di AWAL _dispatch_next_task (baru berlaku di call berikutnya). Tanpa
+        # cek ini, max_rounds=3 bocor menjalankan 1 task ronde-3 sebelum berhenti.
+        # round_idx task = _current_round saat dibuat → chokepoint tunggal yang andal.
+        if task is not None and task.get("round_idx", 0) >= self.config.max_rounds:
+            logger.info(
+                f"Evolution complete: round {task['round_idx']} reached max rounds "
+                f"({self.config.max_rounds})"
+            )
+            return None
         if task is not None:
             task.setdefault("negative_hint", self._negative_hint())
         return task

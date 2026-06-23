@@ -226,11 +226,26 @@ class FrontEndPipeline:
         *,
         direction: str,
         seed_kv: Optional[KVCache] = None,
+        handoff: Optional[str] = None,
         market_context: str = "",
         prior_feedback: str = "",
         negative_hint: str = "",
     ) -> FrontEndOutput:
         rl = self.runlog
+
+        # handoff proposal — dari mana arah riset dibaca:
+        #   'text' : direction disuntik sebagai TEKS (ronde original, belum ada
+        #            latent memory apa pun untuk dibaca).
+        #   'kv'   : arah dari Director (mutation/crossover) SUDAH ada di seed_kv →
+        #            proposal membacanya dari latent memory (else-branch prompt),
+        #            JANGAN re-inject direction generik (akan menarik balik ke arah
+        #            umum, bukan refinement spesifik Director).
+        # Auto bila None: ada seed_kv (guidance) → 'kv'; else → 'text'. Aman karena
+        # di latent mode _pipeline_kv di-reset tiap iterasi (loop.py:490), jadi
+        # seed_kv hanya non-None saat evolution men-seed guidance_kv. Bila guidance
+        # gagal hasilkan KV (seed_kv None) → fallback ke 'text' (pakai direction).
+        if handoff is None:
+            handoff = "kv" if seed_kv is not None else "text"
 
         # Diversity hint (soft) dari family faktor yang sudah diterima sebelumnya —
         # mengarahkan ke family rich yang jarang dipakai TANPA mengorbankan kesetiaan
@@ -239,10 +254,11 @@ class FrontEndPipeline:
         dhint = diversity_hint(list(self._recent_families))
 
         # ── front-end NO-CROP: proposal → design → construct ─────────────────
-        # proposal: direction sebagai TEKS (handoff='text'); seed_kv (guidance
-        # evolution / None original) tetap di-attend via past_kv.
+        # proposal: handoff='text' (original) baca direction sebagai TEKS; handoff='kv'
+        # (mutation/crossover) baca arah Director dari seed_kv (latent memory). seed_kv
+        # tetap di-attend via past_kv di kedua kasus.
         r_prop = self._a("proposal").run(
-            past_kv=seed_kv, handoff="text", direction=direction,
+            past_kv=seed_kv, handoff=handoff, direction=direction,
             market_context=market_context, prior_feedback=prior_feedback,
             negative_hint=negative_hint,
         )
@@ -327,12 +343,20 @@ class FrontEndPipeline:
         if guidance_kv is None and rl:
             rl.warn(f"{kind} guidance produced no KV; front-end runs unseeded")
 
-        # ── 1b. (opsional) decode guidance KV untuk inspeksi arah yang dipilih ──
-        # deepcopy: introspect meng-extend KV in-place → jaga guidance_kv pristine
-        # untuk konsumen sebenarnya (proposal).
-        if guidance_kv is not None and os.environ.get("LATENTMAS_EVO_DEBUG"):
+        # ── 1b. decode guidance KV → readout ke llm_outputs (observability) ──
+        # mutation/crossover berjalan kv_only (tak decode teks) → TANPA langkah ini
+        # keputusan arah mereka tak pernah muncul di llm_outputs seperti agent lain.
+        # Probe introspect (kv_and_text) men-decode KV-nya jadi readout yang OTOMATIS
+        # ter-snapshot (mode != kv_only). DEEPCOPY: introspect meng-extend KV in-place →
+        # jaga guidance_kv pristine untuk konsumen sebenarnya (proposal). Role di-label
+        # `{kind}_guidance` agar file jelas asalnya. Default ON; opt-out
+        # LATENTMAS_EVO_PROBE=0 (mis. saat ingin run secepat mungkin).
+        if guidance_kv is not None and os.environ.get("LATENTMAS_EVO_PROBE", "1") != "0":
             try:
-                probe = self._a("introspect").run(past_kv=kv_ops.kv_deepcopy(guidance_kv))
+                probe = self._a("introspect").run(
+                    past_kv=kv_ops.kv_deepcopy(guidance_kv),
+                    role=f"{kind}_guidance",
+                )
                 if rl: rl.info(f"{kind} guidance (probe)", head=(probe.text or "")[:400])
             except Exception as e:  # noqa: BLE001
                 if rl: rl.warn("evo guidance probe failed", err=repr(e))
@@ -416,7 +440,23 @@ class FrontEndPipeline:
 
         gate_err = first_err or self.gate(usable[0])[1]
         former, err = usable, gate_err
+
+        # Signature normalisasi sekumpulan ekspresi → deteksi "output tak berubah".
+        def _sig(exprs: List[str]) -> tuple:
+            return tuple(sorted(e.replace(" ", "").lower() for e in exprs if e))
+
+        # seen berisi signature input awal; bila repair mengembalikan set yang sama
+        # (mis. model echo ekspresi rusak apa adanya) → memanggil lagi sia-sia.
+        seen = {_sig(former)}
+        attempts_made = 0
+
+        # Loop adaptif: SATU call repair per attempt → gate deterministik.
+        #   - ada yang lolos gate  → return (lanjut backtest), STOP.
+        #   - gagal tapi ada ekspresi BARU → umpan-balik error terbaru, call lagi.
+        #   - gagal & output tak berubah (PASS tanpa ekspresi / set berulang) →
+        #     EARLY-EXIT: call ulang dgn input identik hanya buang kuota & latency.
         for attempt in range(self.max_repair_attempts):
+            attempts_made = attempt + 1
             mode = ["minimal", "different", "bold"][min(attempt, 2)]
             r_rep = self._a("repair").run(
                 past_kv=kv_ops.kv_deepcopy(kv_baseline),
@@ -426,28 +466,28 @@ class FrontEndPipeline:
             is_pass, rep_exprs = parse_repair_multi(r_rep.text or "")
             if rl: rl.info("REPAIR attempt", n=attempt + 1, mode=mode,
                            pass_claim=is_pass, n_expr=len(rep_exprs))
-            if is_pass:
-                # PASS = model klaim valid; gate deterministik → gate ulang.
-                passing = [e for e in former if self.gate(e)[0]]
-                if passing:
-                    self._register_factors(passing)
-                    for e in passing:
-                        gate_log.append({"name": "repaired", "expression": e,
-                                         "ok": True, "reason": "", "repaired_by": "agent"})
-                    if rl: rl.info("REPAIR confirmed by gate", n_passing=len(passing))
-                    return passing, r_rep.kv_cache, True, attempt + 1, gate_err, gate_log
-                continue
-            if not rep_exprs:
-                if rl: rl.warn(f"repair attempt {attempt+1} produced no expression")
-                continue
-            passing = [e for e in rep_exprs if self.gate(e)[0]]
+
+            # Kandidat yg digate = output FIXED model. Bila model menjawab PASS
+            # (tanpa ekspresi baru), uji ULANG `former` — gate deterministik adalah
+            # sumber kebenaran, bukan klaim model.
+            candidates = rep_exprs if rep_exprs else former
+            passing = [e for e in candidates if self.gate(e)[0]]
             if passing:
                 self._register_factors(passing)
                 for e in passing:
                     gate_log.append({"name": "repaired", "expression": e,
                                      "ok": True, "reason": "", "repaired_by": "agent"})
-                if rl: rl.info("REPAIR success", n_passing=len(passing))
+                if rl: rl.info("REPAIR success", n=attempt + 1,
+                               confirmed_by="gate", pass_claim=is_pass,
+                               n_passing=len(passing))
                 return passing, r_rep.kv_cache, True, attempt + 1, gate_err, gate_log
+
+            new_sig = _sig(rep_exprs)
+            if not rep_exprs or new_sig in seen:
+                if rl: rl.warn("REPAIR no-change; early-exit", n=attempt + 1,
+                               reason="pass-no-expr" if not rep_exprs else "repeat-expr")
+                break
+            seen.add(new_sig)
             former = rep_exprs
             err = self.gate(rep_exprs[0])[1]
 
@@ -458,7 +498,7 @@ class FrontEndPipeline:
                         n_dropped=len(usable) - len(survivors), n_kept=len(survivors))
         if survivors:
             self._register_factors(survivors)
-        return survivors, kv_baseline, False, self.max_repair_attempts, gate_err, gate_log
+        return survivors, kv_baseline, False, attempts_made, gate_err, gate_log
 
     def _gate_and_repair(
         self,

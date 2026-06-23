@@ -142,17 +142,23 @@ class LatentAgent:
         *,
         past_kv: Optional[KVCache] = None,
         runlog: Any = None,
+        role: Optional[str] = None,
         **vars: Any,
     ) -> AgentResult:
         """Render prompt → panggil backend → parse → AgentResult.
 
         `past_kv` adalah KV dari agent sebelumnya (sudah di-clone oleh
         orkestrator bila perlu — agent TIDAK meng-clone sendiri).
+
+        `role` (opsional) MENIMPA label snapshot/log untuk call ini saja (spec
+        tetap utuh) — dipakai mis. saat probe introspect dipakai ulang untuk
+        membaca KV mutation/crossover agar file llm_outputs-nya jelas asalnya.
         """
         rl = runlog or self.runlog
+        eff_role = role or self.spec.role
         system, user = self.render(**vars)
 
-        step_cm = rl.step(self.spec.role) if rl is not None else nullcontext()
+        step_cm = rl.step(eff_role) if rl is not None else nullcontext()
         t0 = time.time()
         with step_cm:
             res = self.backend.build_messages_and_run(
@@ -160,7 +166,7 @@ class LatentAgent:
                 system_prompt=system,
                 past_key_values=past_kv,
                 mode=self.spec.mode,
-                role=self.spec.role,
+                role=eff_role,
                 latent_steps=self.spec.latent_steps,
                 temperature=self.spec.temperature,
                 max_new_tokens=self.spec.max_new_tokens,

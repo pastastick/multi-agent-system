@@ -115,7 +115,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # ke KV-cache tanpa generate text) per LLM call.
     # Lebih tinggi = reasoning lebih dalam, tapi lebih lambat.
     # Referensi: LatentMASMethod.latent_steps di core/latent/latent_method.py
-    latent_steps: int = 40                      # default global untuk _CoreEngine
+    latent_steps: int = 60                      # default global untuk _CoreEngine
 
     # Per-step override (None = pakai latent_steps global).
     # Dinaikkan 10 → 40: dengan reasoning-via-latent sebagai jalur utama (output
@@ -146,7 +146,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
 
     # Simpan KV-cache ke disk (untuk resume/debugging).
     # Pakai KVCacheStore di llm/client.py.
-    store_kv: bool = True
+    store_kv: bool = False
 
     # ── KNN-based KV-cache filtering ────────────────────────────────────
     # Diadaptasi dari LatentMAS paper (core/latent/latent_mas_knn.py).

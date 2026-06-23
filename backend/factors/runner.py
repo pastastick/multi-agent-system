@@ -53,11 +53,24 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         env = os.environ.copy()
         project_root = Path(__file__).resolve().parent.parent
         env["PYTHONPATH"] = str(project_root) + os.pathsep + env.get("PYTHONPATH", "")
+        # mlflow 3.x memblokir file store (mlruns/) by default; qlib pakai file store.
+        # Opt-out agar qrun bisa create_experiment. Lihat file_store.py:224.
+        env.setdefault("MLFLOW_ALLOW_FILE_STORE", "true")
+        # PATH: pastikan bin interpreter (mis. .venv/bin) ada di depan agar qrun dan
+        # child-process apa pun yg dipanggilnya ketemu TANPA perlu `source activate`.
+        _bin_dir = str(Path(sys.executable).parent)
+        env["PATH"] = _bin_dir + os.pathsep + env.get("PATH", "")
 
-        # Step 1: qrun
+        # Step 1: qrun. Resolve binary DI SAMPING interpreter (sys.executable) — qrun
+        # ada di .venv/bin bersama python; pakai path absolut agar tak bergantung
+        # PATH/aktivasi venv (akar bug "[Errno 2] No such file or directory: 'qrun'"
+        # saat launcher dijalankan tanpa `source .venv/bin/activate`). Fallback ke
+        # "qrun" (PATH) bila tak ada di sebelah interpreter.
+        _qrun = Path(sys.executable).with_name("qrun")
+        _qrun_cmd = str(_qrun) if _qrun.exists() else "qrun"
         try:
             r = _sp.run(
-                ["qrun", config_name],
+                [_qrun_cmd, config_name],
                 cwd=str(workspace_path),
                 env=env,
                 capture_output=True,
@@ -347,6 +360,30 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
             )
         return ic_out, icir_out
 
+    @staticmethod
+    def _run_dir() -> Path:
+        """Folder run terpadu (backend/runs/<id>/), sumber tunggal = env QUANTA_RUN_DIR
+        yang di-set cli.py. Fallback ke backend/runs/_adhoc bila dijalankan di luar CLI."""
+        rd = os.environ.get("QUANTA_RUN_DIR")
+        return Path(rd) if rd else (DIRNAME.parent / "runs" / "_adhoc")
+
+    def _save_factor_logs(self, corr_df: "pd.DataFrame | None",
+                          values_df: "pd.DataFrame | None") -> None:
+        """Simpan correlation (setelah gate) + factor values round ini ke
+        run_dir/factor_logs/. Satu sub-folder per round (timestamp) supaya round
+        berturut tidak saling timpa. Best-effort: gagal-simpan tak menggagalkan backtest."""
+        try:
+            from datetime import datetime
+            out_dir = self._run_dir() / "factor_logs" / datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+            out_dir.mkdir(parents=True, exist_ok=True)
+            if corr_df is not None:
+                corr_df.to_csv(out_dir / "correlation_after_gate.csv")
+            if values_df is not None:
+                values_df.to_csv(out_dir / "factor_values.csv")
+            logger.info(f"[FactorLogs] correlation & factor values disimpan ke {out_dir}")
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"[FactorLogs] gagal simpan factor logs: {e}")
+
     #* dipanggil di AlphaAgentLoop -> factor_backtest
     # gabung semua faktor value
     # jalankan backtest (Qlib)
@@ -430,9 +467,11 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
             logger.warning(f"[CorrGate] correlation gate gagal: {e}")
             exp.correlation_dropped = []
 
+        corr_df = None
         if len(new_factors.columns) >= 2:
             pd.set_option('display.width', 1000)
-            logger.info(f"Factor correlation (setelah gate): \n\n{new_factors.corr()}\n")
+            corr_df = new_factors.corr()
+            logger.info(f"Factor correlation (setelah gate): \n\n{corr_df}\n")
 
         # Sort, deduplicate, and nest under 'feature' for Qlib compatibility
         combined_factors = new_factors.sort_index()
@@ -440,6 +479,9 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         combined_factors.columns = pd.MultiIndex.from_product([["feature"], combined_factors.columns])
 
         logger.info(f"Factor values this round: \n\n{combined_factors.tail()}\n\n")
+
+        # Persist correlation + factor values round ini ke run_dir/factor_logs/.
+        self._save_factor_logs(corr_df, combined_factors)
 
         parquet_path = exp.experiment_workspace.workspace_path / "combined_factors_df.parquet"
         combined_factors.to_parquet(parquet_path, engine="pyarrow")
@@ -499,7 +541,7 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         for exp in exp_or_list:
             # Iterate over sub-implementations and execute them to get each factor data
             message_and_df_list = multiprocessing_wrapper(
-                [(implementation.execute, ("All",)) for implementation in exp.sub_workspace_list],
+                [(implementation.execute, ("Debug",)) for implementation in exp.sub_workspace_list],
                 n=RD_AGENT_SETTINGS.multi_proc_n,
             )
             

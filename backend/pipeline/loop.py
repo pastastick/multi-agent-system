@@ -870,6 +870,24 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             fb = {"Observations": str(fb)}
         # Keputusan replace bersifat DETERMINISTIK → override apa pun dari LLM.
         fb["Replace Best Result"] = "yes" if replace_flag else "no"
+
+        self._save_metrics_snapshot(
+            exp=exp,
+            names=names,
+            exprs=exprs,
+            factor_ic=factor_ic,
+            factor_icir=factor_icir,
+            factor_ic_mean=factor_ic_mean,
+            factor_icir_mean=factor_icir_mean,
+            complexity=complexity,
+            replace_flag=replace_flag,
+            sota_note=sota_note,
+            prev_sota=prev_sota,
+            factor_block=factor_block,
+            backtest_results=backtest_results,
+            sota_block=sota_block,
+            agent_response=fb,
+        )
         return fb
 
     # ── Audit deterministik (dicabut dari feedback LLM) ──────────────────────
@@ -998,6 +1016,99 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     + "\n".join(lines))
         except Exception:
             return str(res)[:600]
+
+    def _save_metrics_snapshot(
+        self,
+        exp,
+        names: list,
+        exprs: list,
+        factor_ic: dict,
+        factor_icir: dict,
+        factor_ic_mean,
+        factor_icir_mean,
+        complexity: str,
+        replace_flag: bool,
+        sota_note: str,
+        prev_sota,
+        factor_block: str,
+        backtest_results: str,
+        sota_block: str,
+        agent_response: dict,
+    ) -> None:
+        """Simpan snapshot lengkap metrik ke runs/<id>/metrics/round_<N>_<traj>.json.
+
+        File ini berisi persis apa yang diterima agent feedback ([A] per-factor
+        standalone IC/ICIR, [B] combined LightGBM filtered, [C] SOTA) ditambah
+        full exp.result mentah — bisa dibaca ulang tanpa re-run.
+        """
+        import json
+        import datetime as _dt
+
+        try:
+            # ── Full exp.result sebagai dict (semua metrik Qlib mentah) ──────
+            res = getattr(exp, "result", None)
+            result_raw: dict = {}
+            if res is not None:
+                try:
+                    result_raw = {
+                        str(k): (None if pd.isna(v) else float(v))
+                        for k, v in res.items()
+                    }
+                except Exception:
+                    result_raw = {"_raw": str(res)[:2000]}
+
+            # ── Per-factor standalone IC/ICIR (sumber blok [A]) ──────────────
+            per_factor = {}
+            for n, e in zip(names, exprs):
+                per_factor[n] = {
+                    "expression": e,
+                    "standalone_RankIC":   factor_ic.get(n),
+                    "standalone_RankICIR": factor_icir.get(n),
+                }
+
+            snapshot = {
+                "timestamp": _dt.datetime.now().isoformat(timespec="seconds"),
+                "round_idx": self.round_idx,
+                "trajectory_id": getattr(self, "trajectory_id", ""),
+                "evolution_phase": getattr(self, "evolution_phase", ""),
+                "hypothesis": getattr(self, "_last_hypothesis", ""),
+                # Metrik primer penentu SOTA (model-free per-factor)
+                "factor_ic_mean": factor_ic_mean,
+                "factor_icir_mean": factor_icir_mean,
+                # SOTA decision
+                "sota": {
+                    "prev": prev_sota,
+                    "replaced": replace_flag,
+                    "note": sota_note,
+                },
+                # Complexity gate
+                "complexity_warning": complexity or None,
+                # Per-factor breakdown lengkap (sumber blok [A])
+                "per_factor": per_factor,
+                # Full Qlib result mentah (semua metrik, termasuk yang tidak dikirim ke agent)
+                "result_raw": result_raw,
+                # Correlation-gate drops
+                "correlation_dropped": getattr(exp, "correlation_dropped", None) or [],
+                # Teks persis yang dikirim ke agent feedback
+                "agent_input": {
+                    "factor_block": factor_block,
+                    "backtest_results": backtest_results,
+                    "sota_block": sota_block,
+                },
+                # Respons agent
+                "agent_response": agent_response,
+            }
+
+            run_dir = Path(logger.log_trace_path)
+            metrics_dir = run_dir / "metrics"
+            metrics_dir.mkdir(parents=True, exist_ok=True)
+            traj = getattr(self, "trajectory_id", "") or "orig"
+            fname = metrics_dir / f"round_{self.round_idx:03d}_{traj}.json"
+            with open(fname, "w", encoding="utf-8") as f:
+                json.dump(snapshot, f, ensure_ascii=False, indent=2, default=str)
+            logger.info(f"Metrics snapshot saved → {fname.relative_to(run_dir)}")
+        except Exception as exc:
+            logger.warning(f"_save_metrics_snapshot failed (non-fatal): {exc}")
 
 
 

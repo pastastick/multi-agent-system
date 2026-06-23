@@ -4,18 +4,33 @@
 # Adapted from legacy conf: parquet factor data, no ProcessInf (pandas 1.5.x),
 # full preprocessing (Fillna + DropnaLabel + CSRankNorm), learning_rate 0.05,
 # early_stopping_round 50, open price execution, out-of-sample test [2022-2025].
+#
+# QUICK MODE (lebih sedikit data — untuk iterasi cepat / debug):
+#   market: csi100          → ~100 saham vs 300
+#   start_time: 2020-01-01  → handler hanya load 2020-2024
+#   train:  [2020-01-01, 2022-12-31]
+#   valid:  [2023-01-01, 2023-06-30]
+#   test:   [2023-07-01, 2024-06-30]
+#   port backtest: start=2023-07-01  end=2024-06-30
+#   num_boost_round: 100  early_stopping_round: 10
 # =============================================================================
 
 qlib_init:
     provider_uri: "/workspace/project/multi-agent-system/backend/data/qlib/cn_data"
     region: cn
 
+# QUICK MODE: ganti ke csi100 untuk ~⅓ saham (lebih cepat ~3×)
+# market: &market csi100
 market: &market csi300
 benchmark: &benchmark SH000300
 
 data_handler_config: &data_handler_config
     start_time: 2016-01-01
-    end_time: 2025-12-26
+    # Handler hanya perlu load s/d segmen test (≤2021). 2022-2025 = holdout final
+    # eval terpisah (lihat segments di bawah) → tak di-load di loop ini (hemat I/O,
+    # backtest lebih cepat tanpa ubah universe/segmen/model). Kembalikan ke
+    # 2025-12-26 bila menjalankan final eval yang butuh holdout.
+    end_time: 2021-12-31
     instruments: *market
     data_loader:
         class: NestedDataLoader
@@ -66,6 +81,7 @@ port_analysis_config: &port_analysis_config
             topk: 50
             n_drop: 5
     backtest:
+        # QUICK MODE: start_time: 2023-07-01  end_time: 2024-06-30
         start_time: 2021-01-01
         end_time: 2021-12-31
         account: 100000000
@@ -92,6 +108,7 @@ task:
             max_depth: 8
             num_leaves: 210
             num_threads: 20
+            # QUICK MODE: early_stopping_round: 10  num_boost_round: 100
             early_stopping_round: 50
             num_boost_round: 500
 
@@ -104,6 +121,10 @@ task:
                 module_path: qlib.contrib.data.handler
                 kwargs: *data_handler_config
             segments:
+                # QUICK MODE (handler start_time: 2020-01-01):
+                #   train: [2020-01-01, 2022-12-31]
+                #   valid: [2023-01-01, 2023-06-30]
+                #   test:  [2023-07-01, 2024-06-30]
                 train: [2016-01-01, 2019-12-31]
                 valid: [2020-01-01, 2020-12-31]
                 # In-loop selection window = 2021 saja (1 tahun). Tahun 2022-2025
