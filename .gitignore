@@ -68,4 +68,6 @@ backend/runs/**/*.pkl
 backend/runs/**/*.pt
 backend/runs/**/*.db
 backend/runs/**/__session__/
+# factor_values.csv = matrix (saham × hari × faktor), 10-50 MB, regeneratable
+backend/runs/**/factor_values.csv
 backend/latent_runs/
