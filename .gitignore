@@ -59,6 +59,13 @@ git_ignore_folder/
 !backend/data/factorlib/*.json
 ## output agent
 ~
-# unified run output (runtime)
-backend/runs/
+# unified run output — ignore binary/heavy, track readable artifacts
+# pkl  = serialized Python objects (RD-Agent checkpoint, resume state)
+# pt   = PyTorch KV-cache tensors (binary, bisa ratusan MB)
+# db   = SQLite KV index
+# __session__ = legacy RD-Agent session dir (berisi pkl-pkl di atas)
+backend/runs/**/*.pkl
+backend/runs/**/*.pt
+backend/runs/**/*.db
+backend/runs/**/__session__/
 backend/latent_runs/

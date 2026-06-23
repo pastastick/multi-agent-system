@@ -1,0 +1,65 @@
+{
+  "timestamp": "2026-06-23T10:31:30",
+  "round_idx": 0,
+  "trajectory_id": "c2563f75ef5c",
+  "evolution_phase": "original",
+  "hypothesis": "small-cap stocks with unusually high volume on a day are followed by lower returns the next period, reflecting liquidity-induced mean reversion.",
+  "factor_ic_mean": -0.007510205353782984,
+  "factor_icir_mean": -0.05274687194479129,
+  "sota": {
+    "prev": null,
+    "replaced": true,
+    "note": "FactorIC_mean -0.0075 > SOTA none → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "small_cap_stocks_with_unusually_0": {
+      "expression": "TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0",
+      "standalone_RankIC": -0.00479764841783379,
+      "standalone_RankICIR": -0.0368469366496448
+    },
+    "small_cap_stocks_with_unusually_1": {
+      "expression": "RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_2": {
+      "expression": "TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_3": {
+      "expression": "TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_4": {
+      "expression": "TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_5": {
+      "expression": "TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0",
+      "standalone_RankIC": -0.010222762289732177,
+      "standalone_RankICIR": -0.06864680723993778
+    }
+  },
+  "result_raw": {},
+  "correlation_dropped": [
+    "small_cap_stocks_with_unusually_2 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]",
+    "small_cap_stocks_with_unusually_4 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]",
+    "small_cap_stocks_with_unusually_3 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_1]",
+    "small_cap_stocks_with_unusually_1 [within-round |corr|=0.927 with small_cap_stocks_with_unusually_5]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: small-cap stocks with unusually high volume on a day are followed by lower returns the next period, reflecting liquidity-induced mean reversion.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  small_cap_stocks_with_unusually_0: TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0\n    standalone RankIC=-0.0048  ICIR=-0.0368\n  small_cap_stocks_with_unusually_1: RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_2: TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_3: TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_4: TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_5: TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0\n    standalone RankIC=-0.0102  ICIR=-0.0686\n  [mean]: RankIC=-0.0075  ICIR=-0.0527\n[CORR-GATE] 4 faktor di-drop sebelum backtest (|corr| > threshold): small_cap_stocks_with_unusually_2 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]; small_cap_stocks_with_unusually_4 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]; small_cap_stocks_with_unusually_3 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_1]; small_cap_stocks_with_unusually_1 [within-round |corr|=0.927 with small_cap_stocks_with_unusually_5]",
+    "backtest_results": "backtest produced no result (factor may have failed)",
+    "sota_block": "Previous best FactorIC_mean (SOTA): none yet\nThis round FactorIC_mean: -0.0075\nDecision: REPLACE — FactorIC_mean -0.0075 > SOTA none → replace"
+  },
+  "agent_response": {
+    "Observations": "The standalone RankIC+ICIR metric indicates weak predictive power with a mean RankIC of -0.0075 and ICIR of -0.0527, suggesting instability. [B] combined model results are not available as the factors failed backtest.",
+    "Factor Diagnosis": "small_cap_stocks_with_unusually_0: weak / noise (negative RankIC and ICIR); small_cap_stocks_with_unusually_1: weak / noise (n/a metrics); small_cap_stocks_with_unusually_2: weak / noise (n/a metrics); small_cap_stocks_with_unusually_3: weak / noise (n/a metrics); small_cap_stocks_with_unusually_4: weak / noise (negative RankIC and ICIR); small_cap_stocks_with_unusually_5: weak / noise (negative RankIC and ICIR).",
+    "Feedback for Hypothesis": "PARTIALLY — the mechanism is valid but the implementation is weak (inconsistent metrics, negative values, and unstable signals). Refine the expression to improve RankIC and ICIR.",
+    "Replace Best Result": "yes"
+  }
+}

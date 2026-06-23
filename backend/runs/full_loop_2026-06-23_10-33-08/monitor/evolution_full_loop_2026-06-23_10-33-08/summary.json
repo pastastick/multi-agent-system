@@ -1,0 +1,80 @@
+{
+  "total_events": 168,
+  "event_type_counts": {
+    "llm.call.start": 39,
+    "llm.call.end": 39,
+    "llm.output.quality": 40,
+    "pipeline.loop.start": 7,
+    "pipeline.step.start": 14,
+    "pipeline.step.end": 14,
+    "pipeline.loop.end": 7,
+    "evolution.round": 7,
+    "anomaly.detected": 1
+  },
+  "pipeline": {
+    "steps": {
+      "factor_backtest": {
+        "call_count": 7,
+        "total_s": 4713.831,
+        "avg_s": 673.404,
+        "min_s": 537.652,
+        "max_s": 777.625,
+        "errors": 0
+      },
+      "feedback": {
+        "call_count": 7,
+        "total_s": 121.594,
+        "avg_s": 17.371,
+        "min_s": 8.28,
+        "max_s": 22.854,
+        "errors": 0
+      }
+    },
+    "total_pipeline_time_s": 4835.426,
+    "bottleneck": {
+      "step": "factor_backtest",
+      "total_s": 4713.831,
+      "percentage": 97.5
+    }
+  },
+  "llm": {
+    "total_calls": 39,
+    "total_output_tokens": 15026,
+    "callers": {
+      "planning": 1,
+      "proposal": 7,
+      "design": 7,
+      "construct": 7,
+      "feedback": 7,
+      "mutation": 3,
+      "mutation_guidance": 3,
+      "crossover": 2,
+      "crossover_guidance": 2
+    },
+    "avg_duration_s": 20.52,
+    "total_duration_s": 800.287,
+    "avg_quality_score": 0.4068,
+    "min_quality_score": 0.0829
+  },
+  "anomalies": {
+    "total": 1,
+    "by_severity": {
+      "warning": 1
+    },
+    "by_type": {
+      "low_diversity": 1
+    },
+    "details": [
+      {
+        "type": "low_diversity",
+        "severity": "warning",
+        "description": "Token diversity sangat rendah (14.58%). Model mungkin stuck dalam loop repetisi.",
+        "time": "2026-06-23T11:55:06.864120"
+      }
+    ]
+  },
+  "session_duration_s": 5589.25,
+  "session_name": "evolution_full_loop_2026-06-23_10-33-08",
+  "total_events_written": 168,
+  "generated_at": "2026-06-23T12:08:53.959186"
+}

@@ -1,0 +1,33 @@
+2026-06-23 07:32:02.953 | INFO     | latent_mas.runlog:log:154 - [latent] run started  run_dir=/workspace/project/multi-agent-system/backend/runs/2026-06-23_07-30-17/latent pid=51569
+2026-06-23 07:32:02.992 | INFO     | pipeline.factor_mining:main:1031 - Unified run dir: /workspace/project/multi-agent-system/backend/runs/2026-06-23_07-30-17
+2026-06-23 07:32:03.879 | INFO     | pipeline.factor_mining:main:1041 - factor.py executor python_bin → /workspace/project/multi-agent-system/.venv/bin/python
+2026-06-23 07:32:03.936 | INFO     | pipeline.factor_mining:main:1043 - ============================================================
+2026-06-23 07:32:03.971 | INFO     | pipeline.factor_mining:main:1044 - Experiment config
+2026-06-23 07:32:04.012 | INFO     | pipeline.factor_mining:main:1045 -   Workspace: /workspace/project/multi-agent-system/backend/data/results/workspace
+2026-06-23 07:32:04.044 | INFO     | pipeline.factor_mining:main:1046 -   Cache dir: /workspace/project/multi-agent-system/backend/data/results/pickle_cache
+2026-06-23 07:32:04.078 | INFO     | pipeline.factor_mining:main:1047 -   Cache enabled: True
+2026-06-23 07:32:04.118 | INFO     | pipeline.factor_mining:main:1048 - ============================================================
+2026-06-23 07:32:04.229 | INFO     | pipeline.factor_mining:_apply_latent_overrides:114 - [Config] Latent overrides from YAML → latent_enabled=True, latent_model_name=Qwen/Qwen3-4B, latent_device=cuda, latent_steps=10, latent_steps_propose=None, latent_steps_construct=None, latent_steps_coder=None, latent_steps_feedback=None, use_realign=True, enable_thinking=False, kv_max_tokens=20480, store_kv=True, knn_enabled=True, knn_percentage=0.8, knn_min_keep=5, knn_strategy=top, max_new_tokens=40960, temperature=0.8, top_p=0.95, temperature_propose=None, temperature_construct=0.7, temperature_coder=0.4, temperature_feedback=None, log_tensors=True
+2026-06-23 07:32:04.274 | INFO     | pipeline.factor_mining:_apply_factor_overrides:156 - [Config] Factor overrides from YAML → symbol_length_threshold=200, base_features_threshold=5, duplication_threshold=5
+2026-06-23 07:32:04.319 | INFO     | pipeline.factor_mining:main:1079 - [Config] insight_mode from YAML → sequential
+2026-06-23 07:32:04.365 | INFO     | pipeline.factor_mining:main:1091 - [LatentPipeline] latent_enabled=True, creating LocalLLMBackend...
+2026-06-23 07:32:59.173 | INFO     | pipeline.factor_mining:main:1099 - [LatentPipeline] Backend ready: model=Qwen/Qwen3-4B, device=cuda, latent_steps=10, use_realign=True, knn=80%/top
+2026-06-23 07:32:59.219 | INFO     | pipeline.factor_mining:main:1122 - Use Local to execute factor backtest
+2026-06-23 07:32:59.260 | INFO     | pipeline.factor_mining:main:1125 - ============================================================
+2026-06-23 07:32:59.308 | INFO     | pipeline.factor_mining:main:1126 - Evolution mode: Original -> Mutation -> Crossover loop
+2026-06-23 07:32:59.349 | INFO     | pipeline.factor_mining:main:1127 - ============================================================
+2026-06-23 07:32:59.394 | INFO     | pipeline.factor_mining:run_evolution_loop:579 - Evolution mode: file lock disabled to avoid deadlock
+2026-06-23 07:32:59.450 | INFO     | pipeline.factor_mining:run_evolution_loop:590 - [Monitor] Session started: evolution_2026-06-23_07-30-17
+2026-06-23 07:32:59.496 | INFO     | pipeline.factor_mining:run_evolution_loop:675 - Generated 2 exploration directions
+2026-06-23 07:32:59.547 | INFO     | pipeline.factor_mining:run_evolution_loop:677 -   Direction 0: None
+2026-06-23 07:32:59.594 | INFO     | pipeline.factor_mining:run_evolution_loop:677 -   Direction 1: None
+2026-06-23 07:32:59.644 | INFO     | pipeline.factor_mining:run_evolution_loop:708 - Trajectory pool path: /workspace/project/multi-agent-system/backend/runs/2026-06-23_07-30-17/trajectory_pool.json (fresh_start=True)
+2026-06-23 07:32:59.778 | INFO     | pipeline.factor_mining:run_evolution_loop:757 - ========================================
+2026-06-23 07:32:59.847 | INFO     | pipeline.factor_mining:run_evolution_loop:758 - Starting evolution loop
+2026-06-23 07:32:59.892 | INFO     | pipeline.factor_mining:run_evolution_loop:759 - Config: directions=2, max_rounds=3, crossover_size=2, crossover_n=2
+2026-06-23 07:32:59.940 | INFO     | pipeline.factor_mining:run_evolution_loop:761 - Phases: mutation=on, crossover=on
+2026-06-23 07:32:59.985 | INFO     | pipeline.factor_mining:run_evolution_loop:768 - Mode: full evolution (Original -> Mutation -> Crossover -> ...)
+2026-06-23 07:33:00.034 | INFO     | pipeline.factor_mining:run_evolution_loop:771 - Parent selection: best
+2026-06-23 07:33:00.080 | INFO     | pipeline.factor_mining:run_evolution_loop:773 - Parallel execution: off
+2026-06-23 07:33:00.128 | INFO     | pipeline.factor_mining:run_evolution_loop:774 - ============================================================
+2026-06-23 07:33:00.177 | INFO     | pipeline.factor_mining:run_evolution_loop:838 - Running task: phase=original, round=0, direction=0

@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-06-23T10:49:21",
+  "round_idx": 0,
+  "trajectory_id": "c4b39707eb61",
+  "evolution_phase": "original",
+  "hypothesis": "small-cap stocks with unusually high volume on a day are likely to underperform in the next period's cross-sectional returns, reflecting liquidity-driven reversal in short-term markets.",
+  "factor_ic_mean": null,
+  "factor_icir_mean": null,
+  "sota": {
+    "prev": null,
+    "replaced": true,
+    "note": "RankIC(combined,fallback) 0.0361 > SOTA none → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "small_cap_stocks_with_unusually_0": {
+      "expression": "TS_ZSCORE($return, 1) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_1": {
+      "expression": "RANK(TS_ZSCORE($return, 1)) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_2": {
+      "expression": "TS_MIN($return, 10) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_3": {
+      "expression": "TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 1) : TS_ZSCORE($return, 1)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_4": {
+      "expression": "TS_ARGMIN($return, 10) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.1060465001002087,
+    "1day.excess_return_with_cost.information_ratio": 0.7252623668923143,
+    "1day.excess_return_with_cost.annualized_return": 0.1018635307622648,
+    "1day.excess_return_with_cost.std": 0.0091040598476377,
+    "1day.excess_return_with_cost.mean": 0.0004279980284128,
+    "1day.excess_return_without_cost.max_drawdown": -0.0931749707414188,
+    "1day.excess_return_without_cost.information_ratio": 0.8915220133894393,
+    "1day.excess_return_without_cost.annualized_return": 0.1251363992562562,
+    "1day.excess_return_without_cost.std": 0.0090983597411613,
+    "1day.excess_return_without_cost.mean": 0.0005257831901523,
+    "Rank ICIR": 0.2795293978884436,
+    "Rank IC": 0.0361257366380021,
+    "ICIR": 0.1322997853869391,
+    "IC": 0.0169491063714096,
+    "l2.valid": 0.9969339250078296,
+    "l2.train": 0.994556585947783
+  },
+  "correlation_dropped": [
+    "small_cap_stocks_with_unusually_1 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]",
+    "small_cap_stocks_with_unusually_2 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]",
+    "small_cap_stocks_with_unusually_4 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]",
+    "small_cap_stocks_with_unusually_0 [cross-round |corr|=0.928 with stocks_showing_sharp_price_swing_2 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: small-cap stocks with unusually high volume on a day are likely to underperform in the next period's cross-sectional returns, reflecting liquidity-driven reversal in short-term markets.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  small_cap_stocks_with_unusually_0: TS_ZSCORE($return, 1) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_1: RANK(TS_ZSCORE($return, 1)) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_2: TS_MIN($return, 10) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_3: TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 1) : TS_ZSCORE($return, 1)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_4: TS_ARGMIN($return, 10) ? TS_ZSCORE($volume, 10) : TS_ZSCORE($volume, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  [mean]: RankIC=n/a  ICIR=n/a\n[CORR-GATE] 4 faktor di-drop sebelum backtest (|corr| > threshold): small_cap_stocks_with_unusually_1 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]; small_cap_stocks_with_unusually_2 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]; small_cap_stocks_with_unusually_4 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]; small_cap_stocks_with_unusually_0 [cross-round |corr|=0.928 with stocks_showing_sharp_price_swing_2 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0361\n  RankICIR: 0.2795\n  IC: 0.0169\n  ICIR: 0.1323\n  Ann.Return: 0.1019\n  InfoRatio: 0.7253\n  MaxDrawdown: -0.1060",
+    "sota_block": "Previous best FactorIC_mean (SOTA): none yet\nThis round FactorIC_mean: n/a\nDecision: REPLACE — RankIC(combined,fallback) 0.0361 > SOTA none → replace"
+  },
+  "agent_response": {
+    "Replace Best Result": "yes"
+  }
+}

@@ -1,0 +1,7 @@
+[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/runs/full_loop_2026-06-23_10-16-58/latent pid=94081
+[  180.94s] INFO    GATE PASS  name=volume_zscore_return expr=TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0
+[  181.53s] INFO    GATE PASS  name=volume_rank_return expr=RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0
+[  181.80s] INFO    GATE PASS  name=volume_corr_return expr=TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0
+[  182.05s] INFO    GATE PASS  name=volume_tsrank_return expr=TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0
+[  182.27s] INFO    GATE PASS  name=volume_tsmean_return expr=TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0
+[  182.46s] INFO    GATE PASS  name=volume_tsargmax_return expr=TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0

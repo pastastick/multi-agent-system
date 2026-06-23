@@ -1,0 +1,3 @@
+2026-06-23 07:10:39.099 | ERROR    | app.utils.health_check:check_docker:18 - An error occurred: Error while fetching server API version: ('Connection aborted.', FileNotFoundError(2, 'No such file or directory'))
+2026-06-23 07:10:39.144 | WARNING  | app.utils.health_check:check_docker:19 - Docker status is exception, please check the docker configuration or reinstall it. Refs: https://docs.docker.com/engine/install/ubuntu/.
+2026-06-23 07:10:39.162 | INFO     | app.utils.health_check:check_and_list_free_ports:40 - Port 19899 is not occupied, you can run the `quantaalpha ui` command

@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-06-23T11:28:27",
+  "round_idx": 1,
+  "trajectory_id": "10ad24c70886",
+  "evolution_phase": "mutation",
+  "hypothesis": "Sudden increases in 10-day volume volatility in mid-cap sectors precede a 20-day return rank degradation due to liquidity-induced price compression",
+  "factor_ic_mean": -0.012673286871438759,
+  "factor_icir_mean": -0.09659729757482205,
+  "sota": {
+    "prev": 0.0361257366380021,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0127 ≤ SOTA 0.0361 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "Sudden_increases_in_10_day_volum_0": {
+      "expression": "TS_RANK(TS_ZSCORE(TS_CORR($volume, $return, 10), 10), 20)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "Sudden_increases_in_10_day_volum_1": {
+      "expression": "TS_STD($volume, 10)",
+      "standalone_RankIC": -0.024759356572376535,
+      "standalone_RankICIR": -0.15820755813332854
+    },
+    "Sudden_increases_in_10_day_volum_2": {
+      "expression": "TS_ZSCORE($volume, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "Sudden_increases_in_10_day_volum_3": {
+      "expression": "TS_PCTCHANGE($volume, 10)",
+      "standalone_RankIC": -0.010603693494707552,
+      "standalone_RankICIR": -0.1028246468530692
+    },
+    "Sudden_increases_in_10_day_volum_4": {
+      "expression": "TS_ZSCORE(TS_CORR($volume, $return, 10), 10)",
+      "standalone_RankIC": -0.002656810547232188,
+      "standalone_RankICIR": -0.028759687738068394
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0770660415094843,
+    "1day.excess_return_with_cost.information_ratio": 1.2949927226964426,
+    "1day.excess_return_with_cost.annualized_return": 0.1383770430708469,
+    "1day.excess_return_with_cost.std": 0.0069264107049107,
+    "1day.excess_return_with_cost.mean": 0.0005814161473564,
+    "1day.excess_return_without_cost.max_drawdown": -0.0770660415094843,
+    "1day.excess_return_without_cost.information_ratio": 1.5154567770399274,
+    "1day.excess_return_without_cost.annualized_return": 0.161907861390981,
+    "1day.excess_return_without_cost.std": 0.0069252571380487,
+    "1day.excess_return_without_cost.mean": 0.0006802851318948,
+    "Rank ICIR": 0.2608062747182506,
+    "Rank IC": 0.0353655164010528,
+    "ICIR": 0.1519938509512556,
+    "IC": 0.0199398005116397,
+    "l2.valid": 0.9972450832284964,
+    "l2.train": 0.9930824844400316
+  },
+  "correlation_dropped": [
+    "Sudden_increases_in_10_day_volum_0 [within-round |corr|=0.878 with Sudden_increases_in_10_day_volum_4]",
+    "Sudden_increases_in_10_day_volum_2 [cross-round |corr|=0.928 with stocks_showing_sharp_price_swing_2 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: Sudden increases in 10-day volume volatility in mid-cap sectors precede a 20-day return rank degradation due to liquidity-induced price compression\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  Sudden_increases_in_10_day_volum_0: TS_RANK(TS_ZSCORE(TS_CORR($volume, $return, 10), 10), 20)\n    standalone RankIC=n/a  ICIR=n/a\n  Sudden_increases_in_10_day_volum_1: TS_STD($volume, 10)\n    standalone RankIC=-0.0248  ICIR=-0.1582\n  Sudden_increases_in_10_day_volum_2: TS_ZSCORE($volume, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  Sudden_increases_in_10_day_volum_3: TS_PCTCHANGE($volume, 10)\n    standalone RankIC=-0.0106  ICIR=-0.1028\n  Sudden_increases_in_10_day_volum_4: TS_ZSCORE(TS_CORR($volume, $return, 10), 10)\n    standalone RankIC=-0.0027  ICIR=-0.0288\n  [mean]: RankIC=-0.0127  ICIR=-0.0966\n[CORR-GATE] 2 faktor di-drop sebelum backtest (|corr| > threshold): Sudden_increases_in_10_day_volum_0 [within-round |corr|=0.878 with Sudden_increases_in_10_day_volum_4]; Sudden_increases_in_10_day_volum_2 [cross-round |corr|=0.928 with stocks_showing_sharp_price_swing_2 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0354\n  RankICIR: 0.2608\n  IC: 0.0199\n  ICIR: 0.1520\n  Ann.Return: 0.1384\n  InfoRatio: 1.2950\n  MaxDrawdown: -0.0771",
+    "sota_block": "Previous best FactorIC_mean (SOTA): 0.0361\nThis round FactorIC_mean: -0.0127\nDecision: KEEP — FactorIC_mean -0.0127 ≤ SOTA 0.0361 → keep"
+  },
+  "agent_response": {
+    "Observations": "The standalone RankIC of -0.0127 is below the 0.02 threshold, indicating weak predictive power. The ICIR of -0.0966 suggests instability, making this factor unreliable. [B] combined model shows moderate performance but is not the deciding metric.",
+    "Factor Diagnosis": "Sudden_increases_in_10_day_volum_0: weak — low RankIC and unstable ICIR. Sudden_increases_in_10_day_volum_1: weak — negative RankIC and low ICIR. Sudden_increases_in_10_day_volum_2: weak — no RankIC or ICIR. Sudden_increases_in_10_day_volum_3: weak — negative RankIC and low ICIR. Sudden_increases_in_10_day_volum_4: weak — negative RankIC and low ICIR.",
+    "Feedback for Hypothesis": "REFUTES — the mechanism is valid but the implementation is weak (refine the expression). The framework still has room for refinement.",
+    "Replace Best Result": "no"
+  }
+}

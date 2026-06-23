@@ -1,0 +1,8 @@
+2026-06-23 10:31:32.456 | INFO     | pipeline.factor_mining:_run_evolution_task:267 - Starting evolution task: phase=original, round=0, direction=1
+2026-06-23 10:31:32.517 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-06-23 10:31:32.591 | INFO     | pipeline.loop:__init__:156 - Initial direction: mean-reversion in mid-cap stocks during regime transitions between trending and mean-reverting conditions
+2026-06-23 10:31:32.648 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-06-23 10:31:32.708 | INFO     | pipeline.loop:__init__:174 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-06-23 10:31:34.021 | INFO     | pipeline.loop:__init__:249 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-06-23 10:31:34.150 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-06-23 10:31:34.252 | INFO     | log.time:wrapper:16 - __init__ took 1.74s

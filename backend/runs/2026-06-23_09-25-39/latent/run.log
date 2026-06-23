@@ -1,0 +1,21 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/runs/2026-06-23_09-25-39/latent pid=81533
+[  168.17s] INFO    deterministic arity fix  before=TS_CORR($return, $volume, 10) * RANK($high - $low, 10) after=(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10)) applied=['RANK(.., n) → TS_RANK(.., n)']
+[  168.75s] INFO    deterministic arity fix  before=TS_ZSCORE($volume, 10) * ZSCORE($high - $low, 10) after=(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10)) applied=['ZSCORE(.., n) → TS_ZSCORE(.., n)']
+[  169.42s] INFO    GATE PASS  name=RangeVolumeZScore expr=TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0
+[  169.66s] INFO    GATE PASS  name=RangeVolumeRank expr=RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)
+[  169.95s] INFO    GATE PASS  name=VolumeRangeCorrelation expr=(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))
+[  170.13s] INFO    GATE PASS  name=RangeVolumeMedian expr=MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0
+[  170.38s] INFO    GATE PASS  name=VolumeRangeZScore expr=(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))
+[  170.62s] INFO    GATE PASS  name=RangeVolumeHighday expr=HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0
+[  920.32s] INFO    GATE PASS  name=VOLATILITY_DROP_3D expr=TS_ZSCORE(TS_STD($return, 3), 3) ? 1 : -1
+[  920.46s] INFO    GATE PASS  name=VOLATILITY_RANK_3D expr=RANK(TS_STD($return, 3)) * -1
+[  920.66s] INFO    GATE PASS  name=VOLATILITY_CORRELATION expr=TS_CORR(TS_STD($return, 3), $return, 1)
+[  920.96s] INFO    GATE PASS  name=VOLATILITY_GATED_RETURN expr=(TS_STD($return, 3) < TS_STD($return, 7)) ? TS_PCTCHANGE($return, 1) : 0
+[  921.21s] INFO    GATE PASS  name=VOLATILITY_ZSCORE_RANK expr=ZSCORE(TS_STD($return, 3)) * RANK(TS_STD($return, 3))
+[  921.43s] INFO    GATE PASS  name=VOLATILITY_TREND_3D expr=TS_PCTCHANGE(TS_STD($return, 3), 2)
+[ 1764.21s] INFO    GATE PASS  name=CorrVolReturn10 expr=TS_RANK(TS_CORR($volume, $return, 10), 10)
+[ 1764.44s] INFO    GATE PASS  name=ZScoreVol10 expr=TS_ZSCORE($volume, 10)
+[ 1764.70s] INFO    GATE PASS  name=ZScoreReturn10 expr=TS_ZSCORE($return, 10)
+[ 1764.99s] INFO    GATE PASS  name=RankCorrVolReturn10 expr=TS_RANK(TS_CORR($volume, $return, 10), 10)
+[ 1765.27s] INFO    GATE PASS  name=RankVol10 expr=TS_RANK($volume, 10)
+[ 1765.52s] INFO    GATE PASS  name=RankReturn10 expr=TS_RANK($return, 10)

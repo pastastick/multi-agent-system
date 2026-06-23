@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-06-23T09:55:16",
+  "round_idx": 0,
+  "trajectory_id": "9b23da7f0de0",
+  "evolution_phase": "original",
+  "hypothesis": "stocks with declining volatility over three days are more likely to outperform in the next period due to increased liquidity and investor confidence.",
+  "factor_ic_mean": -0.007397554160203749,
+  "factor_icir_mean": -0.0481630542755555,
+  "sota": {
+    "prev": -0.014396042078462413,
+    "replaced": true,
+    "note": "FactorIC_mean -0.0074 > SOTA -0.0144 → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "stocks_with_declining_volatility_0": {
+      "expression": "TS_ZSCORE(TS_STD($return, 3), 3) ? 1 : -1",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "stocks_with_declining_volatility_1": {
+      "expression": "RANK(TS_STD($return, 3)) * -1",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "stocks_with_declining_volatility_2": {
+      "expression": "TS_CORR(TS_STD($return, 3), $return, 1)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "stocks_with_declining_volatility_3": {
+      "expression": "(TS_STD($return, 3) < TS_STD($return, 7)) ? TS_PCTCHANGE($return, 1) : 0",
+      "standalone_RankIC": 0.006461296570871303,
+      "standalone_RankICIR": 0.09024074547516908
+    },
+    "stocks_with_declining_volatility_4": {
+      "expression": "ZSCORE(TS_STD($return, 3)) * RANK(TS_STD($return, 3))",
+      "standalone_RankIC": -0.032148015663056424,
+      "standalone_RankICIR": -0.27794178003693953
+    },
+    "stocks_with_declining_volatility_5": {
+      "expression": "TS_PCTCHANGE(TS_STD($return, 3), 2)",
+      "standalone_RankIC": 0.003494056611573874,
+      "standalone_RankICIR": 0.04321187173510397
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0707656901906587,
+    "1day.excess_return_with_cost.information_ratio": 0.5960543379594855,
+    "1day.excess_return_with_cost.annualized_return": 0.0598741075874157,
+    "1day.excess_return_with_cost.std": 0.0065112552683349,
+    "1day.excess_return_with_cost.mean": 0.0002515718806193,
+    "1day.excess_return_without_cost.max_drawdown": -0.0690303561073725,
+    "1day.excess_return_without_cost.information_ratio": 0.8705286428262169,
+    "1day.excess_return_without_cost.annualized_return": 0.0873521004523412,
+    "1day.excess_return_without_cost.std": 0.006504318639015,
+    "1day.excess_return_without_cost.mean": 0.0003670256321526,
+    "Rank ICIR": 0.2359007473834748,
+    "Rank IC": 0.0315898457781551,
+    "ICIR": 0.1327355841420028,
+    "IC": 0.0170477133668255,
+    "l2.valid": 0.996785282410646,
+    "l2.train": 0.989910320935058
+  },
+  "correlation_dropped": [
+    "stocks_with_declining_volatility_1 [cross-round |corr|=0.801 with stocks_showing_sudden_price_reve_1 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: stocks with declining volatility over three days are more likely to outperform in the next period due to increased liquidity and investor confidence.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  stocks_with_declining_volatility_0: TS_ZSCORE(TS_STD($return, 3), 3) ? 1 : -1\n    standalone RankIC=n/a  ICIR=n/a\n  stocks_with_declining_volatility_1: RANK(TS_STD($return, 3)) * -1\n    standalone RankIC=n/a  ICIR=n/a\n  stocks_with_declining_volatility_2: TS_CORR(TS_STD($return, 3), $return, 1)\n    standalone RankIC=n/a  ICIR=n/a\n  stocks_with_declining_volatility_3: (TS_STD($return, 3) < TS_STD($return, 7)) ? TS_PCTCHANGE($return, 1) : 0\n    standalone RankIC=0.0065  ICIR=0.0902\n  stocks_with_declining_volatility_4: ZSCORE(TS_STD($return, 3)) * RANK(TS_STD($return, 3))\n    standalone RankIC=-0.0321  ICIR=-0.2779\n  stocks_with_declining_volatility_5: TS_PCTCHANGE(TS_STD($return, 3), 2)\n    standalone RankIC=0.0035  ICIR=0.0432\n  [mean]: RankIC=-0.0074  ICIR=-0.0482\n[CORR-GATE] 1 faktor di-drop sebelum backtest (|corr| > threshold): stocks_with_declining_volatility_1 [cross-round |corr|=0.801 with stocks_showing_sudden_price_reve_1 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0316\n  RankICIR: 0.2359\n  IC: 0.0170\n  ICIR: 0.1327\n  Ann.Return: 0.0599\n  InfoRatio: 0.5961\n  MaxDrawdown: -0.0708",
+    "sota_block": "Previous best FactorIC_mean (SOTA): -0.0144\nThis round FactorIC_mean: -0.0074\nDecision: REPLACE — FactorIC_mean -0.0074 > SOTA -0.0144 → replace"
+  },
+  "agent_response": {
+    "Observations": "Factors with_declining_volatility_3 has standalone RankIC=0.0065 and ICIR=0.0902, indicating weak predictive power and low stability. The mean is negative, suggesting no overall strength.",
+    "Factor Diagnosis": "stocks_with_declining_volatility_0: Weak - lacks normalization and is a binary gate. stocks_with_declining_volatility_1: Weak - inverted rank with no clear mechanism. stocks_with_declining_volatility_2: Weak - correlation without causation. stocks_with_declining_volatility_3: Strong - moderate RankIC with stable ICIR. stocks_with_declining_volatility_4: Weak - negative RankIC and unstable ICIR. stocks_with_declining_volatility_5: Weak - low RankIC and low ICIR.",
+    "Feedback for Hypothesis": "SUPPORTS — the mechanism is valid but the implementation is weak (refine the expression).",
+    "Replace Best Result": "yes"
+  }
+}

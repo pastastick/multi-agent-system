@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-06-23T11:53:21",
+  "round_idx": 2,
+  "trajectory_id": "8f1730ea3891",
+  "evolution_phase": "crossover",
+  "hypothesis": "a sudden spike in the rank of small-cap volume outliers on a given day is followed by a sharp decline in the next-day return ranks of those same stocks, suggesting a short-term reversal in liquidity-driven price dynamics.",
+  "factor_ic_mean": -0.008009055084856683,
+  "factor_icir_mean": -0.07572243160609088,
+  "sota": {
+    "prev": 0.0361257366380021,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0080 ≤ SOTA 0.0361 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "a_sudden_spike_in_the_rank_of_sm_0": {
+      "expression": "TS_ZSCORE(RANK(TS_ZSCORE($volume, 10)), 20)",
+      "standalone_RankIC": -0.010889670467518611,
+      "standalone_RankICIR": -0.11792187723759398
+    },
+    "a_sudden_spike_in_the_rank_of_sm_1": {
+      "expression": "TS_CORR(RANK(TS_ZSCORE($volume, 10)), RANK(TS_ZSCORE($return, 10)), 20)",
+      "standalone_RankIC": -0.015112999330452704,
+      "standalone_RankICIR": -0.13958052347826017
+    },
+    "a_sudden_spike_in_the_rank_of_sm_2": {
+      "expression": "TS_ZSCORE(TS_PCTCHANGE(TS_CORR($volume, $return, 10), 20), 20)",
+      "standalone_RankIC": 0.0019755045434012657,
+      "standalone_RankICIR": 0.030335105897581545
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0882244113356049,
+    "1day.excess_return_with_cost.information_ratio": 0.9982443624589457,
+    "1day.excess_return_with_cost.annualized_return": 0.1281673213330445,
+    "1day.excess_return_with_cost.std": 0.0083224647240823,
+    "1day.excess_return_with_cost.mean": 0.0005385181568615,
+    "1day.excess_return_without_cost.max_drawdown": -0.0849464818914471,
+    "1day.excess_return_without_cost.information_ratio": 1.1789593383411598,
+    "1day.excess_return_without_cost.annualized_return": 0.1512249226139613,
+    "1day.excess_return_without_cost.std": 0.0083144986213164,
+    "1day.excess_return_without_cost.mean": 0.0006353988345124,
+    "Rank ICIR": 0.2793105720775299,
+    "Rank IC": 0.0324940400108397,
+    "ICIR": 0.1535639672646429,
+    "IC": 0.0170492242209347,
+    "l2.valid": 0.997494399247638,
+    "l2.train": 0.993297768833598
+  },
+  "correlation_dropped": [],
+  "agent_input": {
+    "factor_block": "Hypothesis: a sudden spike in the rank of small-cap volume outliers on a given day is followed by a sharp decline in the next-day return ranks of those same stocks, suggesting a short-term reversal in liquidity-driven price dynamics.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  a_sudden_spike_in_the_rank_of_sm_0: TS_ZSCORE(RANK(TS_ZSCORE($volume, 10)), 20)\n    standalone RankIC=-0.0109  ICIR=-0.1179\n  a_sudden_spike_in_the_rank_of_sm_1: TS_CORR(RANK(TS_ZSCORE($volume, 10)), RANK(TS_ZSCORE($return, 10)), 20)\n    standalone RankIC=-0.0151  ICIR=-0.1396\n  a_sudden_spike_in_the_rank_of_sm_2: TS_ZSCORE(TS_PCTCHANGE(TS_CORR($volume, $return, 10), 20), 20)\n    standalone RankIC=0.0020  ICIR=0.0303\n  [mean]: RankIC=-0.0080  ICIR=-0.0757",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0325\n  RankICIR: 0.2793\n  IC: 0.0170\n  ICIR: 0.1536\n  Ann.Return: 0.1282\n  InfoRatio: 0.9982\n  MaxDrawdown: -0.0882",
+    "sota_block": "Previous best FactorIC_mean (SOTA): 0.0361\nThis round FactorIC_mean: -0.0080\nDecision: KEEP — FactorIC_mean -0.0080 ≤ SOTA 0.0361 → keep"
+  },
+  "agent_response": {
+    "hypothesis": "a sudden spike in the rank of small-cap volume outliers on a given day is followed by a sharp decline in the next-day return ranks of those same stocks, suggesting a short-term reversal in liquidity-driven price dynamics.",
+    "factors": [
+      {
+        "name": "VRSZ",
+        "expression": "TS_ZSCORE(RANK(TS_ZSCORE($volume, 10)), 20)",
+        "explanation": "This factor uses a z-score of the rank of volume z-scores over 20 days. It captures the abnormal volume days and their rank, then standardizes it to identify extreme outliers."
+      },
+      {
+        "name": "VRCORR",
+        "expression": "TS_CORR(RANK(TS_ZSCORE($volume, 10)), RANK(TS_ZSCORE($return, 10)), 20)",
+        "explanation": "This factor measures the correlation between the rank of abnormal volume days and the rank of returns. It identifies stocks with extreme volume that follow a reversal in returns."
+      },
+      {
+        "name": "VRR",
+        "expression": "TS_ZSCORE(TS_PCTCHANGE(TS_CORR($volume, $return, 10), 20), 20)",
+        "explanation": "This factor calculates the z-score of the percentage change in the correlation between volume and return over 20 days. It captures the strength of the volume-return relationship before a reversal."
+      }
+    ],
+    "Replace Best Result": "no"
+  }
+}

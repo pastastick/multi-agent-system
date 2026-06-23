@@ -1,0 +1,151 @@
+2026-06-23 09:28:12.732 | INFO     | pipeline.factor_mining:_run_evolution_task:267 - Starting evolution task: phase=original, round=0, direction=0
+2026-06-23 09:28:12.799 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-06-23 09:28:12.860 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-06-23 09:28:12.914 | INFO     | pipeline.loop:__init__:174 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-06-23 09:28:51.026 | INFO     | pipeline.loop:__init__:249 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-06-23 09:28:51.142 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-06-23 09:28:51.370 | INFO     | log.time:wrapper:16 - __init__ took 38.60s
+2026-06-23 09:29:55.980 | INFO     | latent_mas.runlog:log:154 - [latent] deterministic arity fix  before=TS_CORR($return, $volume, 10) * RANK($high - $low, 10) after=(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10)) applied=['RANK(.., n) → TS_RANK(.., n)']
+2026-06-23 09:29:56.168 | INFO     | latent_mas.runlog:log:154 - [latent] deterministic arity fix  before=TS_ZSCORE($volume, 10) * ZSCORE($high - $low, 10) after=(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10)) applied=['ZSCORE(.., n) → TS_ZSCORE(.., n)']
+2026-06-23 09:29:56.755 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 3
+                        Symbol Length (SL): 56
+                        # Base Features (ER): 3
+                        
+2026-06-23 09:29:56.808 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=RangeVolumeZScore expr=TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0
+2026-06-23 09:29:56.993 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 3
+                        Symbol Length (SL): 58
+                        # Base Features (ER): 3
+                        
+2026-06-23 09:29:57.054 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=RangeVolumeRank expr=RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)
+2026-06-23 09:29:57.282 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 4
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 4
+                        
+2026-06-23 09:29:57.345 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=VolumeRangeCorrelation expr=(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))
+2026-06-23 09:29:57.465 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 3
+                        Symbol Length (SL): 47
+                        # Base Features (ER): 3
+                        
+2026-06-23 09:29:57.515 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=RangeVolumeMedian expr=MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0
+2026-06-23 09:29:57.711 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: (TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 3
+                        Symbol Length (SL): 56
+                        # Base Features (ER): 3
+                        
+2026-06-23 09:29:57.755 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=VolumeRangeZScore expr=(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))
+2026-06-23 09:29:57.957 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
+                        Evaluated expr: HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 3
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 3
+                        
+2026-06-23 09:29:58.012 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=RangeVolumeHighday expr=HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0
+2026-06-23 09:29:58.063 | INFO     | factors.regulator.factor_regulator:add_factor:487 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0', 'RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)', '(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))', 'MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0', '(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))', 'HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0']
+2026-06-23 09:29:58.101 | INFO     | pipeline.loop:factor_propose:341 - [LatentMAS] phase=original: hypo_len=203, n_expr=6, exprs=['TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0', 'RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)', '(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))', 'MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0', '(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))', 'HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0'], repaired=False, gate_error=none
+2026-06-23 09:29:58.142 | INFO     | log.time:wrapper:16 - factor_propose took 66.73s
+2026-06-23 09:29:58.452 | INFO     | factors.workspace:__init__:27 - Overrode rdagent default config with project template: /workspace/project/multi-agent-system/backend/factors/factor_template
+2026-06-23 09:29:58.499 | INFO     | log.time:wrapper:16 - factor_construct took 0.31s
+2026-06-23 09:29:58.548 | INFO     | log.time:wrapper:16 - factor_calculate took 0.00s
+2026-06-23 09:29:58.592 | INFO     | pipeline.loop:factor_backtest:441 - Start factor backtest (Local: True)
+2026-06-23 09:38:34.682 | INFO     | factors.runner:develop:430 - Per-factor RankIC (OOS): {'When_a_stock_opens_within_a_tigh_0': -0.011722917267690697, 'When_a_stock_opens_within_a_tigh_1': -0.011307096598265821, 'When_a_stock_opens_within_a_tigh_2': -0.013809940571358405, 'When_a_stock_opens_within_a_tigh_4': -0.005361150283877826, 'When_a_stock_opens_within_a_tigh_5': -0.024017035380151007}
+2026-06-23 09:38:34.724 | INFO     | factors.runner:develop:431 - Per-factor RankICIR (OOS): {'When_a_stock_opens_within_a_tigh_0': -0.11816235615316878, 'When_a_stock_opens_within_a_tigh_1': -0.12135816824311009, 'When_a_stock_opens_within_a_tigh_2': -0.1313122154706604, 'When_a_stock_opens_within_a_tigh_4': -0.07900475369665355, 'When_a_stock_opens_within_a_tigh_5': -0.14243675970856892}
+2026-06-23 09:38:34.866 | INFO     | factors.runner:_correlation_gate:242 - [CorrGate] drop When_a_stock_opens_within_a_tigh_0: within-round |corr|=0.907 with When_a_stock_opens_within_a_tigh_1
+2026-06-23 09:38:34.898 | INFO     | factors.runner:_correlation_gate:242 - [CorrGate] drop When_a_stock_opens_within_a_tigh_1: within-round |corr|=0.714 with When_a_stock_opens_within_a_tigh_4
+2026-06-23 09:38:35.333 | INFO     | factors.runner:develop:449 - [CorrGate] 2 faktor di-drop: ['When_a_stock_opens_within_a_tigh_0 [within-round |corr|=0.907 with When_a_stock_opens_within_a_tigh_1]', 'When_a_stock_opens_within_a_tigh_1 [within-round |corr|=0.714 with When_a_stock_opens_within_a_tigh_4]']
+2026-06-23 09:38:35.454 | INFO     | factors.runner:develop:464 - Factor correlation (setelah gate): 
+
+                                    When_a_stock_opens_within_a_tigh_2  When_a_stock_opens_within_a_tigh_4  When_a_stock_opens_within_a_tigh_5
+When_a_stock_opens_within_a_tigh_2                            1.000000                            0.184026                           -0.040197
+When_a_stock_opens_within_a_tigh_4                            0.184026                            1.000000                           -0.024629
+When_a_stock_opens_within_a_tigh_5                           -0.040197                           -0.024629                            1.000000
+
+2026-06-23 09:38:35.522 | INFO     | factors.runner:develop:471 - Factor values this round: 
+
+                                                 feature                                                                      
+                      When_a_stock_opens_within_a_tigh_2 When_a_stock_opens_within_a_tigh_4 When_a_stock_opens_within_a_tigh_5
+datetime   instrument                                                                                                         
+2023-12-29 SH600343                             0.003717                           3.421154                       59189.465625
+           SH600345                            -0.014329                           1.266439                      202751.339844
+           SH600346                             0.089880                           0.019033                       54615.577734
+           SH600348                             0.135783                           0.827728                      676373.650000
+           SH600350                            -0.462458                          -0.025731                      154742.417187
+
+
+2026-06-23 09:38:40.919 | INFO     | factors.runner:_save_factor_logs:373 - [FactorLogs] correlation & factor values disimpan ke /workspace/project/multi-agent-system/backend/runs/2026-06-23_09-25-39/factor_logs/20260623_093835_523757
+2026-06-23 09:38:41.568 | INFO     | factors.runner:develop:478 - Saved combined factors to /workspace/project/multi-agent-system/backend/data/results/workspace/33f0c6e953314dd5888250d681d64bbc/combined_factors_df.parquet
+2026-06-23 09:38:41.630 | INFO     | factors.runner:develop:482 - Execute factor backtest (Use Local): conf_combined_factors.yaml
+2026-06-23 09:40:21.356 | INFO     | factors.runner:_local_execute:73 - [LocalExec] qrun OK:           risk
+mean               0.000408
+std                0.007981
+annualized_return  0.097207
+information_ratio  0.789487
+max_drawdown      -0.099831
+'The following are analysis results of the excess return with cost(1day).'
+                       risk
+mean               0.000311
+std                0.007989
+annualized_return  0.074113
+information_ratio  0.601312
+max_drawdown      -0.105499
+'The following are analysis results of indicators(1day).'
+     value
+ffr    1.0
+pa     0.0
+pos    0.0
+
+2026-06-23 09:41:04.143 | INFO     | factors.runner:develop:505 - Backtesting results: 
+1day.ffr                                             1.000000
+1day.excess_return_with_cost.max_drawdown           -0.105499
+1day.excess_return_with_cost.information_ratio       0.601312
+1day.excess_return_with_cost.annualized_return       0.074113
+1day.excess_return_with_cost.std                     0.007989
+1day.excess_return_with_cost.mean                    0.000311
+1day.excess_return_without_cost.max_drawdown        -0.099831
+1day.excess_return_without_cost.information_ratio    0.789487
+1day.excess_return_without_cost.annualized_return    0.097207
+1day.excess_return_without_cost.std                  0.007981
+1day.excess_return_without_cost.mean                 0.000408
+Rank ICIR                                            0.272680
+Rank IC                                              0.035090
+ICIR                                                 0.157635
+IC                                                   0.018918
+l2.valid                                             0.997049
+l2.train                                             0.992690
+Name: 0, dtype: float64
+2026-06-23 09:41:04.235 | INFO     | log.time:wrapper:16 - factor_backtest took 665.62s
+2026-06-23 09:41:24.612 | INFO     | pipeline.loop:_save_metrics_snapshot:1109 - Metrics snapshot saved → metrics/round_000_a5fefa756da2.json
+2026-06-23 09:41:25.486 | INFO     | pipeline.loop:feedback:560 - Saved factors to library: /workspace/project/multi-agent-system/data/factorlib/all_factors_library.json (phase=original)
+2026-06-23 09:41:25.549 | INFO     | log.time:wrapper:16 - feedback took 21.22s
+2026-06-23 09:41:25.664 | INFO     | pipeline.evolution.trajectory:add:234 - Added trajectory 084806f0d7da (direction=0, phase=original, round=0)
+2026-06-23 09:41:25.734 | INFO     | pipeline.evolution.trajectory:_save:395 - Saved trajectory pool to /workspace/project/multi-agent-system/backend/runs/2026-06-23_09-25-39/trajectory_pool.json
+2026-06-23 09:41:25.780 | INFO     | pipeline.evolution.controller:report_task_complete:853 - Negative memory: recorded failed mechanism 084806f0d7da [weak_ic]
+2026-06-23 09:41:25.838 | INFO     | pipeline.evolution.controller:report_task_complete:864 - Original round complete for direction 0
+2026-06-23 09:41:25.875 | INFO     | pipeline.factor_mining:run_evolution_loop:867 - Task done: trajectory_id=084806f0d7da, RankIC=-0.014396042078462413
+2026-06-23 09:41:25.923 | INFO     | pipeline.factor_mining:run_evolution_loop:838 - Running task: phase=original, round=0, direction=1

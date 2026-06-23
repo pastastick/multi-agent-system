@@ -1,0 +1,83 @@
+{
+  "timestamp": "2026-06-23T09:41:24",
+  "round_idx": 0,
+  "trajectory_id": "a5fefa756da2",
+  "evolution_phase": "original",
+  "hypothesis": "When a stock opens within a tight range and shows high volume, it is likely to experience a large directional move in the next day's returns due to heightened uncertainty and exaggerated price reactions.",
+  "factor_ic_mean": -0.014396042078462413,
+  "factor_icir_mean": -0.11758457629196095,
+  "sota": {
+    "prev": null,
+    "replaced": true,
+    "note": "FactorIC_mean -0.0144 > SOTA none → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "When_a_stock_opens_within_a_tigh_0": {
+      "expression": "TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "When_a_stock_opens_within_a_tigh_1": {
+      "expression": "RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "When_a_stock_opens_within_a_tigh_2": {
+      "expression": "(TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))",
+      "standalone_RankIC": -0.013809940571358405,
+      "standalone_RankICIR": -0.1313122154706604
+    },
+    "When_a_stock_opens_within_a_tigh_3": {
+      "expression": "MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "When_a_stock_opens_within_a_tigh_4": {
+      "expression": "(TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))",
+      "standalone_RankIC": -0.005361150283877826,
+      "standalone_RankICIR": -0.07900475369665355
+    },
+    "When_a_stock_opens_within_a_tigh_5": {
+      "expression": "HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0",
+      "standalone_RankIC": -0.024017035380151007,
+      "standalone_RankICIR": -0.14243675970856892
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.1054988351603813,
+    "1day.excess_return_with_cost.information_ratio": 0.6013120837000059,
+    "1day.excess_return_with_cost.annualized_return": 0.0741130373975102,
+    "1day.excess_return_with_cost.std": 0.0079892535186095,
+    "1day.excess_return_with_cost.mean": 0.0003113993167962,
+    "1day.excess_return_without_cost.max_drawdown": -0.099830849262557,
+    "1day.excess_return_without_cost.information_ratio": 0.7894872917960858,
+    "1day.excess_return_without_cost.annualized_return": 0.0972070256698305,
+    "1day.excess_return_without_cost.std": 0.0079811235278109,
+    "1day.excess_return_without_cost.mean": 0.0004084328809656,
+    "Rank ICIR": 0.2726799249388457,
+    "Rank IC": 0.0350898843169743,
+    "ICIR": 0.1576349844116014,
+    "IC": 0.0189181443267799,
+    "l2.valid": 0.9970486391900716,
+    "l2.train": 0.9926899360672876
+  },
+  "correlation_dropped": [
+    "When_a_stock_opens_within_a_tigh_0 [within-round |corr|=0.907 with When_a_stock_opens_within_a_tigh_1]",
+    "When_a_stock_opens_within_a_tigh_1 [within-round |corr|=0.714 with When_a_stock_opens_within_a_tigh_4]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: When a stock opens within a tight range and shows high volume, it is likely to experience a large directional move in the next day's returns due to heightened uncertainty and exaggerated price reactions.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  When_a_stock_opens_within_a_tigh_0: TS_ZSCORE($high - $low, 10) ? TS_ZSCORE($volume, 10) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  When_a_stock_opens_within_a_tigh_1: RANK(TS_ZSCORE($high - $low, 10)) * TS_ZSCORE($volume, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  When_a_stock_opens_within_a_tigh_2: (TS_CORR($return, $volume, 10) * TS_RANK(($high - $low), 10))\n    standalone RankIC=-0.0138  ICIR=-0.1313\n  When_a_stock_opens_within_a_tigh_3: MEDIAN($high - $low) ? TS_MEAN($volume, 10) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  When_a_stock_opens_within_a_tigh_4: (TS_ZSCORE($volume, 10) * TS_ZSCORE(($high - $low), 10))\n    standalone RankIC=-0.0054  ICIR=-0.0790\n  When_a_stock_opens_within_a_tigh_5: HIGHDAY($high - $low, 10) ? TS_MEAN($volume, 10) : 0\n    standalone RankIC=-0.0240  ICIR=-0.1424\n  [mean]: RankIC=-0.0144  ICIR=-0.1176\n[CORR-GATE] 2 faktor di-drop sebelum backtest (|corr| > threshold): When_a_stock_opens_within_a_tigh_0 [within-round |corr|=0.907 with When_a_stock_opens_within_a_tigh_1]; When_a_stock_opens_within_a_tigh_1 [within-round |corr|=0.714 with When_a_stock_opens_within_a_tigh_4]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0351\n  RankICIR: 0.2727\n  IC: 0.0189\n  ICIR: 0.1576\n  Ann.Return: 0.0741\n  InfoRatio: 0.6013\n  MaxDrawdown: -0.1055",
+    "sota_block": "Previous best FactorIC_mean (SOTA): none yet\nThis round FactorIC_mean: -0.0144\nDecision: REPLACE — FactorIC_mean -0.0144 > SOTA none → replace"
+  },
+  "agent_response": {
+    "Observations": "[A] standalone RankIC+ICIR is the metric that decides SOTA. The mean RankIC is -0.0144 with ICIR -0.1176, indicating weak predictive power and low stability. [B] combined model shows a RankIC of 0.0351, but it is not the verdict on the mined factors.",
+    "Factor Diagnosis": "When_a_stock_opens_0: Weak / noise — unstable composition with conditional gate and z-score multiplication.\nWhen_a_stock_opens_1: Weak / noise — shallow composition of rank and z-score without clear mechanism alignment.\nWhen_a_stock_opens_2: Weak / noise — negative RankIC and low ICIR, indicating instability.\nWhen_a_stock_opens_3: Weak / noise — no standalone metrics, unstable composition.\nWhen_a_stock_opens_4: Weak / noise — negative RankIC and low ICIR, unstable composition.\nWhen_a_stock_opens_5: Weak / noise — negative RankIC and low ICIR, unstable composition.",
+    "Feedback for Hypothesis": "REFUTES — the mechanism is valid but the implementation is weak (refine the expression). The framework still has room for refinement.",
+    "Replace Best Result": "yes"
+  }
+}
