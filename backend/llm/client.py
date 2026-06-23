@@ -28,6 +28,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 # (e.g. first download or to refresh an outdated snapshot).
 _HF_LOCAL_ONLY = os.environ.get("HF_LOCAL_ONLY", "1") not in ("0", "false", "False")
 
+# HuggingFace token for downloading gated/private models (Qwen3, etc.)
+_HF_TOKEN: str | None = os.environ.get("HF_TOKEN") or None
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Shared imports from _shared.py (single source of truth)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -598,6 +601,7 @@ def _load_or_get_cached_model(
         )
         tokenizer = AutoTokenizer.from_pretrained(
             model_name, use_fast=True, local_files_only=_HF_LOCAL_ONLY,
+            token=_HF_TOKEN,
         )
         _ensure_pad_token(tokenizer)
 
@@ -607,6 +611,7 @@ def _load_or_get_cached_model(
                 dtype=torch.bfloat16 if torch.cuda.is_available()
                              else torch.float32,
                 local_files_only=_HF_LOCAL_ONLY,
+                token=_HF_TOKEN,
             )
 
         if len(tokenizer) != model.get_input_embeddings().weight.shape[0]:

@@ -142,11 +142,6 @@ agents:
       condition that is true or false, such as "$close is greater than $open"; n and p
       are whole-number windows of days; q is a fraction between 0 and 1.
 
-      ARITY IS STRICT — each function takes exactly the arguments shown. CROSS-SECTIONAL
-      functions take exactly ONE argument with no window. RANK(A) takes one argument;
-      for a rolling rank over n days, use the separate function TS_RANK(A, n) instead.
-      Always match argument count to the signature above.
-
       Cross-sectional functions = one argument, no window; they compare one stock
       against all other stocks on the same day:
         RANK(A) rank of A across all stocks today.
