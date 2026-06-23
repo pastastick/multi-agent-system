@@ -97,14 +97,29 @@ class RunLogger:
         run_name: Optional[str] = None,
         console_level: str = "WARNING",
         tee_console_steps: bool = True,
+        tee_logger: bool = False,
+        nest_timestamp: bool = True,
     ) -> None:
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         name = f"{ts}_{run_name}" if run_name else ts
-        self.dir = Path(run_dir) / name
+        # nest_timestamp=False → tulis langsung di run_dir/<run_name> (tanpa awalan
+        # timestamp) supaya bisa di-anchor ke run dir terpadu (backend/runs/<id>/latent).
+        self.dir = Path(run_dir) / (run_name or ts) if not nest_timestamp else Path(run_dir) / name
         self.dir.mkdir(parents=True, exist_ok=True)
 
         self._console_level = _LEVELS.get(console_level.upper(), 30)
         self._tee_steps = tee_console_steps
+        # tee_logger: teruskan baris human-readable ke rdagent logger (loguru) →
+        # masuk ke console.log run dir terpadu. Jadi SATU log lengkap (regulator +
+        # pipeline + keputusan gate + repair) di console.log; events.jsonl tetap
+        # untuk parsing terstruktur. Soft-import agar latent_mas tetap standalone.
+        self._rd = None
+        if tee_logger:
+            try:
+                from log import logger as _rd  # rdagent logger wrapper
+                self._rd = _rd
+            except Exception:
+                self._rd = None
         self._lock = threading.Lock()
         self._t0 = time.time()
 
@@ -125,12 +140,22 @@ class RunLogger:
 
     def log(self, level: str, msg: str, **fields: Any) -> None:
         lvl = _LEVELS.get(level.upper(), 20)
-        line = f"[{round(time.time() - self._t0, 2):>8.2f}s] {level:<7} {msg}"
-        if fields:
-            line += "  " + " ".join(f"{k}={v}" for k, v in fields.items())
+        suffix = ("  " + " ".join(f"{k}={v}" for k, v in fields.items())) if fields else ""
+        line = f"[{round(time.time() - self._t0, 2):>8.2f}s] {level:<7} {msg}{suffix}"
         with self._lock:
             self._run_log.write(line + "\n")
-            if lvl >= self._console_level:
+            teed = False
+            if self._rd is not None:
+                # Teruskan ke rdagent logger → console.log terpadu (juga ke stderr
+                # via sink konsol rdagent). Hindari double-print stderr di bawah.
+                try:
+                    meth = {"WARNING": "warning", "ERROR": "error",
+                            "DEBUG": "debug"}.get(level.upper(), "info")
+                    getattr(self._rd, meth)(f"[latent] {msg}{suffix}")
+                    teed = True
+                except Exception:
+                    teed = False
+            if not teed and lvl >= self._console_level:
                 print(line, file=sys.stderr)
         self.event("log", level=level, msg=msg, **fields)
 
@@ -236,14 +261,19 @@ def get_run_logger(
     run_name: Optional[str] = None,
     run_dir: str | Path = _DEFAULT_RUN_DIR,
     console_level: Optional[str] = None,
+    tee_logger: bool = False,
+    nest_timestamp: bool = True,
 ) -> RunLogger:
     """Ambil RunLogger global (buat sekali). `console_level` bisa di-override
-    via env LATENTMAS_CONSOLE_LEVEL (DEBUG/INFO/WARNING/ERROR)."""
+    via env LATENTMAS_CONSOLE_LEVEL (DEBUG/INFO/WARNING/ERROR). Bila pipeline sudah
+    menyemai singleton lebih dulu (set_run_logger di output dir terpadu), call ini
+    mengembalikannya — run_name di sini diabaikan."""
     global _GLOBAL
     with _GLOBAL_LOCK:
         if _GLOBAL is None:
             lvl = console_level or os.environ.get("LATENTMAS_CONSOLE_LEVEL", "WARNING")
-            _GLOBAL = RunLogger(run_dir=run_dir, run_name=run_name, console_level=lvl)
+            _GLOBAL = RunLogger(run_dir=run_dir, run_name=run_name, console_level=lvl,
+                                tee_logger=tee_logger, nest_timestamp=nest_timestamp)
         return _GLOBAL
 
 

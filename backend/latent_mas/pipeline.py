@@ -15,21 +15,24 @@ dioper apa adanya ke judger, objek kv_consist ikut ter-extend oleh prompt judger
 — lalu saat feedback memakai kv_consist yang sama, ia melihat token judger.
 Itu kontaminasi senyap. `kv_deepcopy` memutus rantai itu.
 
-Aliran KV (sesuai desain):
+Aliran KV (front-end NO-CROP, dipromosikan dari prod — DESIGN drift fix):
 
-  FRONT-END (sequential, in-place extension sah karena linear):
-    seed → proposal(kv_only) → construct(kv_only) → consistency(kv_only)
-                                                       └→ kv_consist (BASELINE)
-  KONSUMEN kv_consist (masing-masing dapat CLONE sendiri):
-    judger(kv_and_text)        ← deepcopy(kv_consist)   → teks final + parse
-    repair(kv_and_text) ×N     ← deepcopy(kv_consist)   per attempt (baseline sama)
-    feedback(kv_and_text)      ← deepcopy(kv_consist)   ← bukan kv_judger (anti-bias)
+  FRONT-END (sequential, NO-CROP: jawaban tiap agent tetap di KV → agent berikut
+  membaca output ASLI, bukan cuma vektor laten lossy. keep_answer_in_kv=true):
+    seed → proposal(kv_and_text) → design(kv_and_text) → construct(kv_and_text)
+       direction(teks)         baca HYPOTHESIS dr KV   baca palette dr KV →
+                                                         JSON {hypothesis,factors}
+    construct = TERMINAL EMITTER (menggantikan consistency+judger lama). Ekspresi
+    diekstrak parser construct_json (JSON, fallback hypothesis_exprs).
+  KONSUMEN kv_construct (kv_final):
+    repair(kv_and_text) ×N     ← deepcopy(kv_construct)  per attempt (baseline sama)
+    feedback(kv_and_text)      ← deepcopy(kv_final)      (loop._run_latent_feedback)
 
   EVOLUTION (GUIDANCE kv_only → re-entry front-end, bounded per-generasi):
     mutation   (kv_only) ← past_kv=None + TEKS 1 parent → guidance_kv (arah refine)
     crossover  (kv_only) ← past_kv=None + TEKS k parent → guidance_kv (arah fusi)
   guidance_kv lalu MENYEMAI front-end: run(seed_kv=guidance_kv) →
-    proposal → construct → consistency → judger → gate/repair (lihat run_evolution).
+    proposal → design → construct → gate/repair (lihat run_evolution).
   Materi parent masuk sebagai TEKS & KV TIDAK diwariskan antar-generasi (trajectory
   .kv_cache tetap None) → KV per ronde terbatas (~guidance + front-end ≈ 3k) → tak
   ada over-KV / collapse lintas-generasi (akar regresi 2026-06-02).
@@ -39,15 +42,15 @@ from __future__ import annotations
 
 import os
 from collections import deque
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Callable, List, Optional
 
 from llm.client import LocalLLMBackend, KVCache
 from latent_mas import kv_ops
 from latent_mas.agent import LatentAgent, AgentResult, load_all_agents
 from latent_mas.parsers import (
-    HypothesisExprs, PASS_SENTINEL,
-    parse_repair_multi, parse_hypothesis_exprs,
+    HypothesisExprs, ConstructResult, PASS_SENTINEL,
+    parse_repair_multi, parse_hypothesis_exprs, parse_construct_json,
 )
 from latent_mas.operator_families import families_of, diversity_hint
 
@@ -81,16 +84,22 @@ def default_quality_gate(expression: str) -> "tuple[bool, str]":
 class FrontEndOutput:
     hypothesis: str
     expressions: List[str]             # SEMUA ekspresi lolos regulator (≥1) → LightGBM combined
-    kv_consist: Optional[KVCache]      # baseline (pristine) — dipakai judger & repair
-    kv_judger: Optional[KVCache]       # KV judger
-    judger_text: str
+    kv_consist: Optional[KVCache]      # baseline (pristine) — KV construct, dipakai repair
+    kv_judger: Optional[KVCache]       # = KV construct (terminal emitter; nama dipertahankan utk back-compat loop)
+    judger_text: str                   # = teks construct (JSON faktor) — back-compat field name
     repaired: bool = False
     repair_attempts: int = 0
     gate_error: str = ""
     # KV yang BENAR-BENAR menghasilkan ekspresi final yang diterima:
-    #   kv_repair bila repair berjalan & sukses, selain itu kv_judger.
+    #   kv_repair bila repair berjalan & sukses, selain itu kv_construct.
     # Inilah seed feedback (trajectory-coherent) — lihat loop._run_latent_feedback.
     kv_final: Optional[KVCache] = None
+    # Faktor mentah dari construct: [{name, expression, explanation}] (intent per faktor,
+    # dipakai repair sadar-intent & dicatat di StrategyTrajectory.factors).
+    factors: List[dict] = field(default_factory=list)
+    # Jejak gate per-ekspresi: [{name, expression, ok, reason, repaired_by}] → audit
+    # keputusan gate lengkap (console.log + trajectory.extra_info).
+    gate_log: List[dict] = field(default_factory=list)
 
     @property
     def expression(self) -> str:
@@ -99,12 +108,15 @@ class FrontEndOutput:
 
 
 class FrontEndPipeline:
-    """proposal → construct → consistency → judger → [regulator-gate → repair].
+    """proposal → design → construct → [regulator-gate → repair]  (NO-CROP).
 
-    Gate = FactorRegulator PENUH (parsable + complexity SL/PC/ER + redundansi
-    alpha-zoo) bila tersedia, fallback ke `default_quality_gate` (sintaks AST).
-    Judger boleh keluarkan N ekspresi; tiap ekspresi di-gate. Aturan repair:
-    hanya bila SEMUA ekspresi gagal (repair pun hasilkan N ekspresi).
+    Front-end dipromosikan dari prod: proposal merumuskan hipotesis, design memilih
+    palette VARIABLE+FUNCTION (membaca hipotesis ASLI dari KV — no-crop memperbaiki
+    drift hipotesis), construct = TERMINAL EMITTER yang menulis JSON
+    {hypothesis, factors:[{name,expression,explanation}]}. Ekspresi diparse
+    (construct_json) lalu di-gate. Gate = FactorRegulator PENUH (parsable +
+    complexity SL/PC/ER + redundansi alpha-zoo) bila tersedia, fallback
+    `default_quality_gate`. Repair hanya bila SEMUA ekspresi gagal gate.
     """
 
     def __init__(
@@ -221,60 +233,53 @@ class FrontEndPipeline:
         rl = self.runlog
 
         # Diversity hint (soft) dari family faktor yang sudah diterima sebelumnya —
-        # mengarahkan ke family rich yang jarang dipakai + afordansnya, TANPA
-        # mengorbankan kesetiaan ke hipotesis. Disuntik ke construct (membentuk
-        # latent) & judger_reason (decoder yang menulis ekspresi); proposal SENGAJA
+        # mengarahkan ke family rich yang jarang dipakai TANPA mengorbankan kesetiaan
+        # ke hipotesis. Disuntik ke construct (yang menulis ekspresi); proposal SENGAJA
         # tidak (jaga hipotesis tetap di altitude mekanisme, bukan operator).
         dhint = diversity_hint(list(self._recent_families))
 
-        # ── sequential latent chain (in-place extension OK: linear) ──────────
+        # ── front-end NO-CROP: proposal → design → construct ─────────────────
+        # proposal: direction sebagai TEKS (handoff='text'); seed_kv (guidance
+        # evolution / None original) tetap di-attend via past_kv.
         r_prop = self._a("proposal").run(
-            past_kv=seed_kv, direction=direction,
+            past_kv=seed_kv, handoff="text", direction=direction,
             market_context=market_context, prior_feedback=prior_feedback,
             negative_hint=negative_hint,
         )
-        r_con = self._a("construct").run(past_kv=r_prop.kv_cache, diversity_hint=dhint)
-        r_cons = self._a("consistency").run(past_kv=r_con.kv_cache)
+        # design: baca HYPOTHESIS asli proposal dari KV (no-crop) → palette function.
+        r_design = self._a("design").run(past_kv=r_prop.kv_cache, handoff="kv")
+        # construct (TERMINAL): baca palette dari KV → JSON {hypothesis, factors}.
+        r_con = self._a("construct").run(
+            past_kv=r_design.kv_cache, handoff="kv", diversity_hint=dhint,
+        )
+        kv_construct = r_con.kv_cache
 
-        kv_consist = r_cons.kv_cache          # BASELINE — jaga tetap pristine
-
-        # ── JUDGER: agen OUTPUT tunggal ───────────────────────────────────────
-        # Reasoning proposal→construct→consistency sudah hidup di KV; judger TIDAK
-        # menalar ulang & TIDAK menyalin teks — ia men-decode KV jadi baris
-        # HYPOTHESIS + EXPRESSION. Ekspresi diekstrak DETERMINISTIK oleh parser
-        # (hypothesis_exprs, sudah split ';'), lalu di-gate fail-closed. Retry
-        # sekali dari baseline pristine bila output degenerate/tak terparse.
-        he: Optional[HypothesisExprs] = None
-        r_judge: Optional[AgentResult] = None
-        for attempt in range(2):
-            r_judge = self._a("judger").run(
-                past_kv=kv_ops.kv_deepcopy(kv_consist), direction=direction,
+        cr: Optional[ConstructResult] = r_con.parsed
+        if cr is None:  # parser gagal → retry construct sekali dari design KV
+            if rl: rl.warn("construct output unparseable; retry once",
+                           head=(r_con.text or "")[:120])
+            r_con = self._a("construct").run(
+                past_kv=kv_ops.kv_deepcopy(r_design.kv_cache), handoff="kv",
                 diversity_hint=dhint,
             )
-            he = r_judge.parsed
-            if he is not None:
-                break
-            if rl: rl.warn(
-                f"judger output unparseable (attempt {attempt + 1}/2)",
-                head=(r_judge.text or "")[:120],
-            )
-        if he is None:
-            hypothesis, candidates = "", []
-        else:
-            hypothesis, candidates = he.hypothesis, list(he.expressions)
+            kv_construct = r_con.kv_cache
+            cr = r_con.parsed
+
+        hypothesis, factors = ("", []) if cr is None else (cr.hypothesis, list(cr.factors))
 
         # ── regulator-gate semua ekspresi; repair hanya bila SEMUA gagal ──────
-        passing, kv_final, repaired, attempts, gate_err = self._gate_and_repair_multi(
-            candidates, kv_consist, r_judge.kv_cache,
-        )
+        passing, kv_final, repaired, attempts, gate_err, gate_log = \
+            self._gate_and_repair_factors(factors, kv_construct)
+
         # Catat family faktor yang diterima → diversity hint run berikutnya.
         for e in passing:
             self._recent_families.append(families_of(e))
         return FrontEndOutput(
             hypothesis=hypothesis, expressions=passing,
-            kv_consist=kv_consist, kv_judger=r_judge.kv_cache,
-            judger_text=r_judge.text or "", kv_final=kv_final,
+            kv_consist=kv_construct, kv_judger=kv_construct,
+            judger_text=r_con.text or "", kv_final=kv_final,
             repaired=repaired, repair_attempts=attempts, gate_error=gate_err,
+            factors=factors, gate_log=gate_log,
         )
 
     def run_evolution(
@@ -295,8 +300,8 @@ class FrontEndPipeline:
         **None** dan membaca materi parent sebagai **TEKS** (`parent_text`); ia
         bernalar laten untuk menetapkan ARAH (diagnosis + direction) TANPA menulis
         ekspresi. KV-nya (`guidance_kv`) lalu MENYEMAI front-end via
-        `run(seed_kv=guidance_kv)` → proposal→construct→consistency→judger→
-        gate/repair yang menyusun ekspresinya. Downstream (backtest/feedback) tak
+        `run(seed_kv=guidance_kv)` → proposal→design→construct→gate/repair
+        yang menyusun ekspresinya. Downstream (backtest/feedback) tak
         berubah; output tetap `FrontEndOutput`.
 
         Karena guidance di-seed None + parent=teks, dan `trajectory.kv_cache` tetap
@@ -333,8 +338,8 @@ class FrontEndPipeline:
                 if rl: rl.warn("evo guidance probe failed", err=repr(e))
 
         # ── 2. RE-ENTER front-end di-seed guidance_kv (1 konsumen → no deepcopy) ─
-        # proposal(past_kv=guidance_kv) → construct → consistency → judger →
-        # _gate_and_repair_multi. FrontEndOutput sama seperti jalur original.
+        # proposal(past_kv=guidance_kv) → design → construct →
+        # _gate_and_repair_factors. FrontEndOutput sama seperti jalur original.
         return self.run(direction=direction, seed_kv=guidance_kv, negative_hint=negative_hint)
 
     @staticmethod
@@ -366,40 +371,51 @@ class FrontEndPipeline:
                 out.append(e)
         return out
 
-    def _gate_and_repair_multi(
+    def _gate_and_repair_factors(
         self,
-        candidates: List[str],
+        factors: List[dict],
         kv_baseline: Optional[KVCache],
-        kv_judger: Optional[KVCache],
-    ) -> "tuple[List[str], Optional[KVCache], bool, int, str]":
-        """Gate tiap ekspresi via regulator. Aturan (sesuai keputusan user):
-          - ada ≥1 lolos → pakai yang lolos, TANPA repair. kv_final = kv_judger.
-          - SEMUA gagal → repair (≤max attempts), repair pun hasilkan N ekspresi;
-            gate ulang, pakai yang lolos. kv_final = kv_repair.
-          - repair habis tetap gagal → kembalikan kandidat asal (pipeline tak
-            dead-end; backtest yang akan menyaring). kv_final = kv_judger.
+    ) -> "tuple[List[str], Optional[KVCache], bool, int, str, List[dict]]":
+        """Gate tiap ekspresi faktor + LOG keputusan per-faktor. Aturan:
+          - ≥1 lolos → pakai yang lolos, TANPA repair. kv_final = kv_construct.
+          - SEMUA gagal → repair legacy (≤max attempts), gate ulang. kv_final = kv_repair.
+          - repair habis → fail-closed (drop yang gagal-gate, jangan ke backtest).
 
-        Returns: (passing_exprs, kv_final, repaired, attempts, gate_error).
+        Returns: (passing, kv_final, repaired, attempts, gate_error, gate_log).
+        gate_log: [{name, expression, ok, reason, repaired_by}] → audit lengkap.
         """
         rl = self.runlog
-        # Pra-perbaikan arity DETERMINISTIK (no-LLM) → RANK(A,n)→TS_RANK(A,n) dkk
-        # lolos langsung tanpa membakar attempt repair.
-        candidates = self._auto_fix_arity(candidates, rl)
-        passing = [e for e in candidates if self.gate(e)[0]]
+        gate_log: List[dict] = []
+        # Pra-perbaikan arity DETERMINISTIK (no-LLM) → RANK(A,n)→TS_RANK(A,n) dkk.
+        exprs = self._auto_fix_arity([f.get("expression", "") for f in factors], rl)
+        names = [f.get("name") or f"f{i+1}" for i, f in enumerate(factors)]
+
+        passing: List[str] = []
+        first_err = ""
+        for nm, e in zip(names, exprs):
+            ok, reason = self.gate(e) if e else (False, "empty expression")
+            gate_log.append({"name": nm, "expression": e, "ok": bool(ok),
+                             "reason": reason, "repaired_by": None})
+            if ok:
+                passing.append(e)
+                if rl: rl.info("GATE PASS", name=nm, expr=e)
+            else:
+                if not first_err:
+                    first_err = reason
+                if rl: rl.warn("GATE REJECT", name=nm, expr=e, reason=reason)
+
         if passing:
             self._register_factors(passing)
-            return passing, kv_judger, False, 0, ""
+            return passing, kv_baseline, False, 0, "", gate_log
 
-        # Tanpa kandidat tak ada yang bisa diperbaiki: repair dengan
-        # former_expression kosong terbukti menghasilkan sampah (run
-        # 20260608_064005) dan membuang ~60s per ronde.
-        if not candidates:
-            if rl: rl.error("no expression from judger; skipping repair")
-            return [], kv_judger, False, 0, "no expression from judger"
+        # Tanpa kandidat: repair dengan former kosong → sampah (run 20260608_064005).
+        usable = [e for e in exprs if e]
+        if not usable:
+            if rl: rl.error("no expression from construct; skipping repair")
+            return [], kv_baseline, False, 0, "no expression from construct", gate_log
 
-        gate_err = self.gate(candidates[0])[1]
-        former = candidates
-        err = gate_err
+        gate_err = first_err or self.gate(usable[0])[1]
+        former, err = usable, gate_err
         for attempt in range(self.max_repair_attempts):
             mode = ["minimal", "different", "bold"][min(attempt, 2)]
             r_rep = self._a("repair").run(
@@ -408,13 +424,18 @@ class FrontEndPipeline:
                 error_log=err, value_feedback="", attempt_mode=mode,
             )
             is_pass, rep_exprs = parse_repair_multi(r_rep.text or "")
+            if rl: rl.info("REPAIR attempt", n=attempt + 1, mode=mode,
+                           pass_claim=is_pass, n_expr=len(rep_exprs))
             if is_pass:
-                # PASS = model klaim valid; tapi gate kita deterministik → gate ulang.
+                # PASS = model klaim valid; gate deterministik → gate ulang.
                 passing = [e for e in former if self.gate(e)[0]]
                 if passing:
-                    if rl: rl.info("repair PASS confirmed by gate")
                     self._register_factors(passing)
-                    return passing, r_rep.kv_cache, True, attempt + 1, gate_err
+                    for e in passing:
+                        gate_log.append({"name": "repaired", "expression": e,
+                                         "ok": True, "reason": "", "repaired_by": "agent"})
+                    if rl: rl.info("REPAIR confirmed by gate", n_passing=len(passing))
+                    return passing, r_rep.kv_cache, True, attempt + 1, gate_err, gate_log
                 continue
             if not rep_exprs:
                 if rl: rl.warn(f"repair attempt {attempt+1} produced no expression")
@@ -422,20 +443,22 @@ class FrontEndPipeline:
             passing = [e for e in rep_exprs if self.gate(e)[0]]
             if passing:
                 self._register_factors(passing)
-                return passing, r_rep.kv_cache, True, attempt + 1, gate_err
+                for e in passing:
+                    gate_log.append({"name": "repaired", "expression": e,
+                                     "ok": True, "reason": "", "repaired_by": "agent"})
+                if rl: rl.info("REPAIR success", n_passing=len(passing))
+                return passing, r_rep.kv_cache, True, attempt + 1, gate_err, gate_log
             former = rep_exprs
             err = self.gate(rep_exprs[0])[1]
 
-        # FAIL-CLOSED: repair mentok → JANGAN teruskan faktor gagal-gate ke
-        # backtest (ekspresi rusak → factor.py crash → "No valid factor data" +
-        # ~3 menit terbuang per faktor). Kembalikan hanya yang lolos gate (boleh
-        # kosong → loop di-skip bersih). Backtest hanya menerima ekspresi valid.
-        survivors = [e for e in candidates if self.gate(e)[0]]
-        if rl: rl.error("multi-repair exhausted; dropping gate-failing factors (fail-closed)",
-                        n_dropped=len(candidates) - len(survivors), n_kept=len(survivors))
+        # FAIL-CLOSED: repair mentok → drop ekspresi gagal-gate (jangan ke backtest:
+        # ekspresi rusak → factor.py crash + waktu terbuang).
+        survivors = [e for e in usable if self.gate(e)[0]]
+        if rl: rl.error("repair exhausted; fail-closed drop",
+                        n_dropped=len(usable) - len(survivors), n_kept=len(survivors))
         if survivors:
             self._register_factors(survivors)
-        return survivors, kv_judger, False, self.max_repair_attempts, gate_err
+        return survivors, kv_baseline, False, self.max_repair_attempts, gate_err, gate_log
 
     def _gate_and_repair(
         self,

@@ -59,3 +59,6 @@ git_ignore_folder/
 !backend/data/factorlib/*.json
 ## output agent
 ~
+# unified run output (runtime)
+backend/runs/
+backend/latent_runs/

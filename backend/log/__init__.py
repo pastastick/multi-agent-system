@@ -27,6 +27,15 @@ class _AlphaAgentLoggerWrapper:
     def __init__(self, inner):
         object.__setattr__(self, "_inner", inner) #* simpan rdagent_logger asli
         object.__setattr__(self, "_console_file_sink_id", None) #* id sink file loguru aktif
+        #* OUTPUT TERPADU: bila QUANTA_RUN_DIR di-set (oleh cli.py sebelum import),
+        #* anchor trace path awal ke sana agar tak ada folder log/<ts> liar di cwd.
+        _run_dir = os.getenv("QUANTA_RUN_DIR")
+        if _run_dir:
+            try:
+                from rdagent.log.storage import FileStorage
+                inner.storage = FileStorage(Path(_run_dir))
+            except Exception:
+                pass
         self._attach_console_file(inner.storage.path) #* pasang sink awal di trace path saat ini
 
     # ---------- Console-format file sink ----------

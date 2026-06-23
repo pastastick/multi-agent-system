@@ -269,10 +269,76 @@ def _balance_parens(expr: str) -> str:
     return expr
 
 
+# ── Construct (JSON): hypothesis + factors[{name, expression, explanation}] ───
+
+@dataclass
+class ConstructResult:
+    """Output agent `construct` (front-end no-crop). Superset dari HypothesisExprs:
+    selain hypothesis + daftar ekspresi, menyimpan NAMA + EXPLANATION (intent) tiap
+    faktor. `explanation` dipakai repair sadar-intent & dicatat di StrategyTrajectory.
+    """
+    hypothesis: str
+    factors: list          # list[dict]: {name, expression, explanation}
+
+    @property
+    def expressions(self) -> list:
+        """Daftar ekspresi (urutan dipertahankan) — kompatibel HypothesisExprs."""
+        return [f["expression"] for f in self.factors if f.get("expression")]
+
+
+def _extract_json_block(text: str) -> Optional[dict]:
+    """Ambil objek JSON pertama..terakhir dari teks (toleran fence ```json)."""
+    if not text:
+        return None
+    import json
+    t = text.strip()
+    fence = re.search(r"```(?:json|text)?\s*(.*?)```", t, re.DOTALL | re.IGNORECASE)
+    if fence:
+        t = fence.group(1).strip()
+    s, e = t.find("{"), t.rfind("}")
+    if s == -1 or e == -1 or e < s:
+        return None
+    try:
+        return json.loads(t[s:e + 1])
+    except json.JSONDecodeError:
+        return None
+
+
+def parse_construct_json(raw: str) -> Optional[ConstructResult]:
+    """Parse output construct. Utama: JSON {hypothesis, factors:[{name,expression,
+    explanation}]}. Fallback: parser DSL hypothesis_exprs (nama f1..fn, explanation
+    kosong) bila JSON rusak — supaya pipeline tak dead-end."""
+    obj = _extract_json_block(raw)
+    if obj and isinstance(obj.get("factors"), list):
+        facs = []
+        for i, f in enumerate(obj["factors"]):
+            if not isinstance(f, dict):
+                continue
+            expr = _balance_parens(str(f.get("expression") or "").strip())
+            if not expr:
+                continue
+            facs.append({
+                "name": str(f.get("name") or f"f{i+1}").strip(),
+                "expression": expr,
+                "explanation": str(f.get("explanation") or "").strip(),
+            })
+        if facs:
+            return ConstructResult(
+                hypothesis=str(obj.get("hypothesis") or "").strip(), factors=facs)
+
+    he = parse_hypothesis_exprs(raw or "")
+    if he is None:
+        return None
+    facs = [{"name": f"f{i+1}", "expression": e, "explanation": ""}
+            for i, e in enumerate(he.expressions)]
+    return ConstructResult(hypothesis=he.hypothesis, factors=facs)
+
+
 # registry untuk lookup by name dari YAML
 PARSERS = {
     "hypothesis_expr": parse_hypothesis_expr,
     "hypothesis_exprs": parse_hypothesis_exprs,
+    "construct_json": parse_construct_json,
     "repair": parse_repair,
     "mutation_diagnosis": parse_mutation_diagnosis,
     "passthrough": parse_passthrough,

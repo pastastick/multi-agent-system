@@ -660,6 +660,15 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         exp = QlibFactorExperiment(tasks)
         exp.based_experiments = []  # runner evaluates new factors only; no SOTA concatenation
         exp.sub_workspace_list = workspaces
+        # AUDIT front-end (intent per faktor + keputusan gate + repair) → menempel di
+        # experiment agar create_trajectory_from_loop_result mencatatnya di trajectory.
+        fo = getattr(self, "_front_out", None)
+        if fo is not None:
+            exp.front_factors = fo.factors            # [{name, expression, explanation}]
+            exp.front_gate_log = fo.gate_log          # [{name, expression, ok, reason, repaired_by}]
+            exp.front_repaired = fo.repaired
+            exp.front_repair_attempts = fo.repair_attempts
+            exp.front_gate_error = fo.gate_error
         return exp
 
     @staticmethod

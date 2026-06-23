@@ -19,6 +19,16 @@ if _env_path.exists():
 else:
     load_dotenv(".env")
 
+# OUTPUT TERPADU: tetapkan satu run dir SEBELUM import pipeline (yang memicu
+# `from log import logger` → membuat folder log/<ts> liar di cwd). Dengan
+# QUANTA_RUN_DIR di-set lebih dulu, console.log impor-awal pun langsung jatuh di
+# backend/runs/<id>/ — tak ada duplikasi log/ di root. main() membaca env yg sama.
+import os as _os
+import datetime as _dt
+if not _os.environ.get("QUANTA_RUN_DIR"):
+    _rid = _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    _os.environ["QUANTA_RUN_DIR"] = str(Path(__file__).resolve().parent / "runs" / _rid)
+
 import fire  #* ubah dict menjadi cli command
 from pipeline.factor_mining import main as mine 
 from pipeline.factor_backtest import main as backtest

@@ -1006,9 +1006,39 @@ def main(
         # Di-set sebelum logger.info pertama agar tidak ada folder log kosong di CWD.
         import datetime as _dt
         _backend_dir = Path(__file__).resolve().parent.parent
-        _base_log = _backend_dir / "log" / _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+        # OUTPUT TERPADU: satu folder run berisi SEMUA artefak (console.log,
+        # trajectory_pool.json, monitor/, latent/{run.log,events.jsonl}, llm_outputs/).
+        # Menggantikan tiga lokasi tercerai-berai sebelumnya (log/, latent_runs/,
+        # debug/llm_outputs/). Override via env QUANTA_RUN_DIR.
+        _run_id = _dt.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        _base_log = Path(os.environ.get("QUANTA_RUN_DIR", _backend_dir / "runs" / _run_id))
         _base_log.mkdir(parents=True, exist_ok=True)
         logger.set_trace_path(_base_log)
+
+        # 1) snapshot LLM per-call (termasuk REPAIR) → run_dir/llm_outputs (bukan debug/).
+        ALPHA_AGENT_FACTOR_PROP_SETTING.output_log_dir = str(_base_log / "llm_outputs")
+        # 2) latent runlog (keputusan gate/repair, timing per-step) → run_dir/latent,
+        #    di-tee ke rdagent logger sehingga MASUK ke console.log (satu log lengkap).
+        try:
+            from latent_mas.runlog import RunLogger, set_run_logger
+            set_run_logger(RunLogger(
+                run_dir=_base_log, run_name="latent", nest_timestamp=False,
+                tee_logger=True,
+                console_level=os.environ.get("LATENTMAS_CONSOLE_LEVEL", "WARNING"),
+            ))
+        except Exception as _e:  # noqa: BLE001
+            logger.warning(f"latent runlog unify skipped: {_e!r}")
+        logger.info(f"Unified run dir: {_base_log}")
+
+        # factor.py subprocess executor: pakai interpreter yang SAMA dgn proses ini
+        # (venv, punya pandas + semua deps). Default python_bin='python' di runpod =
+        # /usr/bin/python sistem TANPA pandas → factor execution gagal SENYAP
+        # ("No valid factor data found to merge" → trajectory kosong, RankIC=None).
+        import sys as _sys
+        from factors.coder.config import FACTOR_COSTEER_SETTINGS as _FCS
+        if _FCS.python_bin in ("python", "python3") or not Path(_FCS.python_bin).is_absolute():
+            _FCS.python_bin = _sys.executable
+            logger.info(f"factor.py executor python_bin → {_FCS.python_bin}")
 
         logger.info("="*60)
         logger.info("Experiment config")

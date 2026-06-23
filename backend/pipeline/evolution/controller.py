@@ -910,17 +910,24 @@ class EvolutionController:
                     hypothesis_details[attr] = getattr(hypothesis, attr, "")
         
         # Extract factor info
+        # explanation (intent) per ekspresi dari front-end construct → audit/repair.
+        _expl_by_expr = {
+            (f.get("expression") or "").replace(" ", ""): f.get("explanation", "")
+            for f in (getattr(experiment, "front_factors", None) or [])
+        }
         factors = []
         if experiment and hasattr(experiment, "sub_tasks"):
             #* ambil semua faktor: nama, rumus, deskripsi dan kode kalau ada
             for idx, task_obj in enumerate(experiment.sub_tasks):
+                expr = getattr(task_obj, "factor_expression", "")
                 factor_info = {
                     "name": getattr(task_obj, "factor_name", f"factor_{idx}"),
-                    "expression": getattr(task_obj, "factor_expression", ""),
+                    "expression": expr,
                     "description": getattr(task_obj, "factor_description", ""),
+                    "explanation": _expl_by_expr.get((expr or "").replace(" ", ""), ""),
                 }
                 # Try to get code
-                if (hasattr(experiment, "sub_workspace_list") and 
+                if (hasattr(experiment, "sub_workspace_list") and
                     idx < len(experiment.sub_workspace_list)):
                     ws = experiment.sub_workspace_list[idx]
                     if ws and hasattr(ws, "code_dict") and ws.code_dict:
@@ -979,6 +986,11 @@ class EvolutionController:
                 "factor_ic": factor_ic,
                 "factor_icir": factor_icir,
                 "correlation_dropped": getattr(experiment, "correlation_dropped", []),
+                # AUDIT front-end (no-crop): keputusan gate per-ekspresi + repair.
+                "gate_log": getattr(experiment, "front_gate_log", []),
+                "repaired": getattr(experiment, "front_repaired", False),
+                "repair_attempts": getattr(experiment, "front_repair_attempts", 0),
+                "gate_error": getattr(experiment, "front_gate_error", ""),
             },
         )
     

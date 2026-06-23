@@ -227,6 +227,10 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
         yang sama — KV dari model A tidak bisa dipakai oleh model B.
         """
         from llm.client import LocalLLMBackend
+        # OUTPUT TERPADU: anchor SEMUA sink debug backend (llm_outputs, conv_logs,
+        # kv_store) di bawah folder run yang sama (parent dari output_log_dir =
+        # backend/runs/<id>/). Jadi tak ada lagi ./debug/ liar relatif-cwd.
+        _run_dir = Path(self.output_log_dir).parent
         return LocalLLMBackend(
             model_name=self.latent_model_name,
             device=self.latent_device,
@@ -243,6 +247,8 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
             knn_min_keep=self.knn_min_keep,
             knn_strategy=self.knn_strategy,
             output_log_dir=self.output_log_dir,
+            conv_dir=str(_run_dir / "conv_logs"),
+            kv_dir=str(_run_dir / "kv_store"),
         )
 
 
