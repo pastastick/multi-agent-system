@@ -22,7 +22,7 @@ export HUGGINGFACE_HUB_CACHE=/workspace/.cache/huggingface/hub
 export TRANSFORMERS_CACHE=/workspace/.cache/huggingface/hub
 
 # HuggingFace token — untuk download model/dataset private (Qwen3, qlib_csi300)
-HF_TOKEN="your_hf_token_here"
+export HF_TOKEN="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"
 
 # Torch hub & inductor cache
 export TORCH_HOME=/workspace/.cache/torch

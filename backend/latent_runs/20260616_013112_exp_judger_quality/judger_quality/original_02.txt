@@ -1,9 +1,0 @@
-# original#2  verdict: parse gate MD✗(bold,fence/backtick)
-# hypothesis: When 5-day volume is ranked high and the 5-day range ($high - $low) is narrow, returns reverse the next day.
-# expressions (1 pass / 1 cand): ['REGBETA(TS_RANK($volume, 5), TS_ZSCORE(($high - $low), 5), 1)']
-# gate_error: 
-
-**Hypothesis:** When 5-day volume is ranked high and the 5-day range ($high - $low) is narrow, returns reverse the next day.
-
-**Expression:**  
-`REGBETA(RANK($volume, 5), TS_ZSCORE($high - $low, 5), 1)`

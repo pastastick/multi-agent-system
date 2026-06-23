@@ -1,9 +1,0 @@
-# original#2  verdict: parse GATE✗ MD✗(bold)
-# hypothesis: When  volume spikes and the daily range ($high - $low) narrows, returns reverse the next day.
-# expressions (0 pass / 1 cand): []
-# gate_error: arity: `RANK` takes 1 argument(s) but got 3 (`RANK(($high - $low), $return, 1.0)`). `RANK` is CROSS-SECTIONAL (1 arg, no period). For a rolling/windowed version use `TS_RANK(A, n)` instead.
-
-**HYPOTHESIS**: When  volume spikes and the daily range ($high - $low) narrows, returns reverse the next day.
-
-**EXPRESSION**:  
-TS_ZSCORE($volume, 5) < RANK($high - $low,     $return,1)

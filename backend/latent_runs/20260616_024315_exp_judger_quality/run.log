@@ -1,3 +1,0 @@
-[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260616_024315_exp_judger_quality pid=41051
-[   46.44s] WARNING repair attempt 1 produced no expression
-[  102.02s] ERROR   multi-repair exhausted; dropping gate-failing factors (fail-closed)  n_dropped=1 n_kept=0

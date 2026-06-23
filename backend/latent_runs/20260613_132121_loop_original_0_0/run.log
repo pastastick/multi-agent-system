@@ -1,9 +1,0 @@
-[    0.01s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260613_132121_loop_original_0_0 pid=60097
-[   70.57s] INFO    deterministic arity fix  before=TS_ZSCORE( ($close > $open) ? $volume : 0, 7 ) * RANK($return, 7 ) after=(TS_ZSCORE((($close > $open) ? $volume : 0), 7) * TS_RANK($return, 7)) applied=['RANK(.., n) → TS_RANK(.., n)']
-[  884.14s] WARNING judger formatter unparseable (attempt 1/2)  head=
-[  887.09s] WARNING judger formatter unparseable (attempt 2/2)  head=
-[  887.09s] ERROR   no expression from judger; skipping repair
-[  960.82s] WARNING repair attempt 1 produced no expression
-[  976.22s] WARNING repair attempt 3 produced no expression
-[  976.22s] ERROR   multi-repair exhausted; keeping original candidates  n=2
-[ 1230.05s] INFO    deterministic arity fix  before=TS_ZSCORE($return, 15) * (RANK($volume, 10) > 50) * (TS_PCTCHANGE($return, 5) < 0) after=((TS_ZSCORE($return, 15) * (TS_RANK($volume, 10) > 50)) * (TS_PCTCHANGE($return, 5) < 0)) applied=['RANK(.., n) → TS_RANK(.., n)']

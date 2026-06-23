@@ -1,5 +1,0 @@
-bordered in the memory of the previous agent, which is: the hypothesis that "When  volume rises sharply while daily range stays narrow, returns reverse the next week." This is the hypothesis in memory. The expression is:
-
-TS_RANK($volume, 5) > TS_RANK($high - $low, 1) AND TS_ZSCORE($return, 7) < 0
-
-This expression is faithful, valid, and parsimonious. It captures the core mechanism: 5-day volume rank is high (sharply rising), daily range is low (narrow), and return z-score is negative (reversal). It uses only OHLCV variables, no operators, and is structurally distinct from prior rounds.

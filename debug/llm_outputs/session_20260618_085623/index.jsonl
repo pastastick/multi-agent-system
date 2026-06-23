@@ -1,9 +1,0 @@
-{"n": 1, "ts": "2026-06-18 08:58:30", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "7e573efe", "text_len": 1861, "duration_s": 43.1448, "file": "0001_construct_kv_and_text.md", "vars": []}
-{"n": 1, "ts": "2026-06-18 08:58:31", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "15a355c7", "text_len": 2022, "duration_s": 44.0611, "file": "0001_construct_kv_and_text.md", "vars": []}
-{"n": 1, "ts": "2026-06-18 08:58:31", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "f9a504e9", "text_len": 2205, "duration_s": 44.0637, "file": "0001_construct_kv_and_text.md", "vars": []}
-{"n": 2, "ts": "2026-06-18 08:59:06", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "73e9b6aa", "text_len": 1277, "duration_s": 27.0455, "file": "0002_proposal_kv_and_text.md", "vars": []}
-{"n": 2, "ts": "2026-06-18 08:59:08", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "12297aeb", "text_len": 1590, "duration_s": 31.7686, "file": "0002_proposal_kv_and_text.md", "vars": []}
-{"n": 2, "ts": "2026-06-18 08:59:13", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "7bc0a22a", "text_len": 1700, "duration_s": 32.578, "file": "0002_proposal_kv_and_text.md", "vars": []}
-{"n": 3, "ts": "2026-06-18 08:59:39", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "019d6246", "text_len": 1248, "duration_s": 27.9581, "file": "0003_proposal_kv_and_text.md", "vars": []}
-{"n": 3, "ts": "2026-06-18 08:59:43", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "63dfb8e5", "text_len": 1462, "duration_s": 30.664, "file": "0003_proposal_kv_and_text.md", "vars": []}
-{"n": 3, "ts": "2026-06-18 08:59:59", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "2901ed17", "text_len": 3163, "duration_s": 41.8772, "file": "0003_proposal_kv_and_text.md", "vars": []}

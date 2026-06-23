@@ -1,9 +1,0 @@
-[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260616_025721_exp_judger_quality pid=44325
-[   31.96s] INFO    deterministic arity fix  before=RANK($volume, 5) < $close < $open after=((TS_RANK($volume, 5) < $close) < $open) applied=['RANK(.., n) → TS_RANK(.., n)']
-[   49.96s] WARNING judger output unparseable (attempt 1/2)  head=$volume > $volume_prev AND $return <  $return_prev AND $high - $low < $high_prev - $low_prev  
-TS_ZSCORE($return, 5) >  
-[   67.79s] WARNING judger output unparseable (attempt 2/2)  head=$volume > $volume_prev AND $return <   $return_prev  
-TS_ZSCORE($return, 5) <  -1.5  
-AND  
-TS_MEAN($open, $high, $low, 
-[   67.79s] ERROR   no expression from judger; skipping repair

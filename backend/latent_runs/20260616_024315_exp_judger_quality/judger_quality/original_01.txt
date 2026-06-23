@@ -1,9 +1,0 @@
-# original#1  verdict: parse gate MD✗(bold,fence/backtick) repaired
-# hypothesis: High-volume days with narrow daily range (high-low) precede short-horizon reversal in returns.
-# expressions (1 pass / 1 cand): ['TS_ZSCORE($volume, 5)']
-# gate_error: regulator evaluate failed
-
-**Hypothesis:** High-volume days with narrow daily range (high-low) precede short-horizon reversal in returns.
-
-**Expression:**  
-`TS_ZSCORE($high - $low, 1) < TS_ZSCORE($open, 1) and TS_PCTCHANGE($return, 3) <   TS_PCTCHANGE($return,1)`

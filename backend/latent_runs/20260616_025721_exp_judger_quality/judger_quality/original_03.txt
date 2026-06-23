@@ -1,9 +1,0 @@
-# original#3  verdict: PARSE✗ GATE✗ REPEAT✗
-# hypothesis: 
-# expressions (0 pass / 0 cand): []
-# gate_error: no expression from judger
-
-$volume > $volume_prev AND $return <   $return_prev  
-TS_ZSCORE($return, 5) <  -1.5  
-AND  
-TS_MEAN($open, $high, $low, $close, $volume, $return, 5) > TS_MEAN($open, $high, $low, $Close, $volume, $return, $return_prev, $return_prev, $return_prev, $return_prev, $return_prev, $return_prev, $return_prev, $return_prev, $return_prev, $return_prev, $ return_prev, $ return_prev, $Return_prev, $Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev, $ Return_prev,

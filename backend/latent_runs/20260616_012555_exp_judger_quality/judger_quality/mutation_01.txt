@@ -1,8 +1,0 @@
-# mutation#1  verdict: parse gate REPEAT✗
-# hypothesis: When 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the next week.
-# expressions (1 pass / 2 cand): ['(TS_ZSCORE($volume, 5) > TS_RANK(($high - $low), 5))']
-# gate_error: 
-
-HYPOTHESIS: When 5-day volume rises sharply while the daily range ($high-$low) stays narrow, returns reverse the next week.  
-EXPRESSION 1: TS_ZSCORE($volume, 5) > RANK($high - $low, 5)  
-EXPRESSION 2: DELTA($return, 7) * (TS_MAD($volume, 5) < 0.1)

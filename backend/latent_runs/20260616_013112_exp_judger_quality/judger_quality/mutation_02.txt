@@ -1,8 +1,0 @@
-# mutation#2  verdict: PARSE✗ GATE✗
-# hypothesis: 
-# expressions (0 pass / 0 cand): []
-# gate_error: no expression from judger
-
-the hypothesis and expression line(s now_from_the_analysis_in_y_memory)
-
-. the hypothesis and_expression_line_line_now from_the_analysis_in_y_memory

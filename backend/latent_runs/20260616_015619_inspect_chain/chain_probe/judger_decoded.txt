@@ -1,4 +1,0 @@
-**Hypothesis**: When high-volume days are followed by narrow daily range ($high - $low) and low $close relative to $open, returns reverse the next day.
-
-**Expression**:  
-`$return >  0 AND $rank($volume) >   $rank($high - $low) <   $rank($close / $open) >    $return <   `

@@ -1,2 +1,0 @@
-{"n": 1, "ts": "2026-06-18 09:20:33", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "0cf5fdaa", "text_len": 2998, "duration_s": 59.6962, "file": "0001_construct_kv_and_text.md", "vars": []}
-{"n": 1, "ts": "2026-06-18 09:20:35", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "a1774f33", "text_len": 3362, "duration_s": 63.4548, "file": "0001_construct_kv_and_text.md", "vars": []}

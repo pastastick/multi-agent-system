@@ -1,9 +1,0 @@
-[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/latent_runs/20260613_114902_evolution pid=44909
-[    0.00s] INFO    evolution isolation test  mode=both latent_steps=10 use_realign=False knn=False
-[   47.05s] INFO    building parent-1 via front-end
-[   94.70s] INFO    building parent-2 via front-end  direction=overnight gap reversal under liquidity stress
-[  148.38s] ERROR   multi-repair exhausted; keeping original candidates  n=3
-[  148.38s] INFO    running mutation (judger-only: revise target)
-[  215.10s] ERROR   multi-repair exhausted; keeping original candidates  n=3
-[  215.11s] INFO    running crossover (judger-only: recombination)
-[  275.99s] INFO    run finished  wall_clock_s=275.985

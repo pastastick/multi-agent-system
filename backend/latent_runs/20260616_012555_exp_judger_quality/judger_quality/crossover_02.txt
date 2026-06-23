@@ -1,8 +1,0 @@
-# crossover#2  verdict: parse gate REPEAT✗
-# hypothesis: High-volume days precede short-horizon reversal through volume-driven momentum shifts in the next 5 days.
-# expressions (2 pass / 2 cand): ['TS_ZSCORE($volume, 5) > 0.5 && TS_ZSCORE($return, 5) < 1 && $close > $open && $high - $low < $close - $open', 'DELTA(TS_RANK($volume, 5), 5) > 0 && TS_ZSCORE($return, 5) < 1 && $close > $open && $high - $low < $close - $open']
-# gate_error: 
-
-HYPOTHESIS: High-volume days precede short-horizon reversal through volume-driven momentum shifts in the next 5 days.
-EXPRESSION 1: TS_ZSCORE($volume, 5) > 0.5 && TS_ZSCORE($return, 5) < 1 && $close > $open && $high - $low < $close - $open
-EXPRESSION 2: DELTA(TS_RANK($volume, 5), 5) > 0 && TS_ZSCORE($return, 5) < 1 && $close > $open && $high - $low < $close - $open
