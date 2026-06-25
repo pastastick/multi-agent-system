@@ -134,7 +134,7 @@ factor:
 
   # Complexity constraints (important for preventing overfitting; keep symbol length under ~250)
   complexity:
-    symbol_length_threshold: 200
+    symbol_length_threshold: 300
     base_features_threshold: 5
     free_args_ratio_threshold: 0.5
 
@@ -199,8 +199,16 @@ prompts:
 # ============================================================
 latent:
   # Master switch: enable KV-cache chaining + latent reasoning.
-  # When false, pipeline falls back to text-only mode.
+  # When false, pipeline falls back to the legacy text-only path.
   enabled: true
+
+  # Communication medium antar-agen front-end (variabel eksperimen KV-vs-TEXT).
+  # Berlaku saat enabled=true. Prompt & agen SAMA; beda hanya mediumnya:
+  #   "text"        : semua agen generate teks; handoff via TEKS (tanpa KV).
+  #   "kv_and_text" : semua agen generate teks, TETAPI handoff via KV-cache.
+  #   "kv"          : hanya construct & feedback yang generate teks; proposal/
+  #                   design/guidance laten murni (kv_only). Handoff via KV-cache.
+  comm_mode: "kv"
 
   # HuggingFace model name (loaded once, shared by all steps).
   # Required: same model across steps — KV-cache is model-specific.
@@ -234,7 +242,7 @@ latent:
   kv_max_tokens: 20480
 
   # Persist KV-cache to disk (for resume / debugging).
-  store_kv: true
+  store_kv: false
 
   # KNN-based KV filtering: keep only tokens most relevant to
   # the current prompt (cosine similarity in middle-layer keys).
@@ -254,6 +262,8 @@ latent:
   # Construct/coder: lower → formula precision (parsed downstream
   # by QlibFactorParser, so output must be deterministic).
   # Propose/feedback: null → use global (exploration-friendly).
+  # TODO(config): di mode "kv", propose/design laten murni (tak emit teks) →
+  #   temperature_propose tak berefek; relevan hanya saat comm_mode kv_and_text/text.
   temperature_propose: null
   temperature_construct: 0.7
   temperature_coder: 0.4

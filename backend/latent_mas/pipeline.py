@@ -59,6 +59,9 @@ QualityGate = Callable[[str], "tuple[bool, str]"]
 # Type alias untuk backtest: (expression, hypothesis) -> dict hasil
 Backtester = Callable[[str, str], dict]
 
+# Medium komunikasi antar-agen (lihat FrontEndPipeline.__init__).
+_COMM_MODES = ("text", "kv_and_text", "kv")
+
 
 def default_quality_gate(expression: str) -> "tuple[bool, str]":
     """Gate AST/arity deterministik. Lazy-import parser asli; fallback ke
@@ -128,11 +131,23 @@ class FrontEndPipeline:
         max_repair_attempts: int = 3,
         agents: Optional[dict] = None,
         use_regulator: bool = True,
+        comm_mode: str = "kv",
     ) -> None:
         self.backend = backend
         self.runlog = runlog
         self.max_repair_attempts = max_repair_attempts
         self.agents: dict = agents or load_all_agents(backend, runlog=runlog)
+        # ── comm_mode: medium komunikasi antar-agen (variabel eksperimen utama) ──
+        #   "kv"          : hanya construct & feedback yang generate TEKS; proposal/
+        #                   design/guidance kv_only (laten). Handoff via KV-cache.
+        #                   (= perilaku default; mode pure-latent paling hemat token).
+        #   "kv_and_text" : SEMUA agen generate teks, tetapi handoff tetap via KV-cache.
+        #   "text"        : SEMUA agen generate teks, handoff via TEKS (no KV).
+        #                   = baseline TEKS terkontrol (prompt sama, beda medium saja).
+        if comm_mode not in _COMM_MODES:
+            raise ValueError(f"comm_mode harus salah satu dari {_COMM_MODES}, "
+                             f"dapat {comm_mode!r}")
+        self.comm_mode = comm_mode
         # Riwayat family operator faktor yang BARU diterima → diversity hint
         # (soft, hybrid). Lintas-run dalam satu instance pipeline (mis. original →
         # mutation → crossover) → tekanan anti-monokultur antar-faktor.
@@ -148,6 +163,27 @@ class FrontEndPipeline:
     def _a(self, name: str) -> LatentAgent:
         return self.agents[name]
 
+    @property
+    def _is_text(self) -> bool:
+        """True bila handoff antar-agen lewat TEKS (no KV)."""
+        return self.comm_mode == "text"
+
+    def _agent_mode(self, native_mode: str) -> str:
+        """Mode efektif satu agen di bawah comm_mode global.
+
+          - "text"        : semua agen → text_only.
+          - "kv_and_text" : agen yang aslinya kv_only (proposal/design/guidance)
+                            dinaikkan → kv_and_text (ikut generate teks); agen lain tetap.
+          - "kv"          : pakai mode asli dari spec (default; tak ada override).
+        """
+        if self.comm_mode == "text":
+            return "text_only"
+        if self.comm_mode == "kv_and_text":
+            return "kv_and_text" if native_mode == "kv_only" else native_mode
+        return native_mode
+    # [terjawab — skripsi Bab 4 §Kendali Mutu Faktor]: rangkaian gate berurutan
+    #   (parsable → arity → variabel → degenerate → redundansi S(f) → kompleksitas
+    #   SL/PC/ER) + kesetiaan/divergensi terhadap C(f) paper.
     @staticmethod
     def _build_regulator_gate(runlog: Any = None) -> "tuple[QualityGate, Any]":
         """Bangun gate berbasis FactorRegulator PENUH (dari FACTOR_COSTEER_SETTINGS).
@@ -253,33 +289,77 @@ class FrontEndPipeline:
         # tidak (jaga hipotesis tetap di altitude mekanisme, bukan operator).
         dhint = diversity_hint(list(self._recent_families))
 
-        # ── front-end NO-CROP: proposal → design → construct ─────────────────
-        # proposal: handoff='text' (original) baca direction sebagai TEKS; handoff='kv'
-        # (mutation/crossover) baca arah Director dari seed_kv (latent memory). seed_kv
-        # tetap di-attend via past_kv di kedua kasus.
-        r_prop = self._a("proposal").run(
-            past_kv=seed_kv, handoff=handoff, direction=direction,
-            market_context=market_context, prior_feedback=prior_feedback,
-            negative_hint=negative_hint,
-        )
-        # design: baca HYPOTHESIS asli proposal dari KV (no-crop) → palette function.
-        r_design = self._a("design").run(past_kv=r_prop.kv_cache, handoff="kv")
-        # construct (TERMINAL): baca palette dari KV → JSON {hypothesis, factors}.
-        r_con = self._a("construct").run(
-            past_kv=r_design.kv_cache, handoff="kv", diversity_hint=dhint,
-        )
-        kv_construct = r_con.kv_cache
+        # ── front-end: proposal → design → construct ─────────────────────────
+        # comm_mode menentukan medium handoff + mode tiap agen:
+        #   text        : no KV; tiap agen baca TEKS output agen sebelumnya.
+        #   kv/kv_and_text : handoff via KV (proposal: handoff='text' original /
+        #                    'kv' mutation-crossover). Beda keduanya hanya apakah
+        #                    proposal/design ikut men-decode teks (kv_and_text) atau
+        #                    laten murni (kv).
+        prop_mode = self._agent_mode("kv_only")
+        design_mode = self._agent_mode("kv_only")
+        con_mode = self._agent_mode("kv_and_text")
+        cr: Optional[ConstructResult] = None
 
-        cr: Optional[ConstructResult] = r_con.parsed
-        if cr is None:  # parser gagal → retry construct sekali dari design KV
-            if rl: rl.warn("construct output unparseable; retry once",
-                           head=(r_con.text or "")[:120])
+        if self._is_text:
+            # TEKS: tak ada KV chaining. proposal emit hipotesis (teks) → design baca
+            # teks itu → construct baca keduanya. past_kv selalu None.
+            # Cabang handoff="text" sudah ada di prompts.yaml: proposal baca
+            # {{direction}}, design baca {{hypothesis_text}}, construct baca
+            # {{prior_factors}} (= hipotesis + palette). Nama var harus persis.
+            r_prop = self._a("proposal").run(
+                past_kv=None, handoff="text", direction=direction,
+                market_context=market_context, prior_feedback=prior_feedback,
+                negative_hint=negative_hint, mode_override=prop_mode,
+            )
+            r_design = self._a("design").run(
+                past_kv=None, handoff="text",
+                hypothesis_text=r_prop.text or "", mode_override=design_mode,
+            )
+            prior_factors = f"{(r_prop.text or '').strip()}\n\n{(r_design.text or '').strip()}".strip()
             r_con = self._a("construct").run(
-                past_kv=kv_ops.kv_deepcopy(r_design.kv_cache), handoff="kv",
-                diversity_hint=dhint,
+                past_kv=None, handoff="text",
+                prior_factors=prior_factors,
+                diversity_hint=dhint, mode_override=con_mode,
+            )
+            kv_construct = r_con.kv_cache  # None di mode text
+            cr = r_con.parsed
+            if cr is None:  # parser gagal → retry construct sekali (teks sama)
+                if rl: rl.warn("construct output unparseable; retry once",
+                               head=(r_con.text or "")[:120])
+                r_con = self._a("construct").run(
+                    past_kv=None, handoff="text",
+                    prior_factors=prior_factors,
+                    diversity_hint=dhint, mode_override=con_mode,
+                )
+                kv_construct = r_con.kv_cache
+                cr = r_con.parsed
+        else:
+            # KV: proposal handoff='text'(original)/'kv'(evolution); seed_kv di-attend
+            # via past_kv. design & construct baca KV agen sebelumnya (no-crop).
+            r_prop = self._a("proposal").run(
+                past_kv=seed_kv, handoff=handoff, direction=direction,
+                market_context=market_context, prior_feedback=prior_feedback,
+                negative_hint=negative_hint, mode_override=prop_mode,
+            )
+            r_design = self._a("design").run(
+                past_kv=r_prop.kv_cache, handoff="kv", mode_override=design_mode,
+            )
+            r_con = self._a("construct").run(
+                past_kv=r_design.kv_cache, handoff="kv", diversity_hint=dhint,
+                mode_override=con_mode,
             )
             kv_construct = r_con.kv_cache
             cr = r_con.parsed
+            if cr is None:  # parser gagal → retry construct sekali dari design KV
+                if rl: rl.warn("construct output unparseable; retry once",
+                               head=(r_con.text or "")[:120])
+                r_con = self._a("construct").run(
+                    past_kv=kv_ops.kv_deepcopy(r_design.kv_cache), handoff="kv",
+                    diversity_hint=dhint, mode_override=con_mode,
+                )
+                kv_construct = r_con.kv_cache
+                cr = r_con.parsed
 
         hypothesis, factors = ("", []) if cr is None else (cr.hypothesis, list(cr.factors))
 
@@ -336,11 +416,14 @@ class FrontEndPipeline:
             raise ValueError(f"unknown evolution kind: {kind!r}")
 
         # ── 1. GUIDANCE (kv_only, seed=None): parent sebagai TEKS → arah laten ──
-        # past_kv=None → tak warisi KV parent (RESET tiap generasi). Output tak
-        # di-decode (kv_only); yang dipakai HANYA KV-nya sebagai seed proposal.
-        r_guide = self._a(agent_name).run(past_kv=None, **kw)
+        # past_kv=None → tak warisi KV parent (RESET tiap generasi). Pada comm_mode
+        # kv: output tak di-decode (kv_only), dipakai HANYA KV-nya sebagai seed
+        # proposal. Pada comm_mode text: guidance di-decode jadi TEKS arah (tak ada
+        # KV) → disuntik ke front-end sebagai tambahan `direction`.
+        guide_mode = self._agent_mode("kv_only")
+        r_guide = self._a(agent_name).run(past_kv=None, mode_override=guide_mode, **kw)
         guidance_kv = r_guide.kv_cache
-        if guidance_kv is None and rl:
+        if guidance_kv is None and rl and not self._is_text:
             rl.warn(f"{kind} guidance produced no KV; front-end runs unseeded")
 
         # ── 1b. decode guidance KV → readout ke llm_outputs (observability) ──
@@ -356,14 +439,19 @@ class FrontEndPipeline:
                 probe = self._a("introspect").run(
                     past_kv=kv_ops.kv_deepcopy(guidance_kv),
                     role=f"{kind}_guidance",
+                    mode_override=self._agent_mode("kv_and_text"),
                 )
                 if rl: rl.info(f"{kind} guidance (probe)", head=(probe.text or "")[:400])
             except Exception as e:  # noqa: BLE001
                 if rl: rl.warn("evo guidance probe failed", err=repr(e))
 
-        # ── 2. RE-ENTER front-end di-seed guidance_kv (1 konsumen → no deepcopy) ─
-        # proposal(past_kv=guidance_kv) → design → construct →
-        # _gate_and_repair_factors. FrontEndOutput sama seperti jalur original.
+        # ── 2. RE-ENTER front-end ────────────────────────────────────────────
+        # comm_mode kv/kv_and_text: di-seed guidance_kv (1 konsumen → no deepcopy).
+        # comm_mode text: tak ada KV → arah guidance (teks) digabung ke `direction`.
+        if self._is_text:
+            guide_text = (r_guide.text or "").strip()
+            eff_dir = f"{direction}\n\n{guide_text}".strip() if guide_text else direction
+            return self.run(direction=eff_dir, seed_kv=None, negative_hint=negative_hint)
         return self.run(direction=direction, seed_kv=guidance_kv, negative_hint=negative_hint)
 
     @staticmethod
@@ -394,7 +482,11 @@ class FrontEndPipeline:
             else:
                 out.append(e)
         return out
-
+    # [terjawab — investigasi]: dua lapis. (1) auto_fix_arity = deterministik tanpa LLM
+    #   (hanya cross-sectional→TS_ tak ambigu). (2) agen repair = berbasis LLM, MEMBACA
+    #   konteks via past_kv=kv_deepcopy(kv_construct) (clone KV construct) PLUS teks
+    #   (former_expression + error_log). Pada comm_mode=text, kv_construct=None →
+    #   repair murni teks. Jadi repair memperoleh KEDUANYA (KV + teks) di mode KV.
     def _gate_and_repair_factors(
         self,
         factors: List[dict],
@@ -459,9 +551,10 @@ class FrontEndPipeline:
             attempts_made = attempt + 1
             mode = ["minimal", "different", "bold"][min(attempt, 2)]
             r_rep = self._a("repair").run(
-                past_kv=kv_ops.kv_deepcopy(kv_baseline),
+                past_kv=kv_ops.kv_deepcopy(kv_baseline),  # None di mode text
                 former_expression="; ".join(former) if former else "",
                 error_log=err, value_feedback="", attempt_mode=mode,
+                mode_override=self._agent_mode("kv_and_text"),
             )
             is_pass, rep_exprs = parse_repair_multi(r_rep.text or "")
             if rl: rl.info("REPAIR attempt", n=attempt + 1, mode=mode,
@@ -528,9 +621,10 @@ class FrontEndPipeline:
         for attempt in range(self.max_repair_attempts):
             mode = modes[min(attempt, len(modes) - 1)]
             r_rep = self._a("repair").run(
-                past_kv=kv_ops.kv_deepcopy(kv_baseline),
+                past_kv=kv_ops.kv_deepcopy(kv_baseline),  # None di mode text
                 former_expression=former, error_log=err,
                 value_feedback="", attempt_mode=mode,
+                mode_override=self._agent_mode("kv_and_text"),
             )
             parsed = r_rep.parsed
             if parsed is None:

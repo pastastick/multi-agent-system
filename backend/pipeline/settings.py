@@ -63,7 +63,7 @@ class BaseFacSetting(ExtendedBaseSettings):
     scen: str = ""
     knowledge_base: str = ""
     knowledge_base_path: str = ""
-    hypothesis_gen: str = ""        
+    hypothesis_gen: str = ""
     construction: str = ""
     calculation: str = ""
     coder: str = ""
@@ -77,20 +77,27 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     """
     Main experiment: LLM-driven factor mining.
 
-    Dua mode operasi:
-      1. Text-only (latent_enabled=False, default):
-         Semua LLM call via build_messages_and_create_chat_completion().
-         Tidak ada KV-cache chaining.  Seperti QuantaAlpha original.
+    Saklar pipeline: `latent_enabled`
+      - False : jalur QuantaAlpha lama (build_messages_and_create_chat_completion,
+                tanpa KV chaining). Tidak dipakai untuk studi banding medium.
+      - True  : jalur FrontEndPipeline (latent_mas). Medium komunikasi antar-agen
+                ditentukan `comm_mode` (variabel eksperimen utama KV-vs-TEXT).
 
-      2. Latent pipeline (latent_enabled=True):
-         Semua LLM call via build_messages_and_run() dengan mode kv_and_text.
-         KV-cache di-chain: propose → construct → feedback → next iteration.
-         Model melakukan latent reasoning (virtual tokens) sebelum generate text.
-         Ini adalah adaptasi Latent-MAS untuk pipeline factor mining.
+    `comm_mode` (hanya berlaku saat latent_enabled=True) — tiga mode terkontrol
+    yang memakai PROMPT & AGEN yang SAMA, beda hanya medium komunikasinya:
+      1. "text"        : semua agen generate teks; handoff antar-agen via TEKS
+                         (tanpa KV). = baseline TEKS terkontrol.
+      2. "kv_and_text" : semua agen generate teks, TETAPI handoff via KV-cache.
+      3. "kv" (default): hanya construct & feedback yang generate teks; proposal/
+                         design/guidance laten murni (kv_only). Handoff via KV-cache.
     """
     model_config = ExtendedSettingsConfigDict(env_prefix="QLIB_FACTOR_", protected_namespaces=())
 
     # ── Component class paths ────────────────────────────────────────────
+
+    # TODO(naming): 'coder'/'runner' = istilah rdagent lama. Di jalur latent:
+    #   coder=QlibFactorParser (parse ekspresi→kode), runner=QlibFactorRunner
+    #   (eksekusi + RankIC). Pertimbangkan rename agar selaras arsitektur latent_mas.
     scen: str = "factors.experiment.QlibAlphaAgentScenario"
     hypothesis_gen: str = "factors.proposal.AlphaAgentHypothesisGen"
     hypothesis2experiment: str = "factors.proposal.AlphaAgentHypothesis2FactorExpression"
@@ -104,6 +111,11 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Saat True, factor_mining.py akan auto-create LocalLLMBackend
     # dan pipeline menggunakan LatentHypothesisGen/Experiment/Feedback.
     latent_enabled: bool = True
+
+    # Medium komunikasi antar-agen front-end (hanya saat latent_enabled=True).
+    # Salah satu: "text" | "kv_and_text" | "kv". Lihat docstring kelas.
+    # Diteruskan ke FrontEndPipeline(comm_mode=...) di loop.py.
+    comm_mode: str = "kv"
 
     # Model HuggingFace untuk LocalLLMBackend.
     # Di-load sekali, di-share ke semua step dalam satu loop.
@@ -181,10 +193,14 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Propose: bisa lebih tinggi untuk eksplorasi hipotesis yang beragam.
     temperature_propose: Optional[float] = None     # None = pakai temperature global
     temperature_construct: float = 0.7              # rendah: formula presisi
+
+    # TODO(naming): samakan pola nama per-step (propose/construct/coder/feedback).
     temperature_coder: float = 0.4                  # rendah: expression fix presisi
     temperature_feedback: Optional[float] = None    # None = pakai temperature global
 
     # Debug: simpan tensor (input_ids, output_ids, hidden_last) ke disk.
+    # DIPAKAI: bila True, LocalLLMBackend mengaktifkan TensorConvManager (dump
+    # tensor per-call ke folder run). Lihat client.py:1182 & factor_mining.py:87.
     log_tensors: bool = True
 
     # Debug: simpan output text LLM per-call ke JSONL.
@@ -193,7 +209,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     output_log_dir: str = _DEFAULT_OUTPUT_LOG_DIR
 
     # ── Factory methods ──────────────────────────────────────────────────
-
+    # TODO(naming): label `step` pakai {propose, construct, coder, feedback}.
     def get_latent_steps_for(self, step: str) -> Optional[int]:
         """Return per-step latent_steps override, atau None jika pakai default engine."""
         mapping = {
@@ -204,6 +220,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
         }
         return mapping.get(step)
 
+    # TODO(naming): label `step` pakai {propose, construct, coder, feedback}.
     def get_temperature_for(self, step: str) -> Optional[float]:
         """Return per-step temperature override, atau None jika pakai default backend."""
         mapping = {

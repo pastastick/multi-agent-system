@@ -694,7 +694,9 @@ class _CoreEngine:
         print(f"[CoreEngine] Ready. latent_steps={latent_steps}")
 
     # ── Chat formatting ────────────────────────────────────────────────────
-
+    # [terjawab — skripsi Bab 4 §Pemrosesan Prompt dan Penggunaan-Ulang KV]:
+    #   chat template Qwen3; enable_thinking=False menyisipkan <think></think> kosong;
+    #   add_generation_prompt mengontrol prefiks asisten.
     def format_messages(
         self,
         messages: List[Dict[str, str]],
@@ -763,7 +765,9 @@ class _CoreEngine:
         return torch.cat([past_ones, mask], dim=-1)
 
     # ── Forward pass ────────────────────────────────────────────────────────
-
+    # [terjawab — skripsi Bab 4 §Mekanisme Penalaran Laten + §Operasi KV-Cache]:
+    #   realignment (ridge) + iterasi latent_pass; DynamicCache = wadah KV
+    #   (transfer via deepcopy/concat/truncate, bukan operasi matematis tersendiri).
     @torch.no_grad()
     def _forward(
         self,
@@ -792,6 +796,9 @@ class _CoreEngine:
             last_hidden = out.hidden_states[-1][:, -1, :]
         return out.past_key_values, last_hidden
 
+    # [terjawab — skripsi Bab 4]: Qwen3 = transformer decoder-only standar
+    #   (rujuk Vaswani et al., sudah disitir di Bab 2). _close_open_turn menutup
+    #   turn asisten dengan <|im_end|> pada jalur NO-CROP agar struktur chat valid.
     @torch.no_grad()
     def _close_open_turn(self, past_kv: KVCache) -> None:
         """Tutup turn asisten yang menggantung dengan <|im_end|>\\n (path NO-CROP).
@@ -977,7 +984,8 @@ class _CoreEngine:
         return text, ids, generated_ids.unsqueeze(0), kv_out
 
     # ── Generation from existing KV (kv_and_text mode) ──────────────────
-
+    # [terjawab — skripsi Bab 4 §Pemrosesan Prompt]:
+    #   prefix_ids = tok_with[len(tok_without):] (selisih tokenisasi full-text).
     def _get_generation_prefix_ids(
         self, messages: List[Dict[str, str]],
     ) -> torch.Tensor:
@@ -1096,7 +1104,7 @@ class _CoreEngine:
 
 class LocalLLMBackend:
     """
-    Backend LLM lokal sebagai pengganti APIBackend di 
+    Backend LLM lokal sebagai pengganti APIBackend di
 
     Kompatibel dengan APIBackend (client.py):
         build_messages()
@@ -1349,7 +1357,9 @@ class LocalLLMBackend:
         _max_tok = max_new_tokens or self.max_new_tokens
         _temp    = temperature    or self.temperature
         _top_p   = top_p          or self.top_p
-
+        # [terjawab — investigasi]: guided decoding TIDAK terpicu — `json_schema`
+        #   tak pernah dioper di seluruh codebase; construct memakai `json_mode`
+        #   (ekstraksi pasca-generasi). Dead path: aman dihapus / dipertahankan opsional.
         # ── Build guided-decoding prefix_fn (opsional) ──────────────────────
         # Jika `json_schema` di-supply, bangun prefix_allowed_tokens_fn dari
         # lm-format-enforcer — di setiap step dekoder, hanya token yang
@@ -1404,7 +1414,10 @@ class LocalLLMBackend:
 
         with self._lock:
             result = LLMResult(mode=mode)
-
+            # [sebagian terjawab — skripsi Bab 4 §Penyaringan KNN]: rumus kosinus
+            #   s_i = <K_i, q>/(||K_i|| ||q||) sudah ditulis. TODO(verifikasi): alasan
+            #   inkompatibilitas saat latent_steps>0 belum tuntas — hipotesis: re-rotasi
+            #   RoPE token terpilih bentrok dengan posisi virtual-token laten. Perlu cek.
             # ── Normalize past_kv ke DynamicCache (boundary masuk) ────
             # Engine internal bekerja penuh dalam DynamicCache; konversi
             # dilakukan SEKALI di sini (bukan di setiap method _CoreEngine)
@@ -1488,6 +1501,9 @@ class LocalLLMBackend:
                 #   filosofi Latent-MAS: yang di-pass antar agent adalah
                 #   latent reasoning (virtual tokens), bukan discrete
                 #   answer tokens.
+                # [terjawab — skripsi Bab 4 §Pemangkasan Pasca-Generasi (CROP)]:
+                #   C ← C[:ell0], ell0 = panjang pra-generasi (prompt + L virtual token);
+                #   buang token jawaban diskret agar tak mengontaminasi agen berikutnya.
                 _latent_kv_len = _past_length(kv)
                 _t_gen = time.time()
                 text, prefix_ids, out_ids, _ = self._engine.generate_from_kv(
@@ -1558,7 +1574,8 @@ class LocalLLMBackend:
                         "ts"   : time.time(),
                     },
                 ))
-
+            # [terjawab — skripsi Bab 4 §Pemotongan (truncation)]:
+            #   K_l ← K_l[..., -n:, :], V_l ← V_l[..., -n:, :] (pertahankan n token terakhir).
             # ── In-memory KV-cache truncation ─────────────────────────
             if result.kv_cache is not None and self._kv_max_seq_len is not None:
                 result.kv_cache = kv_truncate(result.kv_cache, self._kv_max_seq_len)

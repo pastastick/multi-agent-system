@@ -21,7 +21,7 @@ import time
 import ctypes
 import os
 import pickle
-from pipeline.settings import ALPHA_AGENT_FACTOR_PROP_SETTING 
+from pipeline.settings import ALPHA_AGENT_FACTOR_PROP_SETTING
 from pipeline.planning import generate_parallel_directions
 from pipeline.planning import load_run_config
 from pipeline.loop import AlphaAgentLoop
@@ -38,7 +38,7 @@ except ImportError:
     InsightOrchestrator = Any   # type: ignore[assignment,misc]
     InsightResult = Any         # type: ignore[assignment,misc]
 from pipeline.evolution import (
-    EvolutionController, 
+    EvolutionController,
     EvolutionConfig,
     StrategyTrajectory,
     RoundPhase,
@@ -62,6 +62,7 @@ except ImportError:
 # create_llm_backend() so the backend picks up overridden values.
 _LATENT_YAML_TO_SETTING = {
     "enabled":               "latent_enabled",
+    "comm_mode":             "comm_mode",
     "model_name":            "latent_model_name",
     "device":                "latent_device",
     "steps":                 "latent_steps",
@@ -195,7 +196,7 @@ def _run_branch( #* menjalankan satu loop tanpa evolusi, untuk setiap direction 
         branch_log = Path(log_root) / branch_name
         branch_log.mkdir(parents=True, exist_ok=True) #* buat folder jika belum ada
         logger.set_trace_path(branch_log) #* set path log untuk branch ini
-    
+
     model_loop = AlphaAgentLoop(
         ALPHA_AGENT_FACTOR_PROP_SETTING, #* setting untuk loop (misal model, environment, dll)
         potential_direction=direction,
@@ -246,11 +247,12 @@ def _run_evolution_task( #* jalankan satu task dalam evolution loop (Original/Mu
     negative_hint = task.get("negative_hint", "")  #* AVOID-list mekanisme gagal (L-2)
     round_idx = task["round_idx"]
     parent_trajectories = task.get("parent_trajectories", [])
-    
+    # [terjawab — investigasi]: BEDA. direction = arah eksplorasi (input ke proposal);
+    #   hypothesis = keluaran proposal/construct. direction = masukan, hypothesis = keluaran.
     # Resolve direction by phase
     if phase == RoundPhase.ORIGINAL: #* fase original : pakai direction dari list planning
         direction = directions[direction_id] if direction_id < len(directions) else None
-    elif phase == RoundPhase.MUTATION: #* fase mutation : pakai direction dari list, tapi nanti di mutasi 
+    elif phase == RoundPhase.MUTATION: #* fase mutation : pakai direction dari list, tapi nanti di mutasi
         direction = directions[direction_id] if direction_id < len(directions) else None
     else:  #* CROSSOVER : gabungan dari beberapa parent trajectory, tidak ada direction tunggal
         direction = None
@@ -289,17 +291,17 @@ def _run_evolution_task( #* jalankan satu task dalam evolution loop (Original/Mu
         past_kv=past_kv,
     )
     model_loop.user_initial_direction = user_direction #* simpan direction asli user sebelum di pecah jadi sub-direction
-    
+# !!! perlu update komentar
     # Run one small loop (5 steps)
     model_loop.run(step_n=step_n, stop_event=stop_event) #* running mining loop: propose → code → backtest → feedback × step_n kali
 
     traj_data = model_loop._get_trajectory_data() #* extrak dict hasil/ trajectory: hypothesis, experiment, feedback, hypothesis_embedding => untuk membuat StrategyTrajectory
     traj_data["task"] = task #* tambahkan info task
-    
+
     return traj_data
 
 def _parallel_task_worker( #* dijalankan di proses anak (child process) via multiprocessing.Process. Satu worker = satu evolution task.
-    
+
     task: dict[str, Any],
     directions: list[str],
     step_n: int,
@@ -348,26 +350,26 @@ def _parallel_task_worker( #* dijalankan di proses anak (child process) via mult
         }) #* kirim full traceback ke parent untuk debugging
 
 
-def _serialize_task_for_parallel(task: dict[str, Any]) -> dict[str, Any]: 
+def _serialize_task_for_parallel(task: dict[str, Any]) -> dict[str, Any]:
     #* Menyiapkan task dict agar bisa dikirim ke child process. multiprocessing.Process perlu data yang bisa di-pickle (serialize).
     """Serialize task for use in child process (parent_trajectories are complex objects)."""
     serialized = task.copy()
-    
+
     # RoundPhase -> string
     if "phase" in serialized and isinstance(serialized["phase"], RoundPhase):
         serialized["phase"] = serialized["phase"]
         #* RoundPhase(str, enum) bisa langsung di-pickle karena inherit str
-    
+
     # Convert parent_trajectories to serializable info
-    if "parent_trajectories" in serialized: 
+    if "parent_trajectories" in serialized:
         #* parent trajectory adalah objek kompleks yang tidak bisa di-pickle, jadi hanya kirim id-nya saja ke child process
         serialized["parent_trajectory_ids"] = [
             p.trajectory_id for p in serialized.get("parent_trajectories", [])
         ]
         # Child process does not need full trajectory objects; strategy_suffix has required info
-        serialized["parent_trajectories"] = [] 
+        serialized["parent_trajectories"] = []
         #* child process tidak butuh full object, cukup info di strategy_suffix
-    
+
     return serialized
 
 
@@ -393,7 +395,7 @@ def _run_tasks_parallel(
     logger.info(f"Starting {len(tasks)} parallel evolution tasks")
 
     for idx, task in enumerate(tasks): #* spawn semua child process
-        serialized_task = _serialize_task_for_parallel(task) 
+        serialized_task = _serialize_task_for_parallel(task)
         #* siapkan task yang sudah di serialize agar bisa dikirim ke child process
 
         p = Process(
@@ -434,7 +436,7 @@ def _run_tasks_parallel(
         #*  join() memastikan tidak ada zombie process
 
     logger.info(f"Parallel tasks done: {len(results)}/{len(tasks)} succeeded")
-    
+
     return results
 
 
@@ -444,7 +446,7 @@ def _build_strategy_feedback(
 ) -> dict[str, Any]:
     #! LIMITASI => heuristik: satu direction bisa cocok dengan beberapa topik
     #! LIMITASI => kalau direction tidak mengandung keyword,  topik tidak terepresentasi meski performanya bagus
-    #! LIMITASI => tidak ada fallback jika semua direction tidak mengandung keyword 
+    #! LIMITASI => tidak ada fallback jika semua direction tidak mengandung keyword
     """
     Build feedback dict untuk ExternalAgentBase.update_strategy().
 
@@ -456,9 +458,9 @@ def _build_strategy_feedback(
     top_directions = []
     for t in best_trajs:
         direction = getattr(t, "direction", None) or getattr(t, "hypothesis", None)
-        #* ambil direction dari trajectory, kalau tidak ada coba ambil dari hypothesis 
+        #* ambil direction dari trajectory, kalau tidak ada coba ambil dari hypothesis
         #*(karena direction bisa jadi None untuk crossover, tapi hypothesis biasanya tetap ada)
-        
+
         if direction and str(direction) not in top_directions:
             top_directions.append(str(direction))
 
@@ -484,7 +486,7 @@ def _build_strategy_feedback(
             if any(kw in direction_text for kw in keywords):
                 topic_hits.setdefault(topic, []).append(float(metric))
                 #* simpan topik dan metricnya
-                
+
     topic_performance = {
         topic: sum(vals) / len(vals)
         for topic, vals in topic_hits.items()
@@ -538,7 +540,7 @@ def _run_external_agents(
 
     combined_context = "\n\n".join(ins.to_context_str() for ins in insights)
     #* gabung semua context jadi satu string
-    
+
     return insights, combined_context, prev_kv
     #*   insights        → list ExternalInsight (dipakai di planning + feedback)
     #*   combined_context → string (dipakai di AlphaAgentLoop sebagai external_context)
@@ -599,23 +601,23 @@ def run_evolution_loop(
         logger.info(
             f"[External] Running InsightOrchestrator (mode={insight_mode})..."
         )
-        _insight_result = insight_orchestrator.run(mode=insight_mode) 
+        _insight_result = insight_orchestrator.run(mode=insight_mode)
         #* InsightOrchestrator mengoordinasi semua external agents sekaligus (sequential atau hierarical)
-        
+
         external_insights = _insight_result.as_external_insights_list()
         external_context = _insight_result.external_context
         _planning_kv = getattr(_insight_result, 'kv_cache', None)
         #* ambil context dan KV-cache dari orchestrator
-        
+
         if external_context:
             logger.info(f"[External] Unified context ready ({len(external_context)} chars)")
-    
+
     elif external_agents and _HAS_EXTERNAL:
         logger.info(f"[External] Running {len(external_agents)} external agent(s)...")
         external_insights, external_context, _planning_kv = _run_external_agents(
             external_agents, llm_backend
         ) #* jalankan semua external agents satu per satu
-        
+
         if external_context:
             logger.info(f"[External] Context ready ({len(external_context)} chars)")
 
@@ -623,17 +625,21 @@ def run_evolution_loop(
     num_directions = int(planning_cfg.get("num_directions", 2))
     max_rounds = int(evolution_cfg.get("max_rounds", 10))
     crossover_size = int(evolution_cfg.get("crossover_size", 2))    #* berapa banyak parent untuk crossover (default 2 = crossover antara 2 trajectory)
+    # !!! perlu analisa lagi apakah ini sesuai paper asli quantaalpha dan apakah arsitektur quantalatent sudah menerapkan ini berdasarkan ./runs/ terbaru.
     crossover_n = int(evolution_cfg.get("crossover_n", 3))          #* berapa banyak child yang dihasilkan dari satu set parent di crossover (default 3 = dari 2 parent bisa jadi 3 child dengan kombinasi berbeda)
+    # !!! perlu penyesuaian konfigurasi lagi
     steps_per_loop = int(exec_cfg.get("steps_per_loop", 5))
     use_local = bool(exec_cfg.get("use_local", True))
 
     mutation_enabled = bool(evolution_cfg.get("mutation_enabled", True))
     crossover_enabled = bool(evolution_cfg.get("crossover_enabled", True))
+    # [sebagian terjawab — skripsi Bab 4 §Hyperparameter Laten]: parameter laten/KV/seleksi
+    #   inti terurai berikut lambangnya; parameter evolusi/eksekusi lain masih perlu dilengkapi.
     parent_selection_strategy = str(evolution_cfg.get("parent_selection_strategy", "best"))
     top_percent_threshold = float(evolution_cfg.get("top_percent_threshold", 0.3))
     log_root = str(logger.log_trace_path)
     parallel_enabled = bool(evolution_cfg.get("parallel_enabled", False))
-    
+
     if parallel_enabled and llm_backend is not None:
         logger.warning(
             "[Evolution] parallel_enabled=True but llm_backend is set. "
@@ -641,9 +647,9 @@ def run_evolution_loop(
             "Forcing parallel_enabled=False to use KV-cache latent pipeline."
         )
         parallel_enabled = False
-        #* paksa parallel_enabled=False jika llm_backend disediakan, karena LocalLLMBackend tidak bisa di-serialize untuk multiprocessing. 
+        #* paksa parallel_enabled=False jika llm_backend disediakan, karena LocalLLMBackend tidak bisa di-serialize untuk multiprocessing.
         #* Dalam mode ini, kita akan menggunakan pendekatan latent pipeline dengan KV-cache untuk sharing konteks antar proses.
-        
+
     fresh_start = bool(evolution_cfg.get("fresh_start", True))
     cleanup_on_finish = bool(evolution_cfg.get("cleanup_on_finish", False))
     # Resume: path ke run dir sebelumnya (berisi trajectory_pool.json +
@@ -651,6 +657,9 @@ def run_evolution_loop(
     resume_from = evolution_cfg.get("resume_from")
 
     # Generate initial directions (with external KV-cache context if available)
+    # [terjawab — investigasi]: planning DEFAULT NONAKTIF (enabled=False). Saat nonaktif,
+    #   directions=[initial_direction] → direction user dipakai langsung tanpa agen planning.
+    #   Agen planning hanya jalan bila planning.enabled=true DAN ada initial_direction.
     planning_enabled = bool(planning_cfg.get("enabled", False))
     prompt_file = planning_cfg.get("prompt_file") or "planning_prompts.yaml"
     prompt_path = Path(__file__).parent / "prompts" / str(prompt_file)
@@ -708,6 +717,8 @@ def run_evolution_loop(
     logger.info(f"Trajectory pool path: {pool_save_path} (fresh_start={fresh_start})")
 
     # Teruskan corr_gate_threshold ke FACTOR_COSTEER_SETTINGS via env var agar
+    # [terjawab — skripsi Bab 4 §Hyperparameter Laten + §Kombinasi Faktor]: parameter
+    #   laten/KV/seleksi terurai berikut lambangnya di Bab 4.
     # QlibFactorRunner.develop() bisa membacanya tanpa argumen eksplisit.
     _corr_thr = float(evolution_cfg.get("corr_gate_threshold", 0.7))
     os.environ.setdefault("FACTOR_CoSTEER_CORR_GATE_THRESHOLD", str(_corr_thr))
@@ -798,7 +809,7 @@ def run_evolution_loop(
                 log_root=log_root,
                 external_context=external_context,
             )
-            
+
             completed_tasks = []
             for result in results:
                 if result["success"]:
@@ -814,7 +825,8 @@ def run_evolution_loop(
                         hypothesis_embedding=traj_data.get("hypothesis_embedding"),
                         kv_cache=traj_data.get("pipeline_kv"),
                     )
-                    
+                    # [terjawab — skripsi Bab 4 §Seleksi Trajectory]: FactorIC_mean
+                    #   (get_primary_metric); fallback RankIC gabungan utk trajectory lama.
                     #* simpan ke pool + update state
                     controller.report_task_complete(task, trajectory)
                     completed_tasks.append(task)
@@ -893,22 +905,22 @@ def run_evolution_loop(
     # simpan state di disk (bisa lanjut nanti)
     state_path = Path(log_root) / "evolution_state.json"
     controller.save_state(state_path)
-    
+
     # ambil top Trajectory
     best_trajs = controller.get_best_trajectories(top_n=5)
     logger.info("="*40)
     logger.info(f"Evolution complete. Top {len(best_trajs)} trajectories:")
-    
+
     # menampilkan trajectory terbaik
     for i, t in enumerate(best_trajs):
         metric = t.get_primary_metric()
         metric_str = f"{metric:.4f}" if metric is not None else "N/A"
         logger.info(f"  {i+1}. {t.trajectory_id}: phase={t.phase.value}, RankIC={metric_str}")
-    
+
     # menampilkan statistik pool
     logger.info(f"Pool stats: {controller.pool.get_statistics()}")
     logger.info("="*40)
-    
+
     # ── Finalize pipeline monitor ────────────────────────────────────────
     if _HAS_MONITOR:
         try:
@@ -935,14 +947,14 @@ def run_evolution_loop(
     # Called AFTER all iterations complete. Agents adjust search weights
     # based on which topics/directions produced the best-performing factors.
     if _HAS_EXTERNAL and best_trajs:
-        
+
         # buat feedback dari trajectory terbaik untuk update strategi eksternal agent
         feedback = _build_strategy_feedback(best_trajs, external_insights)
-        
+
         # update semua agent via orchestrator
         if insight_orchestrator:
             insight_orchestrator.update_all_strategies(feedback)
-        
+
         # setiap agent update weight
         elif external_agents:
             for agent in external_agents:
@@ -1118,14 +1130,14 @@ def main(
         if exec_cfg.get("use_local") is not None:
             use_local = bool(exec_cfg.get("use_local"))
         exec_cfg["use_local"] = use_local
-        
+
         logger.info(f"Use {'Local' if use_local else 'Docker container'} to execute factor backtest")
-        
+
         if use_evolution and path is None:
             logger.info("="*60)
             logger.info("Evolution mode: Original -> Mutation -> Crossover loop")
             logger.info("="*60)
-            
+
             run_evolution_loop(
                 initial_direction=direction,
                 evolution_cfg=evolution_cfg,

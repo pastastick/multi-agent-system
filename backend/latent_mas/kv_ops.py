@@ -47,7 +47,9 @@ from pathlib import Path
 from typing import List, Optional, Sequence
 
 import torch
-
+# [terjawab — skripsi Bab 4 §Operasi KV-Cache]: deepcopy (isolasi/clone), kv_concat
+#   (konkatenasi hierarkis sepanjang dim sekuens), truncate (n token terakhir),
+#   kv_knn_filter (seleksi kosinus). Tiap operasi punya rumusan di Bab 4.
 # Bangun di atas helper single-source-of-truth di llm/_shared.py.
 from llm._shared import (
     KVCache,

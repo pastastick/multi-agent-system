@@ -333,7 +333,10 @@ def parse_construct_json(raw: str) -> Optional[ConstructResult]:
             for i, e in enumerate(he.expressions)]
     return ConstructResult(hypothesis=he.hypothesis, factors=facs)
 
-
+# [terjawab — investigasi]: BUKAN duplikat fungsi. parsers.py mem-parse OUTPUT LLM
+#   (hypothesis/expression/JSON construct). factors/coder/expr_parser.py + factor_ast.py
+#   mem-parse EKSPRESI DSL → AST (untuk eksekusi/regulator). Domain berbeda; hanya
+#   sebagian kecil helper (balance-parens/strip) yang berpotensi tumpang-tindih.
 # registry untuk lookup by name dari YAML
 PARSERS = {
     "hypothesis_expr": parse_hypothesis_expr,

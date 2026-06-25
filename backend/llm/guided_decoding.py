@@ -140,7 +140,10 @@ class _TransformersPrefixAllowedTokensFn:
 # ─────────────────────────────────────────────────────────────────────────────
 # Builder: prefix_allowed_tokens_fn
 # ─────────────────────────────────────────────────────────────────────────────
-
+# [terjawab — investigasi]: TIDAK aktif. Dirangkai di client.run() hanya bila
+#   `json_schema` dioper, namun tak ada satu pun pemanggil yang mengopernya;
+#   construct memakai `json_mode` (ekstraksi pasca-generasi). Dead path — kandidat
+#   hapus, atau pertahankan sebagai opsi constrained decoding di masa depan.
 def build_guided_json_prefix_fn(
     tokenizer: Any,
     schema: Dict[str, Any],

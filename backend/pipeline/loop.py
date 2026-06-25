@@ -64,7 +64,7 @@ def stop_event_check(func):
     return wrapper
 
 
-#* Metaclass adalah class yang membuat class lain. 
+#* Metaclass adalah class yang membuat class lain.
 # LoopMeta otomatis mengumpulkan method publik dari sebuah class dan mendaftarkannya sebagai steps.
 
 # SOTA tracker deterministik (per-proses; reset tiap run). Dipakai
@@ -93,7 +93,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         "_runlog",       # RunLogger (file handles)
         "_parent_trajectories",  # parent StrategyTrajectory objects (dibaca sbg teks)
     )
-    
+
     @measure_time  #log berapa lama waktu yang dibutuhkan untuk inisialisasi loop
     def __init__(
         self,
@@ -163,14 +163,16 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                     f"[LatentPipeline] LocalLLMBackend active, "
                     f"past_kv={'yes' if past_kv is not None else 'no'}"
                 )
-                
+                # [terjawab — skripsi Bab 4 §Kendali Mutu Faktor]: gate mutu = rangkaian
+                #   deterministik (parsable/arity/variabel/degenerate) + redundansi S(f)
+                #   + kompleksitas SL/PC/ER.
             #* consistency: apakah faktor konsisten dengan hipotesis?
             consistency_enabled = self.quality_gate_config.get("consistency_enabled", False)
             #* complexity: apakah faktor terlalu kompleks?
             complexity_enabled = self.quality_gate_config.get("complexity_enabled", True)
             #* redundancy: apakah faktor redundant dengan faktor lain yang sudah ada?
             redundancy_enabled = self.quality_gate_config.get("redundancy_enabled", True)
-            
+
             logger.info(f"Quality gate: consistency={'on' if consistency_enabled else 'off'}, "
                        f"complexity={'on' if complexity_enabled else 'off'}, "
                        f"redundancy={'on' if redundancy_enabled else 'off'}")
@@ -184,9 +186,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             #   lalu: importlib.import_module("factors.experiment")
             #   lalu: getattr(module, "QlibAlphaAgentScenario")
             #   lalu: QlibAlphaAgentScenario(use_local=True)
-            
-            logger.log_object(scen, tag="scenario")
 
+            logger.log_object(scen, tag="scenario")
+            # [terjawab — investigasi]: benar, external agent tak aktif — _run_external_agents
+            #   hanya jalan bila argumen external_agents diisi; main() default tak mengisinya.
             # Build effective_direction: base + strategy_suffix + external_context
             effective_direction = potential_direction
             if strategy_suffix:
@@ -216,13 +219,18 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             # _evolution_propose → _format_parents_text (dibaca sebagai TEKS:
             # hypothesis/expr/metrics/feedback; KV parent tidak dipakai lagi).
             self._parent_trajectories = parent_trajectories or []
-
+            # [terjawab — skripsi Bab 4 §Evolusi dan Aliran KV]: trajectory.kv_cache sengaja
+            #   None — transfer antar-generasi via TEKS (_format_parents_text), bukan KV;
+            #   KV induk tidak diwariskan ke generasi berikutnya.
             # ── KV-cache config dari settings ────────────────────────────
             # Baca per-step latent_steps dan temperature dari PROP_SETTING.
             # getattr() dengan fallback agar tetap kompatibel jika settings
             # belum punya field latent (misal BaseFacSetting).
-            self._kv_max_tokens = getattr(PROP_SETTING, 'kv_max_tokens', 20480)  
-
+            self._kv_max_tokens = getattr(PROP_SETTING, 'kv_max_tokens', 20480)
+            # [terjawab — skripsi Bab 4 §Evolusi dan Aliran KV]: DI DALAM satu lintasan
+            #   front-end KV AKUMULATIF (proposal→design→construct via handoff KV). proposal
+            #   di-seed guidance_kv (mutation), jadi design transitif tetap menerima
+            #   kontribusi mutation. ANTAR-generasi KV di-reset (guidance di-seed None).
             # ── Instantiate proposal classes ─────────────────────────────
             # When llm_backend is provided, use Latent variants with
             # KV-cache support.  Otherwise, use standard classes.
@@ -239,8 +247,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 )
                 # quality_gate=None + use_regulator=True → FactorRegulator PENUH
                 # (complexity SL/PC/ER + redundansi alpha-zoo), bukan sekadar sintaks.
+                # comm_mode (text|kv_and_text|kv) = variabel eksperimen medium komunikasi.
+                _comm_mode = getattr(PROP_SETTING, "comm_mode", "kv")
                 self._front = FrontEndPipeline(
                     llm_backend, runlog=self._runlog, max_repair_attempts=3,
+                    comm_mode=_comm_mode,
                 )
                 # Atribut path-standar di-set None agar pickle-exclusion & getattr aman.
                 self.hypothesis_generator = None
@@ -253,17 +264,17 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             else:
                 self._latent = False
                 self.hypothesis_generator: HypothesisGen = import_class(PROP_SETTING.hypothesis_gen)(scen, effective_direction)
-                
+
                 #   "factors.proposal.AlphaAgentHypothesis2FactorExpression"
                 #   convert hipotesis → list faktor (ekspresi matematika)
                 self.factor_constructor: Hypothesis2Experiment = import_class(PROP_SETTING.hypothesis2experiment)(
                     consistency_enabled=consistency_enabled
                 )
-                
+
                 #   "factors.feedback.AlphaAgentQlibFactorHypothesisExperiment2Feedback"
                 #   evaluasi hasil backtest → generate feedback
                 self.summarizer: HypothesisExperiment2Feedback = import_class(PROP_SETTING.summarizer)(scen)
-                
+
                 # Inject llm_backend into standard classes (mereka pakai
                 # self.llm_backend di _call_llm jika tersedia)
                 if llm_backend is not None:
@@ -298,7 +309,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
             logger.log_object(self.summarizer, tag="summarizer")
             self.trace = Trace(scen=scen) #* trace kosong akan diisi setiap loop di step feedback
-            
+
             global STOP_EVENT
             STOP_EVENT = stop_event
             super().__init__()
@@ -318,13 +329,16 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         _mon = _get_monitor() if _HAS_MONITOR else None
 
         # ── NEW LatentMAS path: phase menentukan generator ──────────────────
-        #   original → FrontEndPipeline.run (proposal→construct→consistency→judger)
+        #   original → FrontEndPipeline.run (proposal→design→construct)
         #   mutation → run_evolution("mutation")  — guidance(arah refine) → re-enter front-end
         #   crossover→ run_evolution("crossover") — guidance(arah fusi)   → re-enter front-end
         if getattr(self, "_latent", False):
             phase = getattr(self, "evolution_phase", "original")
             parents = getattr(self, "_parent_trajectories", []) or []
             with logger.tag("r"):
+                # [sebagian terjawab]: mekanisme AKTIF & persisten (record→render_hint→
+                #   inject ke prompt proposal; negative_memory.json). Efektivitas (apakah
+                #   benar mengubah output) = pertanyaan empiris, belum diuji.
                 if phase == "mutation" and parents:
                     front = self._evolution_propose(parents, crossover=False)
                 elif phase == "crossover" and parents:
@@ -397,7 +411,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 )
 
         return factor
-
+    # TODO(verifikasi): factor_calculate adalah step wajib LoopBase; di mode latent
+    #   kemungkinan trivial (ekspresi sudah final di construct). Cek apakah masih relevan.
     @measure_time
     @stop_event_check
     def factor_calculate(self, prev_out: dict[str, Any]):  #* tulis kode dari rumus faktor
@@ -430,7 +445,6 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 )
 
         return factor
-    
 
     @measure_time
     @stop_event_check
@@ -451,6 +465,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             self._last_experiment = exp
         return exp
 
+# !!! perlu update komen dan penamaan variabel
     @measure_time
     @stop_event_check
     def feedback(self, prev_out: dict[str, Any]):
@@ -507,7 +522,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             import os
             from pathlib import Path
             from factors.library import FactorLibraryManager
-            
+
             # Project root: loop.py -> pipeline/ -> quantaalpha/ -> project_root/
             project_root = Path(__file__).resolve().parent.parent.parent
 
@@ -538,11 +553,11 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 library_filename = f"all_factors_library_{library_suffix}.json"
             else:
                 library_filename = "all_factors_library.json"
-                
+
             factorlib_dir = project_root / "data" / "factorlib"
             factorlib_dir.mkdir(parents=True, exist_ok=True)
             library_path = factorlib_dir / library_filename
-            
+
             manager = FactorLibraryManager(str(library_path))
             manager.add_factors_from_experiment(
                 experiment=prev_out["factor_backtest"],
@@ -560,7 +575,7 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             logger.info(f"Saved factors to library: {library_path} (phase={evolution_phase})")
         except Exception as e:
             logger.warning(f"Failed to save factors to library: {e}")
-    
+
     def _get_trajectory_data(self) -> dict[str, Any]:
         """
         Get trajectory data for the current round (used by evolution controller).
@@ -639,6 +654,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             seen.add(key)
             fname = base if single else f"{base}_{i}"
             while fname in existing:    # hindari tabrakan nama dengan history
+                # TODO(prompt): selaraskan format penamaan faktor pada output prompt
+                #   dengan skema nama di kode (hindari tabrakan & sufiks _x ad-hoc)
                 fname = f"{fname}_x"
             existing.add(fname)
             task = FactorTask(
@@ -692,6 +709,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         return float("-inf")
 
     def _evolution_propose(self, parents: list, *, crossover: bool):
+        # TODO(design): cocokkan definisi mutation/crossover dengan paper QuantaAlpha
+        #   (§4.2.2). Mekanisme implementasi terurai di skripsi Bab 4 §Evolusi.
         """Evolution GUIDANCE → FrontEndPipeline.run_evolution.
 
         mutation  : arahkan refine 1 target (eksploitasi).
@@ -701,6 +720,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         DALAM run_evolution. KV parent TIDAK diwariskan antar-generasi → KV per
         ronde terbatas, tak ada salin-loop.
         """
+        # [terjawab — skripsi Bab 4 §Evolusi dan Aliran KV + §Mode Komunikasi]: guidance→
+        #   seed front-end; pada comm_mode=text arah guidance diteruskan sebagai TEKS
+        #   (digabung ke direction), bukan KV.
         if crossover:
             # urut ASC by metric → parent terbaik di posisi TERAKHIR (recency dalam teks)
             ordered = sorted(parents, key=self._parent_metric)
@@ -728,7 +750,10 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
     def _format_parents_text(self, parents: list) -> str:
         """Rangkai parent StrategyTrajectory → TEKS untuk mutation/crossover judger.
-
+        [terjawab — skripsi Bab 4 §Evolusi dan Aliran KV]: agen guidance mutation/crossover
+        di-seed KV KOSONG dan membaca parent sebagai TEKS; KV hasil guidance lalu menyemai
+        front-end. Maka format teks feedback & metrik parent memang krusial (itulah jalur
+        transfer antar-generasi).
         Menyertakan hipotesis, ekspresi PENUH (tak dipangkas seperti
         to_summary_text yang memotong di 100 char), metrik backtest, dan feedback.
         Diberi label [Parent i] saat >1 agar crossover bisa membedakan sumber.
@@ -767,7 +792,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
 
     def _run_latent_feedback(self, prev_out: dict[str, Any]) -> dict:
         """Feedback EVALUATIF (support/refute) via agent latent_mas.
-
+#       TODO(prompt): bandingkan format output feedback ini dengan prompt feedback
+#         QuantaAlpha asli (support/refute, alasan, sinyal arah) lalu samakan field
+#         yang dibaca _build_strategy_feedback / parser feedback.
         Berbeda dari QuantaAlpha asli: feedback TIDAK lagi mengarang "New
         Hypothesis" — generasi arah berikutnya adalah tugas mutation (revisi 1
         target) & crossover (fusi), keduanya GUIDANCE membaca parent sebagai teks
@@ -789,7 +816,8 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         # ── DETERMINISTIK ─────────────────────────────────────────────────────
         complexity = self._complexity_audit_multi(front.expressions)
         metrics = self._extract_metrics_safe(exp)
-
+        # [terjawab — skripsi Bab 4 §RankIC Standalone per Faktor]: FactorIC_mean =
+        #   rata-rata RankIC cross-sectional harian (OOS); metrik primer seleksi induk.
         # Model-free per-factor IC+ICIR (primary metric) — dihitung sebelum
         # _decide_replace_sota agar jadi penentu replace-SOTA, bukan combined LightGBM.
         factor_ic = getattr(exp, "factor_ic", None) or {}
@@ -834,7 +862,9 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
             )
         if complexity:
             factor_block += f"\nCOMPLEXITY WARNING: {complexity}"
-
+        # [terjawab — skripsi Bab 4 §RankIC Gabungan via LightGBM]: F=[f_1..f_N] → LightGBM
+        #   g(·) → ŷ; RankIC_gab = mean_t spearman(ŷ_t, y_t). Beda dari standalone karena g
+        #   non-linear (memanfaatkan interaksi antar-faktor + meredam derau).
         # ── [B] Combined LightGBM model result (key metrics only) ─────────────
         # RankIC di sini = model gabungan setelah LightGBM dilatih pada semua faktor.
         # Angkanya BERBEDA dari standalone RankIC karena model dapat memanfaatkan
@@ -851,12 +881,17 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
         )
 
         fb_agent = self._front.agents["feedback"]
+        # comm_mode: feedback selalu emit teks; di mode "text" jadi text_only (past_kv
+        # None karena front.kv_final None). factor_block/backtest_results/sota_block
+        # sudah berupa TEKS sehingga feedback berjalan di ketiga mode tanpa beda prompt.
+        _fb_mode = self._front._agent_mode("kv_and_text")
         with _get_monitor().track_step("feedback") if (_HAS_MONITOR and _get_monitor()) else _nullcontext():
             r = fb_agent.run(
                 past_kv=kv_ops.kv_deepcopy(front.kv_final),
                 factor_block=factor_block,
                 backtest_results=backtest_results,
                 sota_block=sota_block,
+                mode_override=_fb_mode,
             )
         # KV feedback (terminal) sengaja TIDAK disimpan/diwariskan: evolution kini
         # guidance-based membaca parent sebagai teks, jadi membiarkan r.kv_cache di-GC
@@ -1132,7 +1167,7 @@ class BacktestLoop(LoopBase, metaclass=LoopMeta):
 
             self.coder: Developer = import_class(PROP_SETTING.coder)(scen, with_feedback=False, with_knowledge=False, knowledge_self_gen=False)
             logger.log_object(self.coder, tag="coder")
-            
+
             self.runner: Developer = import_class(PROP_SETTING.runner)(scen)
             logger.log_object(self.runner, tag="runner")
 
@@ -1145,18 +1180,18 @@ class BacktestLoop(LoopBase, metaclass=LoopMeta):
         """
         Market hypothesis on which factors are built
         """
-        with logger.tag("r"):  
+        with logger.tag("r"):
             idea = self.hypothesis_generator.gen(self.trace)
             logger.log_object(idea, tag="hypothesis generation")
         return idea
-        
+
 
     @measure_time
     def factor_construct(self, prev_out: dict[str, Any]):
         """
         Construct a variety of factors that depend on the hypothesis
         """
-        with logger.tag("r"): 
+        with logger.tag("r"):
             factor = self.factor_constructor.convert(prev_out["factor_propose"], self.trace)
             logger.log_object(factor.sub_tasks, tag="experiment generation")
         return factor
@@ -1170,7 +1205,7 @@ class BacktestLoop(LoopBase, metaclass=LoopMeta):
             factor = self.coder.develop(prev_out["factor_construct"])
             logger.log_object(factor.sub_workspace_list, tag="coder result")
         return factor
-    
+
 
     @measure_time
     def factor_backtest(self, prev_out: dict[str, Any]):

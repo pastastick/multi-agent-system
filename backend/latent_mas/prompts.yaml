@@ -9,6 +9,13 @@
 #   dipakai apa adanya oleh EvolutionController + FrontEndPipeline.run_evolution.
 # consistency & judger DIHAPUS: construct kini terminal emitter (peran judger).
 # =============================================================================
+# TODO(prompt): selaraskan format output tiap agen dengan model matematika faktor
+#   alpha & tujuan mining. Langkah:
+#   [ ] bandingkan field output construct/feedback dengan prompt QuantaAlpha asli
+#   [ ] pastikan construct mengeluarkan ekspresi DSL valid (lolos FactorRegulator gate)
+#   [ ] samakan terminologi (hypothesis/expression/explanation) dgn parser di parsers.py
+#   [ ] verifikasi json_mode construct sesuai parse_construct_json()
+
 agents:
   proposal:
     role: proposal
@@ -654,6 +661,7 @@ agents:
 
       Reason toward a sharp diagnosis and ONE focused refinement direction for the
       Proposal agent to build on.
+      hypotesis before, faktor, analisis, new direction, suggested hypothesis
   crossover:
     role: crossover
     mode: kv_only

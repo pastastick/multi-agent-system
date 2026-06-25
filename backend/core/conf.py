@@ -1,5 +1,15 @@
 from __future__ import annotations
 
+# [terjawab — rangkuman file ini]:
+#   conf.py menyediakan BASIS konfigurasi berbasis pydantic-settings. Inti:
+#   1. ExtendedBaseSettings  : kelas dasar; tiap field bisa diisi dari ENVIRONMENT VARIABLE.
+#   2. env_prefix            : awalan nama env var per kelas (mis. "QLIB_FACTOR_").
+#   3. ExtendedEnvSettingsSource : memperluas pencarian env var agar juga melihat prefix
+#                              kelas INDUK, bukan hanya kelas sendiri (lihat get_field_value).
+#   4. RDAgentSettings       : setting global path workspace, cache pickle, multiprocessing.
+#   Alur baca nilai field:  init kwargs  →  ENV (prefix kelas → prefix induk)  →  default.
+#   Contoh: field `latent_steps` di kelas ber-prefix "QLIB_FACTOR_" dibaca dari
+#           env var QLIB_FACTOR_LATENT_STEPS; bila tak ada, pakai default di kode.
 # TODO: use pydantic for other modules in Qlib
 import os
 from pathlib import Path
@@ -19,6 +29,9 @@ from pydantic_settings import (
 class ExtendedEnvSettingsSource(EnvSettingsSource):
     def get_field_value(self, field: FieldInfo, field_name: str) -> tuple[Any, str, bool]:
         # Dynamically gather prefixes from the current and parent classes
+        # [terjawab]: env_prefix = awalan nama environment variable untuk kelas setting.
+        #   mis. env_prefix="QLIB_FACTOR_" → field `latent_steps` dibaca dari env
+        #   QLIB_FACTOR_LATENT_STEPS. Di sini prefix kelas sendiri + prefix kelas induk dikumpulkan.
         prefixes = [self.config.get("env_prefix", "")] #* prefix dari class itu sendiri(inisiasi di settings.py)
         if hasattr(self.settings_cls, "__bases__"): #* cek parent class
             for base in self.settings_cls.__bases__:
@@ -86,5 +99,5 @@ class RDAgentSettings(ExtendedBaseSettings):
         # executing the function multiple times
     )
 
-
+# [terjawab — lihat rangkuman + diagram alur di header file ini (atas)].
 RD_AGENT_SETTINGS = RDAgentSettings()

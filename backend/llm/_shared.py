@@ -641,7 +641,8 @@ def robust_json_parse(text: str, max_retries: int = 3) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 # LatentRealigner
 # ─────────────────────────────────────────────────────────────────────────────
-
+# [terjawab — skripsi Bab 4 §Realignment Laten]: M = (Wout^T Wout + lambda I)^-1
+#   Wout^T Win (ridge), lalu normalisasi ke magnitudo rata-rata embedding masukan.
 class LatentRealigner:
     """
     Membangun dan menerapkan matriks realignment untuk latent reasoning.
