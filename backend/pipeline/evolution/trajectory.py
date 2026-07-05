@@ -103,11 +103,23 @@ class StrategyTrajectory:
         FactorIC_mean dipakai karena jujur: tidak tercemar baseline floor dari
         NestedDataLoader. Empiris (2026-06-14): combined LightGBM RankIC terbukti
         95-103% floor → tidak bisa membedakan faktor baik/buruk.
-        Fallback ke RankIC combined hanya untuk trajectory lama (sebelum migrasi)."""
+        Fallback ke RankIC combined hanya untuk trajectory lama (sebelum migrasi)
+        ATAU saat semua kandidat faktor round ini dibuang correlation-gate
+        (factor_ic kosong/None) — di-log WARNING karena nilai fallback tercemar
+        baseline dan TIDAK BOLEH dipakai diam-diam sebagai representasi kualitas
+        faktor (lihat commit f2d881a; konsisten dengan label eksplisit di
+        loop._decide_replace_sota)."""
         ic = self.backtest_metrics.get("FactorIC_mean")
         if ic is not None:
             return ic
-        return self.backtest_metrics.get("RankIC")
+        fallback = self.backtest_metrics.get("RankIC")
+        if fallback is not None:
+            logger.warning(
+                f"[Metric] trajectory {self.trajectory_id}: FactorIC_mean tidak "
+                f"tersedia -> fallback ke RankIC(combined,fallback)={fallback:.4f} "
+                f"(tercemar baseline NestedDataLoader, ~95-103% floor empiris)"
+            )
+        return fallback
 
     def is_successful(self, thr_ic: float = 0.0, thr_icir: float = 0.0) -> bool:
         """Check if this trajectory produced valid results.
