@@ -1,0 +1,56 @@
+2026-07-05 11:52:28.436 | INFO     | latent_mas.runlog:log:154 - [latent] run started  run_dir=/workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48/latent pid=52708
+2026-07-05 11:52:28.471 | INFO     | pipeline.factor_mining:main:1043 - Unified run dir: /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48
+2026-07-05 11:52:29.352 | INFO     | pipeline.factor_mining:main:1053 - factor.py executor python_bin → /workspace/project/multi-agent-system/.venv/bin/python
+2026-07-05 11:52:29.388 | INFO     | pipeline.factor_mining:main:1055 - ============================================================
+2026-07-05 11:52:29.429 | INFO     | pipeline.factor_mining:main:1056 - Experiment config
+2026-07-05 11:52:29.462 | INFO     | pipeline.factor_mining:main:1057 -   Workspace: /workspace/project/multi-agent-system/backend/data/results/workspace
+2026-07-05 11:52:29.520 | INFO     | pipeline.factor_mining:main:1058 -   Cache dir: /workspace/project/multi-agent-system/backend/data/results/pickle_cache
+2026-07-05 11:52:29.553 | INFO     | pipeline.factor_mining:main:1059 -   Cache enabled: True
+2026-07-05 11:52:29.590 | INFO     | pipeline.factor_mining:main:1060 - ============================================================
+2026-07-05 11:52:29.701 | INFO     | pipeline.factor_mining:_apply_latent_overrides:115 - [Config] Latent overrides from YAML → latent_enabled=True, comm_mode=kv, latent_model_name=Qwen/Qwen3-4B, latent_device=cuda, latent_steps=60, latent_steps_propose=None, latent_steps_construct=None, latent_steps_coder=None, latent_steps_feedback=None, use_realign=True, enable_thinking=False, kv_max_tokens=20480, store_kv=False, knn_enabled=True, knn_percentage=0.8, knn_min_keep=5, knn_strategy=top, max_new_tokens=40960, temperature=0.8, top_p=0.95, temperature_propose=None, temperature_construct=0.7, temperature_coder=0.4, temperature_feedback=None, log_tensors=True
+2026-07-05 11:52:29.750 | INFO     | pipeline.factor_mining:_apply_factor_overrides:157 - [Config] Factor overrides from YAML → symbol_length_threshold=300, base_features_threshold=5, duplication_threshold=5
+2026-07-05 11:52:29.787 | INFO     | pipeline.factor_mining:main:1091 - [Config] insight_mode from YAML → sequential
+2026-07-05 11:52:29.830 | INFO     | pipeline.factor_mining:main:1103 - [LatentPipeline] latent_enabled=True, creating LocalLLMBackend...
+/workspace/project/multi-agent-system/backend/llm/client.py:1182: RuntimeWarning: KNN dinonaktifkan otomatis: tidak kompatibel dengan latent_steps > 0 (RoPE virtual-token desync, lihat konteks.txt Temuan #5).
+  self._engine   = _CoreEngine(
+[CoreEngine] KNN auto-disabled (latent_steps > 0; incompatible with virtual tokens)
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 8662.23it/s]
+2026-07-05 11:53:34.182 | INFO     | pipeline.factor_mining:main:1111 - [LatentPipeline] Backend ready: model=Qwen/Qwen3-4B, device=cuda, latent_steps=60, use_realign=True, knn=80%/top
+2026-07-05 11:53:34.211 | INFO     | pipeline.factor_mining:main:1134 - Use Local to execute factor backtest
+2026-07-05 11:53:34.233 | INFO     | pipeline.factor_mining:main:1137 - ============================================================
+2026-07-05 11:53:34.259 | INFO     | pipeline.factor_mining:main:1138 - Evolution mode: Original -> Mutation -> Crossover loop
+2026-07-05 11:53:34.279 | INFO     | pipeline.factor_mining:main:1139 - ============================================================
+2026-07-05 11:53:34.321 | INFO     | pipeline.factor_mining:run_evolution_loop:581 - Evolution mode: file lock disabled to avoid deadlock
+2026-07-05 11:53:34.348 | INFO     | pipeline.factor_mining:run_evolution_loop:592 - [Monitor] Session started: evolution_prod_kv_2026-07-05_09-36-48
+2026-07-05 11:53:41.452 | INFO     | pipeline.factor_mining:run_evolution_loop:684 - Generated 2 exploration directions
+2026-07-05 11:53:41.482 | INFO     | pipeline.factor_mining:run_evolution_loop:686 -   Direction 0: short-term reversal after abnormally high-volume days in small-cap stocks
+2026-07-05 11:53:41.524 | INFO     | pipeline.factor_mining:run_evolution_loop:686 -   Direction 1: mean-reversion in low-volatility stocks during regime transitions
+2026-07-05 11:53:41.562 | INFO     | pipeline.factor_mining:run_evolution_loop:717 - Trajectory pool path: /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48/trajectory_pool.json (fresh_start=True)
+2026-07-05 11:53:41.661 | INFO     | pipeline.factor_mining:run_evolution_loop:768 - ========================================
+2026-07-05 11:53:41.712 | INFO     | pipeline.factor_mining:run_evolution_loop:769 - Starting evolution loop
+2026-07-05 11:53:41.751 | INFO     | pipeline.factor_mining:run_evolution_loop:770 - Config: directions=2, max_rounds=3, crossover_size=2, crossover_n=2
+2026-07-05 11:53:41.788 | INFO     | pipeline.factor_mining:run_evolution_loop:772 - Phases: mutation=on, crossover=on
+2026-07-05 11:53:41.832 | INFO     | pipeline.factor_mining:run_evolution_loop:779 - Mode: full evolution (Original -> Mutation -> Crossover -> ...)
+2026-07-05 11:53:41.863 | INFO     | pipeline.factor_mining:run_evolution_loop:782 - Parent selection: best
+2026-07-05 11:53:41.892 | INFO     | pipeline.factor_mining:run_evolution_loop:784 - Parallel execution: off
+2026-07-05 11:53:41.921 | INFO     | pipeline.factor_mining:run_evolution_loop:785 - ============================================================
+2026-07-05 11:53:41.956 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=original, round=0, direction=0
+2026-07-05 11:53:42.028 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=original, round=0, direction=0
+2026-07-05 11:53:42.082 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-05 11:53:42.124 | INFO     | pipeline.loop:__init__:156 - Initial direction: short-term reversal after abnormally high-volume days in small-cap stocks
+2026-07-05 11:53:42.156 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-05 11:53:42.188 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-05 11:54:09.154 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-05 11:54:09.223 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-05 11:54:09.411 | INFO     | log.time:wrapper:16 - __init__ took 27.36s
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s]▶ proposal ...
+✓ proposal  2.66s
+▶ design ...
+✓ design  3.01s
+▶ construct ...
+✓ construct  755.76s
+2026-07-05 12:06:51.168 | WARNING  | latent_mas.runlog:log:154 - [latent] construct output unparseable; retry once  head=selection, selectioninvestment and analysis expression expression expression is to compute the selection of in one sente
+▶ construct ...

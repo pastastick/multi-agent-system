@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-07-05T10:29:49",
+  "round_idx": 1,
+  "trajectory_id": "9d0241345092",
+  "evolution_phase": "mutation",
+  "hypothesis": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+  "factor_ic_mean": -0.022838780747765512,
+  "factor_icir_mean": -0.18246880345264366,
+  "sota": {
+    "prev": 0.04492601440188402,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0228 ≤ SOTA 0.0449 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "during_regime_transitions_low_vo_0": {
+      "expression": "TS_ZSCORE($high, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "during_regime_transitions_low_vo_1": {
+      "expression": "RANK(TS_STD($high, 10))",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "during_regime_transitions_low_vo_2": {
+      "expression": "TS_MAX($high, 10) ? -1 : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "during_regime_transitions_low_vo_3": {
+      "expression": "(TS_STD($high, 10) < 1) ? TS_ZSCORE($high, 10) : 0",
+      "standalone_RankIC": -0.022838780747765512,
+      "standalone_RankICIR": -0.18246880345264366
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.1041852089798135,
+    "1day.excess_return_with_cost.information_ratio": 1.0592785075024025,
+    "1day.excess_return_with_cost.annualized_return": 0.145100121829481,
+    "1day.excess_return_with_cost.std": 0.0088791038987005,
+    "1day.excess_return_with_cost.mean": 0.0006096643774347,
+    "1day.excess_return_without_cost.max_drawdown": -0.1041852089798135,
+    "1day.excess_return_without_cost.information_ratio": 1.2299333875503051,
+    "1day.excess_return_without_cost.annualized_return": 0.1683968607090932,
+    "1day.excess_return_without_cost.std": 0.0088749092634632,
+    "1day.excess_return_without_cost.mean": 0.0007075498349121,
+    "Rank ICIR": 0.2727582658212706,
+    "Rank IC": 0.0353306191876144,
+    "ICIR": 0.1242337685627659,
+    "IC": 0.0159555370620632,
+    "l2.valid": 0.9968375886395382,
+    "l2.train": 0.9944166810602548
+  },
+  "correlation_dropped": [
+    "during_regime_transitions_low_vo_0 [within-round |corr|=0.993 with during_regime_transitions_low_vo_3]",
+    "during_regime_transitions_low_vo_1 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  during_regime_transitions_low_vo_0: TS_ZSCORE($high, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  during_regime_transitions_low_vo_1: RANK(TS_STD($high, 10))\n    standalone RankIC=n/a  ICIR=n/a\n  during_regime_transitions_low_vo_2: TS_MAX($high, 10) ? -1 : 0\n    standalone RankIC=n/a  ICIR=n/a\n  during_regime_transitions_low_vo_3: (TS_STD($high, 10) < 1) ? TS_ZSCORE($high, 10) : 0\n    standalone RankIC=-0.0228  ICIR=-0.1825\n  [mean]: RankIC=-0.0228  ICIR=-0.1825\n[CORR-GATE] 2 faktor di-drop sebelum backtest (|corr| > threshold): during_regime_transitions_low_vo_0 [within-round |corr|=0.993 with during_regime_transitions_low_vo_3]; during_regime_transitions_low_vo_1 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0353\n  RankICIR: 0.2728\n  IC: 0.0160\n  ICIR: 0.1242\n  Ann.Return: 0.1451\n  InfoRatio: 1.0593\n  MaxDrawdown: -0.1042",
+    "sota_block": "Previous best FactorIC_mean (SOTA): 0.0449\nThis round FactorIC_mean: -0.0228\nDecision: KEEP — FactorIC_mean -0.0228 ≤ SOTA 0.0449 → keep"
+  },
+  "agent_response": {
+    "Observations": "Standalone RankIC+ICIR for all factors is negative, with [A] deciding SOTA as the previous best FactorIC_mean of 0.0449. [B] combined model shows moderate performance but is not the verdict on the mined factors.",
+    "Factor Diagnosis": "during_regime_transitions_low_vo_3: noise, wrong window; during_regime_transitions_low_vo_0: noise, redundant with other factor; during_regime_transitions_low_vo_1: noise, redundant with other factor; during_regime_transitions_low_vo_2: noise, shallow composition",
+    "Feedback for Hypothesis": "REFUTES — the mechanism is invalid (liquidity-induced reversal in cross-sectional returns during regime transitions is not captured by the factors tested). The implementation is weak (factors are noisy, redundant, or shallow). The framework still has room for refinement.",
+    "Replace Best Result": "no"
+  }
+}

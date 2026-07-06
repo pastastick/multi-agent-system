@@ -1,0 +1,21 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/runs/prod_kv_and_text_2026-07-05_09-36-48-resume/latent pid=12192
+[  116.91s] INFO    crossover guidance (probe)  head=(1) **TASK**  
+not present in memory  
+
+(2) **THOUGHT PROCESS**  
+not present in memory  
+
+(3) **DECISION RATIONALE**  
+not present in memory  
+
+(4) **VARIABLES & OPERATORS available to you**  
+not present in memory  
+
+(5) **CURRENT HYPOTHESIS and factor EXPRESSION(S), if any**  
+not present in memory
+[  171.82s] INFO    GATE PASS  name=volatility_gate expr=TS_ZSCORE($return, 10) ? TS_RANK($return, 10) : 0
+[  171.95s] INFO    GATE PASS  name=volume_trigger expr=TS_ZSCORE($volume, 10) ? TS_PCTCHANGE($return, 1) : 0
+[  172.42s] INFO    GATE PASS  name=cap_filter expr=TS_MEAN($volume, 10) < 500000 ? TS_ZSCORE($return, 10) : 0
+[  172.54s] INFO    GATE PASS  name=volatility_rank expr=TS_RANK($return, 10) ? TS_ZSCORE($return, 10) : 0
+[  172.74s] INFO    GATE PASS  name=volume_zscore expr=TS_ZSCORE($volume, 10) ? TS_PCTCHANGE($return, 1) : 0
+[  172.93s] INFO    GATE PASS  name=cap_volatility expr=TS_MEAN($volume, 10) < 500000 ? TS_ZSCORE($return, 10) : 0

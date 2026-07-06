@@ -1,0 +1,68 @@
+{
+  "total_events": 80,
+  "event_type_counts": {
+    "llm.call.start": 21,
+    "llm.call.end": 21,
+    "llm.output.quality": 14,
+    "pipeline.loop.start": 6,
+    "pipeline.step.start": 6,
+    "pipeline.step.end": 6,
+    "pipeline.loop.end": 3,
+    "evolution.round": 3
+  },
+  "pipeline": {
+    "steps": {
+      "factor_backtest": {
+        "call_count": 3,
+        "total_s": 2571.548,
+        "avg_s": 857.183,
+        "min_s": 437.107,
+        "max_s": 1213.085,
+        "errors": 0
+      },
+      "feedback": {
+        "call_count": 3,
+        "total_s": 37.459,
+        "avg_s": 12.486,
+        "min_s": 9.585,
+        "max_s": 15.553,
+        "errors": 0
+      }
+    },
+    "total_pipeline_time_s": 2609.007,
+    "bottleneck": {
+      "step": "factor_backtest",
+      "total_s": 2571.548,
+      "percentage": 98.6
+    }
+  },
+  "llm": {
+    "total_calls": 21,
+    "total_output_tokens": 4015,
+    "callers": {
+      "planning": 1,
+      "proposal": 3,
+      "design": 3,
+      "construct": 3,
+      "feedback": 3,
+      "mutation": 2,
+      "mutation_guidance": 2,
+      "crossover": 2,
+      "crossover_guidance": 2
+    },
+    "avg_duration_s": 9.598,
+    "total_duration_s": 201.558,
+    "avg_quality_score": 0.4234,
+    "min_quality_score": 0.2019
+  },
+  "anomalies": {
+    "total": 0,
+    "by_severity": {},
+    "by_type": {},
+    "details": []
+  },
+  "session_duration_s": 2875.85,
+  "session_name": "evolution_prod_kv_2026-07-05_09-36-48",
+  "total_events_written": 80,
+  "generated_at": "2026-07-06T03:05:05.648778"
+}

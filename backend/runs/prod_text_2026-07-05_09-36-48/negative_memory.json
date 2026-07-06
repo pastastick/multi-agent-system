@@ -1,0 +1,66 @@
+{
+  "entries": {
+    "duringregimetransitionslowvolatilitystocksexhibitaliquiditydrivenreversalincrosssectionalreturnsdrivenbynarrowingpricera": {
+      "hypothesis": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+      "reason": "weak_ic",
+      "ic": -0.0029154209418394412,
+      "icir": -0.07045736031721357,
+      "families": [
+        "conditional",
+        "cross_sectional",
+        "time_series",
+        "ts_pair"
+      ],
+      "round_idx": -1,
+      "phase": "RoundPhase.ORIGINAL",
+      "count": 1,
+      "created_at": "2026-07-05T10:04:41.647131"
+    },
+    "smallcapstockswithhighvolumedaysfollowedbylowreturnranksexhibitliquiditydrivenreversalincrosssectionalreturns": {
+      "hypothesis": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+      "reason": "weak_ic",
+      "ic": -0.03556626136161578,
+      "icir": -0.43572862808742935,
+      "families": [
+        "conditional",
+        "cross_sectional",
+        "time_series"
+      ],
+      "round_idx": 1,
+      "phase": "RoundPhase.MUTATION",
+      "count": 1,
+      "created_at": "2026-07-05T10:18:39.045627"
+    },
+    "duringregimetransitionslowvolatilitystocksexperiencealiquidityinducedreversalincrosssectionalreturnsduetocompressedprice": {
+      "hypothesis": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+      "reason": "weak_ic",
+      "ic": -0.022838780747765512,
+      "icir": -0.18246880345264366,
+      "families": [
+        "conditional",
+        "cross_sectional",
+        "time_series"
+      ],
+      "round_idx": 1,
+      "phase": "RoundPhase.MUTATION",
+      "count": 1,
+      "created_at": "2026-07-05T10:29:53.789959"
+    },
+    "duringlowvolatilityregimetransitionssmallcapstockswithhighvolumeexhibitaliquiditydrivenmeanreversioninnextperiodreturns": {
+      "hypothesis": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+      "reason": "weak_ic",
+      "ic": -0.0075101951788793045,
+      "icir": -0.1013040119656039,
+      "families": [
+        "conditional",
+        "time_series",
+        "ts_pair"
+      ],
+      "round_idx": 2,
+      "phase": "RoundPhase.CROSSOVER",
+      "count": 1,
+      "created_at": "2026-07-05T10:52:55.352371"
+    }
+  },
+  "saved_at": "2026-07-05T10:52:55.353284"
+}

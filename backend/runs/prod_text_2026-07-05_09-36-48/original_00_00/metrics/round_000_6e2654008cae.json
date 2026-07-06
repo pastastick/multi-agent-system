@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-07-05T09:51:47",
+  "round_idx": 0,
+  "trajectory_id": "6e2654008cae",
+  "evolution_phase": "original",
+  "hypothesis": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+  "factor_ic_mean": 0.04492601440188402,
+  "factor_icir_mean": 0.4310106758630833,
+  "sota": {
+    "prev": null,
+    "replaced": true,
+    "note": "FactorIC_mean 0.0449 > SOTA none → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "small_cap_stocks_with_unusually_0": {
+      "expression": "TS_ZSCORE($volume, 1) * (TS_MEAN($return, 1) ? -1 : 1)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_1": {
+      "expression": "RANK($volume) * (TS_RANK($return, 1) ? -1 : 1)",
+      "standalone_RankIC": 0.04492601440188402,
+      "standalone_RankICIR": 0.4310106758630833
+    },
+    "small_cap_stocks_with_unusually_2": {
+      "expression": "(TS_ZSCORE($volume, 1) > 1) ? TS_MEAN($return, 1) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_3": {
+      "expression": "TS_QUANTILE($return, 0.1, 1) * TS_ZSCORE($volume, 1)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_4": {
+      "expression": "TS_RANK($return, 1) * (TS_ZSCORE($volume, 1) ? -1 : 1)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_unusually_5": {
+      "expression": "(TS_ZSCORE($volume, 1) > 1) ? TS_ZSCORE($return, 1) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.083465519606989,
+    "1day.excess_return_with_cost.information_ratio": 0.8050780002001185,
+    "1day.excess_return_with_cost.annualized_return": 0.0959787848813285,
+    "1day.excess_return_with_cost.std": 0.0077276743031886,
+    "1day.excess_return_with_cost.mean": 0.0004032722053837,
+    "1day.excess_return_without_cost.max_drawdown": -0.0777734936963119,
+    "1day.excess_return_without_cost.information_ratio": 1.0007013060742806,
+    "1day.excess_return_without_cost.annualized_return": 0.1191903620773509,
+    "1day.excess_return_without_cost.std": 0.0077205491829681,
+    "1day.excess_return_without_cost.mean": 0.0005007998406611,
+    "Rank ICIR": 0.3036023619930885,
+    "Rank IC": 0.0358589348027002,
+    "ICIR": 0.135378446961472,
+    "IC": 0.0164813084777312,
+    "l2.valid": 0.9969387082042056,
+    "l2.train": 0.9937802875426144
+  },
+  "correlation_dropped": [],
+  "agent_input": {
+    "factor_block": "Hypothesis: small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  small_cap_stocks_with_unusually_0: TS_ZSCORE($volume, 1) * (TS_MEAN($return, 1) ? -1 : 1)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_1: RANK($volume) * (TS_RANK($return, 1) ? -1 : 1)\n    standalone RankIC=0.0449  ICIR=0.4310\n  small_cap_stocks_with_unusually_2: (TS_ZSCORE($volume, 1) > 1) ? TS_MEAN($return, 1) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_3: TS_QUANTILE($return, 0.1, 1) * TS_ZSCORE($volume, 1)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_4: TS_RANK($return, 1) * (TS_ZSCORE($volume, 1) ? -1 : 1)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_unusually_5: (TS_ZSCORE($volume, 1) > 1) ? TS_ZSCORE($return, 1) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  [mean]: RankIC=0.0449  ICIR=0.4310",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0359\n  RankICIR: 0.3036\n  IC: 0.0165\n  ICIR: 0.1354\n  Ann.Return: 0.0960\n  InfoRatio: 0.8051\n  MaxDrawdown: -0.0835",
+    "sota_block": "Previous best FactorIC_mean (SOTA): none yet\nThis round FactorIC_mean: 0.0449\nDecision: REPLACE — FactorIC_mean 0.0449 > SOTA none → replace"
+  },
+  "agent_response": {
+    "Observations": "The SOTA is determined by [A] standalone RankIC+ICIR, where FactorIC_mean has RankIC=0.0449 and ICIR=0.4310. [B] combined model only provides context and does not decide SOTA.",
+    "Factor Diagnosis": "small_cap_stocks_with_unusually_1: strong, valid mechanism but implementation is shallow. small_cap_stocks_with_unusually_2: noise, missing normalization. small_cap_stocks_with_unusually_3: noise, wrong window. small_cap_stocks_with_unusually_4: noise, shallow composition. small_cap_stocks_with_unusually_5: noise, missing normalization.",
+    "Feedback for Hypothesis": "SUPPORTS — the mechanism is valid but the implementation is weak (refine the expression). The framework still has room for refinement.",
+    "Replace Best Result": "yes"
+  }
+}

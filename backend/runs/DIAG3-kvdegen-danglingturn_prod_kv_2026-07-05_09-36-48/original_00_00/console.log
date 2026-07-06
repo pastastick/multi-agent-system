@@ -1,0 +1,165 @@
+2026-07-06 01:31:21.875 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=original, round=0, direction=0
+2026-07-06 01:31:21.909 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 01:31:21.933 | INFO     | pipeline.loop:__init__:156 - Initial direction: volume-based mean reversion in high-volatility stocks during intraday price range compression
+2026-07-06 01:31:21.953 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 01:31:21.979 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 01:31:54.225 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 01:31:54.279 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 01:31:54.452 | INFO     | log.time:wrapper:16 - __init__ took 32.56s
+2026-07-06 01:37:03.210 | WARNING  | latent_mas.runlog:log:154 - [latent] construct output unparseable; retry once  head=.
+
+ and the same mechanism that of and in the
+
+ the
+
+ to the,ing the mechanism
+ expression
+ the theview the mechanism
+ e
+2026-07-06 01:42:06.748 | ERROR    | latent_mas.runlog:log:154 - [latent] no expression from construct; skipping repair
+2026-07-06 01:42:06.768 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=original: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 01:42:06.784 | WARNING  | utils.workflow:run:212 - Skip loop 0 due to Front-end produced no expression
+2026-07-06 01:47:14.342 | WARNING  | latent_mas.runlog:log:154 - [latent] construct output unparseable; retry once  head=ing
+
+
+
+ and
+
+ the is the and the or and
+
+
+
+ing the review and the and the selection
+ and the
+
+
+
+
+
+ the, and
+
+ the and an
+2026-07-06 01:52:17.972 | ERROR    | latent_mas.runlog:log:154 - [latent] no expression from construct; skipping repair
+2026-07-06 01:52:17.990 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=original: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 01:52:18.012 | WARNING  | utils.workflow:run:212 - Skip loop 1 due to Front-end produced no expression
+2026-07-06 01:57:25.440 | WARNING  | latent_mas.runlog:log:154 - [latent] construct output unparseable; retry once  head=ation  the anding
+
+ and, the and and
+ and then
+
+ and
+ of
+ the same mechanism,
+
+ and
+
+ the and
+ and
+
+
+ the and the same m
+2026-07-06 02:02:28.976 | ERROR    | latent_mas.runlog:log:154 - [latent] no expression from construct; skipping repair
+2026-07-06 02:02:28.998 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=original: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 02:02:29.021 | WARNING  | utils.workflow:run:212 - Skip loop 2 due to Front-end produced no expression
+2026-07-06 02:07:36.658 | ERROR    | pipeline.factor_mining:run_evolution_loop:899 - Task failed: [Errno 5] Input/output error
+2026-07-06 02:07:36.676 | ERROR    | pipeline.factor_mining:run_evolution_loop:901 - Traceback (most recent call last):
+  File "/workspace/project/multi-agent-system/backend/pipeline/factor_mining.py", line 857, in run_evolution_loop
+    traj_data = _run_evolution_task(
+  File "/workspace/project/multi-agent-system/backend/pipeline/factor_mining.py", line 296, in _run_evolution_task
+    model_loop.run(step_n=step_n, stop_event=stop_event) #* running mining loop: propose → code → backtest → feedback × step_n kali
+  File "/workspace/project/multi-agent-system/backend/utils/workflow.py", line 199, in run
+    self.loop_prev_out[name] = func(self.loop_prev_out)
+  File "/workspace/project/multi-agent-system/backend/log/time.py", line 14, in wrapper
+    result = func(*args, **kwargs)
+  File "/workspace/project/multi-agent-system/backend/pipeline/loop.py", line 63, in wrapper
+    return func(self, *args, **kwargs)
+  File "/workspace/project/multi-agent-system/backend/pipeline/loop.py", line 347, in factor_propose
+    front = self._front.run(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py", line 348, in run
+    r_con = self._a("construct").run(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/agent.py", line 169, in run
+    with step_cm:
+  File "/usr/lib/python3.10/contextlib.py", line 142, in __exit__
+    next(self.gen)
+  File "/workspace/project/multi-agent-system/backend/latent_mas/runlog.py", line 192, in step
+    self.event(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/runlog.py", line 139, in event
+    self._events.write(json.dumps(rec, default=str) + "\n")
+OSError: [Errno 5] Input/output error
+
+2026-07-06 02:07:36.688 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=original, round=0, direction=0
+2026-07-06 02:07:36.718 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=original, round=0, direction=0
+2026-07-06 02:07:36.733 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 02:07:36.749 | INFO     | pipeline.loop:__init__:156 - Initial direction: volume-based mean reversion in high-volatility stocks during intraday price range compression
+2026-07-06 02:07:36.765 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 02:07:36.781 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 02:07:37.550 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 02:07:37.587 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 02:07:37.657 | INFO     | log.time:wrapper:16 - __init__ took 0.92s
+2026-07-06 02:07:37.683 | ERROR    | pipeline.factor_mining:run_evolution_loop:899 - Task failed: [Errno 5] Input/output error
+2026-07-06 02:07:37.700 | ERROR    | pipeline.factor_mining:run_evolution_loop:901 - Traceback (most recent call last):
+  File "/workspace/project/multi-agent-system/backend/pipeline/factor_mining.py", line 857, in run_evolution_loop
+    traj_data = _run_evolution_task(
+  File "/workspace/project/multi-agent-system/backend/pipeline/factor_mining.py", line 296, in _run_evolution_task
+    model_loop.run(step_n=step_n, stop_event=stop_event) #* running mining loop: propose → code → backtest → feedback × step_n kali
+  File "/workspace/project/multi-agent-system/backend/utils/workflow.py", line 199, in run
+    self.loop_prev_out[name] = func(self.loop_prev_out)
+  File "/workspace/project/multi-agent-system/backend/log/time.py", line 14, in wrapper
+    result = func(*args, **kwargs)
+  File "/workspace/project/multi-agent-system/backend/pipeline/loop.py", line 63, in wrapper
+    return func(self, *args, **kwargs)
+  File "/workspace/project/multi-agent-system/backend/pipeline/loop.py", line 347, in factor_propose
+    front = self._front.run(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py", line 340, in run
+    r_prop = self._a("proposal").run(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/agent.py", line 169, in run
+    with step_cm:
+  File "/usr/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/workspace/project/multi-agent-system/backend/latent_mas/runlog.py", line 176, in step
+    self.event("step_start", step=name, **ctx)
+  File "/workspace/project/multi-agent-system/backend/latent_mas/runlog.py", line 139, in event
+    self._events.write(json.dumps(rec, default=str) + "\n")
+OSError: [Errno 5] Input/output error
+
+2026-07-06 02:07:37.719 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=original, round=0, direction=0
+2026-07-06 02:07:37.751 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=original, round=0, direction=0
+2026-07-06 02:07:37.767 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 02:07:37.784 | INFO     | pipeline.loop:__init__:156 - Initial direction: volume-based mean reversion in high-volatility stocks during intraday price range compression
+2026-07-06 02:07:37.799 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 02:07:37.820 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 02:07:38.558 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 02:07:38.628 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 02:07:38.660 | INFO     | log.time:wrapper:16 - __init__ took 0.89s
+2026-07-06 02:07:38.686 | ERROR    | pipeline.factor_mining:run_evolution_loop:899 - Task failed: [Errno 5] Input/output error
+2026-07-06 02:07:38.710 | ERROR    | pipeline.factor_mining:run_evolution_loop:901 - Traceback (most recent call last):
+  File "/workspace/project/multi-agent-system/backend/pipeline/factor_mining.py", line 857, in run_evolution_loop
+    traj_data = _run_evolution_task(
+  File "/workspace/project/multi-agent-system/backend/pipeline/factor_mining.py", line 296, in _run_evolution_task
+    model_loop.run(step_n=step_n, stop_event=stop_event) #* running mining loop: propose → code → backtest → feedback × step_n kali
+  File "/workspace/project/multi-agent-system/backend/utils/workflow.py", line 199, in run
+    self.loop_prev_out[name] = func(self.loop_prev_out)
+  File "/workspace/project/multi-agent-system/backend/log/time.py", line 14, in wrapper
+    result = func(*args, **kwargs)
+  File "/workspace/project/multi-agent-system/backend/pipeline/loop.py", line 63, in wrapper
+    return func(self, *args, **kwargs)
+  File "/workspace/project/multi-agent-system/backend/pipeline/loop.py", line 347, in factor_propose
+    front = self._front.run(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py", line 340, in run
+    r_prop = self._a("proposal").run(
+  File "/workspace/project/multi-agent-system/backend/latent_mas/agent.py", line 169, in run
+    with step_cm:
+  File "/usr/lib/python3.10/contextlib.py", line 135, in __enter__
+    return next(self.gen)
+  File "/workspace/project/multi-agent-system/backend/latent_mas/runlog.py", line 176, in step
+    self.event("step_start", step=name, **ctx)
+  File "/workspace/project/multi-agent-system/backend/latent_mas/runlog.py", line 139, in event
+    self._events.write(json.dumps(rec, default=str) + "\n")
+OSError: [Errno 5] Input/output error
+
+2026-07-06 02:07:38.723 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=original, round=0, direction=0
+2026-07-06 02:07:38.777 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=original, round=0, direction=0
+2026-07-06 02:07:38.794 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 02:07:38.816 | INFO     | pipeline.loop:__init__:156 - Initial direction: volume-based mean reversion in high-volatility stocks during intraday price range compression
+2026-07-06 02:07:38.833 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 02:07:38.849 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on

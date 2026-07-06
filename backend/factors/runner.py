@@ -379,7 +379,17 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
             if corr_df is not None:
                 corr_df.to_csv(out_dir / "correlation_after_gate.csv")
             if values_df is not None:
-                values_df.to_csv(out_dir / "factor_values.csv")
+                # Hemat kuota: simpan hanya window OOS (segmen test) + gzip.
+                # Full-range pasca-fix "All" (2008-2026, ~14 jt baris) ≈ 700MB
+                # CSV per ronde — pemicu insiden disk-quota 2026-07-05.
+                try:
+                    _s, _e = self._oos_window()
+                    if _s is not None:
+                        _dts = values_df.index.get_level_values("datetime")
+                        values_df = values_df[(_dts >= _s) & (_dts <= _e)]
+                except Exception:  # noqa: BLE001
+                    pass
+                values_df.to_csv(out_dir / "factor_values.csv.gz", compression="gzip")
             logger.info(f"[FactorLogs] correlation & factor values disimpan ke {out_dir}")
         except Exception as e:  # noqa: BLE001
             logger.warning(f"[FactorLogs] gagal simpan factor logs: {e}")
@@ -540,8 +550,15 @@ class QlibFactorRunner(CachedRunner[QlibFactorExperiment]):
         # Collect all exp's dataframes
         for exp in exp_or_list:
             # Iterate over sub-implementations and execute them to get each factor data
+            # "All" (bukan "Debug"): nilai faktor FINAL harus dihitung di data penuh
+            # (factor_implementation_source_data, 2008-2026). Sebelumnya "Debug"
+            # memakai subset 2018-2019 → kolom faktor NaN di segmen valid/test
+            # 2020-2021 (LightGBM efektif belajar baseline saja) dan FactorIC_mean
+            # selalu None (window OOS 2021 kosong) → fallback metrik tercemar.
+            # Evaluator in-loop coder tetap "Debug" (cepat); hash cache memuat
+            # data_type sehingga hasil Debug/All tidak saling tertukar.
             message_and_df_list = multiprocessing_wrapper(
-                [(implementation.execute, ("Debug",)) for implementation in exp.sub_workspace_list],
+                [(implementation.execute, ("All",)) for implementation in exp.sub_workspace_list],
                 n=RD_AGENT_SETTINGS.multi_proc_n,
             )
             

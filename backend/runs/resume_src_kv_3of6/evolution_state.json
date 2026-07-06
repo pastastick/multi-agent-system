@@ -1,0 +1,23 @@
+{
+  "current_round": 1,
+  "current_phase": "mutation",
+  "directions_completed": [
+    0,
+    1
+  ],
+  "crossover_idx": 0,
+  "active_branch_count": 2,
+  "mutation_idx": 0,
+  "mutation_target_ids": [
+    "13cf02744ae3",
+    "a1706537aec6"
+  ],
+  "config": {
+    "num_directions": 2,
+    "max_rounds": 3,
+    "mutation_enabled": true,
+    "crossover_enabled": true,
+    "crossover_size": 2,
+    "crossover_n": 2
+  }
+}

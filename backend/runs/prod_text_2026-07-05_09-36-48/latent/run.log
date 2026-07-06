@@ -1,0 +1,39 @@
+[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/runs/prod_text_2026-07-05_09-36-48/latent pid=25425
+[  124.39s] INFO    GATE PASS  name=VolumeZScoreReturn expr=TS_ZSCORE($volume, 1) * (TS_MEAN($return, 1) ? -1 : 1)
+[  124.84s] INFO    GATE PASS  name=VolumeRankReturn expr=RANK($volume) * (TS_RANK($return, 1) ? -1 : 1)
+[  124.97s] INFO    GATE PASS  name=VolumeZScoreReturnGate expr=(TS_ZSCORE($volume, 1) > 1) ? TS_MEAN($return, 1) : 0
+[  125.12s] INFO    GATE PASS  name=VolumeZScoreReturnQuantile expr=TS_QUANTILE($return, 0.1, 1) * TS_ZSCORE($volume, 1)
+[  125.32s] INFO    GATE PASS  name=VolumeReturnCrossRank expr=TS_RANK($return, 1) * (TS_ZSCORE($volume, 1) ? -1 : 1)
+[  125.49s] INFO    GATE PASS  name=VolumeReturnZScoreGate expr=(TS_ZSCORE($volume, 1) > 1) ? TS_ZSCORE($return, 1) : 0
+[  909.72s] INFO    GATE PASS  name=VolReversalZScore expr=RANK(TS_ZSCORE($return, 20))
+[  909.76s] WARNING GATE REJECT  name=VolReversalRange expr=TS_RANGE($high, $low, 20) reason=arity: `TS_RANGE` is not a known function. Use only functions from the allowed list.
+[  909.88s] INFO    GATE PASS  name=VolReversalCorr expr=TS_CORR($return, TS_STD($return, 20), 20)
+[  910.00s] INFO    GATE PASS  name=VolReversalArgMax expr=TS_ARGMAX(TS_STD($return, 20), 20)
+[  910.12s] INFO    GATE PASS  name=VolReversalZRank expr=RANK(TS_ZSCORE($return, 10))
+[  910.30s] INFO    GATE PASS  name=VolReversalCondZScore expr=(TS_ZSCORE($return, 20) > 1.5) ? TS_ZSCORE($return, 20) : 0
+[ 1694.88s] INFO    GATE PASS  name=VolumeReturnReversal1 expr=TS_ZSCORE($return, 1) * (TS_RANK($volume, 1) < 50 ? 1 : 0)
+[ 1695.11s] INFO    GATE PASS  name=VolumeReturnReversal2 expr=(TS_RANK($volume, 1) < 50) ? TS_ZSCORE($return, 1) : 0
+[ 1695.33s] INFO    GATE PASS  name=VolumeReturnReversal3 expr=RANK($return) * (TS_RANK($volume, 1) < 50 ? 1 : 0)
+[ 1695.61s] INFO    GATE PASS  name=VolumeReturnReversal4 expr=TS_RANK($return, 1) * (TS_MIN($volume, 1) > 1000000 ? 1 : 0)
+[ 1695.83s] INFO    GATE PASS  name=VolumeReturnReversal5 expr=(TS_ZSCORE($return, 1) < -1) ? TS_RANK($volume, 1) : 0
+[ 1696.12s] INFO    GATE PASS  name=VolumeReturnReversal6 expr=TS_RANK($volume, 1) * (TS_RANK($return, 1) > 50 ? 1 : 0)
+[ 2532.21s] WARNING GATE REJECT  name=RangeZScore expr=TS_ZSCORE($range, 10) reason=variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.
+[ 2532.26s] WARNING GATE REJECT  name=RangeVolatilityRank expr=RANK(TS_STD($range, 10)) reason=variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.
+[ 2532.30s] WARNING GATE REJECT  name=ReturnRangeCorrelation expr=TS_CORR($return, $range, 10) reason=variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.
+[ 2532.36s] WARNING GATE REJECT  name=RangeMinReversal expr=TS_MIN($range, 10) ? 1 : 0 reason=variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.
+[ 2532.42s] WARNING GATE REJECT  name=RangeMaxContrast expr=TS_MAX($range, 10) ? -1 : 0 reason=variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.
+[ 2532.50s] WARNING GATE REJECT  name=RangeVolatilityGate expr=(TS_STD($range, 10) < 1) ? TS_ZSCORE($range, 10) : 0 reason=variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.
+[ 2536.11s] INFO    REPAIR attempt  n=1 mode=minimal pass_claim=False n_expr=6
+[ 2536.80s] INFO    REPAIR success  n=1 confirmed_by=gate pass_claim=False n_passing=4
+[ 3208.45s] INFO    GATE PASS  name=VolumeZScore expr=TS_ZSCORE($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)
+[ 3208.55s] WARNING GATE REJECT  name=VolatilityLiquidity expr=(TS_VOLATILITY($volatility_indicator, 10) < 0.1) ? TS_ZSCORE($return, 10) : 0 reason=arity: `TS_VOLATILITY` is not a known function. Use only functions from the allowed list.
+[ 3208.82s] INFO    GATE PASS  name=CorrelationLiquidity expr=TS_CORR($volume, $return, 10) * TS_ZSCORE($return, 10)
+[ 3209.13s] INFO    GATE PASS  name=MedianDeviation expr=TS_MAD($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)
+[ 3209.37s] INFO    GATE PASS  name=MaxVolumeSignal expr=TS_ARGMAX($volume, 10) ? TS_ZSCORE($return, 10) : 0
+[ 3209.64s] INFO    GATE PASS  name=VolumeVariance expr=TS_VAR($volume, 10) * TS_ZSCORE($return, 10)
+[ 4592.28s] INFO    GATE PASS  name=VolatilityReversalSignal expr=(TS_ZSCORE($return, 10) > 1.5) ? TS_RANK($volume, 10) : 0
+[ 4592.48s] INFO    GATE PASS  name=VolumeMomentumCrossSection expr=TS_CORR($volume, $return, 10) * TS_ZSCORE($volume, 10)
+[ 4592.64s] INFO    GATE PASS  name=VolatilityLiquidityRatio expr=TS_STD($return, 10) / TS_ZSCORE($volume, 10)
+[ 4592.84s] INFO    GATE PASS  name=MomentumReversalGate expr=(RSI($return, 14) < 30) ? TS_ZSCORE($return, 10) : 0
+[ 4593.06s] INFO    GATE PASS  name=VolumeVolatilityCrossRank expr=TS_RANK(TS_ZSCORE($volume, 10) * TS_STD($return, 10), 10)
+[ 4593.37s] INFO    GATE PASS  name=RegimeConfirmedLiquidity expr=(TS_ZSCORE($return, 10) > 1) && (TS_ZSCORE($volume, 10) > 1) ? 1 : 0

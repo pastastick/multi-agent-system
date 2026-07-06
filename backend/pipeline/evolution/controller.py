@@ -1163,9 +1163,14 @@ class EvolutionController:
             if traj:
                 self._mutation_targets.append(traj)
 
-        # Re-prepare crossover groups if in crossover phase
+        # Re-prepare crossover groups if in crossover phase.
+        # _prepare_crossover_groups() me-reset _crossover_idx ke 0 — simpan lalu
+        # pulihkan cursor dari state agar group yang sudah selesai tidak diulang
+        # saat resume di tengah fase crossover.
         if self._current_phase == RoundPhase.CROSSOVER:
+            _saved_idx = self._crossover_idx
             self._prepare_crossover_groups()
+            self._crossover_idx = min(_saved_idx, len(self._crossover_groups))
 
         logger.info(f"Loaded evolution state from {path}")
 

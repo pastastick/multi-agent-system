@@ -1,0 +1,77 @@
+{
+  "timestamp": "2026-07-06T02:41:38",
+  "round_idx": 0,
+  "trajectory_id": "c62b7afd08a3",
+  "evolution_phase": "original",
+  "hypothesis": "when low-volatility stocks show a sharp decline in price range (the range $high minus $low) during regime transitions, next-period cross-sectional returns are more likely to be negative",
+  "factor_ic_mean": -0.021591772256228374,
+  "factor_icir_mean": -0.2470398688365671,
+  "sota": {
+    "prev": -0.014477280938124644,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0216 ≤ SOTA -0.0145 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "when_low_volatility_stocks_show_0": {
+      "expression": "TS_ZSCORE((($high - $low)), 20)",
+      "standalone_RankIC": -0.021847433652476426,
+      "standalone_RankICIR": -0.2730090350955966
+    },
+    "when_low_volatility_stocks_show_1": {
+      "expression": "RANK(($high - $low) ? ($volume < 1000000) : 0.0)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "when_low_volatility_stocks_show_2": {
+      "expression": "($high - $low) ? TS_MEAN($return, 5) : 0.0",
+      "standalone_RankIC": -0.0291011889970014,
+      "standalone_RankICIR": -0.2285262812010202
+    },
+    "when_low_volatility_stocks_show_3": {
+      "expression": "TS_ZSCORE(TS_MEAN(($high - $low), 10), 30)",
+      "standalone_RankIC": -0.016328741674175667,
+      "standalone_RankICIR": -0.14649363451517983
+    },
+    "when_low_volatility_stocks_show_4": {
+      "expression": "FILTER(TS_ZSCORE(($high - $low), 15), ($volume < 500000))",
+      "standalone_RankIC": -0.019089724701259997,
+      "standalone_RankICIR": -0.34013052453447173
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0990424974796127,
+    "1day.excess_return_with_cost.information_ratio": 0.3715080414255409,
+    "1day.excess_return_with_cost.annualized_return": 0.0496821772745331,
+    "1day.excess_return_with_cost.std": 0.0086684993896654,
+    "1day.excess_return_with_cost.mean": 0.0002087486440106,
+    "1day.excess_return_without_cost.max_drawdown": -0.0948010320774196,
+    "1day.excess_return_without_cost.information_ratio": 0.5484973686936967,
+    "1day.excess_return_without_cost.annualized_return": 0.073279056607018,
+    "1day.excess_return_without_cost.std": 0.0086599790741356,
+    "1day.excess_return_without_cost.mean": 0.0003078951958278,
+    "Rank ICIR": 0.2551669778769438,
+    "Rank IC": 0.0374442969931695,
+    "ICIR": 0.1102312154712946,
+    "IC": 0.0165951267461609,
+    "l2.valid": 0.9970650100525792,
+    "l2.train": 0.9933734050423336
+  },
+  "correlation_dropped": [
+    "when_low_volatility_stocks_show_1 [cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: when low-volatility stocks show a sharp decline in price range (the range $high minus $low) during regime transitions, next-period cross-sectional returns are more likely to be negative\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  when_low_volatility_stocks_show_0: TS_ZSCORE((($high - $low)), 20)\n    standalone RankIC=-0.0218  ICIR=-0.2730\n  when_low_volatility_stocks_show_1: RANK(($high - $low) ? ($volume < 1000000) : 0.0)\n    standalone RankIC=n/a  ICIR=n/a\n  when_low_volatility_stocks_show_2: ($high - $low) ? TS_MEAN($return, 5) : 0.0\n    standalone RankIC=-0.0291  ICIR=-0.2285\n  when_low_volatility_stocks_show_3: TS_ZSCORE(TS_MEAN(($high - $low), 10), 30)\n    standalone RankIC=-0.0163  ICIR=-0.1465\n  when_low_volatility_stocks_show_4: FILTER(TS_ZSCORE(($high - $low), 15), ($volume < 500000))\n    standalone RankIC=-0.0191  ICIR=-0.3401\n  [mean]: RankIC=-0.0216  ICIR=-0.2470\n[CORR-GATE] 1 faktor di-drop sebelum backtest (|corr| > threshold): when_low_volatility_stocks_show_1 [cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0374\n  RankICIR: 0.2552\n  IC: 0.0166\n  ICIR: 0.1102\n  Ann.Return: 0.0497\n  InfoRatio: 0.3715\n  MaxDrawdown: -0.0990",
+    "sota_block": "Previous best FactorIC_mean (SOTA): -0.0145\nThis round FactorIC_mean: -0.0216\nDecision: KEEP — FactorIC_mean -0.0216 ≤ SOTA -0.0145 → keep"
+  },
+  "agent_response": {
+    "Observations": "Factors have low standalone RankIC (≤-0.02) and unstable ICIR (≤-0.25), indicating weak predictive power and poor stability. [B] combined model shows marginal improvement but still below baseline.",
+    "Factor Diagnosis": "when_low_volatility_stocks_show_0: Weak signal with negative RankIC and ICIR; when_low_volatility_stocks_show_1: Missing normalization and conditional gate; when_low_volatility_stocks_show_2: Unstable with negative RankIC; when_low_volatility_stocks_show_3: Weak with low RankIC; when_low_volatility_stocks_show_4: Strong ICIR but weak RankIC",
+    "Feedback for Hypothesis": "PARTIALLY — mechanism valid but implementation weak (shallow composition, missing normalization). Framework has room for refinement.",
+    "Replace Best Result": "no"
+  }
+}

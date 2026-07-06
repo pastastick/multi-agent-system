@@ -132,18 +132,44 @@ class RunLogger:
 
     # ── core writers ────────────────────────────────────────────────────────
 
+    def _safe_write(self, attr: str, filename: str, text: str) -> None:
+        """Tulis ke file log; JANGAN PERNAH melempar exception ke pipeline.
+
+        Errno 5 (I/O error) pada volume network membuat file handle rusak
+        permanen — insiden 2026-07-06 03:04: satu write runlog gagal →
+        3 task evolution mati beruntun (MONITORING_NOTES B12). Di sini:
+        coba tulis; bila gagal, reopen handle sekali; bila masih gagal,
+        buang baris ini (logging best-effort, pipeline jalan terus).
+        """
+        try:
+            getattr(self, attr).write(text)
+            return
+        except (OSError, ValueError):  # ValueError = write ke handle tertutup
+            pass
+        try:
+            getattr(self, attr).close()
+        except Exception:
+            pass
+        try:
+            setattr(self, attr, open(self.dir / filename, "a", buffering=1))
+            getattr(self, attr).write(text)
+        except Exception:
+            print(f"[runlog] gagal tulis {filename} (I/O); baris dibuang",
+                  file=sys.stderr)
+
     def event(self, kind: str, **fields: Any) -> None:
         """Tulis satu event terstruktur ke events.jsonl."""
         rec = {"t": round(time.time() - self._t0, 4), "kind": kind, **fields}
         with self._lock:
-            self._events.write(json.dumps(rec, default=str) + "\n")
+            self._safe_write("_events", "events.jsonl",
+                             json.dumps(rec, default=str) + "\n")
 
     def log(self, level: str, msg: str, **fields: Any) -> None:
         lvl = _LEVELS.get(level.upper(), 20)
         suffix = ("  " + " ".join(f"{k}={v}" for k, v in fields.items())) if fields else ""
         line = f"[{round(time.time() - self._t0, 2):>8.2f}s] {level:<7} {msg}{suffix}"
         with self._lock:
-            self._run_log.write(line + "\n")
+            self._safe_write("_run_log", "run.log", line + "\n")
             teed = False
             if self._rd is not None:
                 # Teruskan ke rdagent logger → console.log terpadu (juga ke stderr

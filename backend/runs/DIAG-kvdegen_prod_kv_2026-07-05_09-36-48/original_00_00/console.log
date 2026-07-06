@@ -1,0 +1,9 @@
+2026-07-05 11:53:42.028 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=original, round=0, direction=0
+2026-07-05 11:53:42.082 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-05 11:53:42.124 | INFO     | pipeline.loop:__init__:156 - Initial direction: short-term reversal after abnormally high-volume days in small-cap stocks
+2026-07-05 11:53:42.156 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-05 11:53:42.188 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-05 11:54:09.154 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-05 11:54:09.223 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-05 11:54:09.411 | INFO     | log.time:wrapper:16 - __init__ took 27.36s
+2026-07-05 12:06:51.168 | WARNING  | latent_mas.runlog:log:154 - [latent] construct output unparseable; retry once  head=selection, selectioninvestment and analysis expression expression expression is to compute the selection of in one sente

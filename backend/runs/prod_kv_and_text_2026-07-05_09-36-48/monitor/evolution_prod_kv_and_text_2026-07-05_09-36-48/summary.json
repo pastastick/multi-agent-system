@@ -1,0 +1,119 @@
+{
+  "total_events": 197,
+  "event_type_counts": {
+    "llm.call.start": 49,
+    "llm.call.end": 49,
+    "llm.output.quality": 53,
+    "pipeline.loop.start": 9,
+    "pipeline.step.start": 9,
+    "pipeline.step.end": 9,
+    "pipeline.loop.end": 4,
+    "evolution.round": 5,
+    "pipeline.loop.skipped": 3,
+    "anomaly.detected": 7
+  },
+  "pipeline": {
+    "steps": {
+      "factor_backtest": {
+        "call_count": 5,
+        "total_s": 3135.537,
+        "avg_s": 627.107,
+        "min_s": 467.974,
+        "max_s": 826.448,
+        "errors": 0
+      },
+      "feedback": {
+        "call_count": 4,
+        "total_s": 40.538,
+        "avg_s": 10.135,
+        "min_s": 9.323,
+        "max_s": 11.657,
+        "errors": 0
+      }
+    },
+    "total_pipeline_time_s": 3176.075,
+    "bottleneck": {
+      "step": "factor_backtest",
+      "total_s": 3135.537,
+      "percentage": 98.7
+    }
+  },
+  "llm": {
+    "total_calls": 49,
+    "total_output_tokens": 97027,
+    "callers": {
+      "planning": 1,
+      "proposal": 9,
+      "design": 9,
+      "construct": 11,
+      "feedback": 4,
+      "mutation": 3,
+      "mutation_guidance": 3,
+      "repair": 1,
+      "crossover": 4,
+      "crossover_guidance": 4
+    },
+    "avg_duration_s": 111.112,
+    "total_duration_s": 5444.509,
+    "avg_quality_score": 0.3781,
+    "min_quality_score": 0.0
+  },
+  "anomalies": {
+    "total": 7,
+    "by_severity": {
+      "warning": 7
+    },
+    "by_type": {
+      "high_repetition": 4,
+      "low_diversity": 3
+    },
+    "details": [
+      {
+        "type": "high_repetition",
+        "severity": "warning",
+        "description": "Repetisi bigram tinggi (60.16%). Output kemungkinan degenerate.",
+        "time": "2026-07-05T13:02:33.850709"
+      },
+      {
+        "type": "low_diversity",
+        "severity": "warning",
+        "description": "Token diversity sangat rendah (13.02%). Model mungkin stuck dalam loop repetisi.",
+        "time": "2026-07-05T13:18:33.044075"
+      },
+      {
+        "type": "high_repetition",
+        "severity": "warning",
+        "description": "Repetisi bigram tinggi (61.97%). Output kemungkinan degenerate.",
+        "time": "2026-07-05T13:18:33.044084"
+      },
+      {
+        "type": "low_diversity",
+        "severity": "warning",
+        "description": "Token diversity sangat rendah (0.02%). Model mungkin stuck dalam loop repetisi.",
+        "time": "2026-07-05T13:50:36.546198"
+      },
+      {
+        "type": "high_repetition",
+        "severity": "warning",
+        "description": "Repetisi bigram tinggi (99.95%). Output kemungkinan degenerate.",
+        "time": "2026-07-05T13:50:36.546210"
+      },
+      {
+        "type": "low_diversity",
+        "severity": "warning",
+        "description": "Token diversity sangat rendah (0.25%). Model mungkin stuck dalam loop repetisi.",
+        "time": "2026-07-05T14:37:58.663158"
+      },
+      {
+        "type": "high_repetition",
+        "severity": "warning",
+        "description": "Repetisi bigram tinggi (99.30%). Output kemungkinan degenerate.",
+        "time": "2026-07-05T14:37:58.663169"
+      }
+    ]
+  },
+  "session_duration_s": 8658.25,
+  "session_name": "evolution_prod_kv_and_text_2026-07-05_09-36-48",
+  "total_events_written": 197,
+  "generated_at": "2026-07-05T14:38:34.388086"
+}

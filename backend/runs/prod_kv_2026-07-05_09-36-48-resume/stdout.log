@@ -1,0 +1,636 @@
+2026-07-06 03:09:34.798 | INFO     | latent_mas.runlog:log:180 - [latent] run started  run_dir=/workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/latent pid=54940
+2026-07-06 03:09:34.839 | INFO     | pipeline.factor_mining:main:1043 - Unified run dir: /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume
+2026-07-06 03:09:35.426 | INFO     | pipeline.factor_mining:main:1053 - factor.py executor python_bin → /workspace/project/multi-agent-system/.venv/bin/python
+2026-07-06 03:09:35.437 | INFO     | pipeline.factor_mining:main:1055 - ============================================================
+2026-07-06 03:09:35.448 | INFO     | pipeline.factor_mining:main:1056 - Experiment config
+2026-07-06 03:09:35.459 | INFO     | pipeline.factor_mining:main:1057 -   Workspace: /workspace/project/multi-agent-system/backend/data/results/workspace
+2026-07-06 03:09:35.471 | INFO     | pipeline.factor_mining:main:1058 -   Cache dir: /workspace/project/multi-agent-system/backend/data/results/pickle_cache
+2026-07-06 03:09:35.483 | INFO     | pipeline.factor_mining:main:1059 -   Cache enabled: True
+2026-07-06 03:09:35.522 | INFO     | pipeline.factor_mining:main:1060 - ============================================================
+2026-07-06 03:09:35.587 | INFO     | pipeline.factor_mining:_apply_latent_overrides:115 - [Config] Latent overrides from YAML → latent_enabled=True, comm_mode=kv, latent_model_name=Qwen/Qwen3-4B, latent_device=cuda, latent_steps=60, latent_steps_propose=None, latent_steps_construct=None, latent_steps_coder=None, latent_steps_feedback=None, use_realign=True, enable_thinking=False, kv_max_tokens=20480, store_kv=False, knn_enabled=True, knn_percentage=0.8, knn_min_keep=5, knn_strategy=top, max_new_tokens=40960, temperature=0.8, top_p=0.95, temperature_propose=None, temperature_construct=0.7, temperature_coder=0.4, temperature_feedback=None, log_tensors=True
+2026-07-06 03:09:35.600 | INFO     | pipeline.factor_mining:_apply_factor_overrides:157 - [Config] Factor overrides from YAML → symbol_length_threshold=300, base_features_threshold=5, duplication_threshold=5
+2026-07-06 03:09:35.619 | INFO     | pipeline.factor_mining:main:1091 - [Config] insight_mode from YAML → sequential
+2026-07-06 03:09:35.631 | INFO     | pipeline.factor_mining:main:1103 - [LatentPipeline] latent_enabled=True, creating LocalLLMBackend...
+/workspace/project/multi-agent-system/backend/llm/client.py:1190: RuntimeWarning: KNN dinonaktifkan otomatis: tidak kompatibel dengan latent_steps > 0 (RoPE virtual-token desync, lihat konteks.txt Temuan #5).
+  self._engine   = _CoreEngine(
+[CoreEngine] KNN auto-disabled (latent_steps > 0; incompatible with virtual tokens)
+[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:  20%|██        | 81/398 [00:00<00:00, 809.38it/s]Loading weights:  41%|████      | 162/398 [00:00<00:00, 406.78it/s]Loading weights:  54%|█████▍    | 214/398 [00:00<00:00, 349.42it/s]Loading weights:  64%|██████▍   | 255/398 [00:00<00:00, 323.36it/s]Loading weights:  73%|███████▎  | 291/398 [00:00<00:00, 298.77it/s]Loading weights:  81%|████████  | 323/398 [00:00<00:00, 281.06it/s]Loading weights:  88%|████████▊ | 352/398 [00:01<00:00, 262.00it/s]Loading weights:  95%|█████████▌| 379/398 [00:01<00:00, 225.63it/s]Loading weights: 100%|██████████| 398/398 [00:01<00:00, 303.56it/s]
+2026-07-06 03:10:31.719 | INFO     | pipeline.factor_mining:main:1111 - [LatentPipeline] Backend ready: model=Qwen/Qwen3-4B, device=cuda, latent_steps=60, use_realign=True, knn=80%/top
+2026-07-06 03:10:31.731 | INFO     | pipeline.factor_mining:main:1134 - Use Local to execute factor backtest
+2026-07-06 03:10:31.743 | INFO     | pipeline.factor_mining:main:1137 - ============================================================
+2026-07-06 03:10:31.754 | INFO     | pipeline.factor_mining:main:1138 - Evolution mode: Original -> Mutation -> Crossover loop
+2026-07-06 03:10:31.766 | INFO     | pipeline.factor_mining:main:1139 - ============================================================
+2026-07-06 03:10:31.779 | INFO     | pipeline.factor_mining:run_evolution_loop:581 - Evolution mode: file lock disabled to avoid deadlock
+2026-07-06 03:10:31.799 | INFO     | pipeline.factor_mining:run_evolution_loop:592 - [Monitor] Session started: evolution_prod_kv_2026-07-05_09-36-48-resume
+2026-07-06 03:10:38.117 | INFO     | pipeline.factor_mining:run_evolution_loop:684 - Generated 2 exploration directions
+2026-07-06 03:10:38.129 | INFO     | pipeline.factor_mining:run_evolution_loop:686 -   Direction 0: short-term reversal after abnormally high-volume days in small-cap stocks
+2026-07-06 03:10:38.169 | INFO     | pipeline.factor_mining:run_evolution_loop:686 -   Direction 1: mean-reversion in high-volatility stocks during market downturns
+2026-07-06 03:10:38.214 | INFO     | pipeline.factor_mining:run_evolution_loop:710 - [Resume] Seeded trajectory pool from /workspace/project/multi-agent-system/backend/runs/resume_src_kv_3of6/trajectory_pool.json
+2026-07-06 03:10:38.226 | INFO     | pipeline.factor_mining:run_evolution_loop:717 - Trajectory pool path: /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/trajectory_pool.json (fresh_start=False)
+2026-07-06 03:10:38.253 | INFO     | pipeline.evolution.trajectory:_load:429 - Loaded 3 trajectories from /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/trajectory_pool.json
+2026-07-06 03:10:38.328 | INFO     | pipeline.evolution.controller:load_state:1175 - Loaded evolution state from /workspace/project/multi-agent-system/backend/runs/resume_src_kv_3of6/evolution_state.json
+2026-07-06 03:10:38.340 | INFO     | pipeline.factor_mining:run_evolution_loop:759 - [Resume] Cursor dipulihkan: round=1, phase=mutation, pool=3 trajectory
+2026-07-06 03:10:38.354 | INFO     | pipeline.factor_mining:run_evolution_loop:768 - ========================================
+2026-07-06 03:10:38.367 | INFO     | pipeline.factor_mining:run_evolution_loop:769 - Starting evolution loop
+2026-07-06 03:10:38.380 | INFO     | pipeline.factor_mining:run_evolution_loop:770 - Config: directions=2, max_rounds=3, crossover_size=2, crossover_n=2
+2026-07-06 03:10:38.393 | INFO     | pipeline.factor_mining:run_evolution_loop:772 - Phases: mutation=on, crossover=on
+2026-07-06 03:10:38.434 | INFO     | pipeline.factor_mining:run_evolution_loop:779 - Mode: full evolution (Original -> Mutation -> Crossover -> ...)
+2026-07-06 03:10:38.448 | INFO     | pipeline.factor_mining:run_evolution_loop:782 - Parent selection: best
+2026-07-06 03:10:38.462 | INFO     | pipeline.factor_mining:run_evolution_loop:784 - Parallel execution: off
+2026-07-06 03:10:38.475 | INFO     | pipeline.factor_mining:run_evolution_loop:785 - ============================================================
+2026-07-06 03:10:38.488 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=mutation, round=1, direction=1
+2026-07-06 03:10:38.553 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=mutation, round=1, direction=1
+2026-07-06 03:10:38.573 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 03:10:38.589 | INFO     | pipeline.loop:__init__:156 - Initial direction: mean-reversion in high-volatility stocks during market downturns
+2026-07-06 03:10:38.610 | INFO     | pipeline.loop:__init__:158 - Evolution phase: mutation, round: 1, trajectory_id: 493abe9abf38
+2026-07-06 03:10:38.625 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 03:10:38.640 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 03:10:59.053 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 03:10:59.110 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 03:10:59.254 | INFO     | log.time:wrapper:16 - __init__ took 20.69s
+[CoreEngine] Realigner built (use_realign=True)
+[CoreEngine] Ready. latent_steps=60
+Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s]▶ mutation ...
+✓ mutation  2.66s
+▶ mutation_guidance ...
+✓ mutation_guidance  34.13s
+2026-07-06 03:11:36.322 | INFO     | latent_mas.runlog:log:180 - [latent] mutation guidance (probe)  head=(1) TASK:  
+Research direction: mean-reversion in high-volatility stocks during market downturns.  
+Constraints: Exploitation — refine the parent factor within the same theoretical framework.  
+
+(2) THOUGHT PROCESS:  
+- Observed: Parent factor expressions have low standalone RankIC (≤-0.02) and unstable ICIR (≤-0.25), indicating weak predictive power and poor stability.  
+- Market mechanism consid
+▶ proposal ...
+✓ proposal  2.56s
+▶ design ...
+✓ design  2.64s
+▶ construct ...
+✓ construct  302.92s
+2026-07-06 03:16:44.538 | WARNING  | latent_mas.runlog:log:180 - [latent] construct output unparseable; retry once  head=**. 
+
+**. 
+**. **. **. ** . **. **. ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** . ** .
+▶ construct ...
+✓ construct  303.50s
+2026-07-06 03:21:48.137 | ERROR    | latent_mas.runlog:log:180 - [latent] no expression from construct; skipping repair
+2026-07-06 03:21:48.158 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] mutation → n_expr=0 exprs=[] repaired=False gate_error=no expression from construct
+2026-07-06 03:21:48.177 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=mutation: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 03:21:48.192 | WARNING  | utils.workflow:run:212 - Skip loop 0 due to Front-end produced no expression
+▶ mutation ...
+✓ mutation  2.25s
+▶ mutation_guidance ...
+✓ mutation_guidance  25.82s
+2026-07-06 03:22:16.336 | INFO     | latent_mas.runlog:log:180 - [latent] mutation guidance (probe)  head=(1) TASK:  
+Research direction: mean-reversion in high-volatility stocks during market downturns.  
+Constraints: Exploitation — refine the parent factor within the same theoretical framework.  
+
+(2) THOUGHT PROCESS:  
+- Observed: Parent factors have low standalone RankIC (≤-0.02) and unstable ICIR (≤-0.25), indicating weak predictive power and poor stability.  
+- Market mechanism considered: Mean-
+▶ proposal ...
+✓ proposal  2.63s
+▶ design ...
+✓ design  2.83s
+▶ construct ...
+✓ construct  302.82s
+2026-07-06 03:27:24.677 | WARNING  | latent_mas.runlog:log:180 - [latent] construct output unparseable; retry once  head=**. 
+
+**. 
+**. 
+
+**. 
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+** .  
+**.  
+** .  
+**.  
+
+▶ construct ...
+✓ construct  6.36s
+2026-07-06 03:27:31.185 | ERROR    | latent_mas.runlog:log:180 - [latent] no expression from construct; skipping repair
+2026-07-06 03:27:31.209 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] mutation → n_expr=0 exprs=[] repaired=False gate_error=no expression from construct
+2026-07-06 03:27:31.229 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=mutation: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 03:27:31.245 | WARNING  | utils.workflow:run:212 - Skip loop 1 due to Front-end produced no expression
+▶ mutation ...
+✓ mutation  2.40s
+▶ mutation_guidance ...
+✓ mutation_guidance  23.95s
+2026-07-06 03:27:57.640 | INFO     | latent_mas.runlog:log:180 - [latent] mutation guidance (probe)  head=(1) TASK:  
+Research direction: mean-reversion in high-volatility stocks during market downturns.  
+Constraints: Exploitation — refine the parent factor within the same theoretical framework.  
+
+(2) THOUGHT PROCESS:  
+- Observed: Parent factor expressions have low standalone RankIC (≤-0.02) and unstable ICIR (≤-0.25), indicating weak predictive power and poor stability.  
+- Considered: Factors 0-4
+▶ proposal ...
+✓ proposal  2.35s
+▶ design ...
+✓ design  2.63s
+▶ construct ...
+✓ construct  302.91s
+2026-07-06 03:33:05.598 | WARNING  | latent_mas.runlog:log:180 - [latent] construct output unparseable; retry once  head=** 
+
+** 
+
+** 
+
+**
+
+** 
+
+** 
+
+** 
+
+** 
+
+**
+
+**  
+** 
+
+** 
+
+** 
+
+** 
+** 
+
+**  
+
+**  
+**  
+**  
+**  
+**  
+**  
+
+
+**  
+**  
+
+▶ construct ...
+✓ construct  22.64s
+2026-07-06 03:33:28.294 | ERROR    | latent_mas.runlog:log:180 - [latent] no expression from construct; skipping repair
+2026-07-06 03:33:28.324 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] mutation → n_expr=0 exprs=[] repaired=False gate_error=no expression from construct
+2026-07-06 03:33:28.380 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=mutation: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 03:33:28.399 | WARNING  | utils.workflow:run:212 - Skip loop 2 due to Front-end produced no expression
+▶ mutation ...
+✓ mutation  2.70s
+▶ mutation_guidance ...
+✓ mutation_guidance  36.65s
+2026-07-06 03:34:07.801 | INFO     | latent_mas.runlog:log:180 - [latent] mutation guidance (probe)  head=(1) TASK:  
+Reconstruct and label each part of the latent memory for the Mutation Director (EXPLOITATION) in a quantitative alpha-mining team. The task is to diagnose the parent factor's weaknesses, identify the weakest expression (lowest RankIC), and propose a focused refinement direction for downstream agents.
+
+(2) THOUGHT PROCESS:  
+- Observed that the parent factor has low standalone RankIC (≤
+▶ proposal ...
+✓ proposal  2.77s
+▶ design ...
+✓ design  2.70s
+▶ construct ...
+✓ construct  302.94s
+2026-07-06 03:39:16.358 | WARNING  | latent_mas.runlog:log:180 - [latent] construct output unparseable; retry once  head=**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+**.  
+** .  
+**.  
+**.  
+**.  
+** .  
+** .  
+**.  
+** .  
+**.  
+** .  
+** .  
+**.  
+
+▶ construct ...
+✓ construct  24.22s
+2026-07-06 03:39:40.650 | ERROR    | latent_mas.runlog:log:180 - [latent] no expression from construct; skipping repair
+2026-07-06 03:39:40.680 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] mutation → n_expr=0 exprs=[] repaired=False gate_error=no expression from construct
+2026-07-06 03:39:40.735 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=mutation: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 03:39:40.759 | WARNING  | utils.workflow:run:212 - Skip loop 3 due to Front-end produced no expression
+▶ mutation ...
+✓ mutation  2.33s
+▶ mutation_guidance ...
+✓ mutation_guidance  34.38s
+2026-07-06 03:40:17.521 | INFO     | latent_mas.runlog:log:180 - [latent] mutation guidance (probe)  head=(1) TASK:  
+Reconstruct and label each part of the latent memory for the Mutation Director (EXPLOITATION) in a quantitative alpha-mining team. The task is to diagnose the parent factor's weaknesses, identify the weakest expression (lowest RankIC), and propose a focused refinement direction for downstream agents.
+
+(2) THOUGHT PROCESS:  
+- Observed that the parent factor has low standalone RankIC (≤
+▶ proposal ...
+✓ proposal  2.31s
+▶ design ...
+✓ design  2.61s
+▶ construct ...
+✓ construct  302.88s
+2026-07-06 03:45:25.382 | WARNING  | latent_mas.runlog:log:180 - [latent] construct output unparseable; retry once  head=H, the same mechanism as a, the same mechanismas, the same mechanism. the same, the same, the same, the same, the same, 
+▶ construct ...
+✓ construct  3.57s
+2026-07-06 03:45:29.033 | ERROR    | latent_mas.runlog:log:180 - [latent] no expression from construct; skipping repair
+2026-07-06 03:45:29.054 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] mutation → n_expr=0 exprs=[] repaired=False gate_error=no expression from construct
+2026-07-06 03:45:29.076 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=mutation: hypo_len=0, n_expr=0, exprs=[], repaired=False, gate_error=no expression from construct
+2026-07-06 03:45:29.093 | WARNING  | utils.workflow:run:212 - Skip loop 4 due to Front-end produced no expression
+Workflow Progress:   0%|          | 0/5 [34:29<?, ?step/s]
+2026-07-06 03:45:29.133 | INFO     | pipeline.evolution.trajectory:add:246 - Added trajectory 5228ed3135cf (direction=1, phase=mutation, round=1)
+2026-07-06 03:45:29.164 | INFO     | pipeline.evolution.trajectory:_save:407 - Saved trajectory pool to /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/trajectory_pool.json
+2026-07-06 03:45:29.189 | INFO     | pipeline.evolution.controller:report_task_complete:872 - Negative memory: recorded failed mechanism 5228ed3135cf [no_factor]
+2026-07-06 03:45:29.212 | INFO     | pipeline.evolution.controller:report_task_complete:886 - Mutation round complete for direction 1
+2026-07-06 03:45:29.226 | INFO     | pipeline.factor_mining:run_evolution_loop:879 - Task done: trajectory_id=5228ed3135cf, RankIC=None
+2026-07-06 03:45:29.246 | INFO     | pipeline.evolution.controller:_get_crossover_candidates:764 - First crossover: using 2 original + 2 mutation (round 1)
+2026-07-06 03:45:29.267 | INFO     | pipeline.evolution.controller:_prepare_crossover_groups:684 - Prepared 2 crossover groups from 4 candidates
+2026-07-06 03:45:29.321 | INFO     | pipeline.evolution.controller:_get_mutation_task:596 - All mutation rounds complete, transitioning to crossover (round 2)
+2026-07-06 03:45:29.356 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=crossover, round=2, direction=0
+2026-07-06 03:45:29.393 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=crossover, round=2, direction=0
+2026-07-06 03:45:29.418 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 03:45:29.437 | INFO     | pipeline.loop:__init__:158 - Evolution phase: crossover, round: 2, trajectory_id: 171e4b7fbe92
+2026-07-06 03:45:29.455 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 03:45:29.474 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 03:45:30.424 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 03:45:30.485 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 03:45:30.527 | INFO     | log.time:wrapper:16 - __init__ took 1.12s
+Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s]▶ crossover ...
+✓ crossover  2.62s
+▶ crossover_guidance ...
+✓ crossover_guidance  20.62s
+2026-07-06 03:45:53.833 | INFO     | latent_mas.runlog:log:180 - [latent] crossover guidance (probe)  head=(1) TASK —  
+The task was to set a bold exploratory direction for the downstream Proposal (Proposal), Construct, and Judger agents by recombining two parent results. The goal was to fuse them into something neither had reached, leveraging their complementary strengths in market driver, construction pattern, time horizon, or data dimension.
+
+(2) THOUGHT PROCESS —  
+- Observed that Parent 1 is empty
+▶ proposal ...
+✓ proposal  2.33s
+▶ design ...
+✓ design  2.60s
+▶ construct ...
+✓ construct  18.66s
+2026-07-06 03:46:17.669 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_ZSCORE(RANK($volume), 7)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 27
+                        # Base Features (ER): 1
+                        
+2026-07-06 03:46:17.699 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=VOLUME_RANK_ZSCORE expr=TS_ZSCORE(RANK($volume), 7)
+2026-07-06 03:46:17.864 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 55
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:46:17.892 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=VOLUME_ZSCORE_RETURN expr=TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))
+2026-07-06 03:46:18.390 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_CORR($return, TS_ZSCORE($volume, 5), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 43
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:46:18.456 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=VOLUME_CORRELATION expr=TS_CORR($return, TS_ZSCORE($volume, 5), 10)
+2026-07-06 03:46:18.564 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 41
+                        # Base Features (ER): 1
+                        
+2026-07-06 03:46:18.593 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=VOLUME_MEAN_RANK expr=MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))
+2026-07-06 03:46:18.768 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: ($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 59
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:46:18.799 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=VOLUME_CONDITIONAL expr=($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0
+2026-07-06 03:46:18.925 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_MEAN(TS_ZSCORE($volume, 20), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 35
+                        # Base Features (ER): 1
+                        
+2026-07-06 03:46:18.953 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=VOLUME_ZSCORE_MEAN expr=TS_MEAN(TS_ZSCORE($volume, 20), 10)
+2026-07-06 03:46:19.037 | INFO     | factors.regulator.factor_regulator:add_factor:489 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ZSCORE(RANK($volume), 7)', 'TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))', 'TS_CORR($return, TS_ZSCORE($volume, 5), 10)', 'MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))', '($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0', 'TS_MEAN(TS_ZSCORE($volume, 20), 10)']
+2026-07-06 03:46:19.064 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] crossover(n=2) → n_expr=6 exprs=['TS_ZSCORE(RANK($volume), 7)', 'TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))', 'TS_CORR($return, TS_ZSCORE($volume, 5), 10)', 'MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))', '($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0', 'TS_MEAN(TS_ZSCORE($volume, 20), 10)'] repaired=False gate_error=none
+2026-07-06 03:46:19.085 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=crossover: hypo_len=85, n_expr=6, exprs=['TS_ZSCORE(RANK($volume), 7)', 'TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))', 'TS_CORR($return, TS_ZSCORE($volume, 5), 10)', 'MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))', '($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0', 'TS_MEAN(TS_ZSCORE($volume, 20), 10)'], repaired=False, gate_error=none
+2026-07-06 03:46:19.111 | INFO     | log.time:wrapper:16 - factor_propose took 48.56s
+Workflow Progress:   0%|          | 0/5 [00:48<?, ?step/s, loop_index=0, step_index=0, step_name=factor_propose]Workflow Progress:  20%|██        | 1/5 [00:48<03:14, 48.58s/step, loop_index=0, step_index=0, step_name=factor_propose]2026-07-06 03:46:19.358 | INFO     | factors.workspace:__init__:27 - Overrode rdagent default config with project template: /workspace/project/multi-agent-system/backend/factors/factor_template
+2026-07-06 03:46:19.385 | INFO     | log.time:wrapper:16 - factor_construct took 0.24s
+Workflow Progress:  20%|██        | 1/5 [00:48<03:14, 48.58s/step, loop_index=0, step_index=1, step_name=factor_construct]Workflow Progress:  40%|████      | 2/5 [00:48<01:00, 20.17s/step, loop_index=0, step_index=1, step_name=factor_construct]2026-07-06 03:46:19.420 | INFO     | log.time:wrapper:16 - factor_calculate took 0.00s
+Workflow Progress:  40%|████      | 2/5 [00:48<01:00, 20.17s/step, loop_index=0, step_index=2, step_name=factor_calculate]2026-07-06 03:46:19.449 | INFO     | pipeline.loop:factor_backtest:455 - Start factor backtest (Local: True)
+/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/pandas/core/nanops.py:1632: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+  return spearmanr(a, b)[0]
+2026-07-06 03:55:25.620 | INFO     | factors.runner:develop:450 - Per-factor RankIC (OOS): {'HYPOTHESIS_short_term_reversal_a_0': -0.02012920353507136, 'HYPOTHESIS_short_term_reversal_a_1': None, 'HYPOTHESIS_short_term_reversal_a_2': -0.022026306633525106, 'HYPOTHESIS_short_term_reversal_a_3': None, 'HYPOTHESIS_short_term_reversal_a_4': None, 'HYPOTHESIS_short_term_reversal_a_5': -0.00489268428830508}
+2026-07-06 03:55:25.643 | INFO     | factors.runner:develop:451 - Per-factor RankICIR (OOS): {'HYPOTHESIS_short_term_reversal_a_0': -0.288957298579618, 'HYPOTHESIS_short_term_reversal_a_1': None, 'HYPOTHESIS_short_term_reversal_a_2': -0.25032373941993424, 'HYPOTHESIS_short_term_reversal_a_3': None, 'HYPOTHESIS_short_term_reversal_a_4': None, 'HYPOTHESIS_short_term_reversal_a_5': -0.04797974636695477}
+/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/numpy/_core/_methods.py:135: RuntimeWarning: invalid value encountered in reduce
+  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/numpy/lib/_function_base_impl.py:3045: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[:, None]
+/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/numpy/lib/_function_base_impl.py:3046: RuntimeWarning: invalid value encountered in divide
+  c /= stddev[None, :]
+2026-07-06 03:55:29.532 | INFO     | factors.runner:develop:484 - Factor correlation (setelah gate): 
+
+                                    HYPOTHESIS_short_term_reversal_a_0  HYPOTHESIS_short_term_reversal_a_1  HYPOTHESIS_short_term_reversal_a_2  HYPOTHESIS_short_term_reversal_a_3  HYPOTHESIS_short_term_reversal_a_4  HYPOTHESIS_short_term_reversal_a_5
+HYPOTHESIS_short_term_reversal_a_0                            1.000000                                 NaN                            0.040777                                 NaN                                 NaN                            0.047832
+HYPOTHESIS_short_term_reversal_a_1                                 NaN                                 NaN                                 NaN                                 NaN                                 NaN                                 NaN
+HYPOTHESIS_short_term_reversal_a_2                            0.040777                                 NaN                            1.000000                                 NaN                                 NaN                            0.302228
+HYPOTHESIS_short_term_reversal_a_3                                 NaN                                 NaN                                 NaN                                 NaN                                 NaN                                 NaN
+HYPOTHESIS_short_term_reversal_a_4                                 NaN                                 NaN                                 NaN                                 NaN                                 NaN                                 NaN
+HYPOTHESIS_short_term_reversal_a_5                            0.047832                                 NaN                            0.302228                                 NaN                                 NaN                            1.000000
+
+2026-07-06 03:55:31.130 | INFO     | factors.runner:develop:491 - Factor values this round: 
+
+                                                 feature                                                                                                                                                                               
+                      HYPOTHESIS_short_term_reversal_a_0 HYPOTHESIS_short_term_reversal_a_1 HYPOTHESIS_short_term_reversal_a_2 HYPOTHESIS_short_term_reversal_a_3 HYPOTHESIS_short_term_reversal_a_4 HYPOTHESIS_short_term_reversal_a_5
+datetime   instrument                                                                                                                                                                                                                  
+2026-01-09 SZ301668                            -0.415352                                NaN                           0.724511                                NaN                                0.0                          -0.317901
+           SZ301678                            -0.574130                                NaN                           0.748054                                NaN                                0.0                           0.078015
+           SZ301687                            -1.830721                                NaN                           0.448081                                NaN                                0.0                          -0.757939
+           SZ302132                             1.529514                                NaN                           0.913575                                NaN                                NaN                           1.353257
+           SZ399300                             0.504076                                NaN                           0.482865                                NaN                                0.0                           1.104039
+
+
+2026-07-06 03:55:50.927 | INFO     | factors.runner:_save_factor_logs:393 - [FactorLogs] correlation & factor values disimpan ke /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/factor_logs/20260706_035531_131362
+2026-07-06 03:55:55.942 | INFO     | factors.runner:develop:498 - Saved combined factors to /workspace/project/multi-agent-system/backend/data/results/workspace/88d4308a923a42fd814971fc695dc1cd/combined_factors_df.parquet
+2026-07-06 03:55:55.963 | INFO     | factors.runner:develop:502 - Execute factor backtest (Use Local): conf_combined_factors.yaml
+2026-07-06 03:57:38.124 | INFO     | factors.runner:_local_execute:83 - [LocalExec] qrun OK:           risk
+mean               0.000346
+std                0.006870
+annualized_return  0.082286
+information_ratio  0.776372
+max_drawdown      -0.063288
+'The following are analysis results of the excess return with cost(1day).'
+                       risk
+mean               0.000247
+std                0.006877
+annualized_return  0.058864
+information_ratio  0.554804
+max_drawdown      -0.063893
+'The following are analysis results of indicators(1day).'
+     value
+ffr    1.0
+pa     0.0
+pos    0.0
+
+2026-07-06 03:58:02.648 | INFO     | factors.runner:develop:525 - Backtesting results: 
+1day.ffr                                             1.000000
+1day.excess_return_with_cost.max_drawdown           -0.063893
+1day.excess_return_with_cost.information_ratio       0.554804
+1day.excess_return_with_cost.annualized_return       0.058864
+1day.excess_return_with_cost.std                     0.006877
+1day.excess_return_with_cost.mean                    0.000247
+1day.excess_return_without_cost.max_drawdown        -0.063288
+1day.excess_return_without_cost.information_ratio    0.776372
+1day.excess_return_without_cost.annualized_return    0.082286
+1day.excess_return_without_cost.std                  0.006870
+1day.excess_return_without_cost.mean                 0.000346
+Rank ICIR                                            0.182929
+Rank IC                                              0.025919
+ICIR                                                 0.058691
+IC                                                   0.007855
+l2.valid                                             0.996942
+l2.train                                             0.993914
+Name: 0, dtype: float64
+2026-07-06 03:58:02.692 | INFO     | log.time:wrapper:16 - factor_backtest took 703.24s
+Workflow Progress:  60%|██████    | 3/5 [12:32<00:40, 20.17s/step, loop_index=0, step_index=3, step_name=factor_backtest] Workflow Progress:  80%|████████  | 4/5 [12:32<03:47, 228.00s/step, loop_index=0, step_index=3, step_name=factor_backtest]▶ feedback ...
+✓ feedback  12.54s
+2026-07-06 03:58:15.690 | INFO     | pipeline.loop:_save_metrics_snapshot:1144 - Metrics snapshot saved → metrics/round_002_171e4b7fbe92.json
+2026-07-06 03:58:16.910 | INFO     | pipeline.loop:feedback:575 - Saved factors to library: /workspace/project/multi-agent-system/data/factorlib/all_factors_library.json (phase=crossover)
+2026-07-06 03:58:16.928 | INFO     | log.time:wrapper:16 - feedback took 14.20s
+Workflow Progress:  80%|████████  | 4/5 [12:46<03:47, 228.00s/step, loop_index=0, step_index=4, step_name=feedback]       Workflow Progress: 100%|██████████| 5/5 [12:46<00:00, 161.88s/step, loop_index=0, step_index=4, step_name=feedback]Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s, loop_index=0, step_index=4, step_name=feedback]         Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s, loop_index=0, step_index=4, step_name=feedback]
+2026-07-06 03:58:16.961 | INFO     | pipeline.evolution.trajectory:add:246 - Added trajectory 1f446c8631d0 (direction=0, phase=crossover, round=2)
+2026-07-06 03:58:17.011 | INFO     | pipeline.evolution.trajectory:_save:407 - Saved trajectory pool to /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/trajectory_pool.json
+2026-07-06 03:58:17.034 | INFO     | pipeline.evolution.controller:report_task_complete:872 - Negative memory: recorded failed mechanism 1f446c8631d0 [weak_ic]
+2026-07-06 03:58:17.049 | INFO     | pipeline.evolution.controller:report_task_complete:889 - Crossover round complete (group 0)
+2026-07-06 03:58:17.063 | INFO     | pipeline.factor_mining:run_evolution_loop:879 - Task done: trajectory_id=1f446c8631d0, RankIC=-0.015682731485633847
+2026-07-06 03:58:17.114 | INFO     | pipeline.factor_mining:run_evolution_loop:850 - Running task: phase=crossover, round=2, direction=1
+2026-07-06 03:58:17.147 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=crossover, round=2, direction=1
+2026-07-06 03:58:17.166 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 03:58:17.183 | INFO     | pipeline.loop:__init__:158 - Evolution phase: crossover, round: 2, trajectory_id: 9e530999406f
+2026-07-06 03:58:17.212 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 03:58:17.230 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 03:58:18.124 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 03:58:18.186 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 03:58:18.229 | INFO     | log.time:wrapper:16 - __init__ took 1.06s
+factor_expression:  TS_ZSCORE(RANK($volume), 7)
+factor_expression:  TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))
+factor_expression:  TS_CORR($return, TS_ZSCORE($volume, 5), 10)
+factor_expression:  MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))
+factor_expression:  ($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0
+factor_expression:  TS_MEAN(TS_ZSCORE($volume, 20), 10)
+Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s]▶ crossover ...
+✓ crossover  2.93s
+▶ crossover_guidance ...
+✓ crossover_guidance  28.46s
+2026-07-06 03:58:49.672 | INFO     | latent_mas.runlog:log:180 - [latent] crossover guidance (probe)  head=(1) **TASK**:  
+Set a bold exploratory direction for the downstream Proposal → Construct → Judger agents by fusing two parent results into something neither has reached. The fusion must combine one parent's driver with another's structure, cross operator families freely, and reach a region neither parent occupied.  
+
+(2) **THOUGHT PROCESS**:  
+- Observed that Parent 1 focuses on low-volatility sto
+▶ proposal ...
+✓ proposal  2.74s
+▶ design ...
+✓ design  2.81s
+▶ construct ...
+✓ construct  25.95s
+2026-07-06 03:59:21.583 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_ZSCORE(TS_MEAN($high - $low, 15), 30)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 40
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:21.620 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_15 expr=TS_ZSCORE(TS_MEAN($high - $low, 15), 30)
+2026-07-06 03:59:21.690 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: RANK(TS_MEAN($high - $low, 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 31
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:21.754 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_rank_10 expr=RANK(TS_MEAN($high - $low, 10))
+2026-07-06 03:59:21.877 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_ZSCORE(TS_MEAN($high - $low, 20), 40)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 40
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:21.908 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_20 expr=TS_ZSCORE(TS_MEAN($high - $low, 20), 40)
+2026-07-06 03:59:22.159 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 3
+                        Symbol Length (SL): 70
+                        # Base Features (ER): 3
+                        
+2026-07-06 03:59:22.191 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_gate_10 expr=(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)
+2026-07-06 03:59:22.435 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 3
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 3
+                        
+2026-07-06 03:59:22.496 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_rank_gate_5 expr=(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)
+2026-07-06 03:59:22.627 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: ZSCORE(TS_MEAN($high - $low, 15))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 33
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:22.660 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_cross_15 expr=ZSCORE(TS_MEAN($high - $low, 15))
+2026-07-06 03:59:22.699 | INFO     | factors.regulator.factor_regulator:add_factor:489 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ZSCORE(TS_MEAN($high - $low, 15), 30)', 'RANK(TS_MEAN($high - $low, 10))', 'TS_ZSCORE(TS_MEAN($high - $low, 20), 40)', '(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)', '(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)', 'ZSCORE(TS_MEAN($high - $low, 15))']
+2026-07-06 03:59:22.737 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] crossover(n=2) → n_expr=6 exprs=['TS_ZSCORE(TS_MEAN($high - $low, 15), 30)', 'RANK(TS_MEAN($high - $low, 10))', 'TS_ZSCORE(TS_MEAN($high - $low, 20), 40)', '(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)', '(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)', 'ZSCORE(TS_MEAN($high - $low, 15))'] repaired=False gate_error=none
+2026-07-06 03:59:22.793 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=crossover: hypo_len=185, n_expr=6, exprs=['TS_ZSCORE(TS_MEAN($high - $low, 15), 30)', 'RANK(TS_MEAN($high - $low, 10))', 'TS_ZSCORE(TS_MEAN($high - $low, 20), 40)', '(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)', '(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)', 'ZSCORE(TS_MEAN($high - $low, 15))'], repaired=False, gate_error=none
+2026-07-06 03:59:22.825 | INFO     | log.time:wrapper:16 - factor_propose took 64.56s
+Workflow Progress:   0%|          | 0/5 [01:04<?, ?step/s, loop_index=0, step_index=0, step_name=factor_propose]Workflow Progress:  20%|██        | 1/5 [01:04<04:18, 64.60s/step, loop_index=0, step_index=0, step_name=factor_propose]2026-07-06 03:59:23.188 | INFO     | factors.workspace:__init__:27 - Overrode rdagent default config with project template: /workspace/project/multi-agent-system/backend/factors/factor_template
+2026-07-06 03:59:23.247 | INFO     | log.time:wrapper:16 - factor_construct took 0.36s
+Workflow Progress:  20%|██        | 1/5 [01:05<04:18, 64.60s/step, loop_index=0, step_index=1, step_name=factor_construct]Workflow Progress:  40%|████      | 2/5 [01:05<01:20, 26.85s/step, loop_index=0, step_index=1, step_name=factor_construct]2026-07-06 03:59:23.288 | INFO     | log.time:wrapper:16 - factor_calculate took 0.00s
+Workflow Progress:  40%|████      | 2/5 [01:05<01:20, 26.85s/step, loop_index=0, step_index=2, step_name=factor_calculate]2026-07-06 03:59:23.349 | INFO     | pipeline.loop:factor_backtest:455 - Start factor backtest (Local: True)
+2026-07-06 04:06:34.039 | INFO     | factors.runner:develop:450 - Per-factor RankIC (OOS): {'when_low_volatility_stocks_show_0': -0.017132609860645732, 'when_low_volatility_stocks_show_1': -0.0319780616997649, 'when_low_volatility_stocks_show_2': -0.02252989951688509, 'when_low_volatility_stocks_show_3': -0.026321168095981617, 'when_low_volatility_stocks_show_4': -0.020774701786182605, 'when_low_volatility_stocks_show_5': -0.031301382684432326}
+2026-07-06 04:06:34.060 | INFO     | factors.runner:develop:451 - Per-factor RankICIR (OOS): {'when_low_volatility_stocks_show_0': -0.146498134525753, 'when_low_volatility_stocks_show_1': -0.24806960699183025, 'when_low_volatility_stocks_show_2': -0.1803121896458357, 'when_low_volatility_stocks_show_3': -0.20668099888257352, 'when_low_volatility_stocks_show_4': -0.16694019837304272, 'when_low_volatility_stocks_show_5': -0.24278630153205863}
+2026-07-06 04:06:35.817 | INFO     | factors.runner:_correlation_gate:252 - [CorrGate] drop when_low_volatility_stocks_show_2: within-round |corr|=0.829 with when_low_volatility_stocks_show_0
+2026-07-06 04:06:35.838 | INFO     | factors.runner:_correlation_gate:252 - [CorrGate] drop when_low_volatility_stocks_show_3: within-round |corr|=0.775 with when_low_volatility_stocks_show_4
+2026-07-06 04:06:36.408 | INFO     | factors.runner:_correlation_gate:276 - [CorrGate] drop when_low_volatility_stocks_show_0: cross-round |corr|=0.766 with during_regime_transitions_low_vo_2 in store
+2026-07-06 04:06:36.428 | INFO     | factors.runner:_correlation_gate:276 - [CorrGate] drop when_low_volatility_stocks_show_1: cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store
+/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/numpy/_core/_methods.py:135: RuntimeWarning: invalid value encountered in reduce
+  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
+2026-07-06 04:06:36.644 | INFO     | factors.runner:develop:469 - [CorrGate] 4 faktor di-drop: ['when_low_volatility_stocks_show_2 [within-round |corr|=0.829 with when_low_volatility_stocks_show_0]', 'when_low_volatility_stocks_show_3 [within-round |corr|=0.775 with when_low_volatility_stocks_show_4]', 'when_low_volatility_stocks_show_0 [cross-round |corr|=0.766 with during_regime_transitions_low_vo_2 in store]', 'when_low_volatility_stocks_show_1 [cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store]']
+2026-07-06 04:06:37.243 | INFO     | factors.runner:develop:484 - Factor correlation (setelah gate): 
+
+                                   when_low_volatility_stocks_show_4  when_low_volatility_stocks_show_5
+when_low_volatility_stocks_show_4                           1.000000                           0.004294
+when_low_volatility_stocks_show_5                           0.004294                           1.000000
+
+2026-07-06 04:06:37.979 | INFO     | factors.runner:develop:491 - Factor values this round: 
+
+                                                feature                                  
+                      when_low_volatility_stocks_show_4 when_low_volatility_stocks_show_5
+datetime   instrument                                                                    
+2026-01-09 SZ301668                            0.007895                         -0.371267
+           SZ301678                            0.008793                         -0.253509
+           SZ301687                           -0.042301                          0.105836
+           SZ302132                            0.017292                          0.333093
+           SZ399300                           -0.002202                         -0.281073
+
+
+2026-07-06 04:06:52.612 | INFO     | factors.runner:_save_factor_logs:393 - [FactorLogs] correlation & factor values disimpan ke /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/factor_logs/20260706_040637_980950
+2026-07-06 04:06:55.866 | INFO     | factors.runner:develop:498 - Saved combined factors to /workspace/project/multi-agent-system/backend/data/results/workspace/cd5f99b827474c72ba83d91d79a5e807/combined_factors_df.parquet
+2026-07-06 04:06:55.887 | INFO     | factors.runner:develop:502 - Execute factor backtest (Use Local): conf_combined_factors.yaml
+2026-07-06 04:08:35.064 | INFO     | factors.runner:_local_execute:83 - [LocalExec] qrun OK:           risk
+mean               0.000506
+std                0.005735
+annualized_return  0.120405
+information_ratio  1.360944
+max_drawdown      -0.056901
+'The following are analysis results of the excess return with cost(1day).'
+                       risk
+mean               0.000407
+std                0.005744
+annualized_return  0.096856
+information_ratio  1.093090
+max_drawdown      -0.056901
+'The following are analysis results of indicators(1day).'
+     value
+ffr    1.0
+pa     0.0
+pos    0.0
+
+2026-07-06 04:08:57.864 | INFO     | factors.runner:develop:525 - Backtesting results: 
+1day.ffr                                             1.000000
+1day.excess_return_with_cost.max_drawdown           -0.056901
+1day.excess_return_with_cost.information_ratio       1.093090
+1day.excess_return_with_cost.annualized_return       0.096856
+1day.excess_return_with_cost.std                     0.005744
+1day.excess_return_with_cost.mean                    0.000407
+1day.excess_return_without_cost.max_drawdown        -0.056901
+1day.excess_return_without_cost.information_ratio    1.360944
+1day.excess_return_without_cost.annualized_return    0.120405
+1day.excess_return_without_cost.std                  0.005735
+1day.excess_return_without_cost.mean                 0.000506
+Rank ICIR                                            0.303168
+Rank IC                                              0.041433
+ICIR                                                 0.151943
+IC                                                   0.021128
+l2.valid                                             0.996801
+l2.train                                             0.993838
+Name: 0, dtype: float64
+2026-07-06 04:08:57.919 | INFO     | log.time:wrapper:16 - factor_backtest took 574.58s
+Workflow Progress:  60%|██████    | 3/5 [10:39<00:53, 26.85s/step, loop_index=0, step_index=3, step_name=factor_backtest] Workflow Progress:  80%|████████  | 4/5 [10:39<03:10, 190.16s/step, loop_index=0, step_index=3, step_name=factor_backtest]▶ feedback ...
+✓ feedback  9.69s
+2026-07-06 04:09:07.983 | INFO     | pipeline.loop:_save_metrics_snapshot:1144 - Metrics snapshot saved → metrics/round_002_9e530999406f.json
+2026-07-06 04:09:14.035 | INFO     | pipeline.loop:feedback:575 - Saved factors to library: /workspace/project/multi-agent-system/data/factorlib/all_factors_library.json (phase=crossover)
+2026-07-06 04:09:14.052 | INFO     | log.time:wrapper:16 - feedback took 16.11s
+Workflow Progress:  80%|████████  | 4/5 [10:55<03:10, 190.16s/step, loop_index=0, step_index=4, step_name=feedback]       Workflow Progress: 100%|██████████| 5/5 [10:55<00:00, 136.33s/step, loop_index=0, step_index=4, step_name=feedback]Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s, loop_index=0, step_index=4, step_name=feedback]         Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s, loop_index=0, step_index=4, step_name=feedback]
+2026-07-06 04:09:14.087 | INFO     | pipeline.evolution.trajectory:add:246 - Added trajectory afdac068f012 (direction=1, phase=crossover, round=2)
+2026-07-06 04:09:14.152 | INFO     | pipeline.evolution.trajectory:_save:407 - Saved trajectory pool to /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/trajectory_pool.json
+2026-07-06 04:09:14.176 | INFO     | pipeline.evolution.controller:report_task_complete:872 - Negative memory: recorded failed mechanism afdac068f012 [weak_ic]
+2026-07-06 04:09:14.192 | INFO     | pipeline.evolution.controller:report_task_complete:889 - Crossover round complete (group 1)
+2026-07-06 04:09:14.247 | INFO     | pipeline.factor_mining:run_evolution_loop:879 - Task done: trajectory_id=afdac068f012, RankIC=-0.026038042235307465
+2026-07-06 04:09:14.266 | INFO     | pipeline.evolution.controller:_get_crossover_task:803 - All crossover rounds complete, transitioning to mutation (round 3)
+2026-07-06 04:09:14.287 | INFO     | pipeline.evolution.controller:_prepare_mutation_targets:648 - Prepared 2 mutation targets for round 3
+2026-07-06 04:09:14.311 | INFO     | pipeline.evolution.controller:get_next_task:225 - Evolution complete: round 3 reached max rounds (3)
+2026-07-06 04:09:14.326 | INFO     | pipeline.factor_mining:run_evolution_loop:847 - Evolution complete: no more tasks
+2026-07-06 04:09:14.347 | INFO     | pipeline.evolution.controller:save_state:1138 - Saved evolution state to /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/evolution_state.json
+2026-07-06 04:09:14.362 | INFO     | pipeline.factor_mining:run_evolution_loop:911 - ========================================
+2026-07-06 04:09:14.376 | INFO     | pipeline.factor_mining:run_evolution_loop:912 - Evolution complete. Top 0 trajectories:
+2026-07-06 04:09:14.391 | INFO     | pipeline.factor_mining:run_evolution_loop:921 - Pool stats: {'total_trajectories': 6, 'by_phase': {'original': 2, 'mutation': 2, 'crossover': 2}, 'by_direction': {0: 3, 1: 3}, 'successful_trajectories': 0, 'latest_round': 2}
+2026-07-06 04:09:14.412 | INFO     | pipeline.factor_mining:run_evolution_loop:922 - ========================================
+2026-07-06 04:09:14.434 | INFO     | pipeline.factor_mining:run_evolution_loop:931 - [Monitor] Session finalized: 148 events recorded
+2026-07-06 04:09:14.450 | WARNING  | pipeline.factor_mining:run_evolution_loop:934 - [Monitor] 13 anomalies detected — check monitor logs
+2026-07-06 04:09:14.463 | INFO     | pipeline.factor_mining:run_evolution_loop:937 - [Monitor] Bottleneck: factor_backtest (98.3% of pipeline time)
+2026-07-06 04:09:14.476 | INFO     | pipeline.factor_mining:main:1254 - Run finished or terminated
+factor_expression:  TS_ZSCORE(TS_MEAN($high - $low, 15), 30)
+factor_expression:  RANK(TS_MEAN($high - $low, 10))
+factor_expression:  TS_ZSCORE(TS_MEAN($high - $low, 20), 40)
+factor_expression:  (TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)
+factor_expression:  (RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)
+factor_expression:  ZSCORE(TS_MEAN($high - $low, 15))

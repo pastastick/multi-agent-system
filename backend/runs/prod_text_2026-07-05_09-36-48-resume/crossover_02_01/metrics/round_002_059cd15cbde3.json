@@ -1,0 +1,84 @@
+{
+  "timestamp": "2026-07-06T04:31:45",
+  "round_idx": 2,
+  "trajectory_id": "059cd15cbde3",
+  "evolution_phase": "crossover",
+  "hypothesis": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+  "factor_ic_mean": -0.020068463180631213,
+  "factor_icir_mean": -0.26505614112028547,
+  "sota": {
+    "prev": null,
+    "replaced": true,
+    "note": "FactorIC_mean -0.0201 > SOTA none → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "regime_conditional_volume_ranked_0": {
+      "expression": "TS_ZSCORE($volume, 20) * TS_ZSCORE($high - $low, 20)",
+      "standalone_RankIC": -0.014002975240777371,
+      "standalone_RankICIR": -0.3409486531728738
+    },
+    "regime_conditional_volume_ranked_1": {
+      "expression": "TS_CORR($return, $volume, 20) * TS_RANK($volume, 20)",
+      "standalone_RankIC": -0.018433991613903238,
+      "standalone_RankICIR": -0.19574147350863338
+    },
+    "regime_conditional_volume_ranked_2": {
+      "expression": "TS_ZSCORE($high - $low, 20) * TS_RANK($volume, 20)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "regime_conditional_volume_ranked_3": {
+      "expression": "TS_STD($return, 20) < 0.5 ? TS_RANK($volume, 20) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "regime_conditional_volume_ranked_4": {
+      "expression": "TS_MIN($high - $low, 20) * TS_RANK($volume, 20)",
+      "standalone_RankIC": -0.027768422687213034,
+      "standalone_RankICIR": -0.25847829667934935
+    },
+    "regime_conditional_volume_ranked_5": {
+      "expression": "TS_ZSCORE($volume, 20) > 1.5 ? TS_ZSCORE($high - $low, 20) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0544883451724303,
+    "1day.excess_return_with_cost.information_ratio": 0.4461958276151098,
+    "1day.excess_return_with_cost.annualized_return": 0.0419963931782643,
+    "1day.excess_return_with_cost.std": 0.0061009576399252,
+    "1day.excess_return_with_cost.mean": 0.0001764554335221,
+    "1day.excess_return_without_cost.max_drawdown": -0.0544883451724303,
+    "1day.excess_return_without_cost.information_ratio": 0.6905648873662353,
+    "1day.excess_return_without_cost.annualized_return": 0.0649060268461878,
+    "1day.excess_return_without_cost.std": 0.0060924511298476,
+    "1day.excess_return_without_cost.mean": 0.0002727143985133,
+    "Rank ICIR": 0.2767358495175724,
+    "Rank IC": 0.0353579744884489,
+    "ICIR": 0.1489973802921036,
+    "IC": 0.0182679925624472,
+    "l2.valid": 0.9969767066763,
+    "l2.train": 0.9925501604700036
+  },
+  "correlation_dropped": [
+    "regime_conditional_volume_ranked_2 [within-round |corr|=0.777 with regime_conditional_volume_ranked_0]",
+    "regime_conditional_volume_ranked_5 [within-round |corr|=0.889 with regime_conditional_volume_ranked_0]",
+    "regime_conditional_volume_ranked_3 [cross-round |corr|=0.917 with small_cap_stocks_with_abnormally_2 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  regime_conditional_volume_ranked_0: TS_ZSCORE($volume, 20) * TS_ZSCORE($high - $low, 20)\n    standalone RankIC=-0.0140  ICIR=-0.3409\n  regime_conditional_volume_ranked_1: TS_CORR($return, $volume, 20) * TS_RANK($volume, 20)\n    standalone RankIC=-0.0184  ICIR=-0.1957\n  regime_conditional_volume_ranked_2: TS_ZSCORE($high - $low, 20) * TS_RANK($volume, 20)\n    standalone RankIC=n/a  ICIR=n/a\n  regime_conditional_volume_ranked_3: TS_STD($return, 20) < 0.5 ? TS_RANK($volume, 20) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  regime_conditional_volume_ranked_4: TS_MIN($high - $low, 20) * TS_RANK($volume, 20)\n    standalone RankIC=-0.0278  ICIR=-0.2585\n  regime_conditional_volume_ranked_5: TS_ZSCORE($volume, 20) > 1.5 ? TS_ZSCORE($high - $low, 20) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  [mean]: RankIC=-0.0201  ICIR=-0.2651\n[CORR-GATE] 3 faktor di-drop sebelum backtest (|corr| > threshold): regime_conditional_volume_ranked_2 [within-round |corr|=0.777 with regime_conditional_volume_ranked_0]; regime_conditional_volume_ranked_5 [within-round |corr|=0.889 with regime_conditional_volume_ranked_0]; regime_conditional_volume_ranked_3 [cross-round |corr|=0.917 with small_cap_stocks_with_abnormally_2 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0354\n  RankICIR: 0.2767\n  IC: 0.0183\n  ICIR: 0.1490\n  Ann.Return: 0.0420\n  InfoRatio: 0.4462\n  MaxDrawdown: -0.0545",
+    "sota_block": "Previous best FactorIC_mean (SOTA): none yet\nThis round FactorIC_mean: -0.0201\nDecision: REPLACE — FactorIC_mean -0.0201 > SOTA none → replace"
+  },
+  "agent_response": {
+    "Observations": "Standalone RankIC+ICIR [A] is -0.0201 with ICIR -0.2651, which is below the threshold for meaningful signals. [B] combined model RankIC 0.0354 is higher but still within baseline floor, so [A] decides SOTA.",
+    "Factor Diagnosis": "regime_conditional_volume_ranked_0: weak — wrong window; regime_conditional_volume_ranked_1: weak — shallow composition; regime_conditional_volume_ranked_2: noise — n/a; regime_conditional_volume_ranked_3: noise — n/a; regime_conditional_volume_ranked_4: weak — wrong window; regime_conditional_volume_ranked_5: noise — n/a",
+    "Feedback for Hypothesis": "REFUTES — mechanism is valid but implementation is weak (refine the expression). The framework still has room.",
+    "Replace Best Result": "yes"
+  }
+}

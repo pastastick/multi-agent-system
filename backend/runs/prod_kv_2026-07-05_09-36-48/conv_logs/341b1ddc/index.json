@@ -1,0 +1,15 @@
+[
+  {
+    "step": 0,
+    "role": "crossover",
+    "file": "step_000_crossover.pt",
+    "has_text": false,
+    "has_hidden": true,
+    "has_latent": true,
+    "metadata": {
+      "mode": "kv_only",
+      "model": "Qwen/Qwen3-4B",
+      "ts": 1783307054.7350833
+    }
+  }
+]

@@ -685,6 +685,12 @@ class _CoreEngine:
 
         self.model, self.tokenizer = _load_or_get_cached_model(model_name, device)
 
+        # Cap wall-clock per panggilan generate (permintaan user 2026-07-06:
+        # "inferensi agent max 5 menit"). Generasi sehat selesai <40s; yang
+        # tersentuh cap hanyalah episode degenerasi/rambling (MONITORING_NOTES B2)
+        # yang outputnya unparseable juga. Override: env LATENT_MAX_GEN_SECONDS.
+        self.max_gen_seconds = float(os.environ.get("LATENT_MAX_GEN_SECONDS", "300"))
+
         self.realigner: Optional[LatentRealigner] = None
         if latent_steps > 0:
             self.realigner = LatentRealigner(self.model, device,
@@ -962,6 +968,7 @@ class _CoreEngine:
             input_ids=ids,
             attention_mask=ext_mask,
             max_new_tokens=max_new_tokens,
+            max_time=self.max_gen_seconds,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -1062,6 +1069,7 @@ class _CoreEngine:
             attention_mask=mask,
             past_key_values=past_kv,
             max_new_tokens=max_new_tokens,
+            max_time=self.max_gen_seconds,
             temperature=temperature,
             top_p=top_p,
             top_k=top_k,
@@ -1445,9 +1453,17 @@ class LocalLLMBackend:
 
             # ── kv_only ────────────────────────────────────────────────
             if mode == "kv_only":
+                # add_generation_prompt=False — SAMA seperti branch kv_and_text.
+                # Tanpa ini KV mewarisi '<|im_start|>assistant\n' menggantung
+                # (turn tak pernah ditutup karena kv_only tak generate teks) dan
+                # prompt agen berikutnya ter-append DI DALAM turn itu → struktur
+                # template rusak bertumpuk tiap hop → repetition collapse pada
+                # agen teks pertama (MONITORING_NOTES B10/B11). kv_only kini =
+                # kv_and_text minus langkah generate, sesuai desain eksperimen.
                 kv, last_hidden, latent_vecs = self._engine.latent_pass(
                     messages, past_key_values, record_vecs=record_latent_vecs,
                     latent_steps=latent_steps,
+                    add_generation_prompt=False,
                 )
                 result.kv_cache    = kv
                 result.hidden_last = last_hidden

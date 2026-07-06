@@ -1,0 +1,11 @@
+2026-07-06 03:08:25.694 | INFO     | pipeline.evolution.trajectory:_load:429 - Loaded 3 trajectories from /tmp/claude-0/-workspace/512925d8-0f46-44db-9e0e-905d3a7537e4/scratchpad/dry_pool_kv.json
+2026-07-06 03:08:25.767 | INFO     | pipeline.evolution.controller:load_state:1175 - Loaded evolution state from backend/runs/resume_src_kv_3of6/evolution_state.json
+2026-07-06 03:08:25.777 | INFO     | pipeline.evolution.controller:_get_crossover_candidates:764 - First crossover: using 2 original + 1 mutation (round 1)
+2026-07-06 03:08:25.786 | INFO     | pipeline.evolution.controller:_prepare_crossover_groups:684 - Prepared 2 crossover groups from 3 candidates
+2026-07-06 03:08:25.793 | INFO     | pipeline.evolution.controller:_get_mutation_task:596 - All mutation rounds complete, transitioning to crossover (round 2)
+2026-07-06 03:08:25.841 | INFO     | pipeline.evolution.controller:_get_crossover_task:803 - All crossover rounds complete, transitioning to mutation (round 3)
+2026-07-06 03:08:25.850 | INFO     | pipeline.evolution.controller:_prepare_mutation_targets:648 - Prepared 0 mutation targets for round 3
+2026-07-06 03:08:25.860 | INFO     | pipeline.evolution.controller:_get_crossover_candidates:764 - First crossover: using 2 original + 1 mutation (round 1)
+2026-07-06 03:08:25.869 | INFO     | pipeline.evolution.controller:_prepare_crossover_groups:684 - Prepared 2 crossover groups from 3 candidates
+2026-07-06 03:08:25.877 | INFO     | pipeline.evolution.controller:_get_mutation_task:596 - All mutation rounds complete, transitioning to crossover (round 4)
+2026-07-06 03:08:25.882 | INFO     | pipeline.evolution.controller:get_next_task:225 - Evolution complete: round 4 reached max rounds (3)

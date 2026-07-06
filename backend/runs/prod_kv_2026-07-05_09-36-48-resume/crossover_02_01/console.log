@@ -1,0 +1,169 @@
+2026-07-06 03:58:17.147 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=crossover, round=2, direction=1
+2026-07-06 03:58:17.166 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-06 03:58:17.183 | INFO     | pipeline.loop:__init__:158 - Evolution phase: crossover, round: 2, trajectory_id: 9e530999406f
+2026-07-06 03:58:17.212 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-06 03:58:17.230 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-06 03:58:18.124 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-06 03:58:18.186 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-06 03:58:18.229 | INFO     | log.time:wrapper:16 - __init__ took 1.06s
+2026-07-06 03:58:49.672 | INFO     | latent_mas.runlog:log:180 - [latent] crossover guidance (probe)  head=(1) **TASK**:  
+Set a bold exploratory direction for the downstream Proposal → Construct → Judger agents by fusing two parent results into something neither has reached. The fusion must combine one parent's driver with another's structure, cross operator families freely, and reach a region neither parent occupied.  
+
+(2) **THOUGHT PROCESS**:  
+- Observed that Parent 1 focuses on low-volatility sto
+2026-07-06 03:59:21.583 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_ZSCORE(TS_MEAN($high - $low, 15), 30)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 40
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:21.620 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_15 expr=TS_ZSCORE(TS_MEAN($high - $low, 15), 30)
+2026-07-06 03:59:21.690 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: RANK(TS_MEAN($high - $low, 10))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 31
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:21.754 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_rank_10 expr=RANK(TS_MEAN($high - $low, 10))
+2026-07-06 03:59:21.877 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_ZSCORE(TS_MEAN($high - $low, 20), 40)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 40
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:21.908 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_20 expr=TS_ZSCORE(TS_MEAN($high - $low, 20), 40)
+2026-07-06 03:59:22.159 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 3
+                        Symbol Length (SL): 70
+                        # Base Features (ER): 3
+                        
+2026-07-06 03:59:22.191 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_gate_10 expr=(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)
+2026-07-06 03:59:22.435 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 3
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 3
+                        
+2026-07-06 03:59:22.496 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_rank_gate_5 expr=(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)
+2026-07-06 03:59:22.627 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: ZSCORE(TS_MEAN($high - $low, 15))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 33
+                        # Base Features (ER): 2
+                        
+2026-07-06 03:59:22.660 | INFO     | latent_mas.runlog:log:180 - [latent] GATE PASS  name=range_zscore_cross_15 expr=ZSCORE(TS_MEAN($high - $low, 15))
+2026-07-06 03:59:22.699 | INFO     | factors.regulator.factor_regulator:add_factor:489 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ZSCORE(TS_MEAN($high - $low, 15), 30)', 'RANK(TS_MEAN($high - $low, 10))', 'TS_ZSCORE(TS_MEAN($high - $low, 20), 40)', '(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)', '(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)', 'ZSCORE(TS_MEAN($high - $low, 15))']
+2026-07-06 03:59:22.737 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] crossover(n=2) → n_expr=6 exprs=['TS_ZSCORE(TS_MEAN($high - $low, 15), 30)', 'RANK(TS_MEAN($high - $low, 10))', 'TS_ZSCORE(TS_MEAN($high - $low, 20), 40)', '(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)', '(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)', 'ZSCORE(TS_MEAN($high - $low, 15))'] repaired=False gate_error=none
+2026-07-06 03:59:22.793 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=crossover: hypo_len=185, n_expr=6, exprs=['TS_ZSCORE(TS_MEAN($high - $low, 15), 30)', 'RANK(TS_MEAN($high - $low, 10))', 'TS_ZSCORE(TS_MEAN($high - $low, 20), 40)', '(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)', '(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)', 'ZSCORE(TS_MEAN($high - $low, 15))'], repaired=False, gate_error=none
+2026-07-06 03:59:22.825 | INFO     | log.time:wrapper:16 - factor_propose took 64.56s
+2026-07-06 03:59:23.188 | INFO     | factors.workspace:__init__:27 - Overrode rdagent default config with project template: /workspace/project/multi-agent-system/backend/factors/factor_template
+2026-07-06 03:59:23.247 | INFO     | log.time:wrapper:16 - factor_construct took 0.36s
+2026-07-06 03:59:23.288 | INFO     | log.time:wrapper:16 - factor_calculate took 0.00s
+2026-07-06 03:59:23.349 | INFO     | pipeline.loop:factor_backtest:455 - Start factor backtest (Local: True)
+2026-07-06 04:06:34.039 | INFO     | factors.runner:develop:450 - Per-factor RankIC (OOS): {'when_low_volatility_stocks_show_0': -0.017132609860645732, 'when_low_volatility_stocks_show_1': -0.0319780616997649, 'when_low_volatility_stocks_show_2': -0.02252989951688509, 'when_low_volatility_stocks_show_3': -0.026321168095981617, 'when_low_volatility_stocks_show_4': -0.020774701786182605, 'when_low_volatility_stocks_show_5': -0.031301382684432326}
+2026-07-06 04:06:34.060 | INFO     | factors.runner:develop:451 - Per-factor RankICIR (OOS): {'when_low_volatility_stocks_show_0': -0.146498134525753, 'when_low_volatility_stocks_show_1': -0.24806960699183025, 'when_low_volatility_stocks_show_2': -0.1803121896458357, 'when_low_volatility_stocks_show_3': -0.20668099888257352, 'when_low_volatility_stocks_show_4': -0.16694019837304272, 'when_low_volatility_stocks_show_5': -0.24278630153205863}
+2026-07-06 04:06:35.817 | INFO     | factors.runner:_correlation_gate:252 - [CorrGate] drop when_low_volatility_stocks_show_2: within-round |corr|=0.829 with when_low_volatility_stocks_show_0
+2026-07-06 04:06:35.838 | INFO     | factors.runner:_correlation_gate:252 - [CorrGate] drop when_low_volatility_stocks_show_3: within-round |corr|=0.775 with when_low_volatility_stocks_show_4
+2026-07-06 04:06:36.408 | INFO     | factors.runner:_correlation_gate:276 - [CorrGate] drop when_low_volatility_stocks_show_0: cross-round |corr|=0.766 with during_regime_transitions_low_vo_2 in store
+2026-07-06 04:06:36.428 | INFO     | factors.runner:_correlation_gate:276 - [CorrGate] drop when_low_volatility_stocks_show_1: cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store
+2026-07-06 04:06:36.644 | INFO     | factors.runner:develop:469 - [CorrGate] 4 faktor di-drop: ['when_low_volatility_stocks_show_2 [within-round |corr|=0.829 with when_low_volatility_stocks_show_0]', 'when_low_volatility_stocks_show_3 [within-round |corr|=0.775 with when_low_volatility_stocks_show_4]', 'when_low_volatility_stocks_show_0 [cross-round |corr|=0.766 with during_regime_transitions_low_vo_2 in store]', 'when_low_volatility_stocks_show_1 [cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store]']
+2026-07-06 04:06:37.243 | INFO     | factors.runner:develop:484 - Factor correlation (setelah gate): 
+
+                                   when_low_volatility_stocks_show_4  when_low_volatility_stocks_show_5
+when_low_volatility_stocks_show_4                           1.000000                           0.004294
+when_low_volatility_stocks_show_5                           0.004294                           1.000000
+
+2026-07-06 04:06:37.979 | INFO     | factors.runner:develop:491 - Factor values this round: 
+
+                                                feature                                  
+                      when_low_volatility_stocks_show_4 when_low_volatility_stocks_show_5
+datetime   instrument                                                                    
+2026-01-09 SZ301668                            0.007895                         -0.371267
+           SZ301678                            0.008793                         -0.253509
+           SZ301687                           -0.042301                          0.105836
+           SZ302132                            0.017292                          0.333093
+           SZ399300                           -0.002202                         -0.281073
+
+
+2026-07-06 04:06:52.612 | INFO     | factors.runner:_save_factor_logs:393 - [FactorLogs] correlation & factor values disimpan ke /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/factor_logs/20260706_040637_980950
+2026-07-06 04:06:55.866 | INFO     | factors.runner:develop:498 - Saved combined factors to /workspace/project/multi-agent-system/backend/data/results/workspace/cd5f99b827474c72ba83d91d79a5e807/combined_factors_df.parquet
+2026-07-06 04:06:55.887 | INFO     | factors.runner:develop:502 - Execute factor backtest (Use Local): conf_combined_factors.yaml
+2026-07-06 04:08:35.064 | INFO     | factors.runner:_local_execute:83 - [LocalExec] qrun OK:           risk
+mean               0.000506
+std                0.005735
+annualized_return  0.120405
+information_ratio  1.360944
+max_drawdown      -0.056901
+'The following are analysis results of the excess return with cost(1day).'
+                       risk
+mean               0.000407
+std                0.005744
+annualized_return  0.096856
+information_ratio  1.093090
+max_drawdown      -0.056901
+'The following are analysis results of indicators(1day).'
+     value
+ffr    1.0
+pa     0.0
+pos    0.0
+
+2026-07-06 04:08:57.864 | INFO     | factors.runner:develop:525 - Backtesting results: 
+1day.ffr                                             1.000000
+1day.excess_return_with_cost.max_drawdown           -0.056901
+1day.excess_return_with_cost.information_ratio       1.093090
+1day.excess_return_with_cost.annualized_return       0.096856
+1day.excess_return_with_cost.std                     0.005744
+1day.excess_return_with_cost.mean                    0.000407
+1day.excess_return_without_cost.max_drawdown        -0.056901
+1day.excess_return_without_cost.information_ratio    1.360944
+1day.excess_return_without_cost.annualized_return    0.120405
+1day.excess_return_without_cost.std                  0.005735
+1day.excess_return_without_cost.mean                 0.000506
+Rank ICIR                                            0.303168
+Rank IC                                              0.041433
+ICIR                                                 0.151943
+IC                                                   0.021128
+l2.valid                                             0.996801
+l2.train                                             0.993838
+Name: 0, dtype: float64
+2026-07-06 04:08:57.919 | INFO     | log.time:wrapper:16 - factor_backtest took 574.58s
+2026-07-06 04:09:07.983 | INFO     | pipeline.loop:_save_metrics_snapshot:1144 - Metrics snapshot saved → metrics/round_002_9e530999406f.json
+2026-07-06 04:09:14.035 | INFO     | pipeline.loop:feedback:575 - Saved factors to library: /workspace/project/multi-agent-system/data/factorlib/all_factors_library.json (phase=crossover)
+2026-07-06 04:09:14.052 | INFO     | log.time:wrapper:16 - feedback took 16.11s
+2026-07-06 04:09:14.087 | INFO     | pipeline.evolution.trajectory:add:246 - Added trajectory afdac068f012 (direction=1, phase=crossover, round=2)
+2026-07-06 04:09:14.152 | INFO     | pipeline.evolution.trajectory:_save:407 - Saved trajectory pool to /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/trajectory_pool.json
+2026-07-06 04:09:14.176 | INFO     | pipeline.evolution.controller:report_task_complete:872 - Negative memory: recorded failed mechanism afdac068f012 [weak_ic]
+2026-07-06 04:09:14.192 | INFO     | pipeline.evolution.controller:report_task_complete:889 - Crossover round complete (group 1)
+2026-07-06 04:09:14.247 | INFO     | pipeline.factor_mining:run_evolution_loop:879 - Task done: trajectory_id=afdac068f012, RankIC=-0.026038042235307465
+2026-07-06 04:09:14.266 | INFO     | pipeline.evolution.controller:_get_crossover_task:803 - All crossover rounds complete, transitioning to mutation (round 3)
+2026-07-06 04:09:14.287 | INFO     | pipeline.evolution.controller:_prepare_mutation_targets:648 - Prepared 2 mutation targets for round 3
+2026-07-06 04:09:14.311 | INFO     | pipeline.evolution.controller:get_next_task:225 - Evolution complete: round 3 reached max rounds (3)
+2026-07-06 04:09:14.326 | INFO     | pipeline.factor_mining:run_evolution_loop:847 - Evolution complete: no more tasks
+2026-07-06 04:09:14.347 | INFO     | pipeline.evolution.controller:save_state:1138 - Saved evolution state to /workspace/project/multi-agent-system/backend/runs/prod_kv_2026-07-05_09-36-48-resume/evolution_state.json
+2026-07-06 04:09:14.362 | INFO     | pipeline.factor_mining:run_evolution_loop:911 - ========================================
+2026-07-06 04:09:14.376 | INFO     | pipeline.factor_mining:run_evolution_loop:912 - Evolution complete. Top 0 trajectories:
+2026-07-06 04:09:14.391 | INFO     | pipeline.factor_mining:run_evolution_loop:921 - Pool stats: {'total_trajectories': 6, 'by_phase': {'original': 2, 'mutation': 2, 'crossover': 2}, 'by_direction': {0: 3, 1: 3}, 'successful_trajectories': 0, 'latest_round': 2}
+2026-07-06 04:09:14.412 | INFO     | pipeline.factor_mining:run_evolution_loop:922 - ========================================
+2026-07-06 04:09:14.434 | INFO     | pipeline.factor_mining:run_evolution_loop:931 - [Monitor] Session finalized: 148 events recorded
+2026-07-06 04:09:14.450 | WARNING  | pipeline.factor_mining:run_evolution_loop:934 - [Monitor] 13 anomalies detected — check monitor logs
+2026-07-06 04:09:14.463 | INFO     | pipeline.factor_mining:run_evolution_loop:937 - [Monitor] Bottleneck: factor_backtest (98.3% of pipeline time)
+2026-07-06 04:09:14.476 | INFO     | pipeline.factor_mining:main:1254 - Run finished or terminated

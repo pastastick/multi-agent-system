@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-07-05T10:18:31",
+  "round_idx": 1,
+  "trajectory_id": "84034b06ec26",
+  "evolution_phase": "mutation",
+  "hypothesis": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+  "factor_ic_mean": -0.03556626136161578,
+  "factor_icir_mean": -0.43572862808742935,
+  "sota": {
+    "prev": 0.04492601440188402,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0356 ≤ SOTA 0.0449 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "small_cap_stocks_with_high_volum_0": {
+      "expression": "TS_ZSCORE($return, 1) * (TS_RANK($volume, 1) < 50 ? 1 : 0)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_high_volum_1": {
+      "expression": "(TS_RANK($volume, 1) < 50) ? TS_ZSCORE($return, 1) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_high_volum_2": {
+      "expression": "RANK($return) * (TS_RANK($volume, 1) < 50 ? 1 : 0)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_high_volum_3": {
+      "expression": "TS_RANK($return, 1) * (TS_MIN($volume, 1) > 1000000 ? 1 : 0)",
+      "standalone_RankIC": -0.03556626136161578,
+      "standalone_RankICIR": -0.43572862808742935
+    },
+    "small_cap_stocks_with_high_volum_4": {
+      "expression": "(TS_ZSCORE($return, 1) < -1) ? TS_RANK($volume, 1) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "small_cap_stocks_with_high_volum_5": {
+      "expression": "TS_RANK($volume, 1) * (TS_RANK($return, 1) > 50 ? 1 : 0)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0988355358286242,
+    "1day.excess_return_with_cost.information_ratio": 0.5450528840841192,
+    "1day.excess_return_with_cost.annualized_return": 0.0674314820336894,
+    "1day.excess_return_with_cost.std": 0.0080192838190968,
+    "1day.excess_return_with_cost.mean": 0.0002833255547634,
+    "1day.excess_return_without_cost.max_drawdown": -0.0930080739613569,
+    "1day.excess_return_without_cost.information_ratio": 0.7294041099569479,
+    "1day.excess_return_without_cost.annualized_return": 0.0901610917104625,
+    "1day.excess_return_without_cost.std": 0.008012397321109,
+    "1day.excess_return_without_cost.mean": 0.0003788281164305,
+    "Rank ICIR": 0.286127775259222,
+    "Rank IC": 0.0353412113225174,
+    "ICIR": 0.1142971451794288,
+    "IC": 0.0144158761440895,
+    "l2.valid": 0.9969395896147828,
+    "l2.train": 0.9936470912450758
+  },
+  "correlation_dropped": [
+    "small_cap_stocks_with_high_volum_2 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  small_cap_stocks_with_high_volum_0: TS_ZSCORE($return, 1) * (TS_RANK($volume, 1) < 50 ? 1 : 0)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_high_volum_1: (TS_RANK($volume, 1) < 50) ? TS_ZSCORE($return, 1) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_high_volum_2: RANK($return) * (TS_RANK($volume, 1) < 50 ? 1 : 0)\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_high_volum_3: TS_RANK($return, 1) * (TS_MIN($volume, 1) > 1000000 ? 1 : 0)\n    standalone RankIC=-0.0356  ICIR=-0.4357\n  small_cap_stocks_with_high_volum_4: (TS_ZSCORE($return, 1) < -1) ? TS_RANK($volume, 1) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  small_cap_stocks_with_high_volum_5: TS_RANK($volume, 1) * (TS_RANK($return, 1) > 50 ? 1 : 0)\n    standalone RankIC=n/a  ICIR=n/a\n  [mean]: RankIC=-0.0356  ICIR=-0.4357\n[CORR-GATE] 1 faktor di-drop sebelum backtest (|corr| > threshold): small_cap_stocks_with_high_volum_2 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0353\n  RankICIR: 0.2861\n  IC: 0.0144\n  ICIR: 0.1143\n  Ann.Return: 0.0674\n  InfoRatio: 0.5451\n  MaxDrawdown: -0.0988",
+    "sota_block": "Previous best FactorIC_mean (SOTA): 0.0449\nThis round FactorIC_mean: -0.0356\nDecision: KEEP — FactorIC_mean -0.0356 ≤ SOTA 0.0449 → keep"
+  },
+  "agent_response": {
+    "Observations": "The standalone [A] RankIC+ICIR of -0.0356 is below the 0.02 threshold for meaningful signals, making it weaker than the previous SOTA. [B] Combined model RankIC of 0.0353 is close to baseline but does not override the [A] decision.",
+    "Factor Diagnosis": "small_cap_stocks_with_high_volum_3: noise — invalid RankIC and ICIR values; small_cap_stocks_with_high_volum_2: weak — high correlation with another factor; others: weak — low RankIC and unstable ICIR.",
+    "Feedback for Hypothesis": "REFUTES — the mechanism is invalid (liquidity-driven reversal is not captured in the factor construction), and the implementation is weak (factors are not well-defined or normalized). The framework has room for refinement.",
+    "Replace Best Result": "no"
+  }
+}

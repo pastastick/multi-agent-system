@@ -1,0 +1,5 @@
+,median_aligned_reversion_in_high_0,median_aligned_reversion_in_high_1,median_aligned_reversion_in_high_2,median_aligned_reversion_in_high_3
+median_aligned_reversion_in_high_0,1.0,0.1531135624658937,0.00856962714518312,0.00015648140510020735
+median_aligned_reversion_in_high_1,0.1531135624658937,1.0,-0.0019622388428563215,0.0001530957833552657
+median_aligned_reversion_in_high_2,0.00856962714518312,-0.0019622388428563215,1.0,0.009319438808501465
+median_aligned_reversion_in_high_3,0.00015648140510020735,0.0001530957833552657,0.009319438808501465,1.0

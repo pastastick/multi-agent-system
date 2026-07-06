@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-07-06T03:58:15",
+  "round_idx": 2,
+  "trajectory_id": "171e4b7fbe92",
+  "evolution_phase": "crossover",
+  "hypothesis": "HYPOTHESIS: short-term reversal after abnormally high-volume days in small-cap stocks",
+  "factor_ic_mean": -0.015682731485633847,
+  "factor_icir_mean": -0.1957535947888357,
+  "sota": {
+    "prev": null,
+    "replaced": true,
+    "note": "FactorIC_mean -0.0157 > SOTA none → replace"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "HYPOTHESIS_short_term_reversal_a_0": {
+      "expression": "TS_ZSCORE(RANK($volume), 7)",
+      "standalone_RankIC": -0.02012920353507136,
+      "standalone_RankICIR": -0.288957298579618
+    },
+    "HYPOTHESIS_short_term_reversal_a_1": {
+      "expression": "TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "HYPOTHESIS_short_term_reversal_a_2": {
+      "expression": "TS_CORR($return, TS_ZSCORE($volume, 5), 10)",
+      "standalone_RankIC": -0.022026306633525106,
+      "standalone_RankICIR": -0.25032373941993424
+    },
+    "HYPOTHESIS_short_term_reversal_a_3": {
+      "expression": "MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "HYPOTHESIS_short_term_reversal_a_4": {
+      "expression": "($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "HYPOTHESIS_short_term_reversal_a_5": {
+      "expression": "TS_MEAN(TS_ZSCORE($volume, 20), 10)",
+      "standalone_RankIC": -0.00489268428830508,
+      "standalone_RankICIR": -0.04797974636695477
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0638927493090298,
+    "1day.excess_return_with_cost.information_ratio": 0.5548043265263949,
+    "1day.excess_return_with_cost.annualized_return": 0.0588641205689478,
+    "1day.excess_return_with_cost.std": 0.0068773692475161,
+    "1day.excess_return_with_cost.mean": 0.0002473282376846,
+    "1day.excess_return_without_cost.max_drawdown": -0.0632878550432518,
+    "1day.excess_return_without_cost.information_ratio": 0.7763716004374275,
+    "1day.excess_return_without_cost.annualized_return": 0.0822861955787324,
+    "1day.excess_return_without_cost.std": 0.0068701918438314,
+    "1day.excess_return_without_cost.mean": 0.0003457403175576,
+    "Rank ICIR": 0.1829285057714307,
+    "Rank IC": 0.0259194307559783,
+    "ICIR": 0.0586908850371112,
+    "IC": 0.0078546970504663,
+    "l2.valid": 0.9969419449273004,
+    "l2.train": 0.9939136876769988
+  },
+  "correlation_dropped": [],
+  "agent_input": {
+    "factor_block": "Hypothesis: HYPOTHESIS: short-term reversal after abnormally high-volume days in small-cap stocks\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  HYPOTHESIS_short_term_reversal_a_0: TS_ZSCORE(RANK($volume), 7)\n    standalone RankIC=-0.0201  ICIR=-0.2890\n  HYPOTHESIS_short_term_reversal_a_1: TS_ZSCORE($return, 1) * ($volume > TS_MEAN($volume, 5))\n    standalone RankIC=n/a  ICIR=n/a\n  HYPOTHESIS_short_term_reversal_a_2: TS_CORR($return, TS_ZSCORE($volume, 5), 10)\n    standalone RankIC=-0.0220  ICIR=-0.2503\n  HYPOTHESIS_short_term_reversal_a_3: MEAN(TS_RANK(TS_ZSCORE($volume, 20), 10))\n    standalone RankIC=n/a  ICIR=n/a\n  HYPOTHESIS_short_term_reversal_a_4: ($volume > TS_MEAN($volume, 5)) ? TS_ZSCORE($return, 1) : 0\n    standalone RankIC=n/a  ICIR=n/a\n  HYPOTHESIS_short_term_reversal_a_5: TS_MEAN(TS_ZSCORE($volume, 20), 10)\n    standalone RankIC=-0.0049  ICIR=-0.0480\n  [mean]: RankIC=-0.0157  ICIR=-0.1958",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0259\n  RankICIR: 0.1829\n  IC: 0.0079\n  ICIR: 0.0587\n  Ann.Return: 0.0589\n  InfoRatio: 0.5548\n  MaxDrawdown: -0.0639",
+    "sota_block": "Previous best FactorIC_mean (SOTA): none yet\nThis round FactorIC_mean: -0.0157\nDecision: REPLACE — FactorIC_mean -0.0157 > SOTA none → replace"
+  },
+  "agent_response": {
+    "Observations": "The standalone RankIC of -0.0157 is below the 0.02 threshold, indicating weak predictive power. ICIR of -0.1958 suggests low stability. [B] combined model RankIC of 0.0259 is modest but above baseline.",
+    "Factor Diagnosis": "HYPOTHESIS_short_term_reversal_a_0: Weak / noise — negative RankIC and ICIR. HYPOTHESIS_short_term_reversal_a_2: Weak / noise — negative RankIC and ICIR. HYPOTHESIS_short_term_reversal_a_5: Weak / noise — negative RankIC and ICIR. Other factors are incomplete or invalid (n/a).",
+    "Feedback for Hypothesis": "PARTIALLY — the mechanism is valid but the implementation is weak (refine the expression) or is the mechanism itself absent (pivot)? The framework still has room for refinement.",
+    "Replace Best Result": "yes"
+  }
+}

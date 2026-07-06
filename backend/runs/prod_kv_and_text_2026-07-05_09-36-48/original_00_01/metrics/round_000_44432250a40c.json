@@ -1,0 +1,67 @@
+{
+  "timestamp": "2026-07-05T12:33:05",
+  "round_idx": 0,
+  "trajectory_id": "44432250a40c",
+  "evolution_phase": "original",
+  "hypothesis": "during low-volume periods, high-volatility stocks revert to their cross-sectional average returns, driven by liquidity constraints and information realignment.",
+  "factor_ic_mean": -0.014973058990624195,
+  "factor_icir_mean": -0.12749990003887024,
+  "sota": {
+    "prev": 0.015716499371787485,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0150 ≤ SOTA 0.0157 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "during_low_volume_periods_high_v_0": {
+      "expression": "TS_ZSCORE($return, 10) ? TS_MEAN($return, 10) : TS_ZSCORE($return, 10)",
+      "standalone_RankIC": -0.024035455986423745,
+      "standalone_RankICIR": -0.17561919857620129
+    },
+    "during_low_volume_periods_high_v_1": {
+      "expression": "TS_RANK($return, 10) ? TS_ZSCORE($return, 10) : TS_RANK($return, 10)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "during_low_volume_periods_high_v_2": {
+      "expression": "TS_ZSCORE($return, 10) * (TS_MEAN($volume, 10) < 500000)",
+      "standalone_RankIC": -0.005910661994824643,
+      "standalone_RankICIR": -0.07938060150153918
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0971964822052977,
+    "1day.excess_return_with_cost.information_ratio": 0.4908774053225747,
+    "1day.excess_return_with_cost.annualized_return": 0.0591015646913747,
+    "1day.excess_return_with_cost.std": 0.0078043629397717,
+    "1day.excess_return_with_cost.mean": 0.0002483259020645,
+    "1day.excess_return_without_cost.max_drawdown": -0.0939335216425055,
+    "1day.excess_return_without_cost.information_ratio": 0.6810290012909522,
+    "1day.excess_return_without_cost.annualized_return": 0.0819120217418212,
+    "1day.excess_return_without_cost.std": 0.0077963900797303,
+    "1day.excess_return_without_cost.mean": 0.000344168158579,
+    "Rank ICIR": 0.2246994769353491,
+    "Rank IC": 0.0343727318191903,
+    "ICIR": 0.0853804235194622,
+    "IC": 0.0137007976580225,
+    "l2.valid": 0.997192967313134,
+    "l2.train": 0.9939808072096968
+  },
+  "correlation_dropped": [
+    "during_low_volume_periods_high_v_1 [within-round |corr|=0.774 with during_low_volume_periods_high_v_2]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: during low-volume periods, high-volatility stocks revert to their cross-sectional average returns, driven by liquidity constraints and information realignment.\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  during_low_volume_periods_high_v_0: TS_ZSCORE($return, 10) ? TS_MEAN($return, 10) : TS_ZSCORE($return, 10)\n    standalone RankIC=-0.0240  ICIR=-0.1756\n  during_low_volume_periods_high_v_1: TS_RANK($return, 10) ? TS_ZSCORE($return, 10) : TS_RANK($return, 10)\n    standalone RankIC=n/a  ICIR=n/a\n  during_low_volume_periods_high_v_2: TS_ZSCORE($return, 10) * (TS_MEAN($volume, 10) < 500000)\n    standalone RankIC=-0.0059  ICIR=-0.0794\n  [mean]: RankIC=-0.0150  ICIR=-0.1275\n[CORR-GATE] 1 faktor di-drop sebelum backtest (|corr| > threshold): during_low_volume_periods_high_v_1 [within-round |corr|=0.774 with during_low_volume_periods_high_v_2]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0344\n  RankICIR: 0.2247\n  IC: 0.0137\n  ICIR: 0.0854\n  Ann.Return: 0.0591\n  InfoRatio: 0.4909\n  MaxDrawdown: -0.0972",
+    "sota_block": "Previous best FactorIC_mean (SOTA): 0.0157\nThis round FactorIC_mean: -0.0150\nDecision: KEEP — FactorIC_mean -0.0150 ≤ SOTA 0.0157 → keep"
+  },
+  "agent_response": {
+    "Observations": "The standalone RankIC+ICIR metric [A] decisively determines SOTA, with a mean of -0.0150 (RankIC) and -0.1275 (ICIR), indicating weak predictive power and instability. [B] Combined model shows moderate performance but is not the verdict.",
+    "Factor Diagnosis": "during_low_volume_periods_high_v_0: weak / gated composition; during_low_volume_periods_high_v_1: weak / incomplete expression; during_low_volume_periods_high_v_2: weak / shallow multiplication; all factors are structurally flawed for the mechanism.",
+    "Feedback for Hypothesis": "PARTIALLY — the mechanism is valid but the implementation is weak (shallow composition, missing normalization). The framework still has room for refinement.",
+    "Replace Best Result": "no"
+  }
+}

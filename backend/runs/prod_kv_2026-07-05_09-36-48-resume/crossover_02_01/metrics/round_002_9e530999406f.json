@@ -1,0 +1,85 @@
+{
+  "timestamp": "2026-07-06T04:09:07",
+  "round_idx": 2,
+  "trajectory_id": "9e530999406f",
+  "evolution_phase": "crossover",
+  "hypothesis": "when low-volatility stocks show a sharp decline in price range (the range $high minus $low) during regime transitions, next-period cross-sectional returns are more likely to be negative",
+  "factor_ic_mean": -0.026038042235307465,
+  "factor_icir_mean": -0.20486324995255067,
+  "sota": {
+    "prev": -0.015682731485633847,
+    "replaced": false,
+    "note": "FactorIC_mean -0.0260 ≤ SOTA -0.0157 → keep"
+  },
+  "complexity_warning": null,
+  "per_factor": {
+    "when_low_volatility_stocks_show_0": {
+      "expression": "TS_ZSCORE(TS_MEAN($high - $low, 15), 30)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "when_low_volatility_stocks_show_1": {
+      "expression": "RANK(TS_MEAN($high - $low, 10))",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "when_low_volatility_stocks_show_2": {
+      "expression": "TS_ZSCORE(TS_MEAN($high - $low, 20), 40)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "when_low_volatility_stocks_show_3": {
+      "expression": "(TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)",
+      "standalone_RankIC": null,
+      "standalone_RankICIR": null
+    },
+    "when_low_volatility_stocks_show_4": {
+      "expression": "(RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)",
+      "standalone_RankIC": -0.020774701786182605,
+      "standalone_RankICIR": -0.16694019837304272
+    },
+    "when_low_volatility_stocks_show_5": {
+      "expression": "ZSCORE(TS_MEAN($high - $low, 15))",
+      "standalone_RankIC": -0.031301382684432326,
+      "standalone_RankICIR": -0.24278630153205863
+    }
+  },
+  "result_raw": {
+    "1day.pos": 0.0,
+    "1day.pa": 0.0,
+    "1day.ffr": 1.0,
+    "1day.excess_return_with_cost.max_drawdown": -0.0569005385785893,
+    "1day.excess_return_with_cost.information_ratio": 1.0930903758815798,
+    "1day.excess_return_with_cost.annualized_return": 0.096855919521588,
+    "1day.excess_return_with_cost.std": 0.0057435660460671,
+    "1day.excess_return_with_cost.mean": 0.0004069576450486,
+    "1day.excess_return_without_cost.max_drawdown": -0.0569005385785893,
+    "1day.excess_return_without_cost.information_ratio": 1.3609438603001531,
+    "1day.excess_return_without_cost.annualized_return": 0.1204048398410731,
+    "1day.excess_return_without_cost.std": 0.0057347601025565,
+    "1day.excess_return_without_cost.mean": 0.0005059026884078,
+    "Rank ICIR": 0.3031683431048437,
+    "Rank IC": 0.0414328663028232,
+    "ICIR": 0.1519426534582111,
+    "IC": 0.0211282590173141,
+    "l2.valid": 0.9968009019409378,
+    "l2.train": 0.9938378920759032
+  },
+  "correlation_dropped": [
+    "when_low_volatility_stocks_show_2 [within-round |corr|=0.829 with when_low_volatility_stocks_show_0]",
+    "when_low_volatility_stocks_show_3 [within-round |corr|=0.775 with when_low_volatility_stocks_show_4]",
+    "when_low_volatility_stocks_show_0 [cross-round |corr|=0.766 with during_regime_transitions_low_vo_2 in store]",
+    "when_low_volatility_stocks_show_1 [cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store]"
+  ],
+  "agent_input": {
+    "factor_block": "Hypothesis: when low-volatility stocks show a sharp decline in price range (the range $high minus $low) during regime transitions, next-period cross-sectional returns are more likely to be negative\n\n[A] Individual factor signals (standalone RankIC + ICIR vs label, OOS — each factor's own predictive strength & stability; THIS decides SOTA):\n  when_low_volatility_stocks_show_0: TS_ZSCORE(TS_MEAN($high - $low, 15), 30)\n    standalone RankIC=n/a  ICIR=n/a\n  when_low_volatility_stocks_show_1: RANK(TS_MEAN($high - $low, 10))\n    standalone RankIC=n/a  ICIR=n/a\n  when_low_volatility_stocks_show_2: TS_ZSCORE(TS_MEAN($high - $low, 20), 40)\n    standalone RankIC=n/a  ICIR=n/a\n  when_low_volatility_stocks_show_3: (TS_ZSCORE(TS_MEAN($high - $low, 10), 30) ? TS_MEAN($return, 5) : 0.0)\n    standalone RankIC=n/a  ICIR=n/a\n  when_low_volatility_stocks_show_4: (RANK(TS_MEAN($high - $low, 5)) ? TS_MEAN($return, 3) : 0.0)\n    standalone RankIC=-0.0208  ICIR=-0.1669\n  when_low_volatility_stocks_show_5: ZSCORE(TS_MEAN($high - $low, 15))\n    standalone RankIC=-0.0313  ICIR=-0.2428\n  [mean]: RankIC=-0.0260  ICIR=-0.2049\n[CORR-GATE] 4 faktor di-drop sebelum backtest (|corr| > threshold): when_low_volatility_stocks_show_2 [within-round |corr|=0.829 with when_low_volatility_stocks_show_0]; when_low_volatility_stocks_show_3 [within-round |corr|=0.775 with when_low_volatility_stocks_show_4]; when_low_volatility_stocks_show_0 [cross-round |corr|=0.766 with during_regime_transitions_low_vo_2 in store]; when_low_volatility_stocks_show_1 [cross-round |corr|=1.000 with small_cap_stocks_with_unusually_1 in store]",
+    "backtest_results": "[B] Combined LightGBM model — OOS (supplementary; ~95-103% baseline floor, does NOT decide SOTA):\n  RankIC: 0.0414\n  RankICIR: 0.3032\n  IC: 0.0211\n  ICIR: 0.1519\n  Ann.Return: 0.0969\n  InfoRatio: 1.0931\n  MaxDrawdown: -0.0569",
+    "sota_block": "Previous best FactorIC_mean (SOTA): -0.0157\nThis round FactorIC_mean: -0.0260\nDecision: KEEP — FactorIC_mean -0.0260 ≤ SOTA -0.0157 → keep"
+  },
+  "agent_response": {
+    "Observations": "The standalone RankIC and ICIR for all factors are below the 0.02 threshold, indicating weak predictive power. [A] is the metric that decides SOTA, with a mean RankIC of -0.0260 and ICIR of -0.2049, suggesting unstable signals.",
+    "Factor Diagnosis": "when_low_volatility_stocks_show_4: Weak signal with low RankIC and ICIR; when_low_volatility_stocks_show_5: Noise with negative RankIC and ICIR; others: Weak or noise due to missing normalization or shallow composition.",
+    "Feedback for Hypothesis": "PARTIALLY — the mechanism is valid but the implementation is weak (refine the expression). The framework still has room for refinement.",
+    "Replace Best Result": "no"
+  }
+}

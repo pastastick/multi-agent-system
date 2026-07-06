@@ -71,3 +71,14 @@ backend/runs/**/__session__/
 # factor_values.csv = matrix (saham × hari × faktor), 10-50 MB, regeneratable
 backend/runs/**/factor_values.csv
 backend/latent_runs/
+
+# 2026-07-06: factor_values.csv.gz individual > batas keras GitHub 100MB/file
+# (runner.py sekarang gzip; 4 run ini besar krn window OOS + "All" data lebih
+# lebar dari perkiraan). Raw matrix, regeneratable dari factor expression +
+# rerun backtest (lihat trajectory_pool.json, tetap ter-track). File .gz LAIN
+# yang <100MB TETAP di-track (keputusan user: exclude seminimal mungkin).
+# Lihat MONITORING_NOTES.md untuk detail.
+backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_104711_020567/factor_values.csv.gz
+backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_100056_832465/factor_values.csv.gz
+backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_102545_250146/factor_values.csv.gz
+backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_094730_433440/factor_values.csv.gz

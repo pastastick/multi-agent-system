@@ -1,0 +1,101 @@
+2026-07-05 10:52:55.457 | INFO     | pipeline.factor_mining:_run_evolution_task:269 - Starting evolution task: phase=crossover, round=2, direction=1
+2026-07-05 10:52:55.474 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
+2026-07-05 10:52:55.492 | INFO     | pipeline.loop:__init__:158 - Evolution phase: crossover, round: 2, trajectory_id: dbc54affd7e2
+2026-07-05 10:52:55.515 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
+2026-07-05 10:52:55.531 | INFO     | pipeline.loop:__init__:176 - Quality gate: consistency=off, complexity=on, redundancy=on
+2026-07-05 10:52:56.339 | INFO     | pipeline.loop:__init__:260 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
+2026-07-05 10:52:56.385 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
+2026-07-05 10:52:56.437 | INFO     | log.time:wrapper:16 - __init__ took 0.96s
+2026-07-05 10:54:01.271 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (TS_ZSCORE($return, 10) > 1.5) ? TS_RANK($volume, 10) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 57
+                        # Base Features (ER): 2
+                        
+2026-07-05 10:54:01.321 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=VolatilityReversalSignal expr=(TS_ZSCORE($return, 10) > 1.5) ? TS_RANK($volume, 10) : 0
+2026-07-05 10:54:01.471 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_CORR($volume, $return, 10) * TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 54
+                        # Base Features (ER): 2
+                        
+2026-07-05 10:54:01.497 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=VolumeMomentumCrossSection expr=TS_CORR($volume, $return, 10) * TS_ZSCORE($volume, 10)
+2026-07-05 10:54:01.633 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_STD($return, 10) / TS_ZSCORE($volume, 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 44
+                        # Base Features (ER): 2
+                        
+2026-07-05 10:54:01.662 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=VolatilityLiquidityRatio expr=TS_STD($return, 10) / TS_ZSCORE($volume, 10)
+2026-07-05 10:54:01.829 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (RSI($return, 14) < 30) ? TS_ZSCORE($return, 10) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 52
+                        # Base Features (ER): 1
+                        
+2026-07-05 10:54:01.854 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=MomentumReversalGate expr=(RSI($return, 14) < 30) ? TS_ZSCORE($return, 10) : 0
+2026-07-05 10:54:02.044 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: TS_RANK(TS_ZSCORE($volume, 10) * TS_STD($return, 10), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 57
+                        # Base Features (ER): 2
+                        
+2026-07-05 10:54:02.069 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=VolumeVolatilityCrossRank expr=TS_RANK(TS_ZSCORE($volume, 10) * TS_STD($return, 10), 10)
+2026-07-05 10:54:02.356 | INFO     | factors.regulator.factor_regulator:evaluate:384 - 
+                        Evaluated expr: (TS_ZSCORE($return, 10) > 1) && (TS_ZSCORE($volume, 10) > 1) ? 1 : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 6
+                        # Unique Vars: 2
+                        Symbol Length (SL): 68
+                        # Base Features (ER): 2
+                        
+2026-07-05 10:54:02.382 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=RegimeConfirmedLiquidity expr=(TS_ZSCORE($return, 10) > 1) && (TS_ZSCORE($volume, 10) > 1) ? 1 : 0
+2026-07-05 10:54:02.424 | INFO     | factors.regulator.factor_regulator:add_factor:489 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['(TS_ZSCORE($return, 10) > 1.5) ? TS_RANK($volume, 10) : 0', 'TS_CORR($volume, $return, 10) * TS_ZSCORE($volume, 10)', 'TS_STD($return, 10) / TS_ZSCORE($volume, 10)', '(RSI($return, 14) < 30) ? TS_ZSCORE($return, 10) : 0', 'TS_RANK(TS_ZSCORE($volume, 10) * TS_STD($return, 10), 10)', '(TS_ZSCORE($return, 10) > 1) && (TS_ZSCORE($volume, 10) > 1) ? 1 : 0']
+2026-07-05 10:54:02.445 | INFO     | pipeline.loop:_evolution_propose:746 - [LatentMAS] crossover(n=2) → n_expr=6 exprs=['(TS_ZSCORE($return, 10) > 1.5) ? TS_RANK($volume, 10) : 0', 'TS_CORR($volume, $return, 10) * TS_ZSCORE($volume, 10)', 'TS_STD($return, 10) / TS_ZSCORE($volume, 10)', '(RSI($return, 14) < 30) ? TS_ZSCORE($return, 10) : 0', 'TS_RANK(TS_ZSCORE($volume, 10) * TS_STD($return, 10), 10)', '(TS_ZSCORE($return, 10) > 1) && (TS_ZSCORE($volume, 10) > 1) ? 1 : 0'] repaired=False gate_error=none
+2026-07-05 10:54:02.465 | INFO     | pipeline.loop:factor_propose:355 - [LatentMAS] phase=crossover: hypo_len=188, n_expr=6, exprs=['(TS_ZSCORE($return, 10) > 1.5) ? TS_RANK($volume, 10) : 0', 'TS_CORR($volume, $return, 10) * TS_ZSCORE($volume, 10)', 'TS_STD($return, 10) / TS_ZSCORE($volume, 10)', '(RSI($return, 14) < 30) ? TS_ZSCORE($return, 10) : 0', 'TS_RANK(TS_ZSCORE($volume, 10) * TS_STD($return, 10), 10)', '(TS_ZSCORE($return, 10) > 1) && (TS_ZSCORE($volume, 10) > 1) ? 1 : 0'], repaired=False, gate_error=none
+2026-07-05 10:54:02.481 | INFO     | log.time:wrapper:16 - factor_propose took 66.03s
+2026-07-05 10:54:02.719 | INFO     | factors.workspace:__init__:27 - Overrode rdagent default config with project template: /workspace/project/multi-agent-system/backend/factors/factor_template
+2026-07-05 10:54:02.744 | INFO     | log.time:wrapper:16 - factor_construct took 0.23s
+2026-07-05 10:54:02.772 | INFO     | log.time:wrapper:16 - factor_calculate took 0.00s
+2026-07-05 10:54:02.808 | INFO     | pipeline.loop:factor_backtest:455 - Start factor backtest (Local: True)
+2026-07-05 11:04:23.307 | INFO     | factors.runner:develop:440 - Per-factor RankIC (OOS): {'regime_confirmed_liquidity_rever_0': -0.012009025539617798, 'regime_confirmed_liquidity_rever_1': -0.010267405361885123, 'regime_confirmed_liquidity_rever_2': -0.007444920712642745, 'regime_confirmed_liquidity_rever_3': 0.008830022574095079, 'regime_confirmed_liquidity_rever_4': -0.018384043619776847, 'regime_confirmed_liquidity_rever_5': -0.015634678063337928}
+2026-07-05 11:04:23.342 | INFO     | factors.runner:develop:441 - Per-factor RankICIR (OOS): {'regime_confirmed_liquidity_rever_0': -0.2232321915811197, 'regime_confirmed_liquidity_rever_1': -0.1725498336552979, 'regime_confirmed_liquidity_rever_2': -0.14187010342883766, 'regime_confirmed_liquidity_rever_3': 0.4222949377149746, 'regime_confirmed_liquidity_rever_4': -0.3135079558980395, 'regime_confirmed_liquidity_rever_5': -0.2800799813685832}
+2026-07-05 11:04:25.720 | INFO     | factors.runner:_update_corr_store:212 - [CorrGate] Store diperbarui: 3 faktor (['regime_confirmed_liquidity_rever_3'] ditambah)
+2026-07-05 11:04:27.461 | INFO     | factors.runner:develop:474 - Factor correlation (setelah gate): 
+
+                                    regime_confirmed_liquidity_rever_0  regime_confirmed_liquidity_rever_1  regime_confirmed_liquidity_rever_2  regime_confirmed_liquidity_rever_3  regime_confirmed_liquidity_rever_4  regime_confirmed_liquidity_rever_5
+regime_confirmed_liquidity_rever_0                            1.000000                            0.457671                            0.000181                            0.014987                            0.298761                            0.669412
+regime_confirmed_liquidity_rever_1                            0.457671                            1.000000                            0.000187                            0.108739                            0.355119                            0.540205
+regime_confirmed_liquidity_rever_2                            0.000181                            0.000187                            1.000000                           -0.000084                            0.000116                            0.000192
+regime_confirmed_liquidity_rever_3                            0.014987                            0.108739                           -0.000084                            1.000000                           -0.046730                            0.016527
+regime_confirmed_liquidity_rever_4                            0.298761                            0.355119                            0.000116                           -0.046730                            1.000000                            0.362007
+regime_confirmed_liquidity_rever_5                            0.669412                            0.540205                            0.000192                            0.016527                            0.362007                            1.000000
+
+2026-07-05 11:04:29.118 | INFO     | factors.runner:develop:481 - Factor values this round: 
+
+                                                 feature                                                                                                                                                                               
+                      regime_confirmed_liquidity_rever_0 regime_confirmed_liquidity_rever_1 regime_confirmed_liquidity_rever_2 regime_confirmed_liquidity_rever_3 regime_confirmed_liquidity_rever_4 regime_confirmed_liquidity_rever_5
+datetime   instrument                                                                                                                                                                                                                  
+2026-01-09 SZ301668                                  0.0                           0.339572                           0.027593                                0.0                               0.70                                0.0
+           SZ301678                                  0.0                           0.196102                           0.103786                                0.0                               0.80                                0.0
+           SZ301687                                  0.0                          -0.585789                          -0.042336                                0.0                               0.25                                0.0
+           SZ302132                                  0.0                           1.844972                           0.008616                                0.0                               1.00                                1.0
+           SZ399300                                  0.0                           0.291689                           0.010764                                0.0                               0.50                                0.0
+
+

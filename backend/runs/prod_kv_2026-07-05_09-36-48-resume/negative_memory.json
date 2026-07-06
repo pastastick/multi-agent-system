@@ -1,0 +1,47 @@
+{
+  "entries": {
+    "_5228ed3135cf": {
+      "hypothesis": "",
+      "reason": "no_factor",
+      "ic": null,
+      "icir": null,
+      "families": [],
+      "round_idx": 1,
+      "phase": "RoundPhase.MUTATION",
+      "count": 1,
+      "created_at": "2026-07-06T03:45:29.167847"
+    },
+    "hypothesisshorttermreversalafterabnormallyhighvolumedaysinsmallcapstocks": {
+      "hypothesis": "HYPOTHESIS: short-term reversal after abnormally high-volume days in small-cap stocks",
+      "reason": "weak_ic",
+      "ic": -0.015682731485633847,
+      "icir": -0.1957535947888357,
+      "families": [
+        "conditional",
+        "cross_sectional",
+        "time_series",
+        "ts_pair"
+      ],
+      "round_idx": 2,
+      "phase": "RoundPhase.CROSSOVER",
+      "count": 1,
+      "created_at": "2026-07-06T03:58:17.012557"
+    },
+    "whenlowvolatilitystocksshowasharpdeclineinpricerangetherangehighminuslowduringregimetransitionsnextperiodcrosssectionalr": {
+      "hypothesis": "when low-volatility stocks show a sharp decline in price range (the range $high minus $low) during regime transitions, next-period cross-sectional returns are more likely to be negative",
+      "reason": "weak_ic",
+      "ic": -0.026038042235307465,
+      "icir": -0.20486324995255067,
+      "families": [
+        "conditional",
+        "cross_sectional",
+        "time_series"
+      ],
+      "round_idx": 2,
+      "phase": "RoundPhase.CROSSOVER",
+      "count": 1,
+      "created_at": "2026-07-06T04:09:14.153912"
+    }
+  },
+  "saved_at": "2026-07-06T04:09:14.154658"
+}

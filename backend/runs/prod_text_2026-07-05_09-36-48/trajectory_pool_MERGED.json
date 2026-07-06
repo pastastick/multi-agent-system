@@ -1,0 +1,844 @@
+{
+  "trajectories": {
+    "0c4eed1644e4": {
+      "trajectory_id": "0c4eed1644e4",
+      "direction_id": 0,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+      "hypothesis_details": {},
+      "factors": [
+        {
+          "name": "small_cap_stocks_with_unusually_0",
+          "expression": "TS_ZSCORE($volume, 1) * (TS_MEAN($return, 1) ? -1 : 1)",
+          "description": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+          "explanation": "Multiplies the z-score of volume (indicating liquidity pressure) with a binary score of cross-sectional returns (negative values indicate negative returns).",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($volume, 1) * (TS_MEAN($return, 1) ? -1 : 1)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_unusually_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_unusually_1",
+          "expression": "RANK($volume) * (TS_RANK($return, 1) ? -1 : 1)",
+          "description": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+          "explanation": "Multiplies the rank of volume (higher ranks indicate higher volume) with a binary score of returns (negative values indicate negative returns).",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK($volume) * (TS_RANK($return, 1) ? -1 : 1)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_unusually_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_unusually_2",
+          "expression": "(TS_ZSCORE($volume, 1) > 1) ? TS_MEAN($return, 1) : 0",
+          "description": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+          "explanation": "Gates the cross-sectional return mean based on the z-score of volume (only active for stocks with unusually high volume).",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_ZSCORE($volume, 1) > 1) ? TS_MEAN($return, 1) : 0\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_unusually_2\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_unusually_3",
+          "expression": "TS_QUANTILE($return, 0.1, 1) * TS_ZSCORE($volume, 1)",
+          "description": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+          "explanation": "Combines the 10th percentile of returns (indicating negative returns) with the z-score of volume to highlight stocks with both high volume and negative returns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_QUANTILE($return, 0.1, 1) * TS_ZSCORE($volume, 1)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_unusually_3\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_unusually_4",
+          "expression": "TS_RANK($return, 1) * (TS_ZSCORE($volume, 1) ? -1 : 1)",
+          "description": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+          "explanation": "Combines the rank of returns (identifying negative returns) with a binary score of volume z-scores to emphasize stocks with high volume and negative returns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK($return, 1) * (TS_ZSCORE($volume, 1) ? -1 : 1)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_unusually_4\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_unusually_5",
+          "expression": "(TS_ZSCORE($volume, 1) > 1) ? TS_ZSCORE($return, 1) : 0",
+          "description": "small-cap stocks with unusually high volume on a day are followed by negative cross-sectional returns, reflecting liquidity-induced mean reversion.",
+          "explanation": "Gates the z-score of returns based on the z-score of volume (only active for stocks with unusually high volume).",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_ZSCORE($volume, 1) > 1) ? TS_ZSCORE($return, 1) : 0\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_unusually_5\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        }
+      ],
+      "backtest_result": null,
+      "backtest_metrics": {
+        "IC": 0.0164813084777312,
+        "ICIR": 0.135378446961472,
+        "RankIC": 0.0358589348027002,
+        "RankICIR": 0.3036023619930885,
+        "annualized_return": 0.0959787848813285,
+        "information_ratio": 0.8050780002001185,
+        "max_drawdown": -0.083465519606989,
+        "FactorIC_mean": 0.04492601440188402,
+        "FactorIC_max": 0.04492601440188402,
+        "FactorICIR_mean": 0.4310106758630833
+      },
+      "feedback": "{'Observations': 'The SOTA is determined by [A] standalone RankIC+ICIR, where FactorIC_mean has RankIC=0.0449 and ICIR=0.4310. [B] combined model only provides context and does not decide SOTA.', 'Factor Diagnosis': 'small_cap_stocks_with_unusually_1: strong, valid mechanism but implementation is shallow. small_cap_stocks_with_unusually_2: noise, missing normalization. small_cap_stocks_with_unusually_3: noise, wrong window. small_cap_stocks_with_unusually_4: noise, shallow composition. small_cap_stocks_with_unusually_5: noise, missing normalization.', 'Feedback for Hypothesis': 'SUPPORTS — the mechanism is valid but the implementation is weak (refine the expression). The framework still has room for refinement.', 'Replace Best Result': 'yes'}",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-07-05T09:51:52.995021",
+      "extra_info": {
+        "factor_ic": {
+          "small_cap_stocks_with_unusually_0": null,
+          "small_cap_stocks_with_unusually_1": 0.04492601440188402,
+          "small_cap_stocks_with_unusually_2": null,
+          "small_cap_stocks_with_unusually_4": null,
+          "small_cap_stocks_with_unusually_5": null
+        },
+        "factor_icir": {
+          "small_cap_stocks_with_unusually_0": null,
+          "small_cap_stocks_with_unusually_1": 0.4310106758630833,
+          "small_cap_stocks_with_unusually_2": null,
+          "small_cap_stocks_with_unusually_4": null,
+          "small_cap_stocks_with_unusually_5": null
+        },
+        "correlation_dropped": [],
+        "gate_log": [
+          {
+            "name": "VolumeZScoreReturn",
+            "expression": "TS_ZSCORE($volume, 1) * (TS_MEAN($return, 1) ? -1 : 1)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeRankReturn",
+            "expression": "RANK($volume) * (TS_RANK($return, 1) ? -1 : 1)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeZScoreReturnGate",
+            "expression": "(TS_ZSCORE($volume, 1) > 1) ? TS_MEAN($return, 1) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeZScoreReturnQuantile",
+            "expression": "TS_QUANTILE($return, 0.1, 1) * TS_ZSCORE($volume, 1)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnCrossRank",
+            "expression": "TS_RANK($return, 1) * (TS_ZSCORE($volume, 1) ? -1 : 1)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnZScoreGate",
+            "expression": "(TS_ZSCORE($volume, 1) > 1) ? TS_ZSCORE($return, 1) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          }
+        ],
+        "repaired": false,
+        "repair_attempts": 0,
+        "gate_error": ""
+      }
+    },
+    "4ac20e6a5e2b": {
+      "trajectory_id": "4ac20e6a5e2b",
+      "direction_id": 1,
+      "round_idx": 0,
+      "phase": "original",
+      "hypothesis": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+      "hypothesis_details": {},
+      "factors": [
+        {
+          "name": "during_regime_transitions_low_vo_0",
+          "expression": "RANK(TS_ZSCORE($return, 20))",
+          "description": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+          "explanation": "Computes the rank of z-scored returns to identify low-volatility stocks showing mean-reversion. Focuses on the z-score mechanism to detect reversal patterns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_ZSCORE($return, 20))\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_1",
+          "expression": "TS_CORR($return, TS_STD($return, 20), 20)",
+          "description": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+          "explanation": "Calculates the correlation between returns and volatility to reveal reversal patterns in low-volatility stocks during regime transitions.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_CORR($return, TS_STD($return, 20), 20)\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_2",
+          "expression": "TS_ARGMAX(TS_STD($return, 20), 20)",
+          "description": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+          "explanation": "Identifies the day with the highest volatility in the past 20 days to detect regime transitions that trigger mean-reversion.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ARGMAX(TS_STD($return, 20), 20)\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_2\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_3",
+          "expression": "RANK(TS_ZSCORE($return, 10))",
+          "description": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+          "explanation": "Uses a shorter window to compute z-scores and rank them, focusing on near-term volatility and reversal patterns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_ZSCORE($return, 10))\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_3\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_4",
+          "expression": "(TS_ZSCORE($return, 20) > 1.5) ? TS_ZSCORE($return, 20) : 0",
+          "description": "during regime transitions, low-volatility stocks exhibit a liquidity-driven reversal in cross-sectional returns, driven by narrowing price ranges and declining volatility measures.",
+          "explanation": "Gates the z-score of returns to highlight extreme values, focusing on low-volatility stocks showing significant mean-reversion.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_ZSCORE($return, 20) > 1.5) ? TS_ZSCORE($return, 20) : 0\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_4\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        }
+      ],
+      "backtest_result": null,
+      "backtest_metrics": {
+        "IC": 0.0204128354323782,
+        "ICIR": 0.1593089467164816,
+        "RankIC": 0.037963634209615,
+        "RankICIR": 0.2971055544018938,
+        "annualized_return": 0.036866417362097,
+        "information_ratio": 0.292008874268813,
+        "max_drawdown": -0.1159951180779763,
+        "FactorIC_mean": -0.0029154209418394412,
+        "FactorIC_max": 0.012279881976034308,
+        "FactorICIR_mean": -0.07045736031721357
+      },
+      "feedback": "{'Observations': 'The standalone RankIC+ICIR [A] is negative and below the 0.02 threshold, indicating weak predictive power. [B] combined model shows moderate performance but does not override [A] as the SOTA decider.', 'Factor Diagnosis': 'during_regime_transitions_low_vo_0: noise — wrong window; during_regime_transitions_low_vo_1: weak — low RankIC and negative ICIR; during_regime_transitions_low_vo_2: weak — low RankIC and moderate ICIR; during_regime_transitions_low_vo_3: noise — wrong window; during_regime_transitions_low_vo_4: weak — low RankIC and negative ICIR', 'Feedback for Hypothesis': 'REFUTES — the mechanism is invalid (liquidity-driven reversal not captured by the factors) and the implementation is weak (factors have low RankIC and unstable ICIR). The framework has room for refinement.', 'Replace Best Result': 'no'}",
+      "feedback_details": {},
+      "parent_ids": [],
+      "hypothesis_embedding": null,
+      "created_at": "2026-07-05T10:04:41.531865",
+      "extra_info": {
+        "factor_ic": {
+          "during_regime_transitions_low_vo_1": -0.007690403904270414,
+          "during_regime_transitions_low_vo_2": 0.012279881976034308,
+          "during_regime_transitions_low_vo_4": -0.013335740897282218
+        },
+        "factor_icir": {
+          "during_regime_transitions_low_vo_1": -0.15276098979114835,
+          "during_regime_transitions_low_vo_2": 0.1655118249291635,
+          "during_regime_transitions_low_vo_4": -0.22412291608965587
+        },
+        "correlation_dropped": [
+          "during_regime_transitions_low_vo_0 [within-round |corr|=0.937 with during_regime_transitions_low_vo_3]",
+          "during_regime_transitions_low_vo_3 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]"
+        ],
+        "gate_log": [
+          {
+            "name": "VolReversalZScore",
+            "expression": "RANK(TS_ZSCORE($return, 20))",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolReversalRange",
+            "expression": "TS_RANGE($high, $low, 20)",
+            "ok": false,
+            "reason": "arity: `TS_RANGE` is not a known function. Use only functions from the allowed list.",
+            "repaired_by": null
+          },
+          {
+            "name": "VolReversalCorr",
+            "expression": "TS_CORR($return, TS_STD($return, 20), 20)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolReversalArgMax",
+            "expression": "TS_ARGMAX(TS_STD($return, 20), 20)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolReversalZRank",
+            "expression": "RANK(TS_ZSCORE($return, 10))",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolReversalCondZScore",
+            "expression": "(TS_ZSCORE($return, 20) > 1.5) ? TS_ZSCORE($return, 20) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          }
+        ],
+        "repaired": false,
+        "repair_attempts": 0,
+        "gate_error": ""
+      }
+    },
+    "4fbb5fdc1849": {
+      "trajectory_id": "4fbb5fdc1849",
+      "direction_id": 0,
+      "round_idx": 1,
+      "phase": "mutation",
+      "hypothesis": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+      "hypothesis_details": {},
+      "factors": [
+        {
+          "name": "small_cap_stocks_with_high_volum_0",
+          "expression": "TS_ZSCORE($return, 1) * (TS_RANK($volume, 1) < 50 ? 1 : 0)",
+          "description": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+          "explanation": "Computes the z-score of return and multiplies it by a binary indicator of high volume days, capturing the liquidity-driven reversal mechanism.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($return, 1) * (TS_RANK($volume, 1) < 50 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_high_volum_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_high_volum_1",
+          "expression": "(TS_RANK($volume, 1) < 50) ? TS_ZSCORE($return, 1) : 0",
+          "description": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+          "explanation": "Uses a conditional gate to apply the z-score of return only to stocks with high volume days, focusing on the liquidity-induced reversal.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_RANK($volume, 1) < 50) ? TS_ZSCORE($return, 1) : 0\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_high_volum_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_high_volum_2",
+          "expression": "RANK($return) * (TS_RANK($volume, 1) < 50 ? 1 : 0)",
+          "description": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+          "explanation": "Multiplies the cross-sectional rank of return by a binary indicator of high volume days, emphasizing the liquidity-driven reversal effect.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK($return) * (TS_RANK($volume, 1) < 50 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_high_volum_2\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_high_volum_3",
+          "expression": "TS_RANK($return, 1) * (TS_MIN($volume, 1) > 1000000 ? 1 : 0)",
+          "description": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+          "explanation": "Combines the time-series rank of return with a condition on high volume, focusing on stocks with unusually high volume on the day of low returns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK($return, 1) * (TS_MIN($volume, 1) > 1000000 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_high_volum_3\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_high_volum_4",
+          "expression": "(TS_ZSCORE($return, 1) < -1) ? TS_RANK($volume, 1) : 0",
+          "description": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+          "explanation": "Applies the rank of volume only to stocks with significantly low return z-scores, highlighting the liquidity-driven reversal mechanism.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_ZSCORE($return, 1) < -1) ? TS_RANK($volume, 1) : 0\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_high_volum_4\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "small_cap_stocks_with_high_volum_5",
+          "expression": "TS_RANK($volume, 1) * (TS_RANK($return, 1) > 50 ? 1 : 0)",
+          "description": "small-cap stocks with high volume days followed by low return ranks exhibit liquidity-driven reversal in cross-sectional returns.",
+          "explanation": "Multiplies the volume rank by a binary indicator of low return ranks, focusing on the liquidity-induced reversal effect.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_RANK($volume, 1) * (TS_RANK($return, 1) > 50 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"small_cap_stocks_with_high_volum_5\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        }
+      ],
+      "backtest_result": null,
+      "backtest_metrics": {
+        "IC": 0.0144158761440895,
+        "ICIR": 0.1142971451794288,
+        "RankIC": 0.0353412113225174,
+        "RankICIR": 0.286127775259222,
+        "annualized_return": 0.0674314820336894,
+        "information_ratio": 0.5450528840841192,
+        "max_drawdown": -0.0988355358286242,
+        "FactorIC_mean": -0.03556626136161578,
+        "FactorIC_max": -0.03556626136161578,
+        "FactorICIR_mean": -0.43572862808742935
+      },
+      "feedback": "{'Observations': 'The standalone [A] RankIC+ICIR of -0.0356 is below the 0.02 threshold for meaningful signals, making it weaker than the previous SOTA. [B] Combined model RankIC of 0.0353 is close to baseline but does not override the [A] decision.', 'Factor Diagnosis': 'small_cap_stocks_with_high_volum_3: noise — invalid RankIC and ICIR values; small_cap_stocks_with_high_volum_2: weak — high correlation with another factor; others: weak — low RankIC and unstable ICIR.', 'Feedback for Hypothesis': 'REFUTES — the mechanism is invalid (liquidity-driven reversal is not captured in the factor construction), and the implementation is weak (factors are not well-defined or normalized). The framework has room for refinement.', 'Replace Best Result': 'no'}",
+      "feedback_details": {},
+      "parent_ids": [
+        "0c4eed1644e4"
+      ],
+      "hypothesis_embedding": null,
+      "created_at": "2026-07-05T10:18:38.889467",
+      "extra_info": {
+        "factor_ic": {
+          "small_cap_stocks_with_high_volum_0": null,
+          "small_cap_stocks_with_high_volum_1": null,
+          "small_cap_stocks_with_high_volum_3": -0.03556626136161578,
+          "small_cap_stocks_with_high_volum_4": null,
+          "small_cap_stocks_with_high_volum_5": null
+        },
+        "factor_icir": {
+          "small_cap_stocks_with_high_volum_0": null,
+          "small_cap_stocks_with_high_volum_1": null,
+          "small_cap_stocks_with_high_volum_3": -0.43572862808742935,
+          "small_cap_stocks_with_high_volum_4": null,
+          "small_cap_stocks_with_high_volum_5": null
+        },
+        "correlation_dropped": [
+          "small_cap_stocks_with_high_volum_2 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]"
+        ],
+        "gate_log": [
+          {
+            "name": "VolumeReturnReversal1",
+            "expression": "TS_ZSCORE($return, 1) * (TS_RANK($volume, 1) < 50 ? 1 : 0)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnReversal2",
+            "expression": "(TS_RANK($volume, 1) < 50) ? TS_ZSCORE($return, 1) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnReversal3",
+            "expression": "RANK($return) * (TS_RANK($volume, 1) < 50 ? 1 : 0)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnReversal4",
+            "expression": "TS_RANK($return, 1) * (TS_MIN($volume, 1) > 1000000 ? 1 : 0)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnReversal5",
+            "expression": "(TS_ZSCORE($return, 1) < -1) ? TS_RANK($volume, 1) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeReturnReversal6",
+            "expression": "TS_RANK($volume, 1) * (TS_RANK($return, 1) > 50 ? 1 : 0)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          }
+        ],
+        "repaired": false,
+        "repair_attempts": 0,
+        "gate_error": ""
+      }
+    },
+    "31656d93760d": {
+      "trajectory_id": "31656d93760d",
+      "direction_id": 1,
+      "round_idx": 1,
+      "phase": "mutation",
+      "hypothesis": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+      "hypothesis_details": {},
+      "factors": [
+        {
+          "name": "during_regime_transitions_low_vo_0",
+          "expression": "TS_ZSCORE($high, 10)",
+          "description": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+          "explanation": "",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($high, 10)\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_1",
+          "expression": "RANK(TS_STD($high, 10))",
+          "description": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+          "explanation": "",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"RANK(TS_STD($high, 10))\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_2",
+          "expression": "TS_MAX($high, 10) ? -1 : 0",
+          "description": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+          "explanation": "",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_MAX($high, 10) ? -1 : 0\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_2\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_regime_transitions_low_vo_3",
+          "expression": "(TS_STD($high, 10) < 1) ? TS_ZSCORE($high, 10) : 0",
+          "description": "during regime transitions, low-volatility stocks experience a liquidity-induced reversal in cross-sectional returns due to compressed price ranges.",
+          "explanation": "",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"(TS_STD($high, 10) < 1) ? TS_ZSCORE($high, 10) : 0\" # Your output factor expression will be filled in here\n    name = \"during_regime_transitions_low_vo_3\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        }
+      ],
+      "backtest_result": null,
+      "backtest_metrics": {
+        "IC": 0.0159555370620632,
+        "ICIR": 0.1242337685627659,
+        "RankIC": 0.0353306191876144,
+        "RankICIR": 0.2727582658212706,
+        "annualized_return": 0.145100121829481,
+        "information_ratio": 1.0592785075024025,
+        "max_drawdown": -0.1041852089798135,
+        "FactorIC_mean": -0.022838780747765512,
+        "FactorIC_max": -0.022838780747765512,
+        "FactorICIR_mean": -0.18246880345264366
+      },
+      "feedback": "{'Observations': 'Standalone RankIC+ICIR for all factors is negative, with [A] deciding SOTA as the previous best FactorIC_mean of 0.0449. [B] combined model shows moderate performance but is not the verdict on the mined factors.', 'Factor Diagnosis': 'during_regime_transitions_low_vo_3: noise, wrong window; during_regime_transitions_low_vo_0: noise, redundant with other factor; during_regime_transitions_low_vo_1: noise, redundant with other factor; during_regime_transitions_low_vo_2: noise, shallow composition', 'Feedback for Hypothesis': 'REFUTES — the mechanism is invalid (liquidity-induced reversal in cross-sectional returns during regime transitions is not captured by the factors tested). The implementation is weak (factors are noisy, redundant, or shallow). The framework still has room for refinement.', 'Replace Best Result': 'no'}",
+      "feedback_details": {},
+      "parent_ids": [
+        "4ac20e6a5e2b"
+      ],
+      "hypothesis_embedding": null,
+      "created_at": "2026-07-05T10:29:53.688293",
+      "extra_info": {
+        "factor_ic": {
+          "during_regime_transitions_low_vo_2": null,
+          "during_regime_transitions_low_vo_3": -0.022838780747765512
+        },
+        "factor_icir": {
+          "during_regime_transitions_low_vo_2": null,
+          "during_regime_transitions_low_vo_3": -0.18246880345264366
+        },
+        "correlation_dropped": [
+          "during_regime_transitions_low_vo_0 [within-round |corr|=0.993 with during_regime_transitions_low_vo_3]",
+          "during_regime_transitions_low_vo_1 [cross-round |corr|=0.999 with small_cap_stocks_with_unusually_1 in store]"
+        ],
+        "gate_log": [
+          {
+            "name": "RangeZScore",
+            "expression": "TS_ZSCORE($range, 10)",
+            "ok": false,
+            "reason": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.",
+            "repaired_by": null
+          },
+          {
+            "name": "RangeVolatilityRank",
+            "expression": "RANK(TS_STD($range, 10))",
+            "ok": false,
+            "reason": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.",
+            "repaired_by": null
+          },
+          {
+            "name": "ReturnRangeCorrelation",
+            "expression": "TS_CORR($return, $range, 10)",
+            "ok": false,
+            "reason": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.",
+            "repaired_by": null
+          },
+          {
+            "name": "RangeMinReversal",
+            "expression": "TS_MIN($range, 10) ? 1 : 0",
+            "ok": false,
+            "reason": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.",
+            "repaired_by": null
+          },
+          {
+            "name": "RangeMaxContrast",
+            "expression": "TS_MAX($range, 10) ? -1 : 0",
+            "ok": false,
+            "reason": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.",
+            "repaired_by": null
+          },
+          {
+            "name": "RangeVolatilityGate",
+            "expression": "(TS_STD($range, 10) < 1) ? TS_ZSCORE($range, 10) : 0",
+            "ok": false,
+            "reason": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return.",
+            "repaired_by": null
+          },
+          {
+            "name": "repaired",
+            "expression": "TS_ZSCORE($high, 10)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": "agent"
+          },
+          {
+            "name": "repaired",
+            "expression": "RANK(TS_STD($high, 10))",
+            "ok": true,
+            "reason": "",
+            "repaired_by": "agent"
+          },
+          {
+            "name": "repaired",
+            "expression": "TS_MAX($high, 10) ? -1 : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": "agent"
+          },
+          {
+            "name": "repaired",
+            "expression": "(TS_STD($high, 10) < 1) ? TS_ZSCORE($high, 10) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": "agent"
+          }
+        ],
+        "repaired": true,
+        "repair_attempts": 1,
+        "gate_error": "variable: `$range` is not a known variable. Use only: $open $high $low $close $volume $return."
+      }
+    },
+    "686ad941bfdc": {
+      "trajectory_id": "686ad941bfdc",
+      "direction_id": 0,
+      "round_idx": 2,
+      "phase": "crossover",
+      "hypothesis": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+      "hypothesis_details": {},
+      "factors": [
+        {
+          "name": "during_low_volatility_regime_tra_0",
+          "expression": "TS_ZSCORE($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)",
+          "description": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+          "explanation": "Computes the z-score of returns to identify extreme returns, multiplied by a binary indicator of high volume ranks, capturing liquidity-driven mean reversion.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"during_low_volatility_regime_tra_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_low_volatility_regime_tra_1",
+          "expression": "TS_CORR($volume, $return, 10) * TS_ZSCORE($return, 10)",
+          "description": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+          "explanation": "Multiplies the correlation between volume and return with the z-score of returns, highlighting liquidity-induced price movements.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_CORR($volume, $return, 10) * TS_ZSCORE($return, 10)\" # Your output factor expression will be filled in here\n    name = \"during_low_volatility_regime_tra_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_low_volatility_regime_tra_2",
+          "expression": "TS_MAD($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)",
+          "description": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+          "explanation": "Uses the median absolute deviation of returns to measure price compression, weighted by high volume ranks to emphasize liquidity effects.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_MAD($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)\" # Your output factor expression will be filled in here\n    name = \"during_low_volatility_regime_tra_2\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_low_volatility_regime_tra_3",
+          "expression": "TS_ARGMAX($volume, 10) ? TS_ZSCORE($return, 10) : 0",
+          "description": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+          "explanation": "Applies the z-score of returns only on days with maximum volume, focusing on liquidity events that drive mean reversion.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ARGMAX($volume, 10) ? TS_ZSCORE($return, 10) : 0\" # Your output factor expression will be filled in here\n    name = \"during_low_volatility_regime_tra_3\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "during_low_volatility_regime_tra_4",
+          "expression": "TS_VAR($volume, 10) * TS_ZSCORE($return, 10)",
+          "description": "during low-volatility regime transitions, small-cap stocks with high volume exhibit a liquidity-driven mean reversion in next-period returns.",
+          "explanation": "Combines the variance of volume with the z-score of returns, capturing liquidity fluctuations and their impact on returns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_VAR($volume, 10) * TS_ZSCORE($return, 10)\" # Your output factor expression will be filled in here\n    name = \"during_low_volatility_regime_tra_4\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        }
+      ],
+      "backtest_result": null,
+      "backtest_metrics": {
+        "IC": 0.0167531530842198,
+        "ICIR": 0.1325206471601358,
+        "RankIC": 0.0335902181582022,
+        "RankICIR": 0.2715428900274774,
+        "annualized_return": 0.0299189750947785,
+        "information_ratio": 0.2460913958469191,
+        "max_drawdown": -0.1050962239961764,
+        "FactorIC_mean": -0.0075101951788793045,
+        "FactorIC_max": -0.0056593044568833155,
+        "FactorICIR_mean": -0.1013040119656039
+      },
+      "feedback": "{'Observations': 'Standalone RankIC+ICIR [-0.0075, -0.1013] is worse than SOTA (0.0449), with [B] combined model showing low performance (RankIC 0.0336, ICIR 0.2715).', 'Factor Diagnosis': 'Weak: wrong window, missing normalization, shallow composition', 'Feedback for Hypothesis': 'REFUTES — mechanism invalid (liquidity-driven mean reversion not captured), implementation weak (shallow composition, no normalization)', 'Replace Best Result': 'no'}",
+      "feedback_details": {},
+      "parent_ids": [
+        "0c4eed1644e4",
+        "31656d93760d"
+      ],
+      "hypothesis_embedding": null,
+      "created_at": "2026-07-05T10:52:55.290078",
+      "extra_info": {
+        "factor_ic": {
+          "during_low_volatility_regime_tra_0": null,
+          "during_low_volatility_regime_tra_1": -0.008296654924700171,
+          "during_low_volatility_regime_tra_2": null,
+          "during_low_volatility_regime_tra_3": -0.0056593044568833155,
+          "during_low_volatility_regime_tra_4": -0.008574626155054426
+        },
+        "factor_icir": {
+          "during_low_volatility_regime_tra_0": null,
+          "during_low_volatility_regime_tra_1": -0.14386515236537167,
+          "during_low_volatility_regime_tra_2": null,
+          "during_low_volatility_regime_tra_3": -0.06046274193104406,
+          "during_low_volatility_regime_tra_4": -0.099584141600396
+        },
+        "correlation_dropped": [],
+        "gate_log": [
+          {
+            "name": "VolumeZScore",
+            "expression": "TS_ZSCORE($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolatilityLiquidity",
+            "expression": "(TS_VOLATILITY($volatility_indicator, 10) < 0.1) ? TS_ZSCORE($return, 10) : 0",
+            "ok": false,
+            "reason": "arity: `TS_VOLATILITY` is not a known function. Use only functions from the allowed list.",
+            "repaired_by": null
+          },
+          {
+            "name": "CorrelationLiquidity",
+            "expression": "TS_CORR($volume, $return, 10) * TS_ZSCORE($return, 10)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "MedianDeviation",
+            "expression": "TS_MAD($return, 10) * (TS_RANK($volume, 10) > 50 ? 1 : 0)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "MaxVolumeSignal",
+            "expression": "TS_ARGMAX($volume, 10) ? TS_ZSCORE($return, 10) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolumeVariance",
+            "expression": "TS_VAR($volume, 10) * TS_ZSCORE($return, 10)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          }
+        ],
+        "repaired": false,
+        "repair_attempts": 0,
+        "gate_error": ""
+      }
+    },
+    "c30de8e38aaa": {
+      "trajectory_id": "c30de8e38aaa",
+      "direction_id": 1,
+      "round_idx": 2,
+      "phase": "crossover",
+      "hypothesis": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+      "hypothesis_details": {},
+      "factors": [
+        {
+          "name": "regime_conditional_volume_ranked_0",
+          "expression": "TS_ZSCORE($volume, 20) * TS_ZSCORE($high - $low, 20)",
+          "description": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+          "explanation": "Combines the z-scores of volume and price range to highlight stocks with high volume and narrowing ranges, capturing liquidity and volatility signals.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($volume, 20) * TS_ZSCORE($high - $low, 20)\" # Your output factor expression will be filled in here\n    name = \"regime_conditional_volume_ranked_0\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "regime_conditional_volume_ranked_1",
+          "expression": "TS_CORR($return, $volume, 20) * TS_RANK($volume, 20)",
+          "description": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+          "explanation": "Multiplies the correlation between returns and volume with the rank of volume to emphasize stocks with both high volume and strong liquidity-driven returns.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_CORR($return, $volume, 20) * TS_RANK($volume, 20)\" # Your output factor expression will be filled in here\n    name = \"regime_conditional_volume_ranked_1\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "regime_conditional_volume_ranked_2",
+          "expression": "TS_ZSCORE($high - $low, 20) * TS_RANK($volume, 20)",
+          "description": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+          "explanation": "Combines the z-score of price range with the rank of volume to focus on stocks with narrow price ranges and high volume, indicating potential reversal.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($high - $low, 20) * TS_RANK($volume, 20)\" # Your output factor expression will be filled in here\n    name = \"regime_conditional_volume_ranked_2\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "regime_conditional_volume_ranked_3",
+          "expression": "TS_STD($return, 20) < 0.5 ? TS_RANK($volume, 20) : 0",
+          "description": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+          "explanation": "Identifies stocks with low volatility (standard deviation < 0.5) and ranks their volume, signaling potential reversal in small-cap stocks.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_STD($return, 20) < 0.5 ? TS_RANK($volume, 20) : 0\" # Your output factor expression will be filled in here\n    name = \"regime_conditional_volume_ranked_3\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "regime_conditional_volume_ranked_4",
+          "expression": "TS_MIN($high - $low, 20) * TS_RANK($volume, 20)",
+          "description": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+          "explanation": "Uses the minimum price range over 20 days multiplied by volume rank to highlight stocks with both narrow ranges and high liquidity.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_MIN($high - $low, 20) * TS_RANK($volume, 20)\" # Your output factor expression will be filled in here\n    name = \"regime_conditional_volume_ranked_4\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        },
+        {
+          "name": "regime_conditional_volume_ranked_5",
+          "expression": "TS_ZSCORE($volume, 20) > 1.5 ? TS_ZSCORE($high - $low, 20) : 0",
+          "description": "regime-conditional volume-ranked liquidity reversal in small-cap stocks predicts sharp cross-sectional return reversals during volatility transitions",
+          "explanation": "Gates the z-score of price range on high volume z-scores, focusing on stocks with extreme volume and narrowing price ranges, indicating reversal potential.",
+          "code": "import pandas as pd\nimport numpy as np\nimport os\nfrom factors.coder.expr_parser import parse_expression, parse_symbol\nfrom factors.coder.function_lib import *\n\n\ndef calculate_factor(expr: str, name: str):\n    # stock dataframe\n    df = pd.read_hdf('./daily_pv.h5', key='data')\n\n    # daily_pv.h5 sudah berisi $return (ditambahkan generate.py via\n    # pct_change $close). Blok ini hanya fallback defensif — kalau suatu\n    # saat file dipasok tanpa kolom $return, derive di sini supaya\n    # ekspresi berbasis $return tetap jalan. groupby instrument supaya\n    # pct_change tidak bocor antar simbol di MultiIndex (instrument, datetime).\n    if '$return' not in df.columns:\n        idx_names = df.index.names\n        if idx_names and 'instrument' in idx_names:\n            df['$return'] = df.groupby(level='instrument')['$close'].pct_change(fill_method=None)\n        else:\n            df['$return'] = df['$close'].pct_change(fill_method=None)\n\n    expr = parse_symbol(expr, df.columns)\n    expr = parse_expression(expr)\n\n    # replace '$var' by 'df['var'] to extract var's actual values\n    for col in df.columns:\n        expr = expr.replace(col[1:], f\"df[\\'{col}\\']\")\n\n    df[name] = eval(expr)\n    result = df[name].astype(np.float64)\n\n    if os.path.exists('result.h5'):\n        os.remove('result.h5')\n    result.to_hdf('result.h5', key='data')\n\nif __name__ == '__main__':\n    # Input factor expression. Do NOT use the variable format like \"df['$xxx']\" in factor expressions. Instead, you should use \"$xxx\". \n    expr = \"TS_ZSCORE($volume, 20) > 1.5 ? TS_ZSCORE($high - $low, 20) : 0\" # Your output factor expression will be filled in here\n    name = \"regime_conditional_volume_ranked_5\" # Your output factor name will be filled in here\n    calculate_factor(expr, name)"
+        }
+      ],
+      "backtest_result": null,
+      "backtest_metrics": {
+        "IC": 0.0182679925624472,
+        "ICIR": 0.1489973802921036,
+        "RankIC": 0.0353579744884489,
+        "RankICIR": 0.2767358495175724,
+        "annualized_return": 0.0419963931782643,
+        "information_ratio": 0.4461958276151098,
+        "max_drawdown": -0.0544883451724303,
+        "FactorIC_mean": -0.020068463180631213,
+        "FactorIC_max": -0.014002975240777371,
+        "FactorICIR_mean": -0.26505614112028547
+      },
+      "feedback": "{'Observations': 'Standalone RankIC+ICIR [A] is -0.0201 with ICIR -0.2651, which is below the threshold for meaningful signals. [B] combined model RankIC 0.0354 is higher but still within baseline floor, so [A] decides SOTA.', 'Factor Diagnosis': 'regime_conditional_volume_ranked_0: weak — wrong window; regime_conditional_volume_ranked_1: weak — shallow composition; regime_conditional_volume_ranked_2: noise — n/a; regime_conditional_volume_ranked_3: noise — n/a; regime_conditional_volume_ranked_4: weak — wrong window; regime_conditional_volume_ranked_5: noise — n/a', 'Feedback for Hypothesis': 'REFUTES — mechanism is valid but implementation is weak (refine the expression). The framework still has room.', 'Replace Best Result': 'yes'}",
+      "feedback_details": {},
+      "parent_ids": [
+        "4ac20e6a5e2b",
+        "4fbb5fdc1849"
+      ],
+      "hypothesis_embedding": null,
+      "created_at": "2026-07-06T04:31:53.662090",
+      "extra_info": {
+        "factor_ic": {
+          "regime_conditional_volume_ranked_0": -0.014002975240777371,
+          "regime_conditional_volume_ranked_1": -0.018433991613903238,
+          "regime_conditional_volume_ranked_4": -0.027768422687213034
+        },
+        "factor_icir": {
+          "regime_conditional_volume_ranked_0": -0.3409486531728738,
+          "regime_conditional_volume_ranked_1": -0.19574147350863338,
+          "regime_conditional_volume_ranked_4": -0.25847829667934935
+        },
+        "correlation_dropped": [
+          "regime_conditional_volume_ranked_2 [within-round |corr|=0.777 with regime_conditional_volume_ranked_0]",
+          "regime_conditional_volume_ranked_5 [within-round |corr|=0.889 with regime_conditional_volume_ranked_0]",
+          "regime_conditional_volume_ranked_3 [cross-round |corr|=0.917 with small_cap_stocks_with_abnormally_2 in store]"
+        ],
+        "gate_log": [
+          {
+            "name": "VolRankZScore",
+            "expression": "TS_ZSCORE($volume, 20) * TS_ZSCORE($high - $low, 20)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolRankCorr",
+            "expression": "TS_CORR($return, $volume, 20) * TS_RANK($volume, 20)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolRangeZScore",
+            "expression": "TS_ZSCORE($high - $low, 20) * TS_RANK($volume, 20)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolStdReversal",
+            "expression": "TS_STD($return, 20) < 0.5 ? TS_RANK($volume, 20) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolRangeMin",
+            "expression": "TS_MIN($high - $low, 20) * TS_RANK($volume, 20)",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          },
+          {
+            "name": "VolZScoreReversal",
+            "expression": "TS_ZSCORE($volume, 20) > 1.5 ? TS_ZSCORE($high - $low, 20) : 0",
+            "ok": true,
+            "reason": "",
+            "repaired_by": null
+          }
+        ],
+        "repaired": false,
+        "repair_attempts": 0,
+        "gate_error": ""
+      }
+    }
+  },
+  "by_direction": {
+    "0": [
+      "0c4eed1644e4",
+      "4fbb5fdc1849",
+      "686ad941bfdc"
+    ],
+    "1": [
+      "4ac20e6a5e2b",
+      "31656d93760d",
+      "c30de8e38aaa"
+    ]
+  },
+  "by_phase": {
+    "original": [
+      "0c4eed1644e4",
+      "4ac20e6a5e2b"
+    ],
+    "mutation": [
+      "4fbb5fdc1849",
+      "31656d93760d"
+    ],
+    "crossover": [
+      "686ad941bfdc",
+      "c30de8e38aaa"
+    ]
+  },
+  "saved_at": "2026-07-05T10:52:55.319633",
+  "merged_note": "MERGED 2026-07-06: run asli (5 traj, proses mati saat backtest cross#2) + c30de8e38aaa dari run -resume"
+}
