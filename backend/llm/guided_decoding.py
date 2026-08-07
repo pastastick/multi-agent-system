@@ -51,6 +51,47 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 # `required` mem-paksa keempat field ada sebelum object bisa ditutup.
 # `minProperties: 1` menjamin setidaknya satu factor ter-generate.
 
+# Schema yang DIPAKAI jalur latent_mas (B11). Bentuknya mengikuti
+# `parsers.parse_construct_json`: {hypothesis, factors:[{name, expression,
+# explanation}]}. Schema lama di bawah (CONSTRUCT_FACTOR_JSON_SCHEMA) melayani
+# format rdagent yang berbeda dan dipertahankan untuk jalur itu.
+#
+# minItems 1 menjamin setidaknya satu faktor; maxItems 6 mengikuti kontrak prompt
+# ("3 sampai 6 ekspresi"). Grammar hanya memaksa STRUKTUR — ia tidak menjamin ISI
+# ekspresinya bermakna; itu tetap tugas gate.
+#
+# `reasoning` ada di sini dengan sengaja. Guided decoding memaksa SELURUH output
+# menjadi JSON, sehingga prosa penalaran yang diminta prompt ("Step 1 … Step 5")
+# tak punya tempat lagi — dan menghapus penalaran dari model kecil biasanya
+# menurunkan mutu, bukan menaikkannya. Dengan menaruhnya sebagai field string
+# PERTAMA, model tetap berpikir dulu baru menulis faktornya, tanpa satu pun token
+# keluar dari grammar JSON. Field ini tidak dibaca parser; ia ada untuk model.
+LATENT_CONSTRUCT_JSON_SCHEMA: Dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "reasoning": {"type": "string"},
+        "hypothesis": {"type": "string"},
+        "factors": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {"type": "string"},
+                    "expression": {"type": "string"},
+                    "explanation": {"type": "string"},
+                },
+                "required": ["name", "expression", "explanation"],
+                "additionalProperties": False,
+            },
+        },
+    },
+    "required": ["reasoning", "hypothesis", "factors"],
+    "additionalProperties": False,
+}
+
+
 CONSTRUCT_FACTOR_JSON_SCHEMA: Dict[str, Any] = {
     "type": "object",
     "additionalProperties": {
@@ -108,21 +149,35 @@ def _decode_function(tokenizer: Any, tokens: List[int]) -> str:
     return decoded.rstrip("�")
 
 
+# Membangun tokenizer-data berarti men-decode SETIAP token di vocab (±150 k untuk
+# Qwen3) — beberapa detik. Tanpa cache, biaya itu dibayar ulang setiap kali agen
+# dipanggil dan akan tampak sebagai "guided decoding lambat" padahal yang lambat
+# adalah persiapannya. Di-key oleh id(tokenizer) karena tokenizer di-share lewat
+# _MODEL_CACHE di client.py, jadi satu entri per model per proses.
+_TOKENIZER_DATA_CACHE: Dict[int, Any] = {}
+
+
 def _build_token_enforcer_tokenizer_data(
     tokenizer: Any,
     use_bitmask: bool = False,
     vocab_size: Optional[int] = None,
 ) -> Any:
-    """Bangun TokenEnforcerTokenizerData dari tokenizer HuggingFace."""
+    """Bangun TokenEnforcerTokenizerData dari tokenizer HuggingFace (di-cache)."""
     from lmformatenforcer.tokenenforcer import TokenEnforcerTokenizerData
 
+    key = id(tokenizer)
+    cached = _TOKENIZER_DATA_CACHE.get(key)
+    if cached is not None:
+        return cached
     vocab_size = vocab_size or len(tokenizer)
     regular_tokens = _build_regular_tokens_list(tokenizer, vocab_size)
     decode_fn = functools.partial(_decode_function, tokenizer)
-    return TokenEnforcerTokenizerData(
+    data = TokenEnforcerTokenizerData(
         regular_tokens, decode_fn, tokenizer.eos_token_id,
         use_bitmask, vocab_size,
     )
+    _TOKENIZER_DATA_CACHE[key] = data
+    return data
 
 
 class _TransformersPrefixAllowedTokensFn:
@@ -170,7 +225,17 @@ def build_guided_json_prefix_fn(
     return _TransformersPrefixAllowedTokensFn(token_enforcer)
 
 
+# Registry nama → schema, supaya prompts.yaml bisa menunjuk schema lewat STRING
+# (`json_schema: latent_construct`) tanpa menyalin JSON schema ke dalam YAML.
+JSON_SCHEMAS: Dict[str, Dict[str, Any]] = {
+    "latent_construct": LATENT_CONSTRUCT_JSON_SCHEMA,
+    "rdagent_construct": CONSTRUCT_FACTOR_JSON_SCHEMA,
+}
+
+
 __all__ = [
     "CONSTRUCT_FACTOR_JSON_SCHEMA",
+    "LATENT_CONSTRUCT_JSON_SCHEMA",
+    "JSON_SCHEMAS",
     "build_guided_json_prefix_fn",
 ]

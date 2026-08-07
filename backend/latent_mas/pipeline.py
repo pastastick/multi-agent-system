@@ -132,11 +132,38 @@ class FrontEndPipeline:
         agents: Optional[dict] = None,
         use_regulator: bool = True,
         comm_mode: str = "kv",
+        chain: Optional[tuple] = None,
+        free_form: Optional[bool] = None,
     ) -> None:
         self.backend = backend
         self.runlog = runlog
         self.max_repair_attempts = max_repair_attempts
         self.agents: dict = agents or load_all_agents(backend, runlog=runlog)
+        # ── chain: SUSUNAN agen front-end (sumbu A8, ablasi arsitektur) ──────
+        # Agen terakhir WAJIB emitter (menulis JSON faktor); agen sebelumnya
+        # menyempitkan arah. Varian yang dipakai eksperimen:
+        #   ("proposal","design","construct")   rantai produksi sekarang
+        #   ("proposal","construct")            tanpa design
+        #   ("construct",)                      direction langsung ke builder
+        #   ("proposal","innovate","construct") design diganti agen inovasi
+        # Ini menjadikan "apakah design berkontribusi" pertanyaan yang bisa
+        # DIJALANKAN, bukan diperdebatkan.
+        self.chain: tuple = tuple(chain or ("proposal", "design", "construct"))
+        unknown = [a for a in self.chain if a not in self.agents]
+        if unknown:
+            raise KeyError(f"agen {unknown} tak ada di prompts.yaml; "
+                           f"tersedia: {sorted(self.agents)}")
+        if len(self.chain) < 1:
+            raise ValueError("chain harus punya minimal satu agen (emitter)")
+        # free_form: melepas klem "FIDELITY FIRST" di emitter. Menyala sendiri
+        # bila rantai memakai `innovate`, karena agen itu SENGAJA membelokkan
+        # hipotesis — menuntut kesetiaan ke hipotesis asal sekaligus menyuruhnya
+        # menyimpang adalah dua perintah yang saling meniadakan, dan hasilnya
+        # akan tertarik balik ke idiom yang sama. Bisa dipaksa lewat argumen
+        # untuk memisahkan efek "ganti agen" dari efek "lepas klem" (lengan
+        # `innovate_fid` di lab/gpu_suite.py).
+        self.free_form = (free_form if free_form is not None
+                          else ("innovate" in self.chain))
         # ── comm_mode: medium komunikasi antar-agen (variabel eksperimen utama) ──
         #   "kv"          : hanya construct & feedback yang generate TEKS; proposal/
         #                   design/guidance kv_only (laten). Handoff via KV-cache.
@@ -207,6 +234,13 @@ class FrontEndPipeline:
                 symbol_length_threshold=getattr(S, "symbol_length_threshold", 300),
                 base_features_threshold=getattr(S, "base_features_threshold", 6),
             )
+            # B12 — execution gate. Semua gate di atas STRUKTURAL; ekspresi yang
+            # kolomnya kosong/konstan saat dijalankan tetap lolos (11 dari 198 di
+            # G5). Ini gate termurah yang selama ini hilang: ±1 detik CPU, tanpa
+            # GPU. get_execution_gate() mengembalikan None bila dimatikan lewat
+            # env, dan fail-open bila datanya tak ada.
+            from factors.regulator.execution_gate import get_execution_gate
+            exec_gate = get_execution_gate()
         except Exception as e:  # noqa: BLE001
             if runlog:
                 runlog.warn("FactorRegulator unavailable; fallback to syntax gate",
@@ -247,6 +281,15 @@ class FrontEndPipeline:
                     return False, (f"regulator reject: sl={ev.get('symbol_length')}, "
                                    f"base_feat={ev.get('num_base_features')}, "
                                    f"dup={ev.get('duplicated_subtree_size')}")
+                # #4 EKSEKUSI (B12) — dijalankan TERAKHIR karena paling mahal
+                # (±1 detik CPU) dan hanya berguna pada ekspresi yang sudah sah
+                # secara struktural. Ini satu-satunya gate yang benar-benar
+                # MENJALANKAN ekspresi, jadi satu-satunya yang bisa menangkap
+                # kolom kosong/konstan (AUDIT §S1).
+                if exec_gate is not None:
+                    ex_ok, ex_err = exec_gate.check(expr)
+                    if not ex_ok:
+                        return False, "execution: " + ex_err
                 return True, ""
             except Exception as e:  # noqa: BLE001
                 return False, f"{type(e).__name__}: {e}"
@@ -304,70 +347,11 @@ class FrontEndPipeline:
         #                    'kv' mutation-crossover). Beda keduanya hanya apakah
         #                    proposal/design ikut men-decode teks (kv_and_text) atau
         #                    laten murni (kv).
-        prop_mode = self._agent_mode("kv_only")
-        design_mode = self._agent_mode("kv_only")
-        con_mode = self._agent_mode("kv_and_text")
-        cr: Optional[ConstructResult] = None
-
-        if self._is_text:
-            # TEKS: tak ada KV chaining. proposal emit hipotesis (teks) → design baca
-            # teks itu → construct baca keduanya. past_kv selalu None.
-            # Cabang handoff="text" sudah ada di prompts.yaml: proposal baca
-            # {{direction}}, design baca {{hypothesis_text}}, construct baca
-            # {{prior_factors}} (= hipotesis + palette). Nama var harus persis.
-            r_prop = self._a("proposal").run(
-                past_kv=None, handoff="text", direction=direction,
-                market_context=market_context, prior_feedback=prior_feedback,
-                negative_hint=negative_hint, mode_override=prop_mode,
-            )
-            r_design = self._a("design").run(
-                past_kv=None, handoff="text",
-                hypothesis_text=r_prop.text or "", mode_override=design_mode,
-            )
-            prior_factors = f"{(r_prop.text or '').strip()}\n\n{(r_design.text or '').strip()}".strip()
-            r_con = self._a("construct").run(
-                past_kv=None, handoff="text",
-                prior_factors=prior_factors,
-                diversity_hint=dhint, mode_override=con_mode,
-            )
-            kv_construct = r_con.kv_cache  # None di mode text
-            cr = r_con.parsed
-            if cr is None:  # parser gagal → retry construct sekali (teks sama)
-                if rl: rl.warn("construct output unparseable; retry once",
-                               head=(r_con.text or "")[:120])
-                r_con = self._a("construct").run(
-                    past_kv=None, handoff="text",
-                    prior_factors=prior_factors,
-                    diversity_hint=dhint, mode_override=con_mode,
-                )
-                kv_construct = r_con.kv_cache
-                cr = r_con.parsed
-        else:
-            # KV: proposal handoff='text'(original)/'kv'(evolution); seed_kv di-attend
-            # via past_kv. design & construct baca KV agen sebelumnya (no-crop).
-            r_prop = self._a("proposal").run(
-                past_kv=seed_kv, handoff=handoff, direction=direction,
-                market_context=market_context, prior_feedback=prior_feedback,
-                negative_hint=negative_hint, mode_override=prop_mode,
-            )
-            r_design = self._a("design").run(
-                past_kv=r_prop.kv_cache, handoff="kv", mode_override=design_mode,
-            )
-            r_con = self._a("construct").run(
-                past_kv=r_design.kv_cache, handoff="kv", diversity_hint=dhint,
-                mode_override=con_mode,
-            )
-            kv_construct = r_con.kv_cache
-            cr = r_con.parsed
-            if cr is None:  # parser gagal → retry construct sekali dari design KV
-                if rl: rl.warn("construct output unparseable; retry once",
-                               head=(r_con.text or "")[:120])
-                r_con = self._a("construct").run(
-                    past_kv=kv_ops.kv_deepcopy(r_design.kv_cache), handoff="kv",
-                    diversity_hint=dhint, mode_override=con_mode,
-                )
-                kv_construct = r_con.kv_cache
-                cr = r_con.parsed
+        r_con, kv_construct, cr = self._run_chain(
+            direction=direction, seed_kv=seed_kv, handoff=handoff,
+            market_context=market_context, prior_feedback=prior_feedback,
+            negative_hint=negative_hint, diversity_hint=dhint,
+        )
 
         hypothesis, factors = ("", []) if cr is None else (cr.hypothesis, list(cr.factors))
 
@@ -385,6 +369,110 @@ class FrontEndPipeline:
             repaired=repaired, repair_attempts=attempts, gate_error=gate_err,
             factors=factors, gate_log=gate_log,
         )
+
+    # Mode NATIF tiap agen front-end sebelum comm_mode diterapkan. Agen perantara
+    # bernalar laten (kv_only); emitter wajib menulis teks.
+    _NATIVE_MODE = {"proposal": "kv_only", "design": "kv_only",
+                    "innovate": "kv_only", "construct": "kv_and_text"}
+
+    def _run_chain(
+        self,
+        *,
+        direction: str,
+        seed_kv: Optional[KVCache],
+        handoff: str,
+        market_context: str,
+        prior_feedback: str,
+        negative_hint: str,
+        diversity_hint: str,
+    ) -> "tuple[AgentResult, Optional[KVCache], Optional[ConstructResult]]":
+        """Jalankan `self.chain` berurutan dan kembalikan (hasil emitter, KV, parsed).
+
+        Satu implementasi untuk SEMUA susunan rantai dan SEMUA comm_mode. Dulu
+        ada dua salinan alur (cabang `text` dan cabang KV) yang harus dijaga
+        tetap sinkron; menambah satu varian rantai berarti menambah dua cabang
+        lagi. Di sini medium hanya menentukan (a) apakah `past_kv` diteruskan dan
+        (b) `handoff` mana yang dirender — bukan alurnya.
+
+        Aliran materi antar-agen:
+          text : tiap agen membaca TEKS agen sebelumnya lewat variabel prompt.
+          kv   : tiap agen membaca KV agen sebelumnya; variabel teks kosong.
+        """
+        rl = self.runlog
+        is_text = self._is_text
+        # Teks yang terkumpul sepanjang rantai — dipakai HANYA di mode text.
+        hyp_text = ""            # keluaran agen hipotesis (proposal)
+        prior_parts: List[str] = []   # semua keluaran hulu, untuk emitter
+        prev_kv = seed_kv
+        # Apakah pustaka fungsi PENUH sudah masuk KV oleh agen hulu (B4). Hanya
+        # design/innovate yang membawanya; proposal tidak. Kalau design dipangkas
+        # (A8), emitter WAJIB memuat pustakanya sendiri — karena itu ini dihitung
+        # dari rantai yang benar-benar berjalan, bukan diasumsikan.
+        lib_in_kv = False
+        res: Optional[AgentResult] = None
+        # KV persis SEBELUM emitter dijalankan — titik berangkat yang bersih bila
+        # output emitter tak bisa diparse.
+        kv_before_emitter: Optional[KVCache] = None
+
+        for i, name in enumerate(self.chain):
+            is_last = i == len(self.chain) - 1
+            if is_last:
+                kv_before_emitter = prev_kv
+            mode = self._agent_mode(self._NATIVE_MODE.get(name, "kv_and_text"))
+            # Agen pertama membaca arah; sisanya membaca agen sebelumnya.
+            eff_handoff = handoff if i == 0 else ("text" if is_text else "kv")
+            kw: dict = {"handoff": eff_handoff}
+            if name == "proposal":
+                kw.update(direction=direction, market_context=market_context,
+                          prior_feedback=prior_feedback, negative_hint=negative_hint)
+            elif name in ("design", "innovate"):
+                kw.update(hypothesis_text=hyp_text if is_text else "")
+            elif name == "construct":
+                # Emitter pertama dalam rantai (mis. varian `("construct",)`)
+                # tak punya hulu: arah riset masuk langsung sebagai teks.
+                kw.update(
+                    prior_factors=("\n\n".join(p for p in prior_parts if p).strip()
+                                   if i > 0 else direction),
+                    diversity_hint=diversity_hint,
+                    lib_in_kv=lib_in_kv,
+                    free_form=self.free_form,
+                )
+            res = self._a(name).run(
+                past_kv=None if is_text else prev_kv, mode_override=mode, **kw)
+            prev_kv = res.kv_cache
+            if name in ("design", "innovate"):
+                lib_in_kv = not is_text
+            text = (res.text or "").strip()
+            if text:
+                prior_parts.append(text)
+                if name == "proposal":
+                    hyp_text = text
+            if is_last:
+                break
+
+        assert res is not None  # chain dijamin non-kosong di __init__
+        kv_last = res.kv_cache
+        cr: Optional[ConstructResult] = res.parsed
+        if cr is None:
+            # Retry sekali dari KV agen SEBELUM emitter. `prev_kv` sudah menunjuk
+            # KV emitter (yang berisi output rusaknya), jadi dipakai ulang akan
+            # meminta model melanjutkan kekacauannya sendiri.
+            if rl: rl.warn("construct output unparseable; retry once",
+                           head=(res.text or "")[:120])
+            emitter = self.chain[-1]
+            retry_kv = (kv_ops.kv_deepcopy(kv_before_emitter)
+                        if (not is_text and kv_before_emitter is not None) else None)
+            res = self._a(emitter).run(
+                past_kv=retry_kv,
+                handoff="text" if retry_kv is None else "kv",
+                prior_factors=("\n\n".join(p for p in prior_parts if p).strip()
+                               if len(self.chain) > 1 else direction),
+                diversity_hint=diversity_hint, lib_in_kv=lib_in_kv,
+                mode_override=self._agent_mode(self._NATIVE_MODE.get(emitter, "kv_and_text")),
+            )
+            kv_last = res.kv_cache
+            cr = res.parsed
+        return res, kv_last, cr
 
     def run_evolution(
         self,

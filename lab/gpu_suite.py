@@ -39,7 +39,7 @@ from lab.frontend_probe import (  # noqa: E402
 BASE = dict(
     model="Qwen/Qwen3-8B", comm_mode="kv", latent_steps=60, latent_mode="raw",
     latent_temp=0.7, no_realign=False, temperature=0.8, max_new_tokens=4096,
-    max_repair=3, prompts="", tag="", holdout=False,
+    max_repair=3, prompts="", tag="", holdout=False, chain="", free_form=None,
 )
 
 
@@ -91,8 +91,44 @@ def plan_prompt(a) -> list[dict]:
             for nm, pp in (("v0", ""), ("v1", v1))]
 
 
+def plan_a8(a) -> list[dict]:
+    """A8 — ABLASI AGEN: apakah rantai 3-agen layak dipertahankan, dan apakah
+    `design` sebaiknya diganti agen inovasi.
+
+    Lima lengan, satu variabel berubah antar-lengan yang berpasangan:
+      full          proposal->design->construct        rantai produksi
+      nodesign      proposal->construct                design DIPOTONG
+      direct        construct sendirian                arah langsung ke builder
+      innovate      proposal->innovate->construct      design DIGANTI (+ klem
+                                                       kesetiaan dilepas)
+      innovate_fid  proposal->innovate->construct      design DIGANTI, klem
+                                                       kesetiaan TETAP
+    Pasangan (innovate, innovate_fid) memisahkan efek "ganti agen" dari efek
+    "lepas klem kesetiaan" — tanpa itu keduanya berubah bersamaan dan tak ada
+    klaim kausal yang bisa dipertahankan.
+
+    Dijalankan pada konfigurasi Tahap 1 (ls dari --ls, gumbel), karena itulah
+    keadaan sistem yang sekarang berlaku.
+    """
+    ls = a.ls
+    return [
+        dict(comm_mode=a.comm_mode, latent_steps=ls, latent_mode="gumbel",
+             chain="proposal,design,construct", tag=f"a8_{a.comm_mode}_full"),
+        dict(comm_mode=a.comm_mode, latent_steps=ls, latent_mode="gumbel",
+             chain="proposal,construct", tag=f"a8_{a.comm_mode}_nodesign"),
+        dict(comm_mode=a.comm_mode, latent_steps=ls, latent_mode="gumbel",
+             chain="construct", tag=f"a8_{a.comm_mode}_direct"),
+        dict(comm_mode=a.comm_mode, latent_steps=ls, latent_mode="gumbel",
+             chain="proposal,innovate,construct", free_form=True,
+             tag=f"a8_{a.comm_mode}_innovate"),
+        dict(comm_mode=a.comm_mode, latent_steps=ls, latent_mode="gumbel",
+             chain="proposal,innovate,construct", free_form=False,
+             tag=f"a8_{a.comm_mode}_innovate_fid"),
+    ]
+
+
 PLANS = {"g2": plan_g2, "g3": plan_g3, "g4": plan_g4, "g6": plan_g6,
-         "prompt": plan_prompt}
+         "prompt": plan_prompt, "a8": plan_a8}
 
 
 def main() -> None:
@@ -101,7 +137,10 @@ def main() -> None:
     ap.add_argument("--model", default="Qwen/Qwen3-8B")
     ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--directions", default="d0,d1")
-    ap.add_argument("--ls", type=int, default=10, help="latent_steps untuk g3/g4/g6")
+    ap.add_argument("--ls", type=int, default=10, help="latent_steps untuk g3/g4/g6/a8")
+    ap.add_argument("--comm-mode", dest="comm_mode", default="kv",
+                    choices=["kv", "kv_and_text", "text"],
+                    help="medium untuk plan a8")
     ap.add_argument("--skip-existing", action="store_true")
     a = ap.parse_args()
 
@@ -140,7 +179,8 @@ def main() -> None:
                           "latent_steps": cfg.latent_steps,
                           "latent_mode": cfg.latent_mode,
                           "model": cfg.model, "use_realign": not cfg.no_realign,
-                          "prompts": str(prompts_path), "tag": cfg.tag})
+                          "prompts": str(prompts_path), "tag": cfg.tag,
+                          "arm": cfg.tag.split("_", 2)[-1]})
                 runs.append(r)
                 print(f"    dir={d} seed={s}: {r['duration_s']:>6.1f}s "
                       f"n_factors={len(r.get('factors') or [])} "

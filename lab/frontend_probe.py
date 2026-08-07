@@ -140,9 +140,14 @@ def run_once(backend, args, direction: str, seed: int, prompts_path: Path):
     torch.manual_seed(seed)
     col = Collector()
     agents = load_all_agents(backend, runlog=col, path=prompts_path)
+    chain = getattr(args, "chain", None)
+    if isinstance(chain, str):
+        chain = tuple(c.strip() for c in chain.split(",") if c.strip()) or None
     pipe = FrontEndPipeline(backend, runlog=col, agents=agents,
                             use_regulator=True, comm_mode=args.comm_mode,
-                            max_repair_attempts=args.max_repair)
+                            max_repair_attempts=args.max_repair,
+                            chain=chain,
+                            free_form=getattr(args, "free_form", None))
     trace = instrument(pipe, col)
 
     t0 = time.time()
@@ -156,10 +161,13 @@ def run_once(backend, args, direction: str, seed: int, prompts_path: Path):
 
     if fe is None:
         return {"error": err, "duration_s": dur, "agent_trace": trace,
+                "chain": ",".join(pipe.chain), "free_form": pipe.free_form,
                 "events": col.events}
 
     return {
         "duration_s": dur,
+        "chain": ",".join(pipe.chain),
+        "free_form": pipe.free_form,
         "hypothesis": fe.hypothesis,
         "factors": fe.factors,
         "passing": fe.expressions,
@@ -238,6 +246,12 @@ def main() -> None:
     ap.add_argument("--max-repair", type=int, default=3)
     ap.add_argument("--holdout", action="store_true",
                     help="skor pada 2022-01-01..2025-12-26 (holdout sejati)")
+    ap.add_argument("--chain", default="",
+                    help="susunan agen front-end, mis. 'proposal,innovate,construct' "
+                         "(kosong = proposal,design,construct)")
+    ap.add_argument("--free-form", dest="free_form", default=None,
+                    action="store_true",
+                    help="lepas klem FIDELITY di construct (default: ikut chain)")
     ap.add_argument("--tag", default="probe")
     ap.add_argument("--score-only", action="store_true",
                     help="lewati GPU; skor ulang frontend_<tag>.json yang sudah ada")

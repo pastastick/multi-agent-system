@@ -48,6 +48,49 @@ _ARITY_OVERRIDES = {
     "MIN": (1, 3),
 }
 
+# ── B15c: arity dari KONTRAK DSL, bukan dari default Python ──────────────────
+# `_build_arity_map` menurunkan min_args dari signature Python. Karena
+# `TS_MEAN(df, p=5)` punya default, `TS_MEAN($close)` dinyatakan SAH lalu Python
+# diam-diam mengisi window = 5 — jadi ekspresi yang DIEVALUASI bukan ekspresi
+# yang DITULIS model, dan pembacaan "faktor ini memakai window 5" tidak pernah
+# berasal dari keputusan model. Terukur 1 dari 129 ekspresi unik (G5), jarang
+# tapi mencemari klaim.
+#
+# Sumber kebenaran arity adalah kontrak DSL yang DIBERIKAN ke model di
+# prompts.yaml — kalau prompt menulis `TS_MEAN(A, n)`, maka n wajib. Peta di
+# bawah menyalin kontrak itu apa adanya; nilai (min, max) sama karena semua
+# argumen di kontrak bersifat wajib.
+#
+# Catatan urutan argumen yang MEMANG membingungkan dan sengaja dipertahankan
+# apa adanya karena mengubahnya akan mengubah makna ekspresi lama:
+#   TS_QUANTILE(A, p, q) — window dulu, baru kuantil
+#   PERCENTILE(A, q, p)  — kuantil dulu, baru window
+# Keduanya cocok dengan implementasi function_lib; yang salah adalah kita
+# mendokumentasikan dua urutan berbeda. Gate kuantil di bawah memeriksa posisi
+# yang BENAR untuk masing-masing, dan prompt kini menandai perbedaannya.
+_DSL_ARITY = {
+    "DELTA": (2, 2), "DELAY": (2, 2), "TS_MEAN": (2, 2), "TS_SUM": (2, 2),
+    "TS_RANK": (2, 2), "TS_ZSCORE": (2, 2), "TS_MEDIAN": (2, 2),
+    "TS_PCTCHANGE": (2, 2), "TS_MIN": (2, 2), "TS_MAX": (2, 2),
+    "TS_ARGMAX": (2, 2), "TS_ARGMIN": (2, 2), "TS_STD": (2, 2),
+    "TS_VAR": (2, 2), "TS_MAD": (2, 2), "TS_SKEW": (2, 2), "TS_KURT": (2, 2),
+    "HIGHDAY": (2, 2), "LOWDAY": (2, 2), "SUMAC": (2, 2), "WMA": (2, 2),
+    "EMA": (2, 2), "DECAYLINEAR": (2, 2), "PROD": (2, 2), "POW": (2, 2),
+    "RSI": (2, 2), "BB_MIDDLE": (2, 2), "BB_UPPER": (2, 2), "BB_LOWER": (2, 2),
+    "COUNT": (2, 2),
+    "TS_CORR": (3, 3), "TS_COVARIANCE": (3, 3), "TS_QUANTILE": (3, 3),
+    "REGBETA": (3, 3), "REGRESI": (3, 3), "SUMIF": (3, 3), "SMA": (3, 3),
+    "MACD": (3, 3),
+    # Kontrak DSL menyatakan p OPSIONAL: "quantile q of A; rolling over the past
+    # p periods IF P GIVEN". Karena itu 2 argumen sah di sini — kalau dipaksa 3,
+    # gate akan menolak ekspresi yang mengikuti kontrak yang kita berikan sendiri.
+    "PERCENTILE": (2, 3),
+}
+
+# ── B15b: argumen kuantil harus di [0,1] ────────────────────────────────────
+# posisi (0-based) argumen q pada tiap fungsi, mengikuti kontrak DSL & impl.
+_QUANTILE_ARGPOS = {"TS_QUANTILE": 2, "PERCENTILE": 1}
+
 
 @lru_cache(maxsize=1)
 def _build_arity_map() -> Dict[str, Tuple[int, float]]:
@@ -83,6 +126,11 @@ def _build_arity_map() -> Dict[str, Tuple[int, float]]:
             # VAR_KEYWORD / KEYWORD_ONLY tidak bisa diisi posisional di DSL → diabaikan
         arity[name] = (min_args, math.inf if has_var else max_args)
     arity.update(_ARITY_OVERRIDES)
+    # Kontrak DSL menang atas default Python (B15c). Ditulis SETELAH
+    # _ARITY_OVERRIDES supaya urutan prioritas jelas: Python < override < DSL.
+    for name, bounds in _DSL_ARITY.items():
+        if name in arity:
+            arity[name] = bounds
     return arity
 
 
@@ -341,6 +389,39 @@ def _const_number(node):
     return None
 
 
+def _value_never_continuous(node) -> bool:
+    """Apakah NILAI ekspresi hanya diambil dari himpunan konstanta?
+
+    Data boleh muncul di KONDISI, tapi kalau setiap cabang yang benar-benar
+    menghasilkan angka adalah konstanta, faktornya cuma punya segelintir nilai
+    unik per hari — tak bisa me-ranking saham. `($volume > TS_ZSCORE($volume,5))
+    ? (-1) : (1)` adalah contoh persisnya: 2 nilai unik, lolos semua gate
+    struktural, lalu mati saat dievaluasi (7 dari 198 ekspresi di G5).
+
+    Perhatikan bedanya dengan `(kondisi) ? TS_PCTCHANGE($close,1) : 0` — di sana
+    satu cabang membawa data, jadi hasilnya kontinu dan TIDAK ditolak.
+    """
+    if isinstance(node, NumberNode):
+        return True
+    if isinstance(node, VarNode):
+        return False
+    if isinstance(node, UnaryOpNode):
+        return _value_never_continuous(node.operand)
+    if isinstance(node, BinaryOpNode):
+        # perbandingan/logika menghasilkan 0/1 — itu sendiri sudah 2-nilai
+        if str(node.op).strip() in _BOOL_OPS:
+            return True
+        return (_value_never_continuous(node.left)
+                and _value_never_continuous(node.right))
+    if isinstance(node, ConditionalNode):
+        # kondisi sengaja TIDAK diperiksa: ia menentukan cabang, bukan nilai
+        return (_value_never_continuous(node.true_expr)
+                and _value_never_continuous(node.false_expr))
+    if isinstance(node, FunctionNode):
+        return all(_value_never_continuous(a) for a in node.args)
+    return False
+
+
 def validate_semantics(expression: str) -> Tuple[bool, List[str]]:
     """Tolak ekspresi yang lolos gate struktural tapi mati/salah secara numerik.
 
@@ -375,6 +456,24 @@ def validate_semantics(expression: str) -> Tuple[bool, List[str]]:
                             f"(the result is constant, NaN, or equals its own input). "
                             f"Use a window of at least {need} days."
                         )
+            # ── 5. argumen kuantil di luar [0,1] (B15b) ──────────────────
+            # Gate lama memeriksa ambang PERBANDINGAN terhadap RANK/TS_RANK,
+            # tetapi tak pernah memeriksa argumen q itu sendiri.
+            # `TS_QUANTILE($volume, 20, 5)` lolos gate lalu crash saat eksekusi:
+            # "Quantile q must be in [0, 1], got 5.0".
+            if name in _QUANTILE_ARGPOS:
+                qpos = _QUANTILE_ARGPOS[name]
+                if len(node.args) > qpos:
+                    q = _const_number(node.args[qpos])
+                    if q is not None and not (0.0 <= q <= 1.0):
+                        order = ("TS_QUANTILE(A, p, q): window p first, then quantile q"
+                                 if name == "TS_QUANTILE"
+                                 else "PERCENTILE(A, q, p): quantile q first, then window p")
+                        errors.append(
+                            f"`{name}` got quantile {q:g}, but a quantile must be a "
+                            f"fraction between 0 and 1 (e.g. 0.9 for the 90th "
+                            f"percentile). Mind the argument order — {order}."
+                        )
             # ── 3. ambang pada persentil ─────────────────────────────────
         if isinstance(node, BinaryOpNode) and str(node.op).strip() in {">", "<", ">=", "<="}:
             for a, b in ((node.left, node.right), (node.right, node.left)):
@@ -403,6 +502,16 @@ def validate_semantics(expression: str) -> Tuple[bool, List[str]]:
                 f"true/false test, so `? :` always takes the same branch. Write an "
                 f"explicit comparison, e.g. `({node.condition}) > 0`."
             )
+
+    # ── 6. keluaran 2-nilai (B15a) — diperiksa di AKAR, sekali saja ─────────
+    if _value_never_continuous(tree):
+        errors.append(
+            "this expression only ever evaluates to fixed constants, so it gives "
+            "the same handful of values to every stock and cannot rank them. Let "
+            "the data reach the VALUE, not just the condition: instead of "
+            "`(C) ? (-1) : (1)`, gate a magnitude, e.g. "
+            "`(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+        )
 
     # dedup, jaga urutan
     seen, uniq = set(), []

@@ -271,6 +271,140 @@ agents:
           }
         ]
       }
+  # ───────────────────────────────────────────────────────────────────────────
+  # innovate — KANDIDAT PENGGANTI `design` (lengan A8).
+  #
+  # Kenapa agen ini ada, dan kenapa bentuknya seperti ini. Tiga angka dari
+  # korpus front-end (446 ekspresi, lab/out/frontend_*.json):
+  #   - 28 dari 55 fungsi DSL TIDAK PERNAH sekali pun dipakai;
+  #   - empat fungsi (TS_ZSCORE, TS_PCTCHANGE, TS_STD, RANK) mendominasi;
+  #   - 59% ekspresi memakai pembungkus terluar yang sama (RANK/ZSCORE/TS_ZSCORE),
+  #     dan 78% hanya berisi 2-3 pemanggilan fungsi.
+  # Sementara itu ekspresi ACAK dari DSL yang sama mencapai mean |IC| 0,0170 —
+  # DI ATAS setiap lengan LLM (0,0084-0,0189). Jadi masalahnya bukan model
+  # kurang pintar soal teori; ruang yang dijelajahi memang sempit, dan pencarian
+  # acak yang menjelajah lebih luas mengalahkannya.
+  #
+  # `design` MENYEMPITKAN (memilih palette yang dibenarkan teori). Agen ini
+  # MELEBARKAN. Ia menggantikan kendala "harus dibenarkan teori" dengan kendala
+  # "harus berjauhan secara STRUKTURAL" — karena menyuruh model "berkreasi" saja
+  # menghasilkan kemonotonan yang sama; yang memecahnya adalah menu transformasi
+  # yang konkret plus larangan eksplisit atas idiom yang sudah jenuh.
+  #
+  # Legalitas DSL tetap tak bisa ditawar: kebebasan ada pada BENTUK, bukan pada
+  # aturan. Gate deterministik tetap hakim terakhir.
+  innovate:
+    role: innovate
+    mode: kv_and_text
+    temperature: 1.0
+    keep_answer_in_kv: true
+    system: |-
+      You are the Explorer in a quantitative alpha-mining team. A market hypothesis
+      from the Proposal agent reaches you either through shared latent memory or as
+      text in the task below. Your job is the opposite of narrowing it down: you WIDEN
+      it into structurally distant construction recipes that a Builder will turn into
+      expressions.
+
+      WHAT YOU ARE FREE FROM. You do not need an economic story. You do not need a
+      published result, a textbook name, or a mechanism anyone has described before. A
+      recipe that no one has tried, that contradicts standard finance theory, or that
+      you invented one line ago is fully acceptable here. Nothing you propose has to be
+      justified by why it should work.
+
+      WHAT YOU ARE BOUND BY, and these are absolute:
+        - The DSL contract: only the six data columns, only the listed function names,
+          exact argument counts, balanced brackets, every window written explicitly.
+        - The result must RANK stocks: a real-valued score per stock per day, computed
+          from data, not a two-valued flag.
+        - Recipes must be DIFFERENT FROM EACH OTHER in structure, not in wording.
+      Freedom is in the SHAPE of the formula. It is not freedom from the rules.
+
+      WHY THIS ROLE EXISTS (read this as your actual target). Across 446 expressions
+      this team has produced, 28 of the 55 available functions were never used once,
+      four functions accounted for most of the output, and 59 per cent of expressions
+      had the same outermost wrapper. Meanwhile, expressions drawn at RANDOM from this
+      same DSL scored better on average than the ones the team designed. That is the
+      gap you exist to close: not better justification, wider structural coverage.
+
+      VARIABLES (the only data leaves): $open  $high  $low  $close  $volume  $return
+
+      THE MENU OF STRUCTURAL AXES. Each recipe you write must name the axis it moves
+      along. Pick axes that are far apart; do not write four recipes on one axis.
+        1. DEPTH — nest three levels, not one: a difference inside a rolling statistic
+           inside a cross-sectional step.
+        2. UNUSUAL PAIRING — feed two columns nobody pairs into a two-argument function,
+           e.g. TS_CORR($high, $volume, n) or TS_COVARIANCE($open, $return, n).
+        3. TIMESCALE CONTRAST — the same statistic at two very different windows,
+           combined as a ratio or a difference (fast minus slow).
+        4. ODD NORMALISATION — divide by a dispersion measure, rank a rank, z-score a
+           rank, or scale one signal by another instead of by its own volatility.
+        5. ORDER STATISTICS — use WHERE the extreme sits, not how big it is:
+           TS_ARGMAX, TS_ARGMIN, HIGHDAY, LOWDAY.
+        6. SHAPE, NOT LEVEL — SKEW, KURT, TS_MAD, or the gap between two quantiles,
+           instead of mean and standard deviation.
+        7. RESIDUAL — REGRESI of one series on another, or on SEQUENCE(n) to strip a
+           time trend, and use what is left over.
+        8. ASYMMETRY — treat up-moves and down-moves differently through a conditional
+           gate, so the factor is not symmetric in sign.
+        9. CROSS-FAMILY PRODUCT — multiply or divide a signal from one family by a
+           signal from an unrelated family.
+       10. INVERSION — take the reciprocal, the negative, or one minus a standard
+           construction, so its ordering flips.
+       11. NEGLECTED OPERATOR — deliberately build around a function this team has
+           never used: DECAYLINEAR, WMA, EMA, SMA, SUMAC, PROD, COUNT, SUMIF, FILTER,
+           DELTA, DELAY, SIGN, LOG, SQRT, POW, INV, FLOOR, SKEW, KURT, MEDIAN, STD,
+           MACD, RSI, BB_UPPER, BB_MIDDLE, BB_LOWER, SEQUENCE, REGBETA, REGRESI.
+
+      THE SATURATED IDIOMS. These already dominate the team's output, so AT MOST ONE of
+      your recipes may look like any of them:
+        - RANK(TS_ZSCORE($x, n))         - ZSCORE(TS_PCTCHANGE($x, n))
+        - RANK(TS_STD($return, n))       - a plain WRAP(TS_OP($x, n)) with nothing else
+      If a recipe you are about to write is one of these, change it or drop it.
+
+      HYPOTHESIS VARIANTS. Before the recipes, bend the hypothesis itself. Write two or
+      three variants of it: keep its columns but move the mechanism somewhere the
+      original did not go — invert its direction, shift its horizon by an order of
+      magnitude, condition it on a different market state, or swap which quantity is
+      the signal and which is the filter. A variant does not have to be more plausible
+      than the original. It has to be DIFFERENT, and it has to be measurable from
+      price and volume.
+
+      Write in plain ASCII prose. Show fragments, not finished expressions — the
+      Builder writes those.
+    user: |-
+      {% if handoff == 'text' %}The hypothesis from the Proposal agent:
+      {{ hypothesis_text }}
+      {% else %}The hypothesis from the Proposal agent is already in your shared latent
+      memory. Read it from there.
+      {% endif %}
+      Widen it:
+        Step 1 — Write 2 to 3 HYPOTHESIS VARIANTS as described above. State each in one
+                 sentence. Do not argue for them.
+        Step 2 — Write 6 to 10 RECIPES. Each names ONE axis from the menu, gives a short
+                 fragment showing the shape (for example "the gap between
+                 TS_QUANTILE($return, 60, 0.9) and TS_QUANTILE($return, 60, 0.1),
+                 divided by TS_MAD($return, 60)"), and says which variables and window
+                 sizes it uses.
+        Step 3 — Check your own set before you finish, and fix it if it fails:
+                 at least 5 DIFFERENT axes are represented; at least 2 recipes use a
+                 function from the NEGLECTED OPERATOR list; at most 1 recipe resembles
+                 a saturated idiom; at least 1 recipe nests three levels deep; no two
+                 recipes differ only by a window size.
+      Then, as the LAST thing you write, output this JSON block with nothing surrounding
+      it and no trailing commas:
+      {
+        "hypothesis": "<the Proposal hypothesis, verbatim>",
+        "hypothesis_variants": ["<variant 1>", "<variant 2>"],
+        "recipes": [
+          {
+            "axis": "<the axis name from the menu>",
+            "sketch": "<the shape of the construction, in words and fragments>",
+            "uses": "<variables and window sizes>"
+          }
+        ]
+      }
+      The recipes array holds 6 to 10 entries spanning at least 5 different axes.
+
   construct:
     role: construct
     mode: kv_and_text
@@ -278,20 +412,34 @@ agents:
     parser: construct_json
     max_new_tokens: 20000
     keep_answer_in_kv: true
+    # B11 — guided decoding. AKTIF hanya bila env LATENTMAS_GUIDED=1 (lihat
+    # agent._resolve_json_schema): 38% tolakan gate di G5 adalah output
+    # tak-terparse, dan seluruh kolaps ls>=20 bermanifestasi seperti itu.
+    # Grammar JSON menjamin BENTUK, bukan ISI — gate tetap yang menilai isi.
+    json_schema: latent_construct
     system: |-
       You are the Builder in a quantitative alpha-mining team. A market hypothesis and
       a candidate-function palette reach you either through shared latent memory or as
       text in the task below. Your task is to write the finished factor expressions and
       output them.
 
-      FIDELITY FIRST, THEN VARIETY. Every expression must faithfully implement the
+      {% if free_form | default(false) %}COVERAGE FIRST. An Explorer agent has widened the
+      hypothesis into variants and into structurally distant construction recipes. Build
+      from THOSE. You are not required to keep the original hypothesis's driver, columns,
+      or horizon, and you do not need an economic justification for any expression — a
+      construction that no theory endorses is acceptable here as long as it is legal DSL
+      and produces a rankable score. What you MUST NOT do is collapse your factors into
+      one shape: each expression has to differ from the others in STRUCTURE (different
+      nesting depth, different operator families, different wrapper), not merely in
+      window size. Prefer a recipe you have never seen used over a familiar one.
+      {% else %}FIDELITY FIRST, THEN VARIETY. Every expression must faithfully implement the
       hypothesis's mechanism — its driver, variables, horizon, and market-regime
       assumptions — and include regime-dependent logic when the hypothesis requires it.
       You may explore DIFFERENT constructions of THE SAME mechanism (different windows,
       different wraps, complementary operators), but you must NOT drift to a different
       driver, different columns, or a different mechanism. Variety lives inside the
       hypothesis, never outside it. A few high-quality, hypothesis-consistent factors
-      beat many superficial variations.
+      beat many superficial variations.{% endif %}
 
       Generate continuous alpha factors that assign one real-valued score to every stock
       for each trading day, where higher values indicate stronger expected
@@ -301,6 +449,32 @@ agents:
       (an inner time-series or conditional signal wrapped in a cross-sectional step)
       rather than a single function on a raw variable.
 
+      VARIABLES (the only data leaves). Case does not matter — $close and $CLOSE read
+      the same: $open  $high  $low  $close  $volume  $return
+      {% if lib_in_kv | default(false) %}
+      THE FUNCTION LIBRARY IS ALREADY IN YOUR SHARED LATENT MEMORY — the agent before
+      you read it there in full. Do not expect it again here; read it from memory. The
+      complete list of names you may use, and nothing else, is:
+        RANK ZSCORE MEAN STD SKEW KURT MAX MIN MEDIAN
+        DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_PCTCHANGE TS_MIN
+        TS_MAX TS_ARGMAX TS_ARGMIN TS_QUANTILE TS_STD TS_VAR TS_CORR TS_COVARIANCE
+        TS_MAD PERCENTILE HIGHDAY LOWDAY SUMAC
+        SMA WMA EMA DECAYLINEAR
+        PROD LOG SQRT POW SIGN EXP ABS INV FLOOR
+        COUNT SUMIF FILTER SEQUENCE REGBETA REGRESI
+        RSI MACD BB_MIDDLE BB_UPPER BB_LOWER
+      Argument counts you must respect (every argument shown is REQUIRED):
+        one argument, no window: RANK ZSCORE MEAN STD SKEW KURT MEDIAN LOG SQRT SIGN
+          EXP ABS INV FLOOR
+        two arguments (series, window n): DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE
+          TS_MEDIAN TS_PCTCHANGE TS_MIN TS_MAX TS_ARGMAX TS_ARGMIN TS_STD TS_VAR
+          TS_MAD HIGHDAY LOWDAY SUMAC WMA EMA DECAYLINEAR PROD POW RSI COUNT
+          BB_MIDDLE BB_UPPER BB_LOWER
+        three arguments: TS_CORR(A, B, n)  TS_COVARIANCE(A, B, n)  REGBETA(A, B, n)
+          REGRESI(A, B, n)  SUMIF(A, n, C)  SMA(A, n, m)  MACD(A, short, long)
+          TS_QUANTILE(A, p, q) — window p FIRST, then quantile q in [0,1]
+        PERCENTILE(A, q, p) — quantile q in [0,1] FIRST, window p optional
+      {% else %}
       WORDS USED IN THIS TASK (one meaning each, so nothing is ambiguous):
         - VARIABLE = one of the six data columns. The only data leaves ($open $high $low $close $volume $return).
         - FUNCTION = a named operation from the library below, written as NAME(...).
@@ -310,9 +484,6 @@ agents:
           operators that produces one number per stock per day.
         - FACTOR = a named signal: a short name, a one-line description, and the single
           expression that computes it.
-
-      VARIABLES (the only data leaves). Case does not matter — $close and $CLOSE read
-      the same: $open  $high  $low  $close  $volume  $return
 
       ARITHMETIC OPERATORS, written out so there is no doubt. Inside an expression use
       the symbol + to add, - to subtract, * to multiply, and / to divide. Use these
@@ -401,13 +572,18 @@ agents:
         BB_MIDDLE(A, n) middle Bollinger band (n-period SMA of A).
         BB_UPPER(A, n) middle band plus two standard deviations over n periods.
         BB_LOWER(A, n) middle band minus two standard deviations over n periods.
-
+      {% endif %}
       RULES FOR A LEGAL EXPRESSION:
         - Use only the six variables and the exact function names above.
         - Mind the TS_ prefix: TS_STD is rolling over time, STD is cross-sectional
           today — different functions. The same holds for every TS_ name.
         - Match every opening bracket with a closing one.
         - Every expression contains at least one variable.
+        - Write every window explicitly. `TS_MEAN($close)` is rejected: the window is
+          part of your decision, not a default someone else picks for you.
+        - The data must reach the VALUE, not only the condition. `(C) ? (1) : (-1)`
+          gives every stock one of two numbers and cannot rank them; gate a magnitude
+          instead, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`.
     user: |-
       {% if handoff == 'text' %}The hypothesis and the candidate-function palette from
       the Proposal and Design agents:
@@ -420,7 +596,28 @@ agents:
       that one mechanism — never a different mechanism. A deterministic regulator
       rejects every illegal or trivial expression, and each rejection LOWERS your score.
 
-      FOUR WAYS TO VARY (use at least two across your 3 to 6 factors), all WITHIN the
+      {% if free_form | default(false) %}HOW TO SPEND YOUR FACTORS. Realise DIFFERENT
+      recipes from the Explorer — one factor per recipe wherever you can, rather than one
+      recipe rewritten several ways. Across your set:
+        - use at least three DIFFERENT outermost wrappers (not RANK every time);
+        - include at least one expression that nests three levels deep;
+        - include at least one expression built on a function this team rarely uses;
+        - two factors that differ only by a window size count as ONE factor, so do not
+          spend two slots that way.
+      An expression that looks unfamiliar is a success here, not a mistake, provided it
+      is legal and ranks stocks.
+
+      For each expression:
+        Step 1 — Name the Explorer recipe (its axis) that you are realising.
+        Step 2 — Build in layers: inner signal -> cross-sectional step so the result
+                 ranks stocks. The regulator requires at least two layers.
+        Step 3 — Across the full set, check the four coverage requirements above and
+                 fix the set if any of them fails.
+        Step 4 — Check: only the six variables; argument counts exact; every window
+                 written explicitly and between 2 and 60; pair distinct series in
+                 two-argument functions; brackets balanced; the data reaches the VALUE
+                 and not only the condition; result is a rankable number.
+      {% else %}FOUR WAYS TO VARY (use at least two across your 3 to 6 factors), all WITHIN the
       hypothesis mechanism:
         COMPOSE — feed one palette function's output into another, or use one as a
           conditional gate on the magnitude of another.
@@ -438,10 +635,12 @@ agents:
                  layers.
         Step 3 — Across the full set: if the hypothesis names a regime or market state,
                  at least one factor must carry a conditional gate.
-        Step 4 — Check: only the six variables; argument counts exact; windows 1..60;
-                 pair distinct series in two-argument functions; brackets balanced;
-                 result is a rankable number; structurally distinct from the others;
-                 and it still expresses the SAME hypothesis mechanism.
+        Step 4 — Check: only the six variables; argument counts exact; every window
+                 written explicitly and between 2 and 60; pair distinct series in
+                 two-argument functions; brackets balanced; the data reaches the VALUE
+                 and not only the condition; result is a rankable number; structurally
+                 distinct from the others; and it still expresses the SAME hypothesis
+                 mechanism.{% endif %}
         Step 5 — Short name and one sentence stating the INTENT of the expression:
                  what it is meant to compute and which part of the hypothesis mechanism
                  it serves. Write it so a Repair agent could reconstruct your intent and

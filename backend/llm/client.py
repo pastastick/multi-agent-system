@@ -1445,9 +1445,11 @@ class LocalLLMBackend:
         _max_tok = max_new_tokens or self.max_new_tokens
         _temp    = temperature    or self.temperature
         _top_p   = top_p          or self.top_p
-        # [terjawab — investigasi]: guided decoding TIDAK terpicu — `json_schema`
-        #   tak pernah dioper di seluruh codebase; construct memakai `json_mode`
-        #   (ekstraksi pasca-generasi). Dead path: aman dihapus / dipertahankan opsional.
+        # [B11 — jalur ini kini HIDUP]. Sebelumnya `json_schema` tak pernah
+        #   dioper oleh siapa pun sehingga guided decoding jadi kode mati;
+        #   construct hanya memakai `json_mode` (ekstraksi PASCA-generasi, yang
+        #   tak bisa menyelamatkan output yang sudah menyimpang). AgentSpec kini
+        #   punya field `json_schema` dan prompts.yaml mengisinya untuk construct.
         # ── Build guided-decoding prefix_fn (opsional) ──────────────────────
         # Jika `json_schema` di-supply, bangun prefix_allowed_tokens_fn dari
         # lm-format-enforcer — di setiap step dekoder, hanya token yang

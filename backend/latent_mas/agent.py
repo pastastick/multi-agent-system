@@ -30,6 +30,7 @@ Spec dimuat dari `prompts.yaml` (lihat `load_agent` / `load_all_agents`).
 
 from __future__ import annotations
 
+import os
 import time
 from contextlib import nullcontext
 from dataclasses import dataclass, field
@@ -65,6 +66,14 @@ class AgentSpec:
     max_new_tokens: Optional[int] = None
     parser: Optional[Callable[[str], Any]] = None
     json_mode: bool = False
+    # B11 — guided (constrained) decoding. Infrastrukturnya sudah ada dan sudah
+    # tersambung di `llm/guided_decoding.py` + `LocalLLMBackend.run(json_schema=)`,
+    # tetapi TAK ADA pemanggil yang pernah mengopernya, sehingga jalur itu mati.
+    # Diisi dari `json_schema:` di prompts.yaml — boleh nama terdaftar di
+    # JSON_SCHEMAS ("latent_construct") atau schema JSON penuh.
+    # Efek: struktur output dipaksa valid token-per-token, bukan dijinjit prompt.
+    # Biaya: latensi +10–20%. Batas: grammar menjamin BENTUK, bukan ISI.
+    json_schema: Optional[Any] = None
     # NO-CROP default (prod): pertahankan jawaban yang di-generate di KV agar
     # agent berikut membaca output ASLI, bukan cuma vektor laten yang lossy.
     # Set False (di YAML) untuk perilaku lama (crop, anti-contamination).
@@ -177,6 +186,7 @@ class LatentAgent:
                 temperature=self.spec.temperature,
                 max_new_tokens=self.spec.max_new_tokens,
                 json_mode=self.spec.json_mode,
+                json_schema=self.spec.json_schema,
                 crop_after_generate=not self.spec.keep_answer_in_kv,
             )
         dur = time.time() - t0
@@ -221,6 +231,33 @@ class LatentAgent:
 # Loader dari prompts.yaml
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _resolve_json_schema(value: Any) -> Optional[Any]:
+    """`json_schema:` di YAML boleh berupa nama terdaftar atau schema penuh.
+
+    DEFAULT MATI. Guided decoding baru menyala bila env `LATENTMAS_GUIDED=1`.
+    Alasannya metodologis, bukan teknis: B11 belum diukur, dan menyalakannya
+    diam-diam akan mengubah objek studi di tengah jalan — laju tak-terparse
+    sebelum/sesudah tak lagi bisa dibandingkan. Nyalakan sebagai LENGAN,
+    promosikan setelah angkanya ada.
+
+    Nama yang tak dikenal DIABAIKAN dengan peringatan, bukan crash: salah ketik
+    di prompts.yaml tak boleh menjatuhkan seluruh run — ia cuma mematikan guided
+    decoding untuk agen itu, dan itu perilaku lama yang sudah teruji.
+    """
+    if value is None:
+        return None
+    if os.environ.get("LATENTMAS_GUIDED", "0") != "1":
+        return None
+    if isinstance(value, dict):
+        return value
+    from llm.guided_decoding import JSON_SCHEMAS
+    schema = JSON_SCHEMAS.get(str(value))
+    if schema is None:
+        print(f"[agent] json_schema {value!r} tak dikenal; guided decoding dilewati. "
+              f"Tersedia: {sorted(JSON_SCHEMAS)}")
+    return schema
+
+
 def _load_specs(path: Path = _PROMPTS_PATH) -> Dict[str, AgentSpec]:
     import yaml
     raw = yaml.safe_load(path.read_text())
@@ -237,6 +274,7 @@ def _load_specs(path: Path = _PROMPTS_PATH) -> Dict[str, AgentSpec]:
             max_new_tokens=cfg.get("max_new_tokens"),
             parser=PARSERS.get(parser_name),
             json_mode=cfg.get("json_mode", False),
+            json_schema=_resolve_json_schema(cfg.get("json_schema")),
             keep_answer_in_kv=cfg.get("keep_answer_in_kv", True),
         )
     return specs
