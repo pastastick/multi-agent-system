@@ -187,13 +187,34 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Terukur G3 (Qwen3-8B, ls=10, 18 run): lolos gate 54% → 91%, faktor hidup
     # 13 → 27, klaster sinyal 6 → 9. PERINGATAN: kekuatan sinyal TIDAK membaik
     # (t = −0,27) — ini perbaikan KEANDALAN PRODUKSI, bukan perbaikan mutu.
+    #
+    # B7 (2026-08-07): default di _CoreEngine ikut diubah "raw" → "gumbel",
+    # sehingga tak ada lagi jalur yang membangun backend tanpa lewat Settings
+    # lalu diam-diam memakai persamaan lama. Ganti ke "raw" HANYA untuk
+    # mereplikasi baseline G1/G3/G6.
     latent_step_mode: str = "gumbel"
     latent_step_temp: float = 0.7
+
+    # ── Early-stop rollout laten (B6) ────────────────────────────────────
+    # Rollout berhenti saat cos(h_k, h_{k−1}) > ambang ini; `latent_steps` di
+    # atas karenanya adalah BATAS ATAS, bukan target. Ambang 0,999 memakai
+    # definisi "titik tetap" yang sama dengan lab/latent_dynamics.py, sehingga
+    # angka A4 dan perilaku produksi tidak bisa berbeda diam-diam.
+    # [G1: jalur `raw` membeku di langkah 12 (4B) / 34 (8B); G7: pengaruh kanal
+    # laten turun 4× saat ls 10→60 — langkah setelah titik tetap hanya
+    # menyalin vektor yang sama sambil menambah token ke KV]
+    # Setel ≥ 1.0 untuk mematikan (mis. saat mereplikasi baseline pra-B6).
+    latent_early_stop_cos: float = 0.999
 
     # ── Latent realignment ───────────────────────────────────────────────
     # Proyeksi hidden state sebelum inject sebagai virtual token.
     # LatentRealigner di _CoreEngine: identity (False) atau learned (True).
-    # True membantu model "fokus" latent reasoning pada domain quantitative.
+    #
+    # B7 (2026-08-07): flag ini INERT pada konfigurasi produksi. Matriks ridge
+    # hanya diterapkan bila `latent_step_mode == "raw"`; di mode gumbel/soft/
+    # sample, _latent_step_vec hanya meminjam `target_norm` dari realigner.
+    # Dipertahankan karena mode "raw" masih dipakai untuk mereplikasi baseline
+    # G1/G3/G6. Jangan tafsirkan hasil ablasi G6 sebagai berlaku umum.
     use_realign: bool = True
 
     # Qwen3 chain-of-thought dalam <think>...</think> tags.
@@ -317,6 +338,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
             knn_strategy=self.knn_strategy,
             latent_step_mode=self.latent_step_mode,
             latent_step_temp=self.latent_step_temp,
+            latent_early_stop_cos=self.latent_early_stop_cos,   # B6
             # B9: `kv_max_tokens` selama ini kode mati — nilainya tak pernah
             # sampai ke backend, dan `knn_enabled` otomatis mati saat
             # latent_steps>0, sehingga TIDAK ADA kendali ukuran KV sama sekali

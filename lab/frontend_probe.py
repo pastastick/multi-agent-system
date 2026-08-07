@@ -101,6 +101,9 @@ def instrument(pipeline, collector, keep_text: int = 6000):
                 "agent": _name, "mode": res.mode,
                 "s": round(time.time() - t0, 2),
                 "latent_s": res.latent_s, "gen_s": res.gen_s,
+                # B6: anggaran vs langkah yang benar-benar berjalan.
+                "n_latent_steps": getattr(res, "n_latent_steps", 0),
+                "latent_stop": getattr(res, "latent_stop", "off"),
                 "kv_len": res.kv_seq_len, "n_out_tok": res.n_output_tokens,
                 "n_in_tok": res.n_input_tokens,
                 "text_len": len(res.text or ""),
@@ -129,6 +132,9 @@ def build_backend(args):
         temperature=args.temperature,
         top_p=0.95,
         knn_enabled=False,          # auto-disabled saat latent_steps>0 (client.py)
+        # B6. Default None → engine memakai env/0,999. Lengan yang ingin
+        # mereplikasi baseline pra-B6 memberi 1.0 (mematikan early-stop).
+        latent_early_stop_cos=getattr(args, "early_stop_cos", None),
     )
 
 
@@ -277,6 +283,10 @@ def main() -> None:
     ap.add_argument("--latent-mode", default="raw",
                     help="raw | gumbel | sample | soft  (G3; via LATENT_STEP_MODE)")
     ap.add_argument("--latent-temp", type=float, default=0.7)
+    ap.add_argument("--early-stop-cos", dest="early_stop_cos", type=float,
+                    default=None,
+                    help="B6: berhenti bila cos(h_k,h_k-1) > nilai ini. "
+                         "1.0 = matikan (baseline pra-B6). None = default engine (0,999)")
     ap.add_argument("--no-realign", action="store_true", help="use_realign=False (G6)")
     ap.add_argument("--seeds", default="0,1,2")
     ap.add_argument("--directions", default="d0,d1")

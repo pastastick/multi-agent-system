@@ -247,6 +247,13 @@ latent:
   step_mode: "gumbel"
   step_temp: 0.7
 
+  # Early-stop rollout laten (B6). Rollout berhenti saat
+  # cos(h_k, h_{k-1}) > ambang ini, jadi `steps` di atas adalah BATAS ATAS,
+  # bukan target. Ambang 0.999 = definisi "titik tetap" yang dipakai
+  # lab/latent_dynamics.py, supaya angka A4 dan perilaku produksi memakai
+  # kriteria yang sama. Setel >= 1.0 untuk mematikan (replikasi baseline pra-B6).
+  early_stop_cos: 0.999
+
   # Per-step override (null = use global `steps` above).
   # Semua agent disamakan ke 10 mengikuti hasil /try latent_steps_sweep.
   steps_propose: null
@@ -256,6 +263,10 @@ latent:
 
   # Realignment: project hidden state via learned matrix before
   # injecting as virtual token. False = identity (no projection).
+  # B7 (2026-08-07): flag ini INERT selama `step_mode` != "raw" — matriks ridge
+  # hanya diterapkan di mode "raw". Pada Qwen3-8B M memutar hidden state sampai
+  # cos(h, hM) = 0.011 (praktis ortogonal), karena itu mode produksi memakai
+  # proyeksi ke convex hull embedding nyata. Lihat lab/HASIL_TAHAP4.md.
   use_realign: true
 
   # Qwen3 chain-of-thought in <think>...</think> tags.

@@ -520,6 +520,12 @@ class LLMResult:
     mode        : OutputMode              = "text_only"
     latent_s    : float                   = 0.0    # durasi latent_pass ("berpikir")
     gen_s       : float                   = 0.0    # durasi generate teks
+    # B6: langkah laten yang BENAR-BENAR dijalankan (≤ latent_steps bila
+    # early-stop menyala) + sebabnya ("budget" | "early_stop" | "off").
+    # Dicatat supaya klaim "early-stop menghemat langkah" bisa diverifikasi
+    # dari log run, bukan disimpulkan dari durasi.
+    n_latent_steps: int                   = 0
+    latent_stop   : str                   = "off"
 
     @property
     def has_text(self) -> bool:
@@ -658,6 +664,7 @@ class _CoreEngine:
         knn_strategy   : str   = "top",
         latent_step_mode: Optional[str]   = None,
         latent_step_temp: Optional[float] = None,
+        latent_early_stop_cos: Optional[float] = None,
     ) -> None:
         self.model_name      = model_name
         self.device          = device
@@ -720,10 +727,23 @@ class _CoreEngine:
         # configs/experiment.yaml (satu file = satu eksperimen reproducible).
         # Env var dipertahankan sebagai default supaya lab/gpu_suite.py — yang
         # men-set LATENT_STEP_MODE sebelum membangun backend — tetap bekerja.
+        # B7 (2026-08-07): default kode diubah "raw" → "gumbel", PERMANEN.
+        # Alasannya bukan preferensi melainkan pengukuran: pada Qwen3-8B
+        # (tie_word_embeddings=False) matriks ridge M memutar hidden state
+        # sampai cos(h, hM) = 0,011 — praktis ORTOGONAL terhadap masukannya
+        # (lab/out/realign_probe_Qwen_Qwen3-8B.json). Vektor yang dihasilkan
+        # `raw` juga di luar manifold embedding (cos ke embedding terdekat
+        # 0,275 vs 0,940 pada gumbel — RENCANA_PERBAIKAN §A4). Jadi `raw`
+        # adalah ekstrapolasi linear ke daerah yang tak pernah difit, sedangkan
+        # softmax(W_out h / T) @ W_in adalah proyeksi ke convex hull embedding
+        # NYATA. Sebelum ini default kode dan default produksi berbeda
+        # (settings.py sudah "gumbel" sejak B2, kode masih "raw") — jalur mana
+        # pun yang membangun backend tanpa lewat Settings diam-diam memakai
+        # persamaan yang sudah ditinggalkan.
         self.latent_step_mode = (
             latent_step_mode
             if latent_step_mode is not None
-            else os.environ.get("LATENT_STEP_MODE", "raw")
+            else os.environ.get("LATENT_STEP_MODE", "gumbel")
         ).strip().lower()
         self.latent_step_temp = float(
             latent_step_temp
@@ -735,10 +755,53 @@ class _CoreEngine:
                 f"LATENT_STEP_MODE={self.latent_step_mode!r} tidak dikenal; "
                 f"pilih salah satu dari {sorted(_LATENT_STEP_MODES)}"
             )
-        if latent_steps > 0 and self.latent_step_mode != "raw":
+        # Cetak PERSAMAAN yang benar-benar berlaku, bukan cuma nama modenya.
+        # `use_realign` hanya berpengaruh pada mode "raw": di mode lain matriks
+        # M tidak pernah dipakai (lihat _latent_step_vec — realigner hanya
+        # dimintai `target_norm`), sehingga ablasi use_realign G6 TIDAK berlaku
+        # untuk konfigurasi produksi sekarang. Menuliskannya di log mencegah
+        # kekeliruan itu terbawa ke analisis.
+        if latent_steps > 0:
+            _EQ = {
+                "raw":    "z = (h @ M_ridge) dinormalkan   [M ridge DIPAKAI: "
+                          f"use_realign={use_realign}]",
+                "soft":   "z = softmax(W_out h / T) @ W_in   [M ridge TIDAK dipakai]",
+                "gumbel": "z = softmax((W_out h + g) / T) @ W_in   [M ridge TIDAK dipakai]",
+                "sample": "z = W_in[i], i ~ softmax(W_out h / T)   [M ridge TIDAK dipakai]",
+            }
             print(f"[CoreEngine] latent step mode={self.latent_step_mode} "
-                  f"T={self.latent_step_temp}")
+                  f"T={self.latent_step_temp} → {_EQ[self.latent_step_mode]}")
 
+        # ── B6: early-stop adaptif pada rollout laten ──────────────────────
+        # [G1: jalur laten `raw` mencapai titik tetap di langkah 12 (4B) / 34
+        # (8B) — setiap langkah setelah itu menyalin vektor yang sama dan
+        # mendesak konteks; G7: pengaruh kanal laten TURUN 4× saat ls 10→60]
+        # Berhenti bila cos(h_k, h_{k−1}) > ambang: langkah berikutnya akan
+        # menghasilkan vektor yang praktis sama, jadi ia hanya menambah token
+        # ke KV tanpa menambah informasi. Ini mengubah makna `latent_steps`
+        # dari TARGET menjadi BATAS ATAS.
+        # Ambang mengikuti definisi "titik tetap" di lab/latent_dynamics.py
+        # (0,999) supaya angka di RENCANA_PERBAIKAN §A4 dan perilaku produksi
+        # memakai kriteria yang sama persis.
+        # Nonaktifkan dengan nilai ≥ 1.0 (mis. 1.0) — bukan dengan 0, karena
+        # 0 justru berarti "berhenti begitu arahnya tak berlawanan".
+        _es_raw = (latent_early_stop_cos
+                   if latent_early_stop_cos is not None
+                   else os.environ.get("LATENT_EARLY_STOP_COS", "0.999"))
+        try:
+            _es = float(_es_raw)
+        except (TypeError, ValueError):
+            _es = 0.999
+        self.latent_early_stop_cos: Optional[float] = None if _es >= 1.0 else _es
+
+        # Diagnostik langkah laten terakhir (dibaca LocalLLMBackend.run →
+        # LLMResult.n_latent_steps). Bukan state semantik: hanya pembukuan.
+        self.last_latent_steps_run: int = 0
+        self.last_latent_stop: str = "off"
+
+        if latent_steps > 0:
+            print(f"[CoreEngine] latent early-stop cos>"
+                  f"{self.latent_early_stop_cos} (None = nonaktif)")
         print(f"[CoreEngine] Ready. latent_steps={latent_steps}")
 
     # ── Satu langkah laten: hidden state → vektor token virtual ─────────────
@@ -924,6 +987,12 @@ class _CoreEngine:
         Virtual token ini tidak punya representasi teks.
         Model "berpikir diam" -- memperbarui KV-cache tanpa menulis token.
 
+        B6 (early-stop): rollout berhenti lebih awal saat
+        ``cos(h_k, h_{k-1}) > latent_early_stop_cos``, sehingga `latent_steps`
+        adalah BATAS ATAS, bukan target. Jumlah langkah yang benar-benar
+        dijalankan ada di ``self.last_latent_steps_run`` dan sebab berhentinya
+        di ``self.last_latent_stop``.
+
         Args:
             add_generation_prompt: Teruskan ke format_messages().
                 Untuk kv_and_text mode, set False agar assistant prefix
@@ -958,12 +1027,16 @@ class _CoreEngine:
         past, last_hidden = self._forward(ids, ext_mask, past_kv, need_hidden=True)
 
         _n_steps = latent_steps if latent_steps is not None else self.latent_steps
+        self.last_latent_steps_run = 0
+        self.last_latent_stop = "off"
         if _n_steps == 0 or self.realigner is None:
             return past, last_hidden, None
 
         vecs: List[torch.Tensor] = []
+        _early = self.latent_early_stop_cos      # B6; None = nonaktif
+        self.last_latent_stop = "budget"
 
-        for _ in range(_n_steps):
+        for _k in range(_n_steps):
             latent_vec   = self._latent_step_vec(last_hidden)  # [B, d]
             latent_embed = latent_vec.unsqueeze(1)             # [B, 1, d]
 
@@ -985,7 +1058,22 @@ class _CoreEngine:
                 return_dict=True,
             )
             past = out.past_key_values
+            prev_hidden = last_hidden
             last_hidden = out.hidden_states[-1][:, -1, :]
+            self.last_latent_steps_run = _k + 1
+
+            # B6: titik tetap tercapai → langkah berikutnya hanya menyalin.
+            # Perbandingan pada HIDDEN STATE (bukan pada vektor laten z), sama
+            # dengan metrik `cos_prev` di lab/latent_dynamics.py. float32 dipakai
+            # karena cosine bf16 hanya punya ~3 digit signifikan — tak cukup
+            # untuk membedakan 0,999 dari 1,000.
+            if _early is not None:
+                cos = torch.nn.functional.cosine_similarity(
+                    last_hidden.float(), prev_hidden.float(), dim=-1
+                ).min()
+                if float(cos) > _early:
+                    self.last_latent_stop = "early_stop"
+                    break
 
         latent_tensor = None
         if record_vecs and vecs:
@@ -1246,6 +1334,9 @@ class LocalLLMBackend:
         # Mode langkah laten (B2/G3). None = pakai env LATENT_STEP_MODE.
         latent_step_mode: Optional[str]   = None,
         latent_step_temp: Optional[float] = None,
+        # Early-stop rollout laten (B6). None = pakai env LATENT_EARLY_STOP_COS
+        # (default 0.999); ≥ 1.0 mematikan early-stop.
+        latent_early_stop_cos: Optional[float] = None,
     ) -> None:
 
         self.max_new_tokens = max_new_tokens
@@ -1273,6 +1364,7 @@ class LocalLLMBackend:
             knn_enabled=knn_enabled, knn_percentage=knn_percentage,
             knn_min_keep=knn_min_keep, knn_strategy=knn_strategy,
             latent_step_mode=latent_step_mode, latent_step_temp=latent_step_temp,
+            latent_early_stop_cos=latent_early_stop_cos,
         )
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
         self._kv_store = KVCacheStore(kv_dir)        if store_kv    else None
@@ -1550,6 +1642,8 @@ class LocalLLMBackend:
                 result.kv_cache    = kv
                 result.hidden_last = last_hidden
                 result.latent_vecs = latent_vecs
+                result.n_latent_steps = self._engine.last_latent_steps_run
+                result.latent_stop    = self._engine.last_latent_stop
 
                 prompt = self._engine.format_messages(messages)
                 ids, _ = self._engine.tokenize(prompt)
@@ -1581,6 +1675,8 @@ class LocalLLMBackend:
                     add_generation_prompt=False,
                 )
                 result.latent_s = round(time.time() - _t_latent, 3)
+                result.n_latent_steps = self._engine.last_latent_steps_run
+                result.latent_stop    = self._engine.last_latent_stop
 
                 # Step 2: Generate teks dari KV TANPA re-encode pesan.
                 #   Hanya kirim assistant prefix tokens (e.g. <|im_start|>assistant\n)

@@ -98,6 +98,12 @@ class AgentResult:
     output_ids: Any = None
     latent_s: float = 0.0   # durasi "berpikir" (latent_pass)
     gen_s: float = 0.0      # durasi generate teks
+    # B6: `latent_steps` di atas adalah anggaran yang DIMINTA; dua field ini
+    # mencatat berapa langkah yang benar-benar berjalan dan kenapa ia berhenti
+    # ("budget" = anggaran habis, "early_stop" = titik tetap, "off" = tak ada
+    # rollout laten). Tanpa ini penghematan B6 hanya terlihat sebagai durasi.
+    n_latent_steps: int = 0
+    latent_stop: str = "off"
 
     @property
     def ok(self) -> bool:
@@ -110,6 +116,8 @@ class AgentResult:
             "role": self.role, "mode": self.mode, "ok": self.ok,
             "duration_s": round(self.duration_s, 3),
             "latent_steps": self.latent_steps,
+            "n_latent_steps": self.n_latent_steps,
+            "latent_stop": self.latent_stop,
             "text_len": len(self.text) if self.text else 0,
             "n_out_tok": self.n_output_tokens,
             "kv": kv_describe(self.kv_cache),
@@ -221,6 +229,8 @@ class LatentAgent:
             output_ids=res.output_ids,
             latent_s=getattr(res, "latent_s", 0.0),
             gen_s=getattr(res, "gen_s", 0.0),
+            n_latent_steps=getattr(res, "n_latent_steps", 0),
+            latent_stop=getattr(res, "latent_stop", "off"),
         )
         if rl is not None:
             rl.event("agent_done", **out.describe())

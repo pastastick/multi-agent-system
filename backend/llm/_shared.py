@@ -668,9 +668,27 @@ def robust_json_parse(text: str, max_retries: int = 3) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 # [terjawab — skripsi Bab 4 §Realignment Laten]: M = (Wout^T Wout + lambda I)^-1
 #   Wout^T Win (ridge), lalu normalisasi ke magnitudo rata-rata embedding masukan.
+#
+# ── STATUS SEJAK B7 (2026-08-07) ─────────────────────────────────────────────
+# Matriks ridge M BUKAN LAGI jalur produksi. `_CoreEngine.latent_step_mode`
+# default "gumbel", dan pada semua mode selain "raw" M tidak pernah diterapkan —
+# kelas ini hanya dimintai `target_norm`. Konsekuensi yang harus ikut dilaporkan
+# di Bab 4, bukan disembunyikan:
+#   (a) ablasi `use_realign` (G6) hanya bermakna pada mode "raw";
+#   (b) pada Qwen3-8B, M memutar hidden state sampai cos(h, hM) = 0,011 —
+#       praktis ortogonal (lab/out/realign_probe_Qwen_Qwen3-8B.json), dan
+#       hasilnya berada di luar manifold embedding (cos ke embedding terdekat
+#       0,275 vs 0,940 pada gumbel).
+# Kelas ini DIPERTAHANKAN karena (i) `target_norm` dipakai semua mode, dan
+# (ii) mode "raw" masih harus bisa dijalankan untuk mereplikasi baseline
+# G1/G3/G6 yang sudah dilaporkan.
 class LatentRealigner:
     """
     Membangun dan menerapkan matriks realignment untuk latent reasoning.
+
+    CATATAN: sejak B7 hanya dipakai penuh oleh mode langkah laten "raw"
+    (baseline lama). Mode produksi memakai proyeksi convex-hull embedding
+    dan hanya meminjam `target_norm` dari sini.
 
     Masalah:
         last_hidden_state h ada di "output space" (setelah semua transformer layer).

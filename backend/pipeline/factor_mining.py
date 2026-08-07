@@ -72,6 +72,7 @@ _LATENT_YAML_TO_SETTING = {
     "steps_feedback":        "latent_steps_feedback",
     "step_mode":             "latent_step_mode",
     "step_temp":             "latent_step_temp",
+    "early_stop_cos":        "latent_early_stop_cos",
     "chain":                 "frontend_chain",
     "guided_decoding":       "guided_decoding",
     "use_realign":           "use_realign",

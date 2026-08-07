@@ -40,6 +40,7 @@ BASE = dict(
     model="Qwen/Qwen3-8B", comm_mode="kv", latent_steps=60, latent_mode="raw",
     latent_temp=0.7, no_realign=False, temperature=0.8, max_new_tokens=4096,
     max_repair=3, prompts="", tag="", holdout=False, chain="", free_form=None,
+    early_stop_cos=None,     # B6; None = default engine (0,999), 1.0 = mati
 )
 
 # Rantai LAMA (sebelum B16), dipatok eksplisit di G2/G3/G4/G6/prompt di bawah.
