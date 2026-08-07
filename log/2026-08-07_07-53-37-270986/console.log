@@ -1,0 +1,56 @@
+2026-08-07 07:54:03.264 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_ZSCORE(TS_STD($volume, 5), 20))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 39
+                        # Base Features (ER): 1
+                        
+2026-08-07 07:54:03.755 | INFO     | factors.regulator.execution_gate:df:93 - [ExecutionGate] sampel dimuat: 72899 baris, 300 instrumen
+2026-08-07 07:54:04.645 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 1
+                        
+2026-08-07 07:54:05.065 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_PCTCHANGE($close, 5) * TS_ZSCORE($volume, 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 47
+                        # Base Features (ER): 2
+                        
+2026-08-07 07:54:05.540 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_SUM($volume, 5))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 24
+                        # Base Features (ER): 1
+                        
+2026-08-07 07:54:05.759 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_CORR($volume, $return, 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 2
+                        Symbol Length (SL): 29
+                        # Base Features (ER): 2
+                        
+2026-08-07 07:54:05.848 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_SKEW($volume, 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 20
+                        # Base Features (ER): 1
+                        
+2026-08-07 07:54:25.871 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4'] with expression: ['RANK(TS_ZSCORE(TS_STD($volume, 5), 20))', 'TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1)', 'TS_PCTCHANGE($close, 5) * TS_ZSCORE($volume, 5)', 'RANK(TS_SUM($volume, 5))', 'TS_SKEW($volume, 20)']

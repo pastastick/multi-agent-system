@@ -184,7 +184,41 @@ def run_once(backend, args, direction: str, seed: int, prompts_path: Path):
 
 
 # ── skoring CPU ─────────────────────────────────────────────────────────────
-def score_expressions(runs: list[dict], window=None, series_path: Path | None = None) -> None:
+class _time_budget:
+    """Batas waktu per-ekspresi. Tanpa ini satu operator lambat menyandera
+    seluruh sweep: `TS_QUANTILE` rolling dan `REGBETA`/`REGRESI` (joblib
+    per-instrumen) bisa memakan belasan menit untuk SATU ekspresi, dan sweep
+    yang macet 11 menit di satu faktor terlihat seperti GPU yang menggantung.
+    Ekspresi yang lewat batas ditandai `eval_error='timeout'` — dilaporkan apa
+    adanya, bukan disamarkan jadi faktor tanpa IC."""
+
+    def __init__(self, seconds: int):
+        self.seconds = seconds
+
+    def __enter__(self):
+        import signal
+
+        def _raise(signum, frame):  # noqa: ARG001
+            raise TimeoutError(f"melebihi {self.seconds}s")
+
+        try:
+            self._old = signal.signal(signal.SIGALRM, _raise)
+            signal.alarm(self.seconds)
+        except ValueError:
+            self._old = None
+        return self
+
+    def __exit__(self, *exc):
+        import signal
+
+        if self._old is not None:
+            signal.alarm(0)
+            signal.signal(signal.SIGALRM, self._old)
+        return False
+
+
+def score_expressions(runs: list[dict], window=None, series_path: Path | None = None,
+                      budget_s: int = 90) -> None:
     """Isi setiap faktor dengan cacat semantik + IC/ICIR OOS (in-place).
 
     Deret IC harian juga disimpan (parquet) supaya analisis bisa mengelompokkan
@@ -212,7 +246,13 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
                 continue
             if e not in cache:
                 ok, errs = validate_semantics(e)
-                res, ser = lab.ic_full(e)
+                try:
+                    with _time_budget(budget_s):
+                        res, ser = lab.ic_full(e)
+                except TimeoutError:
+                    from lab.core import ICResult
+                    res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
+                                        error=f"timeout>{budget_s}s"), None
                 cache[e] = {
                     "sem_ok": bool(ok), "sem_errors": errs,
                     "flags": static_flags(e),

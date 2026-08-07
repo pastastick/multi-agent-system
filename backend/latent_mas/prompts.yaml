@@ -353,7 +353,11 @@ agents:
        11. NEGLECTED OPERATOR — deliberately build around a function this team has
            never used: DECAYLINEAR, WMA, EMA, SMA, SUMAC, PROD, COUNT, SUMIF, FILTER,
            DELTA, DELAY, SIGN, LOG, SQRT, POW, INV, FLOOR, SKEW, KURT, MEDIAN, STD,
-           MACD, RSI, BB_UPPER, BB_MIDDLE, BB_LOWER, SEQUENCE, REGBETA, REGRESI.
+           MACD, RSI, BB_UPPER, BB_MIDDLE, BB_LOWER.
+           (REGBETA, REGRESI and SEQUENCE remain legal but are not on this list: they
+           run a regression per stock and take minutes per expression to evaluate, so
+           recipes built on them get judged on their runtime rather than their signal.
+           Reach for them only when the residual really is the point.)
 
       THE SATURATED IDIOMS. These already dominate the team's output, so AT MOST ONE of
       your recipes may look like any of them:
@@ -642,8 +646,9 @@ agents:
                  distinct from the others; and it still expresses the SAME hypothesis
                  mechanism.{% endif %}
         Step 5 — Short name and one sentence stating the INTENT of the expression:
-                 what it is meant to compute and which part of the hypothesis mechanism
-                 it serves. Write it so a Repair agent could reconstruct your intent and
+                 what it is meant to compute{% if free_form | default(false) %} and which structural axis it
+                 explores{% else %} and which part of the hypothesis mechanism
+                 it serves{% endif %}. Write it so a Repair agent could reconstruct your intent and
                  preserve it even if the raw expression turned out illegal.
       Then, as the LAST thing you write, output this JSON block as the final content,
       with nothing surrounding it and no trailing commas. The "hypothesis" field MUST
@@ -660,8 +665,10 @@ agents:
           }
         ]
       }
-      The factors array holds your 3 to 6 distinct, hypothesis-faithful factors,
-      each structurally different yet expressing the same mechanism.
+      {% if free_form | default(false) %}The factors array holds 3 to 6 factors that are
+      structurally distinct from one another. They do NOT have to agree with the original
+      hypothesis.{% else %}The factors array holds your 3 to 6 distinct, hypothesis-faithful factors,
+      each structurally different yet expressing the same mechanism.{% endif %}
   repair:
     role: repair
     mode: kv_and_text

@@ -248,6 +248,58 @@ deterministik dan bisa diuji dengan unit test:
 Kalau `design` tak berkontribusi, hapus atau gabungkan ke `construct`; itu
 memotong 2 273 token prompt dan satu hop pertumbuhan KV sekaligus.
 
+**B16. GANTI `design` dengan agen inovasi (`innovate`) — bukan sekadar hapus.**
+[permintaan user 2026-08-07 + tiga angka dari korpus 446 ekspresi]
+Ini melengkapi B13: kalau A8 menunjukkan `design` tak berkontribusi, slot itu
+tidak harus kosong — ia bisa diisi agen dengan mandat yang berlawanan.
+
+*Bukti yang mendasarinya.* Keluhan "ekspresi monoton dan standar" ternyata
+terukur, dan angkanya lebih tajam dari dugaan:
+- **28 dari 55 fungsi DSL TIDAK PERNAH dipakai sekali pun** (BB_*, DECAYLINEAR,
+  EMA, WMA, SMA, SUMAC, PROD, COUNT, SUMIF, FILTER, DELTA, SIGN, LOG, SQRT,
+  POW, INV, FLOOR, SKEW, KURT, MEDIAN, STD, MACD, SEQUENCE, …);
+- empat fungsi (TS_ZSCORE, TS_PCTCHANGE, TS_STD, RANK) mendominasi keluaran;
+- **59% ekspresi memakai pembungkus terluar yang sama** (RANK/ZSCORE/TS_ZSCORE),
+  dan 78% hanya berisi 2–3 pemanggilan fungsi;
+- sementara itu ekspresi **ACAK** dari DSL yang sama mencapai mean |IC| 0,0170 —
+  **di atas setiap lengan LLM** (0,0084–0,0189).
+
+Baris terakhir itu yang menentukan arah. Kalau pencarian acak yang tak punya
+teori sama sekali mengungguli rantai agen yang seluruh promptnya tentang
+mekanisme ekonomi, maka yang langka bukan pembenaran teoretis — melainkan
+**cakupan struktural**. `design` menyempitkan (memilih palette yang dibenarkan
+teori); `innovate` melebarkan.
+
+*Kenapa bukan sekadar "suruh model lebih kreatif".* Model kecil yang disuruh
+berkreasi akan kembali ke idiom yang sama; itu justru yang terjadi sekarang
+(prompt construct SUDAH memuat "FOUR WAYS TO VARY"). Karena itu `innovate`
+tidak memakai kata sifat, melainkan **mesin**: menu 11 sumbu struktural yang
+konkret (kedalaman, pasangan tak lazim, kontras skala waktu, normalisasi ganjil,
+statistik urutan, bentuk-bukan-level, residual, asimetri, silang-famili,
+inversi, operator terlantar), **daftar idiom jenuh yang dibatasi maksimal satu**,
+dan swauji cakupan sebelum menutup jawaban.
+
+*Perubahan menyertainya yang tak bisa dihindari.* Prompt `construct` sekarang
+membuka dengan "FIDELITY FIRST … Variety lives inside the hypothesis, never
+outside it." Menaruh agen yang tugasnya MEMBELOKKAN hipotesis di hulu emitter
+yang diperintahkan SETIA pada hipotesis adalah dua perintah yang saling
+meniadakan. Karena itu lengan `innovate` menyalakan `free_form`: klausa
+kesetiaan diganti klausa cakupan. Supaya keduanya tidak berubah bersamaan tanpa
+kendali, A8 menjalankan **dua** lengan innovate — dengan dan tanpa klem
+kesetiaan.
+
+Risiko: ekspresi "bebas" bisa jadi omong kosong yang mahal. Mitigasinya bukan
+teori melainkan gate: B15 + B12 menolak yang tak rankable, mati, atau tak legal,
+dan A6 menghukum lengan yang boros per faktor diterima. Kebebasan ada pada
+BENTUK rumus, bukan pada aturan DSL.
+
+Risiko kedua, khusus pengukuran: operator lambat (`REGBETA`/`REGRESI`, rolling
+quantile) bisa memakan belasan menit per ekspresi, sehingga lengan innovate
+akan tampak buruk karena **timeout**, bukan karena mutunya. Karena itu skoring
+CPU diberi anggaran waktu per-ekspresi, dan REGBETA/REGRESI dikeluarkan dari
+daftar operator yang dianjurkan (tetap legal, hanya tidak dipromosikan) —
+sejalan dengan lantai acak yang juga mengecualikannya.
+
 **B14. Ganti medium menjadi "konteks segar + ringkasan terstruktur".**
 [G4: `text` = 6/6 run berhasil, lolos gate 83%, tanpa akumulasi KV sama sekali]
 Ini pada dasarnya mengakui bahwa `text` menang di sumbu keandalan, lalu
@@ -291,6 +343,44 @@ dilaporkan.
 konteks — yang perlu dijelaskan bukan lagi KV vs teks, melainkan **kenapa
 kolaborasi multi-agen tidak menambah nilai di skala model ini**. Itu kesimpulan
 yang sah dan kuat, dan A9 memberi mekanismenya.
+
+#### Tahap 3a — nasib agen `design`: kriteria keputusan, ditulis SEBELUM dijalankan
+
+A8 dijalankan sebagai lima lengan, 6 run per lengan (2 arah × 3 seed), pada
+konfigurasi Tahap 1 (`kv`, ls=10, gumbel):
+
+| lengan | rantai | klem kesetiaan | yang diisolasi |
+|---|---|---|---|
+| `full` | proposal→design→construct | ON | rantai produksi (rujukan) |
+| `nodesign` | proposal→construct | ON | kontribusi `design` |
+| `direct` | construct sendirian | ON | nilai seluruh hulu |
+| `innovate` | proposal→innovate→construct | **OFF** | usulan pengganti, utuh |
+| `innovate_fid` | proposal→innovate→construct | ON | memisahkan efek agen dari efek klem |
+
+**Aturan keputusan** (unit analisis = run; `design` dinyatakan tak berkontribusi
+bila SALAH SATU terpenuhi):
+1. mean |IC| per-run `full` **tidak** melebihi `nodesign` secara terarah
+   (selisih ≤ 0 atau Welch |t| < 1 dengan n=6 — dengan n sekecil ini kita hanya
+   bisa menolak klaim "jelas lebih baik", bukan membuktikan setara); **atau**
+2. `full` lebih mahal pada A6 (detik & token per faktor diterima) tanpa unggul
+   pada A1 maupun A3 (klaster sinyal).
+
+**Bila `design` dinyatakan tak berkontribusi**, slot itu diisi `innovate` —
+dengan syarat lengan `innovate` melampaui `full` pada minimal satu dari:
+mean |IC| per-run, jumlah klaster sinyal (A3), atau cakupan pustaka (jumlah
+fungsi DSL berbeda yang terpakai), **dan** tidak lebih buruk pada A2
+(fraksi run yang menghasilkan ≥1 ekspresi) lebih dari 1 run dari 6.
+
+Kalau `innovate` juga tidak melampaui apa pun, keputusannya adalah **B13**
+(pangkas jadi `proposal→construct`), bukan mempertahankan `design` — karena
+gerbang 1/2 sudah menyatakan slot itu tidak membayar biayanya.
+
+*Catatan kejujuran yang harus ikut dilaporkan*: n=6 per lengan terlalu kecil
+untuk uji beda yang meyakinkan pada |IC|. Sumbu yang benar-benar bisa diputuskan
+pada n ini adalah yang variansnya rendah dan efeknya besar — cakupan pustaka,
+klaster sinyal, laju lolos gate, dan biaya A6. Keputusan mengganti `design`
+karena itu digantung pada sumbu-sumbu tersebut, dan |IC| dilaporkan sebagai
+sumbu yang **tidak** membedakan, bila memang begitu hasilnya.
 
 ### Tahap 4 — matematika laten (≈2 jam GPU)
 **B6** (early-stop) → **B8**+**B9** (anggaran KV yang benar) → baru **B7**

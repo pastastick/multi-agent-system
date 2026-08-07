@@ -15,11 +15,24 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import re
 import statistics as st
 import sys
 from pathlib import Path
 
 OUT = Path(__file__).resolve().parent / "out"
+
+_FUNC_RE = re.compile(r"\b([A-Z][A-Z0-9_]{1,})\s*\(")
+# Pustaka DSL persis seperti yang didokumentasikan ke model di prompts.yaml.
+_DSL_FUNCS = set("""
+RANK ZSCORE MEAN STD SKEW KURT MAX MIN MEDIAN
+DELTA DELAY TS_MEAN TS_SUM TS_RANK TS_ZSCORE TS_MEDIAN TS_PCTCHANGE TS_MIN TS_MAX
+TS_ARGMAX TS_ARGMIN TS_QUANTILE TS_STD TS_VAR TS_CORR TS_COVARIANCE TS_MAD
+PERCENTILE HIGHDAY LOWDAY SUMAC SMA WMA EMA DECAYLINEAR
+PROD LOG SQRT POW SIGN EXP ABS INV FLOOR
+COUNT SUMIF FILTER SEQUENCE REGBETA REGRESI
+RSI MACD BB_MIDDLE BB_UPPER BB_LOWER
+""".split())
 
 
 def load(patterns: list[str]) -> list[dict]:
@@ -210,6 +223,31 @@ def main() -> None:
               f"{(st.mean(t['kv_len'] for t in con) if con else float('nan')):>7.0f} "
               f"{(st.mean(t['rep_ratio'] for t in con) if con else float('nan')):>5.2f} "
               f"{unparse:>4d}/{len(rs):<3d} {rep:>3d}/{len(rs):<3d} {err:>4d}")
+
+    # ── Cakupan struktural: seberapa luas ruang DSL yang benar-benar disentuh ─
+    # Ini sumbu yang membedakan "agen menyempitkan" dari "agen melebarkan", dan
+    # variansnya jauh lebih rendah daripada |IC| — pada n=6 per lengan, inilah
+    # sumbu yang bisa diputuskan. `pustaka` = fungsi DSL berbeda yang terpakai;
+    # `wrapper` = pembungkus terluar berbeda; `top1` = pangsa pembungkus terlaris
+    # (makin tinggi makin monoton); `lapis` = rata-rata pemanggilan per ekspresi.
+    print(f"\nCakupan struktural (dari {len(_DSL_FUNCS)} fungsi DSL)\n"
+          f"{'lengan':<46s} {'expr':>5s} {'pustaka':>8s} {'wrapper':>8s} "
+          f"{'top1':>6s} {'lapis':>6s}")
+    for name, d in sorted(per_arm.items()):
+        exprs = [f.get("expression", "") for f in d["facs"] if f.get("expression")]
+        used, outer, calls = set(), {}, []
+        for e in exprs:
+            fns = _FUNC_RE.findall(e)
+            used.update(fns)
+            calls.append(len(fns))
+            if fns:
+                outer[fns[0]] = outer.get(fns[0], 0) + 1
+        n_out = sum(outer.values())
+        print(f"{name:<46s} {len(exprs):>5d} "
+              f"{len(used & _DSL_FUNCS):>4d}/{len(_DSL_FUNCS):<3d} "
+              f"{len(outer):>8d} "
+              f"{(max(outer.values())/n_out if n_out else float('nan')):>6.0%} "
+              f"{(st.mean(calls) if calls else float('nan')):>6.1f}")
 
     # ── A6: biaya per FAKTOR DITERIMA ───────────────────────────────────────
     # Satu-satunya metrik yang menghukum arsitektur boros secara adil. Biaya
