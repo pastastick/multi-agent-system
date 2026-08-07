@@ -1,0 +1,3002 @@
+[
+  {
+    "expr": "(WMA($low, 20) / TS_MIN($low, 5))",
+    "ic": -0.0028928672638874916,
+    "icir": -0.022572356647945855,
+    "tstat": -0.351868217047266,
+    "n_days": 243,
+    "coverage": 4330.740740740741,
+    "n_unique": 4328.559670781893,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE($volume, $volume, 5)",
+    "ic": -0.04177096557175115,
+    "icir": -0.4354526264178993,
+    "tstat": -6.788034659206,
+    "n_days": 243,
+    "coverage": 4368.592592592592,
+    "n_unique": 4367.592592592592,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE((($close) > ($low)) ? ($high) : (0), 60)",
+    "ic": -0.026960741925117278,
+    "icir": -0.1728293397963013,
+    "tstat": -2.6941427780920164,
+    "n_days": 243,
+    "coverage": 4369.506172839506,
+    "n_unique": 4367.530864197531,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(DECAYLINEAR($open, 20))",
+    "ic": -0.0089356947584684,
+    "icir": -0.08047978200770219,
+    "tstat": -1.25455564277467,
+    "n_days": 243,
+    "coverage": 4330.740740740741,
+    "n_unique": 4329.732510288066,
+    "error": null
+  },
+  {
+    "expr": "(TS_COVARIANCE(TS_MAD($open, 5), (($high) > ($open)) ? ($volume) : (0), 20) * DECAYLINEAR(TS_RANK($volume, 5), 60))",
+    "ic": -0.015914337672605357,
+    "icir": -0.2867884002309075,
+    "tstat": -4.470588721991968,
+    "n_days": 243,
+    "coverage": 4249.395061728395,
+    "n_unique": 4248.366255144033,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(DELTA($high, 10), TS_MAX(($close - $low), 3), 3)",
+    "ic": -0.01344192814791428,
+    "icir": -0.2935127301869641,
+    "tstat": -4.575410652168695,
+    "n_days": 243,
+    "coverage": 4338.61316872428,
+    "n_unique": 3502.0205761316874,
+    "error": null
+  },
+  {
+    "expr": "(((($volume / $high)) > ($volume)) ? (($close / $return)) : (0) - (((($open) > (0)) ? ($return) : (0)) > (0)) ? (TS_ARGMAX(($low - $open), 5)) : (0))",
+    "ic": -0.00724235814010214,
+    "icir": -0.0979214127219639,
+    "tstat": -1.5264437578502663,
+    "n_days": 243,
+    "coverage": 4331.617283950617,
+    "n_unique": 1105.1399176954733,
+    "error": null
+  },
+  {
+    "expr": "RANK(TS_MEDIAN($high, 3))",
+    "ic": -0.011528632587512931,
+    "icir": -0.10238276918575787,
+    "tstat": -1.595989422443969,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 4370.102880658436,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(SUMAC($volume, 3), TS_VAR($open, 3), 60)",
+    "ic": -0.008372357539480062,
+    "icir": -0.25170080927290334,
+    "tstat": -3.9236273097018497,
+    "n_days": 243,
+    "coverage": 4367.728395061728,
+    "n_unique": 4366.6954732510285,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX($close, 5)",
+    "ic": -0.011607658779580204,
+    "icir": -0.10315872000023966,
+    "tstat": -1.6080852985576812,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 4359.600823045267,
+    "error": null
+  },
+  {
+    "expr": "(RANK(($return * $close)) * WMA(RANK($close), 5))",
+    "ic": -0.010512284747310066,
+    "icir": -0.11414814808016246,
+    "tstat": -1.7793935285826348,
+    "n_days": 243,
+    "coverage": 4361.893004115226,
+    "n_unique": 4359.452674897119,
+    "error": null
+  },
+  {
+    "expr": "EMA(($high - $open), 5)",
+    "ic": -0.039904273551569516,
+    "icir": -0.31132826494095717,
+    "tstat": -4.85312735439002,
+    "n_days": 243,
+    "coverage": 4372.485596707819,
+    "n_unique": 4371.3374485596705,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX(($open - $close), 5)",
+    "ic": -0.0012398627468541126,
+    "icir": -0.01725958434413496,
+    "tstat": -0.269050293014059,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE($volume)",
+    "ic": -0.04492608807432689,
+    "icir": -0.4310105385347457,
+    "tstat": -6.718789362058227,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4106.427983539094,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(($return + ($high - $low)), ($close + $low), 10)",
+    "ic": -0.028217518624082852,
+    "icir": -0.35273124182723053,
+    "tstat": -5.498535890354648,
+    "n_days": 243,
+    "coverage": 4369.316872427984,
+    "n_unique": 4368.316872427984,
+    "error": null
+  },
+  {
+    "expr": "((TS_CORR($close, $return, 3)) > (0)) ? (SQRT($return)) : (0)",
+    "ic": -0.03389297009275841,
+    "icir": -0.37864299578275085,
+    "tstat": -5.902460159632313,
+    "n_days": 243,
+    "coverage": 2512.349794238683,
+    "n_unique": 1794.0493827160494,
+    "error": null
+  },
+  {
+    "expr": "HIGHDAY(($return * $return), 3)",
+    "ic": -0.00019025457147535995,
+    "icir": -0.003586552594811576,
+    "tstat": -0.05590882186408479,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE($close)",
+    "ic": -0.011378897151676576,
+    "icir": -0.10114511492649286,
+    "tstat": -1.5766963019107099,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4362.641975308642,
+    "error": null
+  },
+  {
+    "expr": "(((($open) > ($low)) ? ($open) : (0)) > ($close)) ? (SUMAC($return, 5)) : (0)",
+    "ic": -0.02157189531181805,
+    "icir": -0.23049082744627894,
+    "tstat": -3.5929964143399156,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2076.5267489711932,
+    "error": null
+  },
+  {
+    "expr": "DELAY($high, 3)",
+    "ic": -0.011178326135836962,
+    "icir": -0.09949834192144907,
+    "tstat": -1.5510256512912914,
+    "n_days": 243,
+    "coverage": 4360.85596707819,
+    "n_unique": 4359.399176954733,
+    "error": null
+  },
+  {
+    "expr": "(LOWDAY(TS_COVARIANCE($high, ($open - $close), 3), 3) * TS_PCTCHANGE(($high * $return), 10))",
+    "ic": -0.0011162603642202672,
+    "icir": -0.028316193271180998,
+    "tstat": -0.44140576880362914,
+    "n_days": 243,
+    "coverage": 4244.0,
+    "n_unique": 4087.633744855967,
+    "error": null
+  },
+  {
+    "expr": "($open + ($close - $open))",
+    "ic": -0.011378897595786364,
+    "icir": -0.10114512113378334,
+    "tstat": -1.5766963986727922,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4362.880658436214,
+    "error": null
+  },
+  {
+    "expr": "(((($open) > ($volume)) ? ($return) : (0)) > ($close)) ? (DECAYLINEAR($close, 60)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_MEDIAN(TS_MAD($return, 3), 10)",
+    "ic": -0.0348587300570378,
+    "icir": -0.30282485884661625,
+    "tstat": -4.720572371854916,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4345.905349794239,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX(HIGHDAY($close, 60), 5)",
+    "ic": -0.0063244517340978485,
+    "icir": -0.08708055485439516,
+    "tstat": -1.3574515082319094,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "TS_SUM((($volume) > ($low)) ? ($open) : (0), 3)",
+    "ic": -0.010200735851300465,
+    "icir": -0.09103712920201844,
+    "tstat": -1.4191283983779743,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4371.111111111111,
+    "error": null
+  },
+  {
+    "expr": "((ZSCORE($open)) > ($low)) ? (TS_MEDIAN($return, 60)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "(TS_ZSCORE($high, 3) * TS_RANK($volume, 10))",
+    "ic": -0.01721618622207475,
+    "icir": -0.18307184076341557,
+    "tstat": -2.8538075667365534,
+    "n_days": 243,
+    "coverage": 4366.292181069959,
+    "n_unique": 4364.061728395061,
+    "error": null
+  },
+  {
+    "expr": "((($low - $low)) > ($high)) ? (TS_ZSCORE($return, 3)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "RANK(DELTA($return, 3))",
+    "ic": 0.0006471192529753001,
+    "icir": 0.0065547714797466764,
+    "tstat": 0.10217877511432208,
+    "n_days": 243,
+    "coverage": 4365.547325102881,
+    "n_unique": 4345.798353909465,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($close, $high, 3)",
+    "ic": -0.0059333779826123215,
+    "icir": -0.10315513590992613,
+    "tstat": -1.6080294281189838,
+    "n_days": 243,
+    "coverage": 4359.288065843622,
+    "n_unique": 4356.024691358025,
+    "error": null
+  },
+  {
+    "expr": "((DELTA($close, 60)) > (0.5)) ? (($high / $high)) : (0)",
+    "ic": -0.01956397239491999,
+    "icir": -0.15643799983701712,
+    "tstat": -2.4386270755694888,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2.0,
+    "error": null
+  },
+  {
+    "expr": "TS_MAD($open, 60)",
+    "ic": -0.01897628920834187,
+    "icir": -0.1643338859955779,
+    "tstat": -2.561711759546153,
+    "n_days": 243,
+    "coverage": 4251.7037037037035,
+    "n_unique": 4247.292181069959,
+    "error": null
+  },
+  {
+    "expr": "($volume - $return)",
+    "ic": -0.04492601294077837,
+    "icir": -0.43101066162617363,
+    "tstat": -6.718791280863692,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.131687242799,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE(RANK(($low - $high)), 10)",
+    "ic": 0.02152287311338244,
+    "icir": 0.33464387654721817,
+    "tstat": 5.2165817695943,
+    "n_days": 243,
+    "coverage": 4367.609053497942,
+    "n_unique": 4365.674897119342,
+    "error": null
+  },
+  {
+    "expr": "($high / $return)",
+    "ic": -0.009410580593423217,
+    "icir": -0.14139296231108398,
+    "tstat": -2.2040981509992195,
+    "n_days": 243,
+    "coverage": 4237.493827160494,
+    "n_unique": 4236.411522633744,
+    "error": null
+  },
+  {
+    "expr": "((RANK($return)) > ($volume)) ? ((($high) > (1)) ? ($close) : (0)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(($open * $low), ZSCORE($close), 10)",
+    "ic": -0.026312211879950538,
+    "icir": -0.29607259967161786,
+    "tstat": -4.615315068242184,
+    "n_days": 243,
+    "coverage": 4369.316872427984,
+    "n_unique": 4366.872427983539,
+    "error": null
+  },
+  {
+    "expr": "(($high * $return) / ($close * $close))",
+    "ic": -0.0075120195370891865,
+    "icir": -0.07142099337320632,
+    "tstat": -1.1133431032449008,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4237.415637860082,
+    "error": null
+  },
+  {
+    "expr": "SQRT(($volume + $close))",
+    "ic": -0.04492663367558908,
+    "icir": -0.4310115132833998,
+    "tstat": -6.718804556885969,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.979423868313,
+    "error": null
+  },
+  {
+    "expr": "TS_MEDIAN(($low - $close), 10)",
+    "ic": 0.03052543370534267,
+    "icir": 0.23289942230974703,
+    "tstat": 3.6305426924453013,
+    "n_days": 243,
+    "coverage": 4372.106995884774,
+    "n_unique": 4358.242798353909,
+    "error": null
+  },
+  {
+    "expr": "SIGN($close)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4370.349794238683,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "(($close) > ($return)) ? ($return) : (0)",
+    "ic": -0.01126605028486354,
+    "icir": -0.10019639226314866,
+    "tstat": -1.561907179213872,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4202.641975308642,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(((TS_ARGMIN($return, 3)) > ($high)) ? (DELTA($high, 20)) : (0), SUMAC(TS_STD($open, 20), 10), 3)",
+    "ic": 0.0008338756121070901,
+    "icir": 0.024178279170105624,
+    "tstat": 0.3769020716598649,
+    "n_days": 243,
+    "coverage": 2046.2798353909466,
+    "n_unique": 2046.267489711934,
+    "error": null
+  },
+  {
+    "expr": "SQRT(SUMAC($return, 60))",
+    "ic": -0.0366470600031884,
+    "icir": -0.2522355865453668,
+    "tstat": -3.9319636623616083,
+    "n_days": 243,
+    "coverage": 2265.703703703704,
+    "n_unique": 2263.213991769547,
+    "error": null
+  },
+  {
+    "expr": "RANK(HIGHDAY($open, 3))",
+    "ic": 0.0067443929916117746,
+    "icir": 0.07597368309253287,
+    "tstat": 1.1843125123896316,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "DELAY(($close * $open), 20)",
+    "ic": -0.010046254191068414,
+    "icir": -0.09213823709032916,
+    "tstat": -1.4362929716424957,
+    "n_days": 243,
+    "coverage": 4317.555555555556,
+    "n_unique": 4316.399176954733,
+    "error": null
+  },
+  {
+    "expr": "(TS_RANK($open, 10) * TS_MEAN($high, 10))",
+    "ic": -0.019052759470833333,
+    "icir": -0.1613336682045483,
+    "tstat": -2.514942992715635,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.242798353909,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($high, $return, 3)",
+    "ic": -0.00800965974953369,
+    "icir": -0.1315444180316515,
+    "tstat": -2.0505745393461,
+    "n_days": 243,
+    "coverage": 4366.465020576132,
+    "n_unique": 4363.518518518518,
+    "error": null
+  },
+  {
+    "expr": "TS_VAR(SQRT(($close - $low)), 5)",
+    "ic": -0.03533459652437622,
+    "icir": -0.32015897821058625,
+    "tstat": -4.990784550840653,
+    "n_days": 243,
+    "coverage": 4368.592592592592,
+    "n_unique": 4365.633744855967,
+    "error": null
+  },
+  {
+    "expr": "(($close) > ($volume)) ? ($high) : (0)",
+    "ic": -0.026219208884183616,
+    "icir": null,
+    "tstat": null,
+    "n_days": 1,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0041152263374487,
+    "error": null
+  },
+  {
+    "expr": "((HIGHDAY($close, 5)) > ($low)) ? (RANK($low)) : (0)",
+    "ic": 0.012293354652230885,
+    "icir": 0.1823388016857883,
+    "tstat": 2.842380618399099,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2710.8271604938273,
+    "error": null
+  },
+  {
+    "expr": "TS_STD(($return * ($open - $low)), 60)",
+    "ic": -0.03187365301442281,
+    "icir": -0.24863044719709432,
+    "tstat": -3.875765101685445,
+    "n_days": 243,
+    "coverage": 4370.094650205761,
+    "n_unique": 4367.3127572016465,
+    "error": null
+  },
+  {
+    "expr": "(TS_COVARIANCE($open, $return, 10) - TS_CORR($open, $return, 10))",
+    "ic": 0.000202619745918764,
+    "icir": 0.0028830078676219035,
+    "tstat": 0.04494164494807751,
+    "n_days": 243,
+    "coverage": 4369.3045267489715,
+    "n_unique": 4368.3045267489715,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(((($low - $high)) > (1)) ? ($high) : (0), 20)",
+    "ic": 0.01356874065732033,
+    "icir": 0.2921966964282938,
+    "tstat": 4.55489571615826,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 17.559670781893004,
+    "error": null
+  },
+  {
+    "expr": "DELAY(RANK($low), 60)",
+    "ic": -0.008559188682406087,
+    "icir": -0.08492600725443854,
+    "tstat": -1.3238654350378554,
+    "n_days": 243,
+    "coverage": 4232.814814814815,
+    "n_unique": 4231.423868312757,
+    "error": null
+  },
+  {
+    "expr": "SUMAC($close, 5)",
+    "ic": -0.010322708118947975,
+    "icir": -0.09214558607939104,
+    "tstat": -1.4364075310444506,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 4368.954732510288,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE(TS_CORR($open, $return, 10), 60)",
+    "ic": -2.4497907230442215e-05,
+    "icir": -0.0005464189395736345,
+    "tstat": -0.008517828290034989,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4236.065843621399,
+    "error": null
+  },
+  {
+    "expr": "EMA(EMA($high, 60), 20)",
+    "ic": -0.008350194736311533,
+    "icir": -0.08001493955304853,
+    "tstat": -1.2473094660338935,
+    "n_days": 243,
+    "coverage": 4372.485596707819,
+    "n_unique": 4371.38683127572,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(TS_STD(($open - $close), 60), ABS(($close - $low)), 10)",
+    "ic": -0.0036460787110766265,
+    "icir": -0.06678119658455677,
+    "tstat": -1.0410158292722775,
+    "n_days": 243,
+    "coverage": 4364.234567901234,
+    "n_unique": 4363.152263374485,
+    "error": null
+  },
+  {
+    "expr": "((TS_CORR(TS_ARGMAX($low, 3), RANK($high), 3)) > (0.5)) ? (TS_MEDIAN(TS_CORR($close, $volume, 20), 10)) : (0)",
+    "ic": 0.0006075420533468058,
+    "icir": 0.020054929567667395,
+    "tstat": 0.3126254125807374,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 796.0,
+    "error": null
+  },
+  {
+    "expr": "RANK(TS_RANK($volume, 20))",
+    "ic": -0.018659254935939444,
+    "icir": -0.21049906953644051,
+    "tstat": -3.2813557504478017,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 54.7201646090535,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE($close, $high, 20)",
+    "ic": -0.028404894569414817,
+    "icir": -0.23435558449596944,
+    "tstat": -3.653242014460681,
+    "n_days": 243,
+    "coverage": 4370.061728395061,
+    "n_unique": 4369.061728395061,
+    "error": null
+  },
+  {
+    "expr": "SIGN(RANK($high))",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4370.349794238683,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "RANK(EMA(TS_MEAN($open, 3), 20))",
+    "ic": -0.009381129431678271,
+    "icir": -0.08522996502433189,
+    "tstat": -1.328603667745151,
+    "n_days": 243,
+    "coverage": 4372.485596707819,
+    "n_unique": 4371.477366255144,
+    "error": null
+  },
+  {
+    "expr": "TS_RANK($low, 10)",
+    "ic": -0.01850567438239753,
+    "icir": -0.14613395397966147,
+    "tstat": -2.2780028970333523,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 28.19341563786008,
+    "error": null
+  },
+  {
+    "expr": "((HIGHDAY(TS_RANK($return, 10), 20)) > (0.5)) ? (TS_COVARIANCE(TS_MEDIAN($high, 5), (($close) > (0.5)) ? ($high) : (0), 5)) : (0)",
+    "ic": -0.015375034708254612,
+    "icir": -0.23320447124013852,
+    "tstat": -3.6352979346613945,
+    "n_days": 243,
+    "coverage": 4369.267489711934,
+    "n_unique": 4144.6872427983535,
+    "error": null
+  },
+  {
+    "expr": "((TS_CORR($open, $open, 5)) > (1)) ? (TS_CORR($low, $return, 60)) : (0)",
+    "ic": 0.004640548709983367,
+    "icir": 0.09959906168128987,
+    "tstat": 1.552595716963625,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2177.6748971193415,
+    "error": null
+  },
+  {
+    "expr": "(TS_STD($volume, 60) + (($volume) > (0.5)) ? ($high) : (0))",
+    "ic": -0.012026309637329435,
+    "icir": -0.10662986133804779,
+    "tstat": -1.6621950369737077,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.897119341564,
+    "error": null
+  },
+  {
+    "expr": "TS_STD(TS_VAR(($high - $open), 3), 20)",
+    "ic": -0.03215315404279527,
+    "icir": -0.26699584687386335,
+    "tstat": -4.162053349758702,
+    "n_days": 243,
+    "coverage": 4367.679012345679,
+    "n_unique": 4366.366255144033,
+    "error": null
+  },
+  {
+    "expr": "LOWDAY(TS_SUM(ZSCORE($volume), 3), 10)",
+    "ic": 0.001046432668203285,
+    "icir": 0.02409957414402293,
+    "tstat": 0.37567518172398856,
+    "n_days": 243,
+    "coverage": 4372.419753086419,
+    "n_unique": 9.349794238683128,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(WMA(($close - $high), 5))",
+    "ic": 0.031036753374152643,
+    "icir": 0.24689639037165728,
+    "tstat": 3.848733830961628,
+    "n_days": 243,
+    "coverage": 4361.893004115226,
+    "n_unique": 4355.950617283951,
+    "error": null
+  },
+  {
+    "expr": "TS_MIN(TS_ARGMIN($close, 10), 20)",
+    "ic": -0.010708353688159939,
+    "icir": -0.1226245476571744,
+    "tstat": -1.911527521176395,
+    "n_days": 243,
+    "coverage": 4372.440329218107,
+    "n_unique": 8.534979423868313,
+    "error": null
+  },
+  {
+    "expr": "(DECAYLINEAR(($open - $low), 20) - DELAY($close, 20))",
+    "ic": 0.00985309936700448,
+    "icir": 0.09030007724903191,
+    "tstat": 1.4076388955044596,
+    "n_days": 243,
+    "coverage": 4282.168724279835,
+    "n_unique": 4281.168724279835,
+    "error": null
+  },
+  {
+    "expr": "TS_SUM(($low - $open), 5)",
+    "ic": 0.024435904595622306,
+    "icir": 0.19449688917657645,
+    "tstat": 3.031906445711313,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 4364.3374485596705,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(TS_COVARIANCE(($low - $high), $high, 10), (($close) > (0.5)) ? ($high) : (0), 10)",
+    "ic": 0.018703774432879804,
+    "icir": 0.3428948698758732,
+    "tstat": 5.3452020265175815,
+    "n_days": 243,
+    "coverage": 4367.679012345679,
+    "n_unique": 4175.230452674897,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(ZSCORE($open))",
+    "ic": -0.010749293984566108,
+    "icir": -0.09567389863347114,
+    "tstat": -1.4914084805222994,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.436213991769,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($close, $low, 3)",
+    "ic": 0.010864757393629155,
+    "icir": 0.17880673257070254,
+    "tstat": 2.7873211099305384,
+    "n_days": 243,
+    "coverage": 4359.139917695473,
+    "n_unique": 4356.115226337449,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE((TS_ARGMAX(($close - $high), 60) * SQRT($high)))",
+    "ic": -0.002443195163424328,
+    "icir": -0.03055044711747124,
+    "tstat": -0.4762343394126571,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4322.255144032922,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE($return)",
+    "ic": -0.011257208905891259,
+    "icir": -0.10011812913440696,
+    "tstat": -1.5606871777758125,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4202.691358024691,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX(TS_MEAN($low, 10), 60)",
+    "ic": -0.009300469876650076,
+    "icir": -0.0887363528995603,
+    "tstat": -1.3832628453036029,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4370.432098765432,
+    "error": null
+  },
+  {
+    "expr": "TS_MEDIAN(((($open) > (0)) ? ($close) : (0) - TS_CORR($high, $close, 10)), 60)",
+    "ic": -0.007438677874362881,
+    "icir": -0.07056535344830359,
+    "tstat": -1.1000049968386574,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4366.897119341564,
+    "error": null
+  },
+  {
+    "expr": "EMA(((($high - $close)) > ($low)) ? (($low - $close)) : (0), 5)",
+    "ic": 0.00421834029355742,
+    "icir": 0.20858142187078393,
+    "tstat": 3.251462581756404,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2.9753086419753085,
+    "error": null
+  },
+  {
+    "expr": "(RANK(LOWDAY($high, 10)) / ((($low) > ($low)) ? ($return) : (0) / ($return - $open)))",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 0.0,
+    "n_unique": 0.0,
+    "error": "empty after dropna/OOS"
+  },
+  {
+    "expr": "TS_CORR(($close - $open), TS_MEAN($return, 10), 3)",
+    "ic": -0.004499003444177754,
+    "icir": -0.08966893846320723,
+    "tstat": -1.3978004155113783,
+    "n_days": 243,
+    "coverage": 4361.489711934157,
+    "n_unique": 4359.411522633744,
+    "error": null
+  },
+  {
+    "expr": "DELAY($high, 20)",
+    "ic": -0.010512257554242399,
+    "icir": -0.0960826224060011,
+    "tstat": -1.4977798535848474,
+    "n_days": 243,
+    "coverage": 4317.555555555556,
+    "n_unique": 4316.057613168724,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(TS_MAD($return, 20), 20)",
+    "ic": -0.007070211084125537,
+    "icir": -0.12104139257704837,
+    "tstat": -1.8868485758610432,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 20.0,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX($return, 20)",
+    "ic": 0.008064786724099344,
+    "icir": 0.14059893615122987,
+    "tstat": 2.1917205081365645,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 20.0,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($close, $volume, 5)",
+    "ic": -0.021021732601405194,
+    "icir": -0.30683248021929455,
+    "tstat": -4.783045006369716,
+    "n_days": 243,
+    "coverage": 4368.3621399176955,
+    "n_unique": 4365.736625514403,
+    "error": null
+  },
+  {
+    "expr": "(TS_SUM($high, 5) - (($high) > ($volume)) ? ($open) : (0))",
+    "ic": -0.010749294716343522,
+    "icir": -0.09567390835435541,
+    "tstat": -1.4914086320558884,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.954732510288,
+    "error": null
+  },
+  {
+    "expr": "((TS_COVARIANCE($volume, $low, 10)) > ($open)) ? (TS_CORR($low, $high, 20)) : (0)",
+    "ic": -0.0037167018968983544,
+    "icir": -0.05429577072111429,
+    "tstat": -0.8463873017257255,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2890.9053497942386,
+    "error": null
+  },
+  {
+    "expr": "RANK($close)",
+    "ic": -0.011378897595786364,
+    "icir": -0.10114512113378334,
+    "tstat": -1.5766963986727922,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4362.880658436214,
+    "error": null
+  },
+  {
+    "expr": "EMA(((($close - $open)) > (0)) ? ($volume) : (0), 60)",
+    "ic": -0.035245001234703005,
+    "icir": -0.3301262625762863,
+    "tstat": -5.146159137254568,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4369.349794238683,
+    "error": null
+  },
+  {
+    "expr": "((DELTA($close, 10)) > (0)) ? (TS_STD($return, 60)) : (0)",
+    "ic": -0.031711582352738105,
+    "icir": -0.2719235396870256,
+    "tstat": -4.238868478607103,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2158.604938271605,
+    "error": null
+  },
+  {
+    "expr": "(((($low + $volume)) > ($high)) ? (TS_COVARIANCE($high, $return, 3)) : (0) + TS_CORR(TS_COVARIANCE($return, $close, 20), TS_CORR(($low - $close), ($low - $open), 3), 20))",
+    "ic": -0.014869415199741389,
+    "icir": -0.23341385676009563,
+    "tstat": -3.638561931891809,
+    "n_days": 243,
+    "coverage": 4369.181069958848,
+    "n_unique": 4367.115226337449,
+    "error": null
+  },
+  {
+    "expr": "((DELAY($high, 60) - SUMAC($open, 60)) + TS_COVARIANCE(($open + $return), TS_ARGMAX($volume, 10), 10))",
+    "ic": 0.010622729367373986,
+    "icir": 0.09840242752554056,
+    "tstat": 1.533942036561154,
+    "n_days": 243,
+    "coverage": 4232.041152263375,
+    "n_unique": 4231.041152263375,
+    "error": null
+  },
+  {
+    "expr": "ABS($open)",
+    "ic": -0.010749294716343522,
+    "icir": -0.09567390835435541,
+    "tstat": -1.4914086320558884,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.954732510288,
+    "error": null
+  },
+  {
+    "expr": "HIGHDAY(TS_PCTCHANGE($volume, 20), 60)",
+    "ic": 0.014049811747350618,
+    "icir": 0.21100969020976856,
+    "tstat": 3.2893155389941944,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 60.0,
+    "error": null
+  },
+  {
+    "expr": "(($high) > ($return)) ? ($open) : (0)",
+    "ic": -0.0104531227902659,
+    "icir": -0.09318642627791256,
+    "tstat": -1.4526326240020448,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4369.716049382716,
+    "error": null
+  },
+  {
+    "expr": "(DELAY(TS_PCTCHANGE($return, 20), 60) - ((($high * $open)) > ($low)) ? (TS_VAR($open, 10)) : (0))",
+    "ic": -0.02744347320973218,
+    "icir": -0.22494981643834358,
+    "tstat": -3.5066206010205336,
+    "n_days": 243,
+    "coverage": 4369.38683127572,
+    "n_unique": 4339.798353909465,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(LOG($low))",
+    "ic": -0.010378286675433546,
+    "icir": -0.09264101266837459,
+    "tstat": -1.4441304672563111,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.617283950617,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX(TS_MEAN($volume, 5), 3)",
+    "ic": 0.017348331971366253,
+    "icir": 0.2711631299067458,
+    "tstat": 4.227014863240951,
+    "n_days": 243,
+    "coverage": 4372.024691358025,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE($open, $open, 60)",
+    "ic": -0.022679316028547235,
+    "icir": -0.19704451872947948,
+    "tstat": -3.071620060131741,
+    "n_days": 243,
+    "coverage": 4370.094650205761,
+    "n_unique": 4369.094650205761,
+    "error": null
+  },
+  {
+    "expr": "TS_MEAN(TS_MEDIAN($return, 10), 20)",
+    "ic": -0.0005685456885372431,
+    "icir": -0.00416677606982536,
+    "tstat": -0.06495361071029719,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4368.172839506173,
+    "error": null
+  },
+  {
+    "expr": "TS_MEDIAN(TS_ARGMIN(RANK($high), 20), 3)",
+    "ic": -0.00929780467518867,
+    "icir": -0.07654387503695269,
+    "tstat": -1.193200925149846,
+    "n_days": 243,
+    "coverage": 4372.436213991769,
+    "n_unique": 20.53497942386831,
+    "error": null
+  },
+  {
+    "expr": "(((($volume) > (($low - $open))) ? ($low) : (0) / TS_ARGMAX($volume, 20)) * ((TS_PCTCHANGE($open, 60)) > (1)) ? (TS_MAD($open, 5)) : (0))",
+    "ic": -0.007151905644372681,
+    "icir": -0.13435363098148967,
+    "tstat": -2.094365835371701,
+    "n_days": 243,
+    "coverage": 4370.860082304527,
+    "n_unique": 45.732510288065846,
+    "error": null
+  },
+  {
+    "expr": "((SQRT($volume) - TS_ZSCORE($low, 3)) - (LOWDAY($close, 10) * ($return + ($close - $high))))",
+    "ic": -0.04457158380829003,
+    "icir": -0.42598520331407896,
+    "tstat": -6.640452138712885,
+    "n_days": 243,
+    "coverage": 4365.917695473251,
+    "n_unique": 4364.917695473251,
+    "error": null
+  },
+  {
+    "expr": "($volume * $close)",
+    "ic": -0.050738478656277085,
+    "icir": -0.34489431650326297,
+    "tstat": -5.376370314828534,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.201646090535,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN((TS_CORR($open, $close, 10) * TS_COVARIANCE($volume, $close, 20)), 5)",
+    "ic": -0.001233745053421704,
+    "icir": -0.028527034419726104,
+    "tstat": -0.44469245703808585,
+    "n_days": 243,
+    "coverage": 4370.037037037037,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "TS_RANK(($high - $open), 20)",
+    "ic": -0.021104000320954854,
+    "icir": -0.23389087555011565,
+    "tstat": -3.6459979189161262,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 72.67078189300412,
+    "error": null
+  },
+  {
+    "expr": "LOG(DECAYLINEAR($return, 20))",
+    "ic": -0.02542214209537571,
+    "icir": -0.16774353894155564,
+    "tstat": -2.6148629887936456,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4369.757201646091,
+    "error": null
+  },
+  {
+    "expr": "TS_STD(ZSCORE($low), 3)",
+    "ic": -0.02519045676569848,
+    "icir": -0.2656628342890175,
+    "tstat": -4.141273740041966,
+    "n_days": 243,
+    "coverage": 4368.3045267489715,
+    "n_unique": 4367.3045267489715,
+    "error": null
+  },
+  {
+    "expr": "RANK(TS_RANK(RANK($volume), 10))",
+    "ic": -0.021013680177214094,
+    "icir": -0.2872652578100956,
+    "tstat": -4.47802219598812,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 23.358024691358025,
+    "error": null
+  },
+  {
+    "expr": "TS_MAD($volume, 5)",
+    "ic": -0.03661546418174666,
+    "icir": -0.39655331812294414,
+    "tstat": -6.18165445409067,
+    "n_days": 243,
+    "coverage": 4361.893004115226,
+    "n_unique": 4358.6954732510285,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX($high, 60)",
+    "ic": -0.01190001560231193,
+    "icir": -0.11190016952209318,
+    "tstat": -1.744351010890522,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4368.740740740741,
+    "error": null
+  },
+  {
+    "expr": "((ZSCORE(($low - $close))) > (0)) ? ((($high) > ($volume)) ? ($volume) : (0)) : (0)",
+    "ic": -0.026219208884183616,
+    "icir": null,
+    "tstat": null,
+    "n_days": 1,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0041152263374487,
+    "error": null
+  },
+  {
+    "expr": "HIGHDAY(($open - $close), 5)",
+    "ic": -0.0012398627468541126,
+    "icir": -0.01725958434413496,
+    "tstat": -0.269050293014059,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "TS_MAD($open, 3)",
+    "ic": -0.021940073738782147,
+    "icir": -0.2255768103114428,
+    "tstat": -3.5163944682187136,
+    "n_days": 243,
+    "coverage": 4366.106995884774,
+    "n_unique": 4304.6378600823045,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($return, $open, 20)",
+    "ic": 0.003602178350544519,
+    "icir": 0.05411420534254216,
+    "tstat": 0.8435569775804839,
+    "n_days": 243,
+    "coverage": 4370.049382716049,
+    "n_unique": 4367.917695473251,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(SQRT($high), RANK($volume), 10)",
+    "ic": -0.0314347337535566,
+    "icir": -0.453634336966924,
+    "tstat": -7.071459477160797,
+    "n_days": 243,
+    "coverage": 4369.316872427984,
+    "n_unique": 4368.316872427984,
+    "error": null
+  },
+  {
+    "expr": "(($close) > (1)) ? (($close - $low)) : (0)",
+    "ic": -0.025295099834711763,
+    "icir": -0.22568167872927378,
+    "tstat": -3.518029205068847,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3087.4897119341563,
+    "error": null
+  },
+  {
+    "expr": "TS_MEAN(TS_COVARIANCE($low, ($close - $low), 3), 60)",
+    "ic": 0.023015482292114826,
+    "icir": 0.20671417425673652,
+    "tstat": 3.222355072115827,
+    "n_days": 243,
+    "coverage": 4370.090534979424,
+    "n_unique": 4368.814814814815,
+    "error": null
+  },
+  {
+    "expr": "DELTA(($open - $close), 20)",
+    "ic": 0.01636688567444624,
+    "icir": 0.18736954799603273,
+    "tstat": 2.9208021922830962,
+    "n_days": 243,
+    "coverage": 4315.485596707819,
+    "n_unique": 4283.440329218107,
+    "error": null
+  },
+  {
+    "expr": "((ABS($low)) > (0)) ? (TS_COVARIANCE($open, $low, 5)) : (0)",
+    "ic": -0.026891668960750837,
+    "icir": -0.25127959103854536,
+    "tstat": -3.9170611672550075,
+    "n_days": 243,
+    "coverage": 4369.390946502058,
+    "n_unique": 4366.971193415638,
+    "error": null
+  },
+  {
+    "expr": "EMA(TS_CORR(TS_ARGMAX($volume, 10), SUMAC(($open - $high), 20), 10), 20)",
+    "ic": 0.0010071296914875793,
+    "icir": 0.03313933406550997,
+    "tstat": 0.5165910929741522,
+    "n_days": 243,
+    "coverage": 4367.510288065843,
+    "n_unique": 4365.555555555556,
+    "error": null
+  },
+  {
+    "expr": "TS_MEDIAN(LOWDAY(TS_MEAN($close, 20), 3), 3)",
+    "ic": -0.007344816756073513,
+    "icir": -0.0543328385640837,
+    "tstat": -0.8469651322118755,
+    "n_days": 243,
+    "coverage": 4372.436213991769,
+    "n_unique": 3.580246913580247,
+    "error": null
+  },
+  {
+    "expr": "RANK(TS_MIN($open, 60))",
+    "ic": -0.005054840477613066,
+    "icir": -0.04770546573525751,
+    "tstat": -0.7436546140698196,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4366.3045267489715,
+    "error": null
+  },
+  {
+    "expr": "($volume + $return)",
+    "ic": -0.044926008161905735,
+    "icir": -0.4310106360521992,
+    "tstat": -6.718790882204884,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.131687242799,
+    "error": null
+  },
+  {
+    "expr": "ABS(($low + $low))",
+    "ic": -0.010378285572682534,
+    "icir": -0.09264100438807266,
+    "tstat": -1.4441303381791784,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.954732510288,
+    "error": null
+  },
+  {
+    "expr": "ABS((($low) > (0.5)) ? ($close) : (0))",
+    "ic": -0.011036523400626276,
+    "icir": -0.09822554773414119,
+    "tstat": -1.531184753491331,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4131.514403292181,
+    "error": null
+  },
+  {
+    "expr": "DELAY((($return) > ($volume)) ? ($return) : (0), 60)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4241.625514403292,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "SQRT($volume)",
+    "ic": -0.04492601501362893,
+    "icir": -0.43101068050927277,
+    "tstat": -6.718791575222076,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.888888888889,
+    "error": null
+  },
+  {
+    "expr": "LOWDAY(TS_ZSCORE($open, 3), 10)",
+    "ic": -0.009202265145948385,
+    "icir": -0.18116299462593302,
+    "tstat": -2.8240516002909914,
+    "n_days": 243,
+    "coverage": 4369.358024691358,
+    "n_unique": 10.0,
+    "error": null
+  },
+  {
+    "expr": "RANK(SIGN(TS_COVARIANCE($high, $volume, 60)))",
+    "ic": 0.0021602378125456833,
+    "icir": 0.04021231174862434,
+    "tstat": 0.6268479033457461,
+    "n_days": 243,
+    "coverage": 4370.094650205761,
+    "n_unique": 2.0041152263374484,
+    "error": null
+  },
+  {
+    "expr": "(($low - $close) - $return)",
+    "ic": 0.027025888100888542,
+    "icir": 0.24872341466942455,
+    "tstat": 3.87721432115519,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4363.168724279835,
+    "error": null
+  },
+  {
+    "expr": "(($close) > ($open)) ? ($close) : (0)",
+    "ic": -0.022303067588949604,
+    "icir": -0.23738458290764936,
+    "tstat": -3.700459426766357,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2153.8600823045267,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE(LOWDAY(($open - $close), 20), 20)",
+    "ic": 0.005252127311448381,
+    "icir": 0.10112180460174128,
+    "tstat": 1.5763329299094138,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 251.49794238683128,
+    "error": null
+  },
+  {
+    "expr": "DECAYLINEAR(TS_ARGMIN($high, 20), 3)",
+    "ic": -0.008997525665203624,
+    "icir": -0.07199427559468298,
+    "tstat": -1.1222796886569628,
+    "n_days": 243,
+    "coverage": 4372.316872427984,
+    "n_unique": 77.28395061728395,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE($low)",
+    "ic": -0.01037828893513483,
+    "icir": -0.09264102766987366,
+    "tstat": -1.4441307011065385,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.473251028807,
+    "error": null
+  },
+  {
+    "expr": "TS_RANK(TS_VAR($high, 3), 5)",
+    "ic": -0.0047523092150637694,
+    "icir": -0.08463215736991328,
+    "tstat": -1.3192847686696916,
+    "n_days": 243,
+    "coverage": 4368.3045267489715,
+    "n_unique": 10.316872427983538,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(DELTA($volume, 20), LOG($volume), 10)",
+    "ic": -0.009878713360896638,
+    "icir": -0.13541590260046776,
+    "tstat": -2.1109250111112776,
+    "n_days": 243,
+    "coverage": 4320.38683127572,
+    "n_unique": 4317.744855967078,
+    "error": null
+  },
+  {
+    "expr": "(EMA($low, 10) * EMA($volume, 10))",
+    "ic": -0.04589314695368481,
+    "icir": -0.3029398144107122,
+    "tstat": -4.722364351753559,
+    "n_days": 243,
+    "coverage": 4372.485596707819,
+    "n_unique": 4371.485596707819,
+    "error": null
+  },
+  {
+    "expr": "HIGHDAY($return, 10)",
+    "ic": 0.012094105539065791,
+    "icir": 0.18092612535533711,
+    "tstat": 2.820359173788176,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 10.0,
+    "error": null
+  },
+  {
+    "expr": "(TS_MIN($close, 10) - LOWDAY($open, 20))",
+    "ic": 0.0018952812387510907,
+    "icir": 0.01774560593587458,
+    "tstat": 0.2766266198282757,
+    "n_days": 243,
+    "coverage": 4372.106995884774,
+    "n_unique": 4366.020576131687,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(TS_VAR($low, 20))",
+    "ic": -0.025455316691395228,
+    "icir": -0.21077856145126428,
+    "tstat": -3.285712598218817,
+    "n_days": 243,
+    "coverage": 4370.061728395061,
+    "n_unique": 4369.061728395061,
+    "error": null
+  },
+  {
+    "expr": "DELTA(($close + $open), 20)",
+    "ic": -0.01670619611676865,
+    "icir": -0.1170415292001417,
+    "tstat": -1.824496876531816,
+    "n_days": 243,
+    "coverage": 4315.485596707819,
+    "n_unique": 4312.6378600823045,
+    "error": null
+  },
+  {
+    "expr": "TS_SUM($low, 20)",
+    "ic": -0.007863977171446556,
+    "icir": -0.07154724834123688,
+    "tstat": -1.1153112234189333,
+    "n_days": 243,
+    "coverage": 4372.432098765432,
+    "n_unique": 4371.395061728395,
+    "error": null
+  },
+  {
+    "expr": "DELTA($close, 60)",
+    "ic": -0.022421062825160577,
+    "icir": -0.14417871792118142,
+    "tstat": -2.247523783286649,
+    "n_days": 243,
+    "coverage": 4230.744855967078,
+    "n_unique": 4211.539094650206,
+    "error": null
+  },
+  {
+    "expr": "(((($volume) > (0.5)) ? ($close) : (0)) > (1)) ? (LOG($close)) : (0)",
+    "ic": -0.010422462788427362,
+    "icir": -0.09352396244530527,
+    "tstat": -1.457894292123891,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3187.0781893004114,
+    "error": null
+  },
+  {
+    "expr": "($volume / $close)",
+    "ic": -0.024134584784057445,
+    "icir": -0.329367877518646,
+    "tstat": -5.1343370841907605,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.201646090535,
+    "error": null
+  },
+  {
+    "expr": "TS_MAD($high, 10)",
+    "ic": -0.027053503494545186,
+    "icir": -0.22858600250430897,
+    "tstat": -3.563303132128768,
+    "n_days": 243,
+    "coverage": 4351.419753086419,
+    "n_unique": 4343.962962962963,
+    "error": null
+  },
+  {
+    "expr": "TS_STD(($high - $open), 3)",
+    "ic": -0.03590971108341872,
+    "icir": -0.309128025682607,
+    "tstat": -4.818829018731589,
+    "n_days": 243,
+    "coverage": 4368.3045267489715,
+    "n_unique": 4358.222222222223,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(TS_PCTCHANGE($open, 60), (($open) > ($high)) ? ($close) : (0), 20)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 0.0,
+    "n_unique": 0.0,
+    "error": "empty after dropna/OOS"
+  },
+  {
+    "expr": "ZSCORE($open)",
+    "ic": -0.010749293984566108,
+    "icir": -0.09567389863347114,
+    "tstat": -1.4914084805222994,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.436213991769,
+    "error": null
+  },
+  {
+    "expr": "((TS_VAR($low, 20)) > ($open)) ? (TS_RANK($low, 3)) : (0)",
+    "ic": -0.0017177826805244926,
+    "icir": -0.0695518769900957,
+    "tstat": -0.8879789218409414,
+    "n_days": 163,
+    "coverage": 4372.489711934157,
+    "n_unique": 2.1646090534979425,
+    "error": null
+  },
+  {
+    "expr": "TS_MEDIAN(HIGHDAY((($close) > ($open)) ? ($close) : (0), 3), 60)",
+    "ic": 0.009012342450686732,
+    "icir": 0.14078098768923406,
+    "tstat": 2.194558410757338,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(RANK($close))",
+    "ic": -0.011378897595786364,
+    "icir": -0.10114512113378334,
+    "tstat": -1.5766963986727922,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4362.880658436214,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE($high, $low, 20)",
+    "ic": -0.02658241441809369,
+    "icir": -0.21992374783523655,
+    "tstat": -3.4282719453743606,
+    "n_days": 243,
+    "coverage": 4370.061728395061,
+    "n_unique": 4369.061728395061,
+    "error": null
+  },
+  {
+    "expr": "TS_MEAN(TS_COVARIANCE($high, $close, 5), 5)",
+    "ic": -0.03158012392638551,
+    "icir": -0.2614134556036595,
+    "tstat": -4.075032481989203,
+    "n_days": 243,
+    "coverage": 4369.259259259259,
+    "n_unique": 4368.259259259259,
+    "error": null
+  },
+  {
+    "expr": "SUMAC(RANK($volume), 3)",
+    "ic": -0.041477902832940845,
+    "icir": -0.3877402299737194,
+    "tstat": -6.044272006076306,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 4367.876543209876,
+    "error": null
+  },
+  {
+    "expr": "WMA($open, 3)",
+    "ic": -0.010748997849412328,
+    "icir": -0.0957882149203946,
+    "tstat": -1.493190495076056,
+    "n_days": 243,
+    "coverage": 4366.106995884774,
+    "n_unique": 4365.098765432099,
+    "error": null
+  },
+  {
+    "expr": "TS_MAD($high, 20)",
+    "ic": -0.024472545799897553,
+    "icir": -0.2017620877083946,
+    "tstat": -3.1451596825689676,
+    "n_days": 243,
+    "coverage": 4330.740740740741,
+    "n_unique": 4325.01646090535,
+    "error": null
+  },
+  {
+    "expr": "ABS(RANK($low))",
+    "ic": -0.010378285572682534,
+    "icir": -0.09264100438807266,
+    "tstat": -1.4441303381791784,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.954732510288,
+    "error": null
+  },
+  {
+    "expr": "((ZSCORE($return) - TS_CORR($open, $volume, 10)) - TS_CORR(TS_STD($close, 60), TS_RANK($volume, 20), 10))",
+    "ic": -0.009396232245231569,
+    "icir": -0.10039847890228855,
+    "tstat": -1.565057398152562,
+    "n_days": 243,
+    "coverage": 4366.757201646091,
+    "n_unique": 4365.757201646091,
+    "error": null
+  },
+  {
+    "expr": "TS_MIN(DECAYLINEAR(($return / $close), 3), 5)",
+    "ic": -0.003071192042772543,
+    "icir": -0.02792678526931372,
+    "tstat": -0.4353354988066571,
+    "n_days": 243,
+    "coverage": 4370.115226337449,
+    "n_unique": 4364.460905349794,
+    "error": null
+  },
+  {
+    "expr": "($close - $return)",
+    "ic": -0.01101654414200158,
+    "icir": -0.0980148024064261,
+    "tstat": -1.5278995589557884,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4364.3374485596705,
+    "error": null
+  },
+  {
+    "expr": "TS_VAR(LOG($open), 20)",
+    "ic": -0.03591210453047198,
+    "icir": -0.2699885954575893,
+    "tstat": -4.20870568317034,
+    "n_days": 243,
+    "coverage": 4370.061728395061,
+    "n_unique": 4369.061728395061,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(RANK($return), SUMAC($low, 20), 60)",
+    "ic": 0.01822184638368987,
+    "icir": 0.19917666484756189,
+    "tstat": 3.1048569287828567,
+    "n_days": 243,
+    "coverage": 4370.098765432099,
+    "n_unique": 4369.098765432099,
+    "error": null
+  },
+  {
+    "expr": "LOWDAY((($open) > (1)) ? ($low) : (0), 3)",
+    "ic": -0.0032519015415827853,
+    "icir": -0.041830260924017745,
+    "tstat": -0.6520692349283561,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "TS_SUM(TS_CORR(TS_COVARIANCE($low, ($open - $low), 5), WMA($high, 60), 10), 3)",
+    "ic": -0.006991167678171161,
+    "icir": -0.13635857455385347,
+    "tstat": -2.125619812574486,
+    "n_days": 243,
+    "coverage": 4258.213991769548,
+    "n_unique": 4257.201646090535,
+    "error": null
+  },
+  {
+    "expr": "SUMAC($close, 3)",
+    "ic": -0.010791679019024296,
+    "icir": -0.09610451172199447,
+    "tstat": -1.4981210742518385,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 4368.419753086419,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(TS_MEAN(($low - $high), 3))",
+    "ic": 0.03565017226222541,
+    "icir": 0.2770887201732031,
+    "tstat": 4.319385673898007,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 4365.79012345679,
+    "error": null
+  },
+  {
+    "expr": "SQRT(($close - $low))",
+    "ic": -0.03595709688186366,
+    "icir": -0.3187661680779896,
+    "tstat": -4.969072789606065,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4216.19341563786,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(SUMAC($volume, 60), 3)",
+    "ic": -0.02747875168578941,
+    "icir": -0.29136046626742446,
+    "tstat": -4.541860178029235,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "RANK(EMA($return, 10))",
+    "ic": -0.02652794865468074,
+    "icir": -0.18491014937090622,
+    "tstat": -2.8824639619100387,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4370.037037037037,
+    "error": null
+  },
+  {
+    "expr": "TS_RANK(TS_COVARIANCE($open, $open, 60), 3)",
+    "ic": -0.005069087608994056,
+    "icir": -0.07754918823360973,
+    "tstat": -1.2088722069570115,
+    "n_days": 243,
+    "coverage": 4370.094650205761,
+    "n_unique": 4.02880658436214,
+    "error": null
+  },
+  {
+    "expr": "TS_STD(RANK($volume), 5)",
+    "ic": -0.00959472128733411,
+    "icir": -0.22062769879091562,
+    "tstat": -3.439245454765816,
+    "n_days": 243,
+    "coverage": 4368.592592592592,
+    "n_unique": 4367.592592592592,
+    "error": null
+  },
+  {
+    "expr": "(TS_VAR((($high) > (0.5)) ? ($low) : (0), 60) + LOG(TS_MAD($return, 10)))",
+    "ic": -0.030252139566854522,
+    "icir": -0.26198357416456314,
+    "tstat": -4.083919750813612,
+    "n_days": 243,
+    "coverage": 4370.181069958848,
+    "n_unique": 4369.119341563786,
+    "error": null
+  },
+  {
+    "expr": "TS_MEAN($open, 5)",
+    "ic": -0.010272017215884981,
+    "icir": -0.09170030301697339,
+    "tstat": -1.4294662550537358,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 4370.6872427983535,
+    "error": null
+  },
+  {
+    "expr": "TS_MIN(ZSCORE(($volume * $open)), 3)",
+    "ic": -0.04541953450112533,
+    "icir": -0.3047822729579566,
+    "tstat": -4.751085438085561,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 3657.7736625514403,
+    "error": null
+  },
+  {
+    "expr": "(((($high) > ($low)) ? (($high - $close)) : (0)) > (($close - $low))) ? ((($low) > (1)) ? ($return) : (0)) : (0)",
+    "ic": -0.004731278565059132,
+    "icir": -0.061029713141498465,
+    "tstat": -0.951359075391864,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 1583.8930041152264,
+    "error": null
+  },
+  {
+    "expr": "LOWDAY(DELTA($volume, 5), 10)",
+    "ic": -0.010238597078826017,
+    "icir": -0.24312728625756858,
+    "tstat": -3.7899793125400616,
+    "n_days": 243,
+    "coverage": 4357.909465020576,
+    "n_unique": 10.0,
+    "error": null
+  },
+  {
+    "expr": "((ZSCORE($close)) > (1)) ? (EMA($high, 3)) : (0)",
+    "ic": -0.005159897902872918,
+    "icir": -0.06586340351924966,
+    "tstat": -1.026708851292761,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 184.19341563786008,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX((($open) > ($close)) ? ($high) : (0), 20)",
+    "ic": -0.012338249779282771,
+    "icir": -0.11123576559971551,
+    "tstat": -1.7339939787377665,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4366.3374485596705,
+    "error": null
+  },
+  {
+    "expr": "DELAY(RANK($volume), 10)",
+    "ic": -0.02881166880647334,
+    "icir": -0.26979629700453384,
+    "tstat": -4.20570804695216,
+    "n_days": 243,
+    "coverage": 4341.59670781893,
+    "n_unique": 4340.37037037037,
+    "error": null
+  },
+  {
+    "expr": "TS_SUM($high, 5)",
+    "ic": -0.010795546535635686,
+    "icir": -0.09617935324135511,
+    "tstat": -1.499287738078273,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 4370.621399176955,
+    "error": null
+  },
+  {
+    "expr": "((RANK($return)) > (1)) ? ((($volume) > (1)) ? ($return) : (0)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE((TS_MAX($close, 5) - WMA($high, 3)), 60)",
+    "ic": -0.001529558483465036,
+    "icir": -0.05202614903327654,
+    "tstat": -0.8110074010300686,
+    "n_days": 243,
+    "coverage": 4371.876543209876,
+    "n_unique": 4221.827160493827,
+    "error": null
+  },
+  {
+    "expr": "(($open) > ($return)) ? ($return) : (0)",
+    "ic": -0.011263822602133293,
+    "icir": -0.1001751565053387,
+    "tstat": -1.5615761465106952,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4202.62962962963,
+    "error": null
+  },
+  {
+    "expr": "(((($low) > ($high)) ? ($return) : (0)) > (0)) ? (($open * $high)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "SQRT(TS_COVARIANCE(($low - $open), $low, 10))",
+    "ic": -0.02308652072613618,
+    "icir": -0.18767182106101754,
+    "tstat": -2.9255141630399155,
+    "n_days": 243,
+    "coverage": 2584.0864197530864,
+    "n_unique": 2580.9794238683126,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(EMA($high, 60), EMA($high, 20), 10)",
+    "ic": -0.019740009029057107,
+    "icir": -0.2209315884757279,
+    "tstat": -3.4439826261317346,
+    "n_days": 243,
+    "coverage": 4370.172839506173,
+    "n_unique": 4369.0534979423865,
+    "error": null
+  },
+  {
+    "expr": "((SUMAC(TS_COVARIANCE($return, $low, 60), 5)) > (0)) ? (TS_MAX(ZSCORE($low), 20)) : (0)",
+    "ic": -0.008880630746522112,
+    "icir": -0.11058886365386775,
+    "tstat": -1.7239097753982549,
+    "n_days": 243,
+    "coverage": 4372.477366255144,
+    "n_unique": 2218.3621399176955,
+    "error": null
+  },
+  {
+    "expr": "RANK(($close - $open))",
+    "ic": -0.019916796328115684,
+    "icir": -0.19361106803325884,
+    "tstat": -3.018097860671509,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4228.090534979424,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE($open, $high, 5)",
+    "ic": -0.023107551056697928,
+    "icir": -0.22220415752143963,
+    "tstat": -3.4638200143215436,
+    "n_days": 243,
+    "coverage": 4368.592592592592,
+    "n_unique": 4367.588477366256,
+    "error": null
+  },
+  {
+    "expr": "TS_VAR(TS_COVARIANCE(($high - $open), $high, 10), 5)",
+    "ic": -0.0347593461002177,
+    "icir": -0.2862722211536237,
+    "tstat": -4.462542286503032,
+    "n_days": 243,
+    "coverage": 4367.62962962963,
+    "n_unique": 4366.201646090535,
+    "error": null
+  },
+  {
+    "expr": "(($open * $high) + DECAYLINEAR($return, 5))",
+    "ic": -0.01153567760186936,
+    "icir": -0.10240428281216596,
+    "tstat": -1.5963247866899137,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.325102880658,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX(($volume / $close), 60)",
+    "ic": -0.015624916416520812,
+    "icir": -0.221377898424966,
+    "tstat": -3.450939909703769,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4371.201646090535,
+    "error": null
+  },
+  {
+    "expr": "(((LOWDAY(($low - $close), 3) * TS_MAD($return, 60))) > (0)) ? (TS_MEDIAN(TS_ARGMAX($close, 60), 10)) : (0)",
+    "ic": 0.0190764551722346,
+    "icir": 0.14219559868937162,
+    "tstat": 2.216610013883995,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 93.5843621399177,
+    "error": null
+  },
+  {
+    "expr": "((TS_MAX($volume, 10)) > ($close)) ? (RANK($close)) : (0)",
+    "ic": -0.011082049439771815,
+    "icir": -0.09866311724899875,
+    "tstat": -1.53800578717552,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4363.683127572016,
+    "error": null
+  },
+  {
+    "expr": "LOG($open)",
+    "ic": -0.010749290070710916,
+    "icir": -0.09567386435100503,
+    "tstat": -1.4914079461115413,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.617283950617,
+    "error": null
+  },
+  {
+    "expr": "($return / ($open - $low))",
+    "ic": -0.008291200607057191,
+    "icir": -0.0834160123475838,
+    "tstat": -1.3003269439572718,
+    "n_days": 243,
+    "coverage": 4075.028806584362,
+    "n_unique": 3950.855967078189,
+    "error": null
+  },
+  {
+    "expr": "(RANK(($high - $open)) + (($close) > ($high)) ? (($open - $close)) : (0))",
+    "ic": 0.019916796328115684,
+    "icir": 0.19361106803325884,
+    "tstat": 3.018097860671509,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4228.090534979424,
+    "error": null
+  },
+  {
+    "expr": "(DELAY($open, 3) - TS_COVARIANCE($return, $close, 20))",
+    "ic": -0.010242382499778676,
+    "icir": -0.09148286923928053,
+    "tstat": -1.4260767979015248,
+    "n_days": 243,
+    "coverage": 4360.85596707819,
+    "n_unique": 4359.85596707819,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE(($high - $volume), 5)",
+    "ic": -0.020325745745290547,
+    "icir": -0.2894466215049499,
+    "tstat": -4.512026290731584,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4352.913580246914,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE($high, $open, 3)",
+    "ic": -0.012846587868902179,
+    "icir": -0.16190431498583535,
+    "tstat": -2.523838495680918,
+    "n_days": 243,
+    "coverage": 4368.3045267489715,
+    "n_unique": 4366.674897119342,
+    "error": null
+  },
+  {
+    "expr": "(($high + $volume) * TS_RANK($open, 10))",
+    "ic": -0.044800853649709795,
+    "icir": -0.39364396908135574,
+    "tstat": -6.1363021908778235,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.3045267489715,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE(($low - $open), 20)",
+    "ic": -0.001145393064212816,
+    "icir": -0.012800763644491796,
+    "tstat": -0.19954415707146309,
+    "n_days": 243,
+    "coverage": 4365.222222222223,
+    "n_unique": 4363.61316872428,
+    "error": null
+  },
+  {
+    "expr": "ABS(RANK(($open - $low)))",
+    "ic": -0.016661191536811417,
+    "icir": -0.15260015899299834,
+    "tstat": -2.378801057570657,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4065.3168724279835,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE(TS_STD($volume, 3), 3)",
+    "ic": -0.004265098506034639,
+    "icir": -0.12456440163578099,
+    "tstat": -1.941766852028296,
+    "n_days": 243,
+    "coverage": 4365.057613168724,
+    "n_unique": 4363.559670781893,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(EMA($low, 60), 20)",
+    "ic": -0.020441158147114863,
+    "icir": -0.13443937048778248,
+    "tstat": -2.095702382001736,
+    "n_days": 243,
+    "coverage": 4372.485596707819,
+    "n_unique": 20.0,
+    "error": null
+  },
+  {
+    "expr": "WMA(DELTA($low, 10), 60)",
+    "ic": -0.013899665329701105,
+    "icir": -0.09337975678718684,
+    "tstat": -1.4556463483844908,
+    "n_days": 243,
+    "coverage": 4083.9670781893005,
+    "n_unique": 4082.9670781893005,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE($low, 20)",
+    "ic": -0.01598109238862955,
+    "icir": -0.11235035927038894,
+    "tstat": -1.751368774544376,
+    "n_days": 243,
+    "coverage": 4367.971193415638,
+    "n_unique": 4366.238683127572,
+    "error": null
+  },
+  {
+    "expr": "TS_MEAN(RANK($volume), 10)",
+    "ic": -0.03699381113126087,
+    "icir": -0.33930192730907405,
+    "tstat": -5.289193594848224,
+    "n_days": 243,
+    "coverage": 4372.106995884774,
+    "n_unique": 4371.102880658436,
+    "error": null
+  },
+  {
+    "expr": "(($low) > (0.5)) ? (($low - $close)) : (0)",
+    "ic": 0.034231726093394685,
+    "icir": 0.30313843314063593,
+    "tstat": 4.725460511337624,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3996.7736625514403,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(SQRT((($close) > ($high)) ? ($return) : (0)))",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 0.0,
+    "n_unique": 0.0,
+    "error": "empty after dropna/OOS"
+  },
+  {
+    "expr": "ABS(TS_MEAN($volume, 60))",
+    "ic": -0.03163764929442343,
+    "icir": -0.3181210079228179,
+    "tstat": -4.9590157380960775,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4371.448559670782,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE(TS_MAD((($return) > (0.5)) ? ($low) : (0), 20), 10)",
+    "ic": -0.022049415634216956,
+    "icir": -4.187398999164431,
+    "tstat": -7.252787818115861,
+    "n_days": 3,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0123456790123457,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($high, $low, 60)",
+    "ic": 0.003971042038880189,
+    "icir": 0.049828291297149864,
+    "tstat": 0.7767461896290512,
+    "n_days": 243,
+    "coverage": 4370.078189300411,
+    "n_unique": 4367.827160493827,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX(TS_CORR($open, $high, 10), 20)",
+    "ic": 0.005083001670405573,
+    "icir": 0.06511619055102758,
+    "tstat": 1.015060953867446,
+    "n_days": 243,
+    "coverage": 4370.061728395061,
+    "n_unique": 4332.119341563786,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(($open + $high))",
+    "ic": -0.011403817897848277,
+    "icir": -0.10129651747713876,
+    "tstat": -1.579056434101738,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4368.592592592592,
+    "error": null
+  },
+  {
+    "expr": "(WMA($close, 20) / (($high - $open) / $high))",
+    "ic": 0.02390982019099096,
+    "icir": 0.2397082267219655,
+    "tstat": 3.7366814490721554,
+    "n_days": 243,
+    "coverage": 3978.7201646090534,
+    "n_unique": 3977.80658436214,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(DELAY($close, 10), TS_ZSCORE($return, 3), 60)",
+    "ic": 0.0019129598083703504,
+    "icir": 0.045243217719356715,
+    "tstat": 0.7052719660904371,
+    "n_days": 243,
+    "coverage": 4346.38683127572,
+    "n_unique": 4345.38683127572,
+    "error": null
+  },
+  {
+    "expr": "($volume + $volume)",
+    "ic": -0.04492601440188402,
+    "icir": -0.4310106758630833,
+    "tstat": -6.718791502795149,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.123456790124,
+    "error": null
+  },
+  {
+    "expr": "TS_RANK($return, 10)",
+    "ic": -0.00841957672738091,
+    "icir": -0.08578607128736099,
+    "tstat": -1.3372725064629138,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 23.238683127572017,
+    "error": null
+  },
+  {
+    "expr": "($volume / $volume)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4370.349794238683,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "(((($high) > ($high)) ? ($high) : (0)) > (0.5)) ? (LOWDAY($open, 5)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_MAX(HIGHDAY(DECAYLINEAR($return, 5), 10), 3)",
+    "ic": 0.012844663596321904,
+    "icir": 0.17594177097279612,
+    "tstat": 2.74266077848677,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 10.0,
+    "error": null
+  },
+  {
+    "expr": "SIGN((TS_MEDIAN($return, 60) - ABS($close)))",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4370.349794238683,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_MAD((($close) > (0.5)) ? ($return) : (0), 10)",
+    "ic": -0.03935181290840022,
+    "icir": -0.31155822021747476,
+    "tstat": -4.8567120023915935,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4137.246913580247,
+    "error": null
+  },
+  {
+    "expr": "LOG(TS_ARGMAX(HIGHDAY($high, 10), 60))",
+    "ic": 0.00034218414029562054,
+    "icir": 0.004411553404901775,
+    "tstat": 0.06876931173834015,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 59.61316872427984,
+    "error": null
+  },
+  {
+    "expr": "DELTA(HIGHDAY($open, 60), 5)",
+    "ic": 0.007429379380140942,
+    "icir": 0.09801402892549675,
+    "tstat": 1.5278875015813735,
+    "n_days": 243,
+    "coverage": 4360.6625514403295,
+    "n_unique": 64.2798353909465,
+    "error": null
+  },
+  {
+    "expr": "(TS_ARGMAX((($high) > ($low)) ? ($open) : (0), 10) / (($return / $volume) / TS_STD($close, 60)))",
+    "ic": -0.015131406394899495,
+    "icir": -0.17826125587296957,
+    "tstat": -2.778817969737173,
+    "n_days": 243,
+    "coverage": 4237.493827160494,
+    "n_unique": 3544.4897119341563,
+    "error": null
+  },
+  {
+    "expr": "((TS_MIN($open, 3)) > ($return)) ? (RANK(($low - $high))) : (0)",
+    "ic": 0.03813786733816784,
+    "icir": 0.30228533559013476,
+    "tstat": 4.712162036626098,
+    "n_days": 243,
+    "coverage": 4371.20987654321,
+    "n_unique": 4354.0,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(($low - $close), $close, 3)",
+    "ic": 0.026392873591245758,
+    "icir": 0.3176293222099226,
+    "tstat": 4.9513511163712645,
+    "n_days": 243,
+    "coverage": 4368.3045267489715,
+    "n_unique": 4354.7037037037035,
+    "error": null
+  },
+  {
+    "expr": "((($low - $close)) > (1)) ? ($volume) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(ABS($volume), ($high + $open), 5)",
+    "ic": -0.03342851398632272,
+    "icir": -0.39272622438855836,
+    "tstat": -6.121995966951108,
+    "n_days": 243,
+    "coverage": 4368.592592592592,
+    "n_unique": 4367.592592592592,
+    "error": null
+  },
+  {
+    "expr": "TS_MIN(($close - ($close - $open)), 10)",
+    "ic": -0.008773658192496125,
+    "icir": -0.07907390504333359,
+    "tstat": -1.232640189791376,
+    "n_days": 243,
+    "coverage": 4372.106995884774,
+    "n_unique": 4370.275720164609,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(($close * $volume), 3)",
+    "ic": -0.006154134044451634,
+    "icir": -0.11812107615267649,
+    "tstat": -1.8413253480703335,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "($high / $close)",
+    "ic": -0.02742162868330366,
+    "icir": -0.23207393005632848,
+    "tstat": -3.6176745417277223,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 3803.440329218107,
+    "error": null
+  },
+  {
+    "expr": "SUMAC(TS_MEDIAN(($close - $low), 3), 10)",
+    "ic": -0.029670768943753287,
+    "icir": -0.22553007896892402,
+    "tstat": -3.5156659986827776,
+    "n_days": 243,
+    "coverage": 4372.419753086419,
+    "n_unique": 4369.152263374485,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN($close, 20)",
+    "ic": -0.007800036047346394,
+    "icir": -0.06543865135024077,
+    "tstat": -1.0200876202566245,
+    "n_days": 243,
+    "coverage": 4372.432098765432,
+    "n_unique": 20.0,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE(SUMAC($volume, 5), 60)",
+    "ic": -0.02855678525253913,
+    "icir": -0.24960789584549684,
+    "tstat": -3.8910020181728493,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4236.621399176955,
+    "error": null
+  },
+  {
+    "expr": "HIGHDAY(HIGHDAY($return, 5), 3)",
+    "ic": 0.0018643036388364756,
+    "icir": 0.0340706557415598,
+    "tstat": 0.5311089611241288,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "DECAYLINEAR($high, 3)",
+    "ic": -0.011679559242461326,
+    "icir": -0.10372641865805962,
+    "tstat": -1.6169348448262768,
+    "n_days": 243,
+    "coverage": 4366.106995884774,
+    "n_unique": 4364.975308641975,
+    "error": null
+  },
+  {
+    "expr": "(LOG(($low - $close)) * HIGHDAY(($close - $open), 60))",
+    "ic": 0.018704538758811652,
+    "icir": 0.2150176897792788,
+    "tstat": 3.3517940690141477,
+    "n_days": 243,
+    "coverage": 4318.201646090535,
+    "n_unique": 4174.502057613168,
+    "error": null
+  },
+  {
+    "expr": "ABS(SUMAC($volume, 60))",
+    "ic": -0.028633425160072105,
+    "icir": -0.2873313753193855,
+    "tstat": -4.479052865956361,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4371.448559670782,
+    "error": null
+  },
+  {
+    "expr": "(($return) > (0)) ? ($volume) : (0)",
+    "ic": -0.026970618270563882,
+    "icir": -0.2918388693617764,
+    "tstat": -4.549317744222476,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 2098.9135802469136,
+    "error": null
+  },
+  {
+    "expr": "(((($close - $high) - $close) - TS_COVARIANCE($open, $high, 20)) - TS_MAD(DELAY($open, 10), 5))",
+    "ic": 0.014126035839947922,
+    "icir": 0.12424608595550335,
+    "tstat": 1.9368048016485155,
+    "n_days": 243,
+    "coverage": 4321.917695473251,
+    "n_unique": 4320.917695473251,
+    "error": null
+  },
+  {
+    "expr": "($volume - $low)",
+    "ic": -0.0449255524444333,
+    "icir": -0.4310101234754547,
+    "tstat": -6.718782891924206,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.19341563786,
+    "error": null
+  },
+  {
+    "expr": "($volume / $return)",
+    "ic": -0.00890021523800368,
+    "icir": -0.13699556198419102,
+    "tstat": -2.1355494639126325,
+    "n_days": 243,
+    "coverage": 4237.493827160494,
+    "n_unique": 4236.427983539094,
+    "error": null
+  },
+  {
+    "expr": "ABS((($close) > ($return)) ? ($low) : (0))",
+    "ic": -0.010082622466054085,
+    "icir": -0.09014522837793564,
+    "tstat": -1.4052250404943587,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4369.716049382716,
+    "error": null
+  },
+  {
+    "expr": "TS_PCTCHANGE(($open - $high), 10)",
+    "ic": -0.026020326183162207,
+    "icir": -0.3148943892393543,
+    "tstat": -4.908717730628388,
+    "n_days": 243,
+    "coverage": 4046.9506172839506,
+    "n_unique": 3636.259259259259,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(RANK($open), DELTA($high, 20), 20)",
+    "ic": -0.027682091513006792,
+    "icir": -0.25178878583391284,
+    "tstat": -3.9249987285637427,
+    "n_days": 243,
+    "coverage": 4322.255144032922,
+    "n_unique": 4321.255144032922,
+    "error": null
+  },
+  {
+    "expr": "RANK(TS_COVARIANCE($high, $high, 10))",
+    "ic": -0.031132495967924872,
+    "icir": -0.2575861255863682,
+    "tstat": -4.015370311563665,
+    "n_days": 243,
+    "coverage": 4369.316872427984,
+    "n_unique": 4368.316872427984,
+    "error": null
+  },
+  {
+    "expr": "LOG(ABS($volume))",
+    "ic": -0.04492601592016711,
+    "icir": -0.4310106624575981,
+    "tstat": -6.718791293824316,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4367.205761316873,
+    "error": null
+  },
+  {
+    "expr": "((TS_MEDIAN((($low) > ($close)) ? ($low) : (0), 20)) > ($volume)) ? (TS_ZSCORE(TS_COVARIANCE($open, $volume, 20), 20)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX(ZSCORE(($low - $high)), 3)",
+    "ic": -0.00685349343790868,
+    "icir": -0.11979825942897039,
+    "tstat": -1.8674700479036463,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "(($return - $low) / ZSCORE($open))",
+    "ic": 0.0004277468494281742,
+    "icir": 0.010991705750514311,
+    "tstat": 0.17134373539564007,
+    "n_days": 243,
+    "coverage": 4370.349794238683,
+    "n_unique": 4369.19341563786,
+    "error": null
+  },
+  {
+    "expr": "TS_MIN($open, 60)",
+    "ic": -0.005054840477613066,
+    "icir": -0.04770546573525751,
+    "tstat": -0.7436546140698196,
+    "n_days": 243,
+    "coverage": 4372.448559670782,
+    "n_unique": 4366.3045267489715,
+    "error": null
+  },
+  {
+    "expr": "((LOWDAY($open, 5)) > (($low - $open))) ? (TS_PCTCHANGE($return, 5)) : (0)",
+    "ic": -0.004182500049500922,
+    "icir": -0.08117095974295015,
+    "tstat": -1.2653300373652587,
+    "n_days": 243,
+    "coverage": 4243.748971193416,
+    "n_unique": 4098.020576131687,
+    "error": null
+  },
+  {
+    "expr": "LOG(TS_CORR($open, $return, 20))",
+    "ic": 0.003424819827543864,
+    "icir": 0.051397115992791606,
+    "tstat": 0.8012017463582337,
+    "n_days": 243,
+    "coverage": 4369.308641975309,
+    "n_unique": 4367.448559670782,
+    "error": null
+  },
+  {
+    "expr": "DELTA($return, 60)",
+    "ic": -0.011651547911720706,
+    "icir": -0.12051726897918187,
+    "tstat": -1.878678297552488,
+    "n_days": 243,
+    "coverage": 4241.625514403292,
+    "n_unique": 4227.6378600823045,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(SUMAC($volume, 20), (($low) > (0.5)) ? ($return) : (0), 20)",
+    "ic": 0.007666826576888528,
+    "icir": 0.11894032058635225,
+    "tstat": 1.8540961049168332,
+    "n_days": 243,
+    "coverage": 4370.090534979424,
+    "n_unique": 4183.267489711934,
+    "error": null
+  },
+  {
+    "expr": "SIGN(TS_MAX(TS_SUM($low, 3), 10))",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.419753086419,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(LOG($close), ($close - $volume), 10)",
+    "ic": 0.03829839281122307,
+    "icir": 0.37120714323963067,
+    "tstat": 5.786546690011844,
+    "n_days": 243,
+    "coverage": 4369.316872427984,
+    "n_unique": 4368.316872427984,
+    "error": null
+  },
+  {
+    "expr": "EMA(TS_PCTCHANGE($close, 10), 3)",
+    "ic": -0.02058524720866816,
+    "icir": -0.14721981598786274,
+    "tstat": -2.2949298105472726,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4349.17695473251,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($high, $return, 60)",
+    "ic": -0.009316876492864634,
+    "icir": -0.12842072036580796,
+    "tstat": -2.0018809117635716,
+    "n_days": 243,
+    "coverage": 4370.086419753086,
+    "n_unique": 4367.827160493827,
+    "error": null
+  },
+  {
+    "expr": "ABS(TS_CORR(TS_MEAN($return, 10), ($low * $close), 20))",
+    "ic": 0.005179509193166227,
+    "icir": 0.08830971654742369,
+    "tstat": 1.3766122427592946,
+    "n_days": 243,
+    "coverage": 4370.057613168724,
+    "n_unique": 4367.604938271605,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(TS_STD(DELTA($close, 5), 10))",
+    "ic": -0.02900694492079854,
+    "icir": -0.23685454817017126,
+    "tstat": -3.6921970029105604,
+    "n_days": 243,
+    "coverage": 4354.502057613168,
+    "n_unique": 4353.502057613168,
+    "error": null
+  },
+  {
+    "expr": "((TS_COVARIANCE($return, $close, 20)) > ($volume)) ? (($low + $volume)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "(TS_PCTCHANGE((($return) > (0.5)) ? ($open) : (0), 60) + TS_MAX(($open / $volume), 3))",
+    "ic": 0.020810345219008358,
+    "icir": 0.27930323055958634,
+    "tstat": 4.35390647442595,
+    "n_days": 243,
+    "coverage": 4371.62962962963,
+    "n_unique": 4370.489711934157,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(($open - $close), $low, 20)",
+    "ic": -0.010696190439767734,
+    "icir": -0.1771916676115559,
+    "tstat": -2.762144738829643,
+    "n_days": 243,
+    "coverage": 4369.197530864198,
+    "n_unique": 4367.164609053498,
+    "error": null
+  },
+  {
+    "expr": "DECAYLINEAR(EMA($open, 3), 20)",
+    "ic": -0.008461155239043366,
+    "icir": -0.07654854546483134,
+    "tstat": -1.1932737299152563,
+    "n_days": 243,
+    "coverage": 4372.378600823045,
+    "n_unique": 4371.37037037037,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(TS_STD(TS_COVARIANCE($close, ($close - $high), 20), 10), 60)",
+    "ic": -0.0077858323627780545,
+    "icir": -0.10755276332370653,
+    "tstat": -1.676581655139812,
+    "n_days": 243,
+    "coverage": 4367.732510288066,
+    "n_unique": 60.0,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE($open, 3)",
+    "ic": -0.008100877579700204,
+    "icir": -0.08703922211223081,
+    "tstat": -1.3568071945469062,
+    "n_days": 243,
+    "coverage": 4366.456790123457,
+    "n_unique": 4363.921810699589,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMIN(TS_STD($high, 60), 5)",
+    "ic": -0.0030396785361662517,
+    "icir": -0.04670941775906776,
+    "tstat": -0.7281277627559885,
+    "n_days": 243,
+    "coverage": 4370.094650205761,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR(DECAYLINEAR($open, 3), LOG($open), 20)",
+    "ic": 0.007146394040081039,
+    "icir": 0.09736742205419681,
+    "tstat": 1.5178078979988416,
+    "n_days": 243,
+    "coverage": 4369.917695473251,
+    "n_unique": 4368.6872427983535,
+    "error": null
+  },
+  {
+    "expr": "EMA(ABS($return), 5)",
+    "ic": -0.04628082074215785,
+    "icir": -0.34775568486994446,
+    "tstat": -5.420974633340898,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4370.037037037037,
+    "error": null
+  },
+  {
+    "expr": "TS_VAR(($open / $open), 60)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4370.094650205761,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "DELTA($volume, 10)",
+    "ic": -0.01893773073281069,
+    "icir": -0.2328395573881949,
+    "tstat": -3.6296094906738263,
+    "n_days": 243,
+    "coverage": 4339.547325102881,
+    "n_unique": 4338.382716049383,
+    "error": null
+  },
+  {
+    "expr": "ABS((($return) > (1)) ? ($low) : (0))",
+    "ic": 0.006161407162811185,
+    "icir": null,
+    "tstat": null,
+    "n_days": 1,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0041152263374487,
+    "error": null
+  },
+  {
+    "expr": "TS_VAR(RANK(TS_MEDIAN($return, 5)), 5)",
+    "ic": -0.016005017960566602,
+    "icir": -0.3539864094083091,
+    "tstat": -5.518102016556622,
+    "n_days": 243,
+    "coverage": 4370.181069958848,
+    "n_unique": 4368.818930041152,
+    "error": null
+  },
+  {
+    "expr": "EMA($return, 5)",
+    "ic": -0.023719050018306136,
+    "icir": -0.17859070819865205,
+    "tstat": -2.783953623237957,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4370.037037037037,
+    "error": null
+  },
+  {
+    "expr": "((($return * $return)) > (1)) ? (EMA($low, 10)) : (0)",
+    "ic": 0.006161407162811185,
+    "icir": null,
+    "tstat": null,
+    "n_days": 1,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0041152263374487,
+    "error": null
+  },
+  {
+    "expr": "TS_CORR($close, $low, 20)",
+    "ic": 0.015651809209577573,
+    "icir": 0.21119113665077,
+    "tstat": 3.2921440090861975,
+    "n_days": 243,
+    "coverage": 4370.049382716049,
+    "n_unique": 4367.744855967078,
+    "error": null
+  },
+  {
+    "expr": "SUMAC(DELTA(($open - $close), 10), 5)",
+    "ic": 0.019478084886358833,
+    "icir": 0.22824652143725596,
+    "tstat": 3.5580111460216766,
+    "n_days": 243,
+    "coverage": 4344.065843621399,
+    "n_unique": 4339.761316872428,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX(($open + $low), 5)",
+    "ic": 0.01784602220940078,
+    "icir": 0.17146752651866257,
+    "tstat": 2.6729142100063865,
+    "n_days": 243,
+    "coverage": 4371.753086419753,
+    "n_unique": 5.0,
+    "error": null
+  },
+  {
+    "expr": "((((($volume - $high)) > (1)) ? (TS_CORR($return, $low, 3)) : (0)) > (1)) ? (TS_MAX((($volume) > ($open)) ? ($high) : (0), 20)) : (0)",
+    "ic": -0.00037649519473264463,
+    "icir": -0.021940499539976198,
+    "tstat": -0.2869092607966707,
+    "n_days": 171,
+    "coverage": 4372.489711934157,
+    "n_unique": 2.897119341563786,
+    "error": null
+  },
+  {
+    "expr": "SIGN((($open) > (($close - $high))) ? ($high) : (0))",
+    "ic": 0.006344983762567755,
+    "icir": 0.266981613778011,
+    "tstat": 3.728195342068955,
+    "n_days": 195,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.8024691358024691,
+    "error": null
+  },
+  {
+    "expr": "ABS((SQRT($close) * DELTA($return, 20)))",
+    "ic": -0.028090675009311984,
+    "icir": -0.30192703937548254,
+    "tstat": -4.706576751394663,
+    "n_days": 243,
+    "coverage": 4323.827160493827,
+    "n_unique": 4314.320987654321,
+    "error": null
+  },
+  {
+    "expr": "((($return - $volume)) > (1)) ? (TS_MEDIAN($close, 10)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "((ZSCORE($open)) > (0.5)) ? (TS_ARGMIN($volume, 3)) : (0)",
+    "ic": -0.0049791086938176105,
+    "icir": -0.07033503200450006,
+    "tstat": -1.0964146408539945,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 3.0,
+    "error": null
+  },
+  {
+    "expr": "((RANK($return)) > ($open)) ? ((($open) > ($open)) ? (($open - $close)) : (0)) : (0)",
+    "ic": null,
+    "icir": null,
+    "tstat": null,
+    "n_days": 0,
+    "coverage": 4372.489711934157,
+    "n_unique": 1.0,
+    "error": null
+  },
+  {
+    "expr": "ZSCORE(TS_COVARIANCE($volume, $volume, 10))",
+    "ic": -0.04007087689632595,
+    "icir": -0.40207240484216994,
+    "tstat": -6.267688501572369,
+    "n_days": 243,
+    "coverage": 4369.316872427984,
+    "n_unique": 4368.218106995885,
+    "error": null
+  },
+  {
+    "expr": "TS_ZSCORE($high, 60)",
+    "ic": -0.027981017468671304,
+    "icir": -0.1689096587104045,
+    "tstat": -2.6330409969798563,
+    "n_days": 243,
+    "coverage": 4367.9958847736625,
+    "n_unique": 4366.218106995885,
+    "error": null
+  },
+  {
+    "expr": "TS_COVARIANCE(TS_PCTCHANGE($high, 20), ($return + $high), 3)",
+    "ic": -0.023617498550981074,
+    "icir": -0.3161425951475279,
+    "tstat": -4.928175335089767,
+    "n_days": 243,
+    "coverage": 4368.3045267489715,
+    "n_unique": 4318.547325102881,
+    "error": null
+  },
+  {
+    "expr": "((DECAYLINEAR($volume, 3)) > (0)) ? (RANK(($close - $high))) : (0)",
+    "ic": 0.026887803406155878,
+    "icir": 0.23826351374623328,
+    "tstat": 3.714160602585255,
+    "n_days": 243,
+    "coverage": 4372.489711934157,
+    "n_unique": 4175.395061728395,
+    "error": null
+  },
+  {
+    "expr": "EMA(($high - $open), 20)",
+    "ic": -0.034671847347294886,
+    "icir": -0.2660184187942071,
+    "tstat": -4.146816753906321,
+    "n_days": 243,
+    "coverage": 4372.485596707819,
+    "n_unique": 4371.3374485596705,
+    "error": null
+  },
+  {
+    "expr": "TS_ARGMAX(TS_VAR($close, 10), 3)",
+    "ic": 0.0014926468233530028,
+    "icir": 0.024252952032808903,
+    "tstat": 0.3780661063892031,
+    "n_days": 243,
+    "coverage": 4369.716049382716,
+    "n_unique": 3.0,
+    "error": null
+  }
+]

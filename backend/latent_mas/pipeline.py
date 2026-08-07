@@ -198,6 +198,7 @@ class FrontEndPipeline:
             from factors.regulator.factor_regulator import (
                 FactorRegulator, validate_function_arity,
                 validate_known_variables, validate_no_degenerate_args,
+                validate_semantics,
             )
             from factors.coder.config import FACTOR_COSTEER_SETTINGS as S
             reg = FactorRegulator(
@@ -232,6 +233,13 @@ class FrontEndPipeline:
                 dg_ok, dg_errs = validate_no_degenerate_args(expr)
                 if not dg_ok:
                     return False, "degenerate: " + dg_errs[0]
+                # #3 semantik-numerik (window degenerate, kondisi non-boolean,
+                # ambang pada persentil / volume absolut). Gate lain semuanya
+                # STRUKTURAL → ekspresi konstan/NaN-total masih lolos. Lihat
+                # lab/audit_batch.py untuk kuantifikasi di run 2026-07-05.
+                sm_ok, sm_errs = validate_semantics(expr)
+                if not sm_ok:
+                    return False, "semantics: " + " ".join(sm_errs[:2])
                 ok, ev = reg.evaluate(expr)
                 if not ok or ev is None:
                     return False, "regulator evaluate failed"

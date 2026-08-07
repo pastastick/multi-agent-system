@@ -1,0 +1,5 @@
+# cache data pasar (regenerable dari backend/hf_data/daily_pv.h5, ~60 MB)
+.cache/
+# log mentah sweep
+../lab/out_*.log
+out_*.log

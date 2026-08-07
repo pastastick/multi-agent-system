@@ -275,6 +275,144 @@ def validate_no_degenerate_args(expression: str) -> Tuple[bool, List[str]]:
     return (len(errors) == 0), errors
 
 
+# ── Gate semantik-numerik ────────────────────────────────────────────────────
+# Gate lama (arity/variabel/kompleksitas/redundansi) semuanya STRUKTURAL: sebuah
+# ekspresi bisa lolos semuanya dan tetap menghasilkan kolom NaN total atau
+# konstan. Audit batch 2026-07-05 (lab/audit_batch.py) menemukan kelas cacat ini
+# lolos gate lalu masuk LightGBM sebagai "faktor":
+#   TS_RANK($return, 1)                          → konstan 1.0  (rank pct dari 1 obs)
+#   TS_ZSCORE($volume, 1)                        → 100% NaN     (std dari 1 obs)
+#   (TS_ZSCORE($volume,1) > 1) ? TS_MEAN(...) : 0 → konstan 0.0
+#   RANK($v) * (TS_RANK($r,1) ? -1 : 1)          → identik -RANK($v); ternary mati
+# Window minimum agar statistik terdefinisi (ddof=1 → std butuh >= 2 observasi).
+_MIN_WINDOW = {
+    "TS_ZSCORE": 3, "TS_STD": 3, "TS_VAR": 3, "TS_MAD": 3, "TS_CORR": 3,
+    "TS_COVARIANCE": 3, "REGBETA": 3, "REGRESI": 3, "TS_SKEW": 3, "TS_KURT": 4,
+    "TS_RANK": 2, "TS_MEAN": 2, "TS_MEDIAN": 2, "TS_MAX": 2, "TS_MIN": 2,
+    "TS_SUM": 2, "TS_ARGMAX": 2, "TS_ARGMIN": 2, "TS_QUANTILE": 2,
+    "HIGHDAY": 2, "LOWDAY": 2, "SUMAC": 2, "EMA": 2, "WMA": 2,
+    "DECAYLINEAR": 2, "PROD": 2, "COUNT": 2,
+}
+# posisi argumen window (0-based) untuk fungsi di atas
+_WINDOW_ARGPOS = {"TS_CORR": 2, "TS_COVARIANCE": 2, "REGBETA": 2, "REGRESI": 2,
+                  "SUMIF": 1, "COUNT": 1}
+# operator yang menghasilkan nilai boolean
+_BOOL_OPS = {">", "<", ">=", "<=", "==", "!=", "&&", "||", "&", "|"}
+# fungsi yang keluarannya persentil di [0,1] → ambang > 1 selalu benar/salah
+_PCT_FUNCS = {"RANK", "TS_RANK"}
+
+
+def _iter_nodes(node):
+    """Yield SEMUA node AST (bukan hanya FunctionNode)."""
+    yield node
+    if isinstance(node, FunctionNode):
+        for a in node.args:
+            yield from _iter_nodes(a)
+    elif isinstance(node, BinaryOpNode):
+        yield from _iter_nodes(node.left)
+        yield from _iter_nodes(node.right)
+    elif isinstance(node, UnaryOpNode):
+        yield from _iter_nodes(node.operand)
+    elif isinstance(node, ConditionalNode):
+        yield from _iter_nodes(node.condition)
+        yield from _iter_nodes(node.true_expr)
+        yield from _iter_nodes(node.false_expr)
+
+
+def _is_boolean_valued(node) -> bool:
+    """Apakah node menghasilkan nilai benar/salah (bukan skor kontinu)?"""
+    if isinstance(node, BinaryOpNode):
+        return str(node.op).strip() in _BOOL_OPS
+    if isinstance(node, UnaryOpNode):
+        return _is_boolean_valued(node.operand)
+    if isinstance(node, FunctionNode):
+        return _node_name(node) in {"AND", "OR", "NOT", "GT", "LT", "GE", "LE",
+                                    "EQ", "NE"}
+    return False
+
+
+def _const_number(node):
+    """Nilai literal bila node adalah angka, selain itu None."""
+    if isinstance(node, NumberNode):
+        try:
+            return float(node.value)
+        except Exception:  # noqa: BLE001
+            return None
+    return None
+
+
+def validate_semantics(expression: str) -> Tuple[bool, List[str]]:
+    """Tolak ekspresi yang lolos gate struktural tapi mati/salah secara numerik.
+
+    Empat kelas cacat (semua ditemukan di run nyata, lihat komentar di atas):
+      1. window degenerate — TS_*(A, 1) = identitas/konstan/NaN.
+      2. kondisi non-boolean — `skor_kontinu ? A : B` selalu memilih satu cabang
+         (nilai != 0 dianggap benar) sehingga cabang lain mati.
+      3. ambang pada persentil — RANK/TS_RANK ada di [0,1]; dibandingkan dengan
+         angka > 1 hasilnya konstan.
+      4. ambang absolut pada $volume — tidak sebanding antar-saham/antar-waktu.
+
+    Returns (ok, errors) dengan pesan ramah-LLM untuk agen repair.
+    """
+    try:
+        tree = parse_ast(expression)
+    except Exception:
+        return True, []  # serahkan ke is_parsable
+    errors: List[str] = []
+
+    for node in _iter_nodes(tree):
+        # ── 1. window degenerate ──────────────────────────────────────────
+        if isinstance(node, FunctionNode):
+            name = _node_name(node)
+            if name in _MIN_WINDOW:
+                pos = _WINDOW_ARGPOS.get(name, 1)
+                if len(node.args) > pos:
+                    w = _const_number(node.args[pos])
+                    need = _MIN_WINDOW[name]
+                    if w is not None and w < need:
+                        errors.append(
+                            f"`{name}` got window {w:g}, which is degenerate "
+                            f"(the result is constant, NaN, or equals its own input). "
+                            f"Use a window of at least {need} days."
+                        )
+            # ── 3. ambang pada persentil ─────────────────────────────────
+        if isinstance(node, BinaryOpNode) and str(node.op).strip() in {">", "<", ">=", "<="}:
+            for a, b in ((node.left, node.right), (node.right, node.left)):
+                if isinstance(a, FunctionNode) and _node_name(a) in _PCT_FUNCS:
+                    v = _const_number(b)
+                    if v is not None and (v > 1.0 or v < 0.0):
+                        errors.append(
+                            f"`{_node_name(a)}(...)` returns a percentile between 0 and 1, "
+                            f"so comparing it with {v:g} is always true or always false. "
+                            f"Compare with a fraction such as 0.8, or drop the comparison."
+                        )
+            # ── 4. ambang absolut pada $volume ───────────────────────────
+            for a, b in ((node.left, node.right), (node.right, node.left)):
+                v = _const_number(b)
+                if v is not None and abs(v) >= 1000 and "$volume" in str(a):
+                    errors.append(
+                        f"comparing a raw $volume quantity with the absolute number "
+                        f"{v:g} is not comparable across stocks or across time. "
+                        f"Normalise first, e.g. TS_ZSCORE($volume, 20) > 2 or "
+                        f"RANK($volume) > 0.8."
+                    )
+        # ── 2. kondisi non-boolean ───────────────────────────────────────
+        if isinstance(node, ConditionalNode) and not _is_boolean_valued(node.condition):
+            errors.append(
+                f"the condition `{node.condition}` is a continuous score, not a "
+                f"true/false test, so `? :` always takes the same branch. Write an "
+                f"explicit comparison, e.g. `({node.condition}) > 0`."
+            )
+
+    # dedup, jaga urutan
+    seen, uniq = set(), []
+    for e in errors:
+        if e not in seen:
+            seen.add(e)
+            uniq.append(e)
+    return (len(uniq) == 0), uniq
+
+
 # TODO harusnya bisa dioptimalkan dalam penentuan parameter dianggap "berlebihan" atau tidak
 # [terjawab — skripsi Bab 2 §Kerangka QuantaAlpha (rumus C(f), S(f)) & Bab 4 §Kendali Mutu
 #   Faktor (gate SL/PC/ER + redundansi + kesesuaian kode vs formalisme paper)].

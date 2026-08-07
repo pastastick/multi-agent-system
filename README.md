@@ -61,14 +61,14 @@ source /workspace/runpod_env.sh
 
 ## 1. Spesifikasi Pod RunPod
 
-| Komponen | Minimum | Rekomendasi |
-|---|---|---|
-| GPU | RTX 4090 (24 GB VRAM) | A100 40 GB |
-| RAM | 32 GB | 64 GB |
-| Container Disk | 30 GB | 50 GB |
-| **Volume Disk (`/workspace`)** | **100 GB** | **200 GB** |
-| Python | 3.10 | 3.10 |
-| CUDA | 11.8+ | 12.1+ |
+| Komponen                               | Minimum               | Rekomendasi      |
+| -------------------------------------- | --------------------- | ---------------- |
+| GPU                                    | RTX 4090 (24 GB VRAM) | A100 40 GB       |
+| RAM                                    | 32 GB                 | 64 GB            |
+| Container Disk                         | 30 GB                 | 50 GB            |
+| **Volume Disk (`/workspace`)** | **100 GB**      | **200 GB** |
+| Python                                 | 3.10                  | 3.10             |
+| CUDA                                   | 11.8+                 | 12.1+            |
 
 > **Catatan model**: `Qwen3-14B` butuh ~28 GB VRAM (float16). Untuk 4090 24 GB, gunakan `Qwen3-4B` (~8 GB VRAM). Lihat bagian [Ganti Model](#9-ganti-model-untuk-vram-terbatas).
 
@@ -150,12 +150,12 @@ Verifikasi setelah `uv sync`:
 
 > **Jika pod diganti ke driver ≥ 560**: bisa upgrade ke cu126 dengan mengubah URL index di `pyproject.toml` dan menghapus `uv.lock`, lalu jalankan ulang `uv sync`. Lihat tabel kompatibilitas di bawah.
 
-| CUDA Variant | Driver Min | torch Max | Pod A40 (driver 550) |
-|---|---|---|---|
-| cu124 | ≥ 550.54 | 2.6.0 | **✓ digunakan** |
-| cu126 | ≥ 560.28 | latest | ✗ butuh driver lebih baru |
-| cu128 | ≥ 570.00 | latest | ✗ butuh driver lebih baru |
-| cu130 | ≥ 580.00 | latest | ✗ butuh driver lebih baru |
+| CUDA Variant | Driver Min | torch Max | Pod A40 (driver 550)       |
+| ------------ | ---------- | --------- | -------------------------- |
+| cu124        | ≥ 550.54  | 2.6.0     | **✓ digunakan**     |
+| cu126        | ≥ 560.28  | latest    | ✗ butuh driver lebih baru |
+| cu128        | ≥ 570.00  | latest    | ✗ butuh driver lebih baru |
+| cu130        | ≥ 580.00  | latest    | ✗ butuh driver lebih baru |
 
 ---
 
@@ -284,10 +284,10 @@ hf download Qwen/Qwen3-4B
 
 Setelah model tersedia di cache, pipeline bisa berjalan penuh offline (`HF_LOCAL_ONLY=1`).
 
-| Model | Ukuran download | VRAM saat load |
-|---|---|---|
-| `Qwen/Qwen3-4B` | ~8 GB | ~8 GB |
-| `Qwen/Qwen3-14B` | ~28 GB | ~28 GB |
+| Model              | Ukuran download | VRAM saat load |
+| ------------------ | --------------- | -------------- |
+| `Qwen/Qwen3-4B`  | ~8 GB           | ~8 GB          |
+| `Qwen/Qwen3-14B` | ~28 GB          | ~28 GB         |
 
 ---
 
@@ -414,10 +414,10 @@ latent:
   kv_max_tokens: 1024            # kurangi untuk hemat VRAM
 ```
 
-| Model | VRAM | Keterangan |
-|---|---|---|
-| `Qwen/Qwen3-4B` | ~8 GB | Cocok untuk RTX 4090 |
-| `Qwen/Qwen3-14B` | ~28 GB | Perlu A100 40 GB |
+| Model              | VRAM   | Keterangan           |
+| ------------------ | ------ | -------------------- |
+| `Qwen/Qwen3-4B`  | ~8 GB  | Cocok untuk RTX 4090 |
+| `Qwen/Qwen3-14B` | ~28 GB | Perlu A100 40 GB     |
 
 ---
 
@@ -451,11 +451,11 @@ latent:
 
 ### Hasil tuning dari lapangan (`/try` sweep)
 
-| Parameter | Nilai Lama | Nilai Sekarang | Alasan |
-|---|---|---|---|
-| `latent.steps` | 20 | **10** | Lebih cepat, kualitas setara |
-| `latent.steps_construct` | 30 | **null** (= 10) | Uniform steps lebih stabil |
-| `latent.knn_percentage` | 0.4 | **0.8** | Lebih banyak KV token = konteks lebih lengkap |
+| Parameter                  | Nilai Lama | Nilai Sekarang        | Alasan                                        |
+| -------------------------- | ---------- | --------------------- | --------------------------------------------- |
+| `latent.steps`           | 20         | **10**          | Lebih cepat, kualitas setara                  |
+| `latent.steps_construct` | 30         | **null** (= 10) | Uniform steps lebih stabil                    |
+| `latent.knn_percentage`  | 0.4        | **0.8**         | Lebih banyak KV token = konteks lebih lengkap |
 
 ---
 
@@ -536,6 +536,7 @@ ImportError: cannot import name 'service' from 'google.protobuf'
 **Penyebab**: `rdagent` menarik `mlflow 1.27.0` sebagai transitive dependency. `mlflow 1.x` bergantung pada `google.protobuf.service` yang **dihapus di protobuf ≥ 4.x**. Karena `grpcio` dan `vllm` membutuhkan `protobuf 6.x`, terjadi konflik versi.
 
 **Verifikasi**:
+
 ```bash
 .venv/bin/pip show mlflow protobuf
 # mlflow harus >= 3.0.0
@@ -545,17 +546,20 @@ ImportError: cannot import name 'service' from 'google.protobuf'
 **Solusi** (pilih salah satu):
 
 A. **Upgrade mlflow** (rekomendasi, sudah tercover oleh `pyproject.toml`):
+
 ```bash
 .venv/bin/pip install "mlflow>=3.0.0"
 ```
 
 B. Jika `uv sync` menarik ulang mlflow 1.x (karena rdagent pinning), jalankan setelah sync:
+
 ```bash
 uv sync
 .venv/bin/pip install "mlflow>=3.0.0" --force-reinstall
 ```
 
 Verifikasi fix:
+
 ```bash
 .venv/bin/python -c "
 import qlib, mlflow
@@ -566,14 +570,15 @@ print('qlib:', qlib.__version__, '| mlflow:', mlflow.__version__)
 ```
 
 **Kompatibilitas yang sudah diverifikasi**:
-| Package | Versi | Catatan |
-|---|---|---|
-| `pyqlib` | 0.9.7 | |
-| `mlflow` | **3.x** | Versi 1.x tidak kompatibel dengan protobuf ≥4 |
-| `protobuf` | 6.x | mlflow 3.x requires `<8` |
-| `numpy` | 2.x | |
-| `vllm` | **0.8.5** | Versi lebih baru (0.9+) butuh torch ≥ 2.7 → tidak ada cu124 wheel |
-| `torch` | **2.6.0+cu124** | Max versi tersedia di cu124; cocok driver 550 (CUDA 12.4) |
+
+| Package      | Versi                 | Catatan                                                             |
+| ------------ | --------------------- | ------------------------------------------------------------------- |
+| `pyqlib`   | 0.9.7                 |                                                                     |
+| `mlflow`   | **3.x**         | Versi 1.x tidak kompatibel dengan protobuf ≥4                      |
+| `protobuf` | 6.x                   | mlflow 3.x requires`<8`                                           |
+| `numpy`    | 2.x                   |                                                                     |
+| `vllm`     | **0.8.5**       | Versi lebih baru (0.9+) butuh torch ≥ 2.7 → tidak ada cu124 wheel |
+| `torch`    | **2.6.0+cu124** | Max versi tersedia di cu124; cocok driver 550 (CUDA 12.4)           |
 
 ### ImportError / ModuleNotFoundError (umum)
 

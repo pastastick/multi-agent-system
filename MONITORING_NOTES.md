@@ -107,6 +107,11 @@ Perbandingan KV vs TEXT harus pakai FactorIC_mean/per-factor RankIC OOS.
 - Mode gagalnya BEDA dari rambling: output nyaris kosong ("**.", "** ") atau repetisi pendek ("the same, the same, ..."), berhenti sendiri <300s. Terjadi di jalur re-entry mutation (guidance_kv → proposal → design → construct = rantai laten terdalam). Mutation dir0 dengan jalur sama SUKSES → stokastik/parent-specific.
 - Catatan analisis: trajectory kosong ikut jadi kandidat crossover (parent teks tanpa faktor) — crossover tetap sukses. Pertimbangkan filter trajectory kosong dari pool/parent-selection (TODO T14).
 
+### B14. Mode kv: DAUR-ULANG faktor lintas-trajectory (diversity collapse) [TEMUAN 2026-07-06, sesi analisis]
+- Verifikasi pool kv: nilai per-factor IC IDENTIK berulang lintas trajectory — {−0.0201, −0.0220, −0.0049} muncul di original `13cf02744ae3` DAN crossover `1f446c8631d0`; −0.0220 dobel dalam `e94b4773b111`. Crossover kv mendaur-ulang faktor original, bukan menghasilkan kombinasi baru.
+- Hipotesis mekanis: `latent_pass` = forward pass deterministik (TANPA sampling); temperature hanya bekerja saat emisi teks. Di mode text, SEMUA agen men-sample teks → keragaman ide tiap task. Di mode kv, proposal/design deterministik → dengan direction sama, "pikiran laten" nyaris identik antar-task → construct konvergen ke faktor yang sama. Evolutionary search butuh VARIANS; jalur laten murni menekan sumber varians utamanya.
+- Relevan utk Bab 4 (penjelasan mekanis kenapa kv terburuk utk mining evolusioner) dan utk desain perbaikan (injeksi noise/sampling di latent rollout — lihat keputusan sesi analisis 2026-07-06).
+
 ### B8. (Konteks lama, masih relevan) RankIC/IC combined LightGBM tercemar 4 fitur baseline
 - `conf_combined_factors.yaml` masih mencampur baseline; metrik keputusan sudah dialihkan ke FactorIC_mean (commit f2d881a + 2158daa warning fallback). Perbandingan antar-mode WAJIB pakai FactorIC_mean / per-factor RankIC OOS.
 
@@ -115,8 +120,8 @@ Perbandingan KV vs TEXT harus pakai FactorIC_mean/per-factor RankIC OOS.
 ## 3. TODO (prioritas)
 
 - [x] T1. Resume kv_and_text crossover#2 — **SELESAI 2026-07-06 00:10**: trajectory `92db70581b71` (dir=1, 4 faktor unik dari 6 ekspresi, FactorIC_mean=−0.0019), front-end 83s TANPA degenerasi, backtest 7 mnt normal. rc=0.
-- [ ] T2. Run penuh mode `kv` (6 task) — **BERJALAN sejak 2026-07-06 ~00:15** (`prod_kv_2026-07-05_09-36-48`, expandable_segments, watchdog OOM/rambling/stall-60mnt). Ekspektasi: construct bisa degenerate (B2) — dibiarkan selesai, itu data.
-- [ ] T3. Resume `text` crossover#2 — `resume_src_text_5of6/` SUDAH disiapkan (pool tanpa `686ad941bfdc`, state round=2/crossover/idx=1). Jalankan setelah T2.
+- [x] T2. Run penuh mode `kv` (6 task) — **SELESAI 2026-07-06 04:09** (take-3 pasca-fix B11 + resume pasca-ErrIO; lihat §1). 1 trajectory kosong (B13).
+- [x] T3. Resume `text` crossover#2 — **SELESAI 2026-07-06 04:31** rc=0 (`c30de8e38aaa`); backtest resume TIDAK hang → menguatkan hipotesis B12 (I/O volume) sebagai penyebab kematian run asli.
 - [ ] T4. Investigasi kenapa proses text mati (dmesg/OOM killer?).
 - [ ] T5. `controller.save_state()` per-task (bukan hanya di akhir) — supaya crash tidak menghilangkan cursor.
 - [ ] T6. Fix leak GPU ~600MB/loop (task selesai → KV/tensor task lama belum dibebaskan penuh; kandidat: `empty_cache()` + lepas referensi trajectory KV di loop).
