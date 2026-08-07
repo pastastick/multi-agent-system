@@ -212,7 +212,7 @@ latent:
 
   # HuggingFace model name (loaded once, shared by all steps).
   # Required: same model across steps — KV-cache is model-specific.
-  model_name: "Qwen/Qwen3-4B"
+  model_name: "Qwen/Qwen3-8B"
   device: "cuda"
 
   # ── Latent reasoning ──────────────────────────────────────

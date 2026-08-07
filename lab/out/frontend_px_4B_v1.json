@@ -1,0 +1,1398 @@
+{
+  "args": {
+    "model": "Qwen/Qwen3-4B",
+    "comm_mode": "text",
+    "latent_steps": 0,
+    "latent_mode": "raw",
+    "latent_temp": 0.7,
+    "no_realign": false,
+    "temperature": 0.8,
+    "max_new_tokens": 4096,
+    "max_repair": 3,
+    "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+    "tag": "px_4B_v1",
+    "holdout": false
+  },
+  "runs": [
+    {
+      "duration_s": 42.98,
+      "hypothesis": "small-cap stocks with abnormally high volume on a day experience a short-term reversal, reflecting temporary price distortions followed by corrective movements.",
+      "factors": [
+        {
+          "name": "VolumeZScoreReturnRank",
+          "expression": "(TS_ZSCORE($volume, 5) > 1) ? RANK($return, 1) : 0",
+          "explanation": "This expression uses the standardized volume to gate the ranking of returns, focusing on stocks with abnormally high volume and low returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TypeError: RANK() takes 1 positional argument but 2 were given",
+          "passed_gate": false
+        },
+        {
+          "name": "ReturnTSRankVolumeZScore",
+          "expression": "TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+          "explanation": "Combines the time-series rank of returns with the standardized volume to capture the relationship between volume and subsequent return performance.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.019624768689487974,
+          "icir": -0.29211166016484214,
+          "tstat": -4.553570131999202,
+          "n_days": 243,
+          "coverage": 4367.251028806584,
+          "n_unique": 4365.493827160494,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeZScoreReturnMin",
+          "expression": "TS_ZSCORE($volume, 5) * TS_MIN($return, 5)",
+          "explanation": "Multiplies the standardized volume with the minimum return in the past 5 days to highlight stocks with high volume and extreme negative returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.012609131957170686,
+          "icir": 0.17908091006106816,
+          "tstat": 2.7915951140229835,
+          "n_days": 243,
+          "coverage": 4367.251028806584,
+          "n_unique": 4327.506172839506,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeZScoreReturnCorr",
+          "expression": "TS_ZSCORE($volume, 5) * TS_CORR($volume, $return, 5)",
+          "explanation": "Uses the standardized volume and the correlation between volume and return to identify stocks where high volume is associated with negative returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.0034765097670029417,
+          "icir": -0.05576247297644077,
+          "tstat": -0.8692509271579374,
+          "n_days": 243,
+          "coverage": 4367.185185185185,
+          "n_unique": 4365.139917695473,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeZScoreReturnMax",
+          "expression": "TS_ZSCORE($volume, 5) * (TS_MAX($return, 5) < 0)",
+          "explanation": "Multiplies the standardized volume with a binary indicator of extreme negative returns, emphasizing stocks with high volume and large negative returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.001602524404720227,
+          "icir": -0.0809093656682223,
+          "tstat": -1.2612521893097701,
+          "n_days": 243,
+          "coverage": 4367.251028806584,
+          "n_unique": 94.4074074074074,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeZScoreReturnMedian",
+          "expression": "TS_ZSCORE($volume, 5) * (TS_MEDIAN($return, 5) < 0)",
+          "explanation": "Combines standardized volume with the median return to detect stocks with high volume and generally negative return performance.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.009496029603001235,
+          "icir": -0.17453419881186955,
+          "tstat": -2.7207189000043708,
+          "n_days": 243,
+          "coverage": 4367.251028806584,
+          "n_unique": 2110.7201646090534,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+        "TS_ZSCORE($volume, 5) * TS_MIN($return, 5)",
+        "TS_ZSCORE($volume, 5) * TS_CORR($volume, $return, 5)",
+        "TS_ZSCORE($volume, 5) * (TS_MAX($return, 5) < 0)",
+        "TS_ZSCORE($volume, 5) * (TS_MEDIAN($return, 5) < 0)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolumeZScoreReturnRank",
+          "expression": "((TS_ZSCORE($volume, 5) > 1) ? TS_RANK($return, 1) : 0)",
+          "ok": false,
+          "reason": "semantics: `TS_RANK` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+          "repaired_by": null
+        },
+        {
+          "name": "ReturnTSRankVolumeZScore",
+          "expression": "TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeZScoreReturnMin",
+          "expression": "TS_ZSCORE($volume, 5) * TS_MIN($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeZScoreReturnCorr",
+          "expression": "TS_ZSCORE($volume, 5) * TS_CORR($volume, $return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeZScoreReturnMax",
+          "expression": "TS_ZSCORE($volume, 5) * (TS_MAX($return, 5) < 0)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeZScoreReturnMedian",
+          "expression": "TS_ZSCORE($volume, 5) * (TS_MEDIAN($return, 5) < 0)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1953,
+      "construct_rep_ratio": 0.613,
+      "construct_text_head": "{\n  \"hypothesis\": \"small-cap stocks with abnormally high volume on a day experience a short-term reversal, reflecting temporary price distortions followed by corrective movements.\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeZScoreReturnRank\",\n      \"expression\": \"(TS_ZSCORE($volume, 5) > 1) ? RANK($return, 1) : 0\",\n      \"explanation\": \"This expression uses the standardized volume to gate the ranking of returns, focusing on stocks with abnormally high volume and low returns.\"\n    },\n    {\n      \"name\": \"ReturnTSRankVolumeZScore\",\n      \"expression\": \"TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 4.41,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 129,
+          "text_len": 687,
+          "rep_ratio": 0.295,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "text_only",
+          "s": 21.18,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 626,
+          "text_len": 2685,
+          "rep_ratio": 0.676,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 16.34,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 475,
+          "text_len": 1953,
+          "rep_ratio": 0.613,
+          "parsed_ok": true
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolumeZScoreReturnRank",
+          "expr": "((TS_ZSCORE($volume, 5) > 1) ? TS_RANK($return, 1) : 0)",
+          "reason": "semantics: `TS_RANK` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days."
+        }
+      ],
+      "direction": "d0",
+      "seed": 0,
+      "comm_mode": "text",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-4B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+      "tag": "px_4B_v1"
+    },
+    {
+      "duration_s": 43.2,
+      "hypothesis": "small-cap stocks with abnormally high volume on a day experience reversed returns the next day, indicating a liquidity-induced short-term reversal mechanism.",
+      "factors": [
+        {
+          "name": "VolZScoreNextDayReturn",
+          "expression": "(TS_ZSCORE($volume, 5) > 2) ? TS_RETURN($close, 1) : 0",
+          "explanation": "Identifies stocks with abnormally high volume (z-score > 2) and assigns their next-day return as a score, otherwise zero. Focuses on volume abnormality and its relation to next-day returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_RETURN' is not defined",
+          "passed_gate": false
+        },
+        {
+          "name": "VolRankReturnInverse",
+          "expression": "RANK($volume) < 0.2 ? TS_RETURN($close, 1) : 0",
+          "explanation": "Scores next-day returns for stocks with top 20% volume (rank < 0.2), capturing the inverse relationship between high volume and subsequent returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_RETURN' is not defined",
+          "passed_gate": false
+        },
+        {
+          "name": "VolCorrReturn",
+          "expression": "TS_CORR($volume, $return, 5) < 0.2",
+          "explanation": "Measures the correlation between volume and return over 5 days, focusing on weak positive correlations that might indicate reversal effects.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.01753445072186338,
+          "icir": 0.26228364909597485,
+          "tstat": 4.088597456059158,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2.0,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolZScoreReturnZScore",
+          "expression": "TS_ZSCORE($volume, 5) > 2 ? TS_ZSCORE($return, 1) : 0",
+          "explanation": "Scores z-scored returns for stocks with abnormally high volume (z-score > 2), emphasizing the relationship between volume and return anomalies.",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_ZSCORE` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 3 days."
+          ],
+          "flags": [
+            "degenerate-window:TS_ZSCORE(w=1<2)"
+          ],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 4372.489711934157,
+          "n_unique": 1.0,
+          "eval_error": null,
+          "passed_gate": false
+        },
+        {
+          "name": "VolCovReturn",
+          "expression": "TS_COVARIANCE($volume, $return, 5) < 0",
+          "explanation": "Identifies stocks with negative covariance between volume and return, suggesting a liquidity-induced reversal effect.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.016339293345037614,
+          "icir": 0.2409459508095406,
+          "tstat": 3.755975658121042,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2.0,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolRankReturnReverse",
+          "expression": "RANK($volume) > 0.8 ? TS_RETURN($close, 1) : 0",
+          "explanation": "Scores next-day returns for stocks with bottom 20% volume (rank > 0.8), highlighting the inverse relationship between low volume and returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_RETURN' is not defined",
+          "passed_gate": false
+        }
+      ],
+      "passing": [
+        "TS_CORR($volume, $return, 5) < 0.2",
+        "TS_COVARIANCE($volume, $return, 5) < 0"
+      ],
+      "gate_log": [
+        {
+          "name": "VolZScoreNextDayReturn",
+          "expression": "(TS_ZSCORE($volume, 5) > 2) ? TS_RETURN($close, 1) : 0",
+          "ok": false,
+          "reason": "arity: `TS_RETURN` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolRankReturnInverse",
+          "expression": "RANK($volume) < 0.2 ? TS_RETURN($close, 1) : 0",
+          "ok": false,
+          "reason": "arity: `TS_RETURN` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolCorrReturn",
+          "expression": "TS_CORR($volume, $return, 5) < 0.2",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolZScoreReturnZScore",
+          "expression": "TS_ZSCORE($volume, 5) > 2 ? TS_ZSCORE($return, 1) : 0",
+          "ok": false,
+          "reason": "semantics: `TS_ZSCORE` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 3 days.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolCovReturn",
+          "expression": "TS_COVARIANCE($volume, $return, 5) < 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolRankReturnReverse",
+          "expression": "RANK($volume) > 0.8 ? TS_RETURN($close, 1) : 0",
+          "ok": false,
+          "reason": "arity: `TS_RETURN` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1928,
+      "construct_rep_ratio": 0.6,
+      "construct_text_head": "{\n  \"hypothesis\": \"small-cap stocks with abnormally high volume on a day experience reversed returns the next day, indicating a liquidity-induced short-term reversal mechanism.\",\n  \"factors\": [\n    {\n      \"name\": \"VolZScoreNextDayReturn\",\n      \"expression\": \"(TS_ZSCORE($volume, 5) > 2) ? TS_RETURN($close, 1) : 0\",\n      \"explanation\": \"Identifies stocks with abnormally high volume (z-score > 2) and assigns their next-day return as a score, otherwise zero. Focuses on volume abnormality and its relation to next-day returns.\"\n    },\n    {\n      \"name\": \"VolRankReturnInverse\",\n      \"expression\"",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 4.22,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 122,
+          "text_len": 636,
+          "rep_ratio": 0.309,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "text_only",
+          "s": 21.19,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 625,
+          "text_len": 2663,
+          "rep_ratio": 0.76,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 17.44,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 508,
+          "text_len": 1928,
+          "rep_ratio": 0.6,
+          "parsed_ok": true
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolZScoreNextDayReturn",
+          "expr": "(TS_ZSCORE($volume, 5) > 2) ? TS_RETURN($close, 1) : 0",
+          "reason": "arity: `TS_RETURN` is not a known function. Use only functions from the allowed list."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolRankReturnInverse",
+          "expr": "RANK($volume) < 0.2 ? TS_RETURN($close, 1) : 0",
+          "reason": "arity: `TS_RETURN` is not a known function. Use only functions from the allowed list."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolZScoreReturnZScore",
+          "expr": "TS_ZSCORE($volume, 5) > 2 ? TS_ZSCORE($return, 1) : 0",
+          "reason": "semantics: `TS_ZSCORE` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 3 days."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolRankReturnReverse",
+          "expr": "RANK($volume) > 0.8 ? TS_RETURN($close, 1) : 0",
+          "reason": "arity: `TS_RETURN` is not a known function. Use only functions from the allowed list."
+        }
+      ],
+      "direction": "d0",
+      "seed": 1,
+      "comm_mode": "text",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-4B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+      "tag": "px_4B_v1"
+    },
+    {
+      "duration_s": 41.79,
+      "hypothesis": "small-cap stocks with unusually high volume on a day experience lower returns the next day, indicating a short-term reversal driven by liquidity and information asymmetry.",
+      "factors": [
+        {
+          "name": "VolReversalRank",
+          "expression": "RANK(DELAY($return, 1))",
+          "explanation": "Ranks the delayed return (next day's return) to identify stocks with lower subsequent performance, focusing on the reversal effect from high volume.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.00030044963255425116,
+          "icir": -0.0029840088263842035,
+          "tstat": -0.04651609407778276,
+          "n_days": 243,
+          "coverage": 4370.181069958848,
+          "n_unique": 4199.518518518518,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolReturnZScore",
+          "expression": "TS_ZSCORE($return, 5)",
+          "explanation": "Standardizes the return variable over the past 5 days to highlight abnormal performance, capturing the reversal effect linked to high volume.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.005874341900025539,
+          "icir": -0.059888026937627244,
+          "tstat": -0.9335619487892155,
+          "n_days": 243,
+          "coverage": 4368.588477366256,
+          "n_unique": 4366.85596707819,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolCorrStrength",
+          "expression": "TS_CORR($volume, DELAY($return, 1), 5)",
+          "explanation": "Calculates the correlation between volume and the next day's return, quantifying the strength of the reversal effect driven by liquidity.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.0028923898737937747,
+          "icir": -0.05346750221599472,
+          "tstat": -0.8334758735271396,
+          "n_days": 243,
+          "coverage": 4365.341563786008,
+          "n_unique": 4363.275720164609,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolCovarMagnitude",
+          "expression": "ABS(TS_COVARIANCE($volume, DELAY($return, 1), 5))",
+          "explanation": "Measures the absolute covariance between volume and the next day's return, emphasizing the magnitude of the reversal effect.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.04047755277845907,
+          "icir": -0.39449304130512625,
+          "tstat": -6.149537916955618,
+          "n_days": 243,
+          "coverage": 4366.275720164609,
+          "n_unique": 4364.938271604939,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolZScoreGate",
+          "expression": "(TS_ZSCORE($volume, 5) > 2) ? TS_ZSCORE($return, 5) : 0",
+          "explanation": "Gates the z-score of returns based on extreme volume, highlighting stocks with both high volume and low subsequent returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 4372.489711934157,
+          "n_unique": 1.0,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolRankCorr",
+          "expression": "TS_CORR(TS_RANK($volume, 5), DELAY($return, 1), 5)",
+          "explanation": "Correlates the rank of volume with the next day's return, capturing the reversal effect through relative liquidity measures.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.0017407888411496107,
+          "icir": -0.03880050080284057,
+          "tstat": -0.604839948746732,
+          "n_days": 243,
+          "coverage": 4351.358024691358,
+          "n_unique": 4350.037037037037,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "RANK(DELAY($return, 1))",
+        "TS_ZSCORE($return, 5)",
+        "TS_CORR($volume, DELAY($return, 1), 5)",
+        "ABS(TS_COVARIANCE($volume, DELAY($return, 1), 5))",
+        "(TS_ZSCORE($volume, 5) > 2) ? TS_ZSCORE($return, 5) : 0",
+        "TS_CORR(TS_RANK($volume, 5), DELAY($return, 1), 5)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolReversalRank",
+          "expression": "RANK(DELAY($return, 1))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolReturnZScore",
+          "expression": "TS_ZSCORE($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolCorrStrength",
+          "expression": "TS_CORR($volume, DELAY($return, 1), 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolCovarMagnitude",
+          "expression": "ABS(TS_COVARIANCE($volume, DELAY($return, 1), 5))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolZScoreGate",
+          "expression": "(TS_ZSCORE($volume, 5) > 2) ? TS_ZSCORE($return, 5) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolRankCorr",
+          "expression": "TS_CORR(TS_RANK($volume, 5), DELAY($return, 1), 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1805,
+      "construct_rep_ratio": 0.58,
+      "construct_text_head": "{\n  \"hypothesis\": \"small-cap stocks with unusually high volume on a day experience lower returns the next day, indicating a short-term reversal driven by liquidity and information asymmetry.\",\n  \"factors\": [\n    {\n      \"name\": \"VolReversalRank\",\n      \"expression\": \"RANK(DELAY($return, 1))\",\n      \"explanation\": \"Ranks the delayed return (next day's return) to identify stocks with lower subsequent performance, focusing on the reversal effect from high volume.\"\n    },\n    {\n      \"name\": \"VolReturnZScore\",\n      \"expression\": \"TS_ZSCORE($return, 5)\",\n      \"explanation\": \"Standardizes the retu",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 4.6,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 133,
+          "text_len": 704,
+          "rep_ratio": 0.315,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "text_only",
+          "s": 20.46,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 599,
+          "text_len": 2765,
+          "rep_ratio": 0.713,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 15.79,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 455,
+          "text_len": 1805,
+          "rep_ratio": 0.58,
+          "parsed_ok": true
+        }
+      ],
+      "events": [],
+      "direction": "d0",
+      "seed": 2,
+      "comm_mode": "text",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-4B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+      "tag": "px_4B_v1"
+    },
+    {
+      "duration_s": 52.16,
+      "hypothesis": "during regime transitions, low-volatility stocks show mean-reversion in returns. when volatility drops and momentum fades, these stocks tend to rebound sharply. the driver is a liquidity shift and investor sentiment reset, with columns like volatiltiy, momentum, and return direction. the mechanism is a liquidity-driven mean-reversion in low-volatility stocks during regime transitions.",
+      "factors": [
+        {
+          "name": "LiquidityMeanReversion",
+          "expression": "(TS_ZSCORE($return, 20) > 1) ? TS_ZSCORE($volume, 20) : 0",
+          "explanation": "Identifies stocks with high return z-scores (indicating mean-reversion) and gates their volume z-scores to highlight liquidity shifts during regime transitions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.01770516231397774,
+          "icir": -0.3433982766322883,
+          "tstat": -5.353049361228441,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 633.5144032921811,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityRankReversion",
+          "expression": "RANK($volatility) < 0.2 ? TS_RANK($return, 20) : 0",
+          "explanation": "Focuses on low-volatility stocks (top 20%) and measures their return rank to capture mean-reversion during regime transitions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        },
+        {
+          "name": "LiquidityCorrelation",
+          "expression": "TS_CORR($return, $volume, 20) > 0.5 ? TS_ZSCORE($return, 20) : 0",
+          "explanation": "Highlights stocks with strong positive correlation between returns and volume, indicating liquidity-driven mean-reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.008282604346445335,
+          "icir": -0.1990348405566569,
+          "tstat": -3.102646106884503,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 748.7037037037037,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityAdjustedReturn",
+          "expression": "TS_MAD($return, 20) < 0.1 ? TS_ZSCORE($return, 20) : 0",
+          "explanation": "Identifies stocks with low volatility (measured by MAD) and captures their return z-scores to detect mean-reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.007696773753004601,
+          "icir": -0.07357694219570565,
+          "tstat": -1.1469510193366852,
+          "n_days": 243,
+          "coverage": 4370.057613168724,
+          "n_unique": 4368.139917695473,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "LiquidityFilteredReturn",
+          "expression": "(TS_ZSCORE($volume, 20) > 1) ? TS_RANK($return, 20) : 0",
+          "explanation": "Focuses on stocks with high volume z-scores (indicating liquidity shifts) and measures their return rank to detect mean-reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.021937586015077382,
+          "icir": -0.3258884662666865,
+          "tstat": -5.080098430571375,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 26.613168724279834,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "RegimeTransitionSignal",
+          "expression": "(TS_ZSCORE($return, 20) > 1) && (TS_ZSCORE($volume, 20) > 1) ? TS_RANK($return, 20) : 0",
+          "explanation": "Combines high return z-scores and high volume z-scores to identify stocks showing both mean-reversion and liquidity shifts during regime transitions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.017751521859452002,
+          "icir": -0.3002678085107517,
+          "tstat": -4.68071190196186,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 7.045267489711934,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "(TS_ZSCORE($return, 20) > 1) ? TS_ZSCORE($volume, 20) : 0",
+        "TS_CORR($return, $volume, 20) > 0.5 ? TS_ZSCORE($return, 20) : 0",
+        "TS_MAD($return, 20) < 0.1 ? TS_ZSCORE($return, 20) : 0",
+        "(TS_ZSCORE($volume, 20) > 1) ? TS_RANK($return, 20) : 0",
+        "(TS_ZSCORE($return, 20) > 1) && (TS_ZSCORE($volume, 20) > 1) ? TS_RANK($return, 20) : 0"
+      ],
+      "gate_log": [
+        {
+          "name": "LiquidityMeanReversion",
+          "expression": "(TS_ZSCORE($return, 20) > 1) ? TS_ZSCORE($volume, 20) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityRankReversion",
+          "expression": "RANK($volatility) < 0.2 ? TS_RANK($return, 20) : 0",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "LiquidityCorrelation",
+          "expression": "TS_CORR($return, $volume, 20) > 0.5 ? TS_ZSCORE($return, 20) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityAdjustedReturn",
+          "expression": "TS_MAD($return, 20) < 0.1 ? TS_ZSCORE($return, 20) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "LiquidityFilteredReturn",
+          "expression": "(TS_ZSCORE($volume, 20) > 1) ? TS_RANK($return, 20) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "RegimeTransitionSignal",
+          "expression": "(TS_ZSCORE($return, 20) > 1) && (TS_ZSCORE($volume, 20) > 1) ? TS_RANK($return, 20) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2206,
+      "construct_rep_ratio": 0.655,
+      "construct_text_head": "{\n  \"hypothesis\": \"during regime transitions, low-volatility stocks show mean-reversion in returns. when volatility drops and momentum fades, these stocks tend to rebound sharply. the driver is a liquidity shift and investor sentiment reset, with columns like volatiltiy, momentum, and return direction. the mechanism is a liquidity-driven mean-reversion in low-volatility stocks during regime transitions.\",\n  \"factors\": [\n    {\n      \"name\": \"LiquidityMeanReversion\",\n      \"expression\": \"(TS_ZSCORE($return, 20) > 1) ? TS_ZSCORE($volume, 20) : 0\",\n      \"explanation\": \"Identifies stocks with high",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 4.04,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 116,
+          "text_len": 602,
+          "rep_ratio": 0.459,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "text_only",
+          "s": 26.81,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 788,
+          "text_len": 3425,
+          "rep_ratio": 0.781,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 20.42,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 593,
+          "text_len": 2206,
+          "rep_ratio": 0.655,
+          "parsed_ok": true
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityRankReversion",
+          "expr": "RANK($volatility) < 0.2 ? TS_RANK($return, 20) : 0",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        }
+      ],
+      "direction": "d1",
+      "seed": 0,
+      "comm_mode": "text",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-4B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+      "tag": "px_4B_v1"
+    },
+    {
+      "duration_s": 46.47,
+      "hypothesis": "during regime transitions, low-volatility stocks exhibit sharper price corrections, leading to lower expected returns in the next period. the signal is derived from volume and return volatility, operating within a short horizon, and falls under liquidity-driven mean-reversion.",
+      "factors": [
+        {
+          "name": "VolatilityGate",
+          "expression": "(TS_ZSCORE($return, 5) < -1) ? TS_PCTCHANGE($return, 1) : 0",
+          "explanation": "Gates the percentage change in returns based on extreme negative return volatility, focusing on stocks with sharp price corrections during volatile periods.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.004537357728875736,
+          "icir": 0.10364919437150118,
+          "tstat": 1.6157310373351994,
+          "n_days": 243,
+          "coverage": 4349.407407407408,
+          "n_unique": 644.2427983539095,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "LiquidityRank",
+          "expression": "TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+          "explanation": "Combines the rank of returns with volume z-score to identify low-volatility, high-liquidity stocks, emphasizing liquidity-driven mean-reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.019624768689487974,
+          "icir": -0.29211166016484214,
+          "tstat": -4.553570131999202,
+          "n_days": 243,
+          "coverage": 4367.251028806584,
+          "n_unique": 4365.493827160494,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "CorrelationSignal",
+          "expression": "TS_CORR($volume, $return, 5) * TS_STD($return, 5)",
+          "explanation": "Multiplies the correlation between volume and returns with return volatility to highlight stocks where liquidity and volatility are closely linked.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.027476611939774024,
+          "icir": -0.3494959890684023,
+          "tstat": -5.448103290972087,
+          "n_days": 243,
+          "coverage": 4368.526748971193,
+          "n_unique": 4367.526748971193,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityFilter",
+          "expression": "(TS_STD($return, 5) < 0.01) ? TS_PCTCHANGE($return, 1) : 0",
+          "explanation": "Finds stocks with low return volatility and applies the percentage change in returns, focusing on sharp corrections in low-volatility stocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.008965507083402517,
+          "icir": -0.22093906807994781,
+          "tstat": -3.444099221622499,
+          "n_days": 243,
+          "coverage": 4334.255144032922,
+          "n_unique": 457.50205761316874,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "ZScoreVolatility",
+          "expression": "TS_ZSCORE($return, 5) - TS_ZSCORE($volume, 5)",
+          "explanation": "Subtracts the z-score of volume from the z-score of returns to capture the relative volatility and liquidity dynamics.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.010086466992822849,
+          "icir": 0.13094330852827443,
+          "tstat": 2.0412041695392453,
+          "n_days": 243,
+          "coverage": 4367.185185185185,
+          "n_unique": 4365.473251028807,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "MeanReversionScore",
+          "expression": "TS_ZSCORE($return, 5) * TS_CORR($volume, $return, 5)",
+          "explanation": "Combines return volatility with the correlation between volume and returns to measure liquidity-driven mean-reversion in low-volatility stocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.00677943732143513,
+          "icir": -0.13027232794537935,
+          "tstat": -2.0307446173950474,
+          "n_days": 243,
+          "coverage": 4368.526748971193,
+          "n_unique": 4366.547325102881,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "(TS_ZSCORE($return, 5) < -1) ? TS_PCTCHANGE($return, 1) : 0",
+        "TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+        "TS_CORR($volume, $return, 5) * TS_STD($return, 5)",
+        "(TS_STD($return, 5) < 0.01) ? TS_PCTCHANGE($return, 1) : 0",
+        "TS_ZSCORE($return, 5) - TS_ZSCORE($volume, 5)",
+        "TS_ZSCORE($return, 5) * TS_CORR($volume, $return, 5)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolatilityGate",
+          "expression": "(TS_ZSCORE($return, 5) < -1) ? TS_PCTCHANGE($return, 1) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "LiquidityRank",
+          "expression": "TS_RANK($return, 5) * TS_ZSCORE($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "CorrelationSignal",
+          "expression": "TS_CORR($volume, $return, 5) * TS_STD($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityFilter",
+          "expression": "(TS_STD($return, 5) < 0.01) ? TS_PCTCHANGE($return, 1) : 0",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "ZScoreVolatility",
+          "expression": "TS_ZSCORE($return, 5) - TS_ZSCORE($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "MeanReversionScore",
+          "expression": "TS_ZSCORE($return, 5) * TS_CORR($volume, $return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2041,
+      "construct_rep_ratio": 0.605,
+      "construct_text_head": "{\n  \"hypothesis\": \"during regime transitions, low-volatility stocks exhibit sharper price corrections, leading to lower expected returns in the next period. the signal is derived from volume and return volatility, operating within a short horizon, and falls under liquidity-driven mean-reversion.\",\n  \"factors\": [\n    {\n      \"name\": \"VolatilityGate\",\n      \"expression\": \"(TS_ZSCORE($return, 5) < -1) ? TS_PCTCHANGE($return, 1) : 0\",\n      \"explanation\": \"Gates the percentage change in returns based on extreme negative return volatility, focusing on stocks with sharp price corrections during vola",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 3.95,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 114,
+          "text_len": 633,
+          "rep_ratio": 0.432,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "text_only",
+          "s": 23.91,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 700,
+          "text_len": 3186,
+          "rep_ratio": 0.719,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 17.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 502,
+          "text_len": 2041,
+          "rep_ratio": 0.605,
+          "parsed_ok": true
+        }
+      ],
+      "events": [],
+      "direction": "d1",
+      "seed": 1,
+      "comm_mode": "text",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-4B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+      "tag": "px_4B_v1"
+    },
+    {
+      "duration_s": 54.15,
+      "hypothesis": "during sharp volatility transitions, low-volatility stocks reverse their underperformance in next-period returns due to changing market liquidity and sentiment.",
+      "factors": [
+        {
+          "name": "VolatilityReversalScore",
+          "expression": "(TS_ZSCORE($return, 5) > 0.5) ? TS_ZSCORE($volatility, 5) : -TS_ZSCORE($volatility, 5)",
+          "explanation": "Scores stocks based on the z-score of returns, using volatility z-score as a gate. Positive scores indicate stocks that have shown strong returns and are now reversing underperformance in volatile markets.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        },
+        {
+          "name": "VolatilityCrossRank",
+          "expression": "RANK(TS_ZSCORE($volatility, 5), 1) * TS_CORR($return, $volatility, 5)",
+          "explanation": "Ranks volatility z-scores cross-sectionally and multiplies by the correlation between returns and volatility, capturing stocks that are both volatile and showing a reversal in return trends.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        },
+        {
+          "name": "VolatilityReversionZ",
+          "expression": "TS_ZSCORE(TS_CORR($return, $volatility, 5), 5)",
+          "explanation": "Z-scores the correlation between returns and volatility over the past 5 days, identifying stocks where this correlation has changed significantly, indicating potential mean reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        },
+        {
+          "name": "VolatilityMagnitudeReversal",
+          "expression": "(TS_RANK($volatility, 5) < 0.2) ? TS_ZSCORE($return, 5) : -TS_ZSCORE($return, 5)",
+          "explanation": "Scores stocks based on the z-score of returns, using the percentile rank of volatility as a gate. Low volatility ranks indicate stocks that may reverse underperformance in volatile markets.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        },
+        {
+          "name": "VolatilityReversionMedian",
+          "expression": "TS_MEDIAN(TS_ZSCORE($return, 5), 5) - TS_ZSCORE($volatility, 5)",
+          "explanation": "Subtracts the z-score of volatility from the median of return z-scores, highlighting stocks where returns have diverged from volatility trends, suggesting potential reversal.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        },
+        {
+          "name": "VolatilityTrendReversal",
+          "expression": "TS_ZSCORE($return, 5) * TS_ZSCORE($volatility, 5)",
+          "explanation": "Multiplies the z-score of returns by the z-score of volatility, capturing stocks where both have shown significant changes, indicating possible mean reversion in returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "SyntaxError: invalid syntax (<string>, line 1)",
+          "passed_gate": false
+        }
+      ],
+      "passing": [
+        "(TS_ZSCORE($return, 5) > 0.5) ? TS_ZSCORE($volume, 5) : -TS_ZSCORE($volume, 5)",
+        "TS_ZSCORE(TS_CORR($return, $volume, 5), 5)",
+        "(TS_RANK($volume, 5) < 0.2) ? TS_ZSCORE($return, 5) : -TS_ZSCORE($return, 5)",
+        "TS_MEDIAN(TS_ZSCORE($return, 5), 5) - TS_ZSCORE($volume, 5)",
+        "TS_ZSCORE($return, 5) * TS_ZSCORE($volume, 5)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolatilityReversalScore",
+          "expression": "(TS_ZSCORE($return, 5) > 0.5) ? TS_ZSCORE($volatility, 5) : -TS_ZSCORE($volatility, 5)",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityCrossRank",
+          "expression": "(TS_RANK(TS_ZSCORE($volatility, 5), 1) * TS_CORR($return, $volatility, 5))",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityReversionZ",
+          "expression": "TS_ZSCORE(TS_CORR($return, $volatility, 5), 5)",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityMagnitudeReversal",
+          "expression": "(TS_RANK($volatility, 5) < 0.2) ? TS_ZSCORE($return, 5) : -TS_ZSCORE($return, 5)",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityReversionMedian",
+          "expression": "TS_MEDIAN(TS_ZSCORE($return, 5), 5) - TS_ZSCORE($volatility, 5)",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityTrendReversal",
+          "expression": "TS_ZSCORE($return, 5) * TS_ZSCORE($volatility, 5)",
+          "ok": false,
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "repaired",
+          "expression": "(TS_ZSCORE($return, 5) > 0.5) ? TS_ZSCORE($volume, 5) : -TS_ZSCORE($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": "agent"
+        },
+        {
+          "name": "repaired",
+          "expression": "TS_ZSCORE(TS_CORR($return, $volume, 5), 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": "agent"
+        },
+        {
+          "name": "repaired",
+          "expression": "(TS_RANK($volume, 5) < 0.2) ? TS_ZSCORE($return, 5) : -TS_ZSCORE($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": "agent"
+        },
+        {
+          "name": "repaired",
+          "expression": "TS_MEDIAN(TS_ZSCORE($return, 5), 5) - TS_ZSCORE($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": "agent"
+        },
+        {
+          "name": "repaired",
+          "expression": "TS_ZSCORE($return, 5) * TS_ZSCORE($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": "agent"
+        }
+      ],
+      "repaired": true,
+      "repair_attempts": 1,
+      "gate_error": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return.",
+      "construct_text_len": 2316,
+      "construct_rep_ratio": 0.626,
+      "construct_text_head": "{\n  \"hypothesis\": \"during sharp volatility transitions, low-volatility stocks reverse their underperformance in next-period returns due to changing market liquidity and sentiment.\",\n  \"factors\": [\n    {\n      \"name\": \"VolatilityReversalScore\",\n      \"expression\": \"(TS_ZSCORE($return, 5) > 0.5) ? TS_ZSCORE($volatility, 5) : -TS_ZSCORE($volatility, 5)\",\n      \"explanation\": \"Scores stocks based on the z-score of returns, using volatility z-score as a gate. Positive scores indicate stocks that have shown strong returns and are now reversing underperformance in volatile markets.\"\n    },\n    {\n    ",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 5.63,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 132,
+          "text_len": 711,
+          "rep_ratio": 0.433,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "text_only",
+          "s": 21.3,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 626,
+          "text_len": 2838,
+          "rep_ratio": 0.659,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 19.82,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 572,
+          "text_len": 2316,
+          "rep_ratio": 0.626,
+          "parsed_ok": true
+        },
+        {
+          "agent": "repair",
+          "mode": "text_only",
+          "s": 6.36,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 0,
+          "n_out_tok": 185,
+          "text_len": 419,
+          "rep_ratio": 0.807,
+          "parsed_ok": true
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityReversalScore",
+          "expr": "(TS_ZSCORE($return, 5) > 0.5) ? TS_ZSCORE($volatility, 5) : -TS_ZSCORE($volatility, 5)",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityCrossRank",
+          "expr": "(TS_RANK(TS_ZSCORE($volatility, 5), 1) * TS_CORR($return, $volatility, 5))",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityReversionZ",
+          "expr": "TS_ZSCORE(TS_CORR($return, $volatility, 5), 5)",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityMagnitudeReversal",
+          "expr": "(TS_RANK($volatility, 5) < 0.2) ? TS_ZSCORE($return, 5) : -TS_ZSCORE($return, 5)",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityReversionMedian",
+          "expr": "TS_MEDIAN(TS_ZSCORE($return, 5), 5) - TS_ZSCORE($volatility, 5)",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityTrendReversal",
+          "expr": "TS_ZSCORE($return, 5) * TS_ZSCORE($volatility, 5)",
+          "reason": "variable: `$volatility` is not a known variable. Use only: $open $high $low $close $volume $return."
+        }
+      ],
+      "direction": "d1",
+      "seed": 2,
+      "comm_mode": "text",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-4B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts_v1.yaml",
+      "tag": "px_4B_v1"
+    }
+  ]
+}

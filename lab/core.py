@@ -145,8 +145,20 @@ class Lab:
         out = eval(code, env)  # noqa: S307 — sama dengan produksi
         if isinstance(out, pd.DataFrame):
             out = out.iloc[:, 0]
+        # Ekspresi LLM yang cacat bisa mengevaluasi ke OBJEK, bukan angka —
+        # mis. `MAX` telanjang (tanpa argumen) menghasilkan objek fungsi, yang
+        # kalau di-broadcast ke pd.Series akan meledak jauh di hilir
+        # (`float() argument must be ... not 'function'`) dan menjatuhkan
+        # seluruh loop skoring. Tolak di sini dengan pesan yang jelas; `ic()`
+        # menangkapnya jadi ICResult(error=...) seperti kegagalan lainnya.
         if not isinstance(out, pd.Series):
+            if callable(out) or isinstance(out, (str, bytes, type)):
+                raise TypeError(
+                    f"ekspresi menghasilkan {type(out).__name__}, bukan deret angka"
+                )
             out = pd.Series(out, index=df.index)
+        if not np.issubdtype(out.dtype, np.number):
+            out = pd.to_numeric(out, errors="coerce")
         return out
 
     # ── metrik ────────────────────────────────────────────────────────────

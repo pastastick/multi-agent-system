@@ -537,6 +537,9 @@ class LLMResult:
 _MODEL_CACHE: Dict[Tuple[str, str], Tuple[Any, Any]] = {}
 _MODEL_CACHE_LOCK = threading.Lock()
 
+# Mode langkah laten yang sah (lihat _CoreEngine._latent_step_vec).
+_LATENT_STEP_MODES = ("raw", "soft", "gumbel", "sample")
+
 # ── Global LLM output log state ───────────────────────────────────────────────
 # Semua LocalLLMBackend instance berbagi satu session dir dan satu counter
 # atomik, sehingga semua output LLM (dari pipeline, evaluator, mutation, dsb.)
@@ -697,7 +700,65 @@ class _CoreEngine:
                                              use_realign=use_realign)
             print(f"[CoreEngine] Realigner built (use_realign={use_realign})")
 
+        # ── Mode langkah laten (AUDIT_KRITIS §7 / G3) ──────────────────────
+        # "raw" = perilaku lama: z = realign(h) lalu dinormalkan ke target_norm.
+        # Terukur di lab/latent_dynamics.py: vektornya berada DI LUAR manifold
+        # embedding (kosinus ke embedding terdekat negatif) dan rollout-nya
+        # deterministik → entropi jalur laten nol → pencarian evolusioner
+        # kehilangan sumber variansnya (B14).
+        # Alternatif memakai kombinasi konveks embedding NYATA, sehingga vektor
+        # laten selalu in-distribution, dan T menjadi knob entropi:
+        #   soft    z = softmax(W_out h / T) @ W_in            (deterministik)
+        #   gumbel  z = softmax((W_out h + g) / T) @ W_in      (stokastik, kontinu)
+        #   sample  z = W_in[i], i ~ softmax(W_out h / T)      (batas diskretnya)
+        # Semua varian tetap dinormalkan ke target_norm, jadi hanya ARAH vektor
+        # yang berubah — sisa pipeline (KV, chat template, parser) tak tersentuh.
+        self.latent_step_mode = os.environ.get("LATENT_STEP_MODE", "raw").strip().lower()
+        self.latent_step_temp = float(os.environ.get("LATENT_STEP_TEMP", "0.7"))
+        if self.latent_step_mode not in _LATENT_STEP_MODES:
+            raise ValueError(
+                f"LATENT_STEP_MODE={self.latent_step_mode!r} tidak dikenal; "
+                f"pilih salah satu dari {sorted(_LATENT_STEP_MODES)}"
+            )
+        if latent_steps > 0 and self.latent_step_mode != "raw":
+            print(f"[CoreEngine] latent step mode={self.latent_step_mode} "
+                  f"T={self.latent_step_temp}")
+
         print(f"[CoreEngine] Ready. latent_steps={latent_steps}")
+
+    # ── Satu langkah laten: hidden state → vektor token virtual ─────────────
+    def _latent_step_vec(self, last_hidden: "torch.Tensor") -> "torch.Tensor":
+        """Petakan hidden state ke vektor yang diumpankan sebagai inputs_embeds.
+
+        `raw` mempertahankan jalur produksi lama (realigner). Mode lain
+        memproyeksikan lewat distribusi token dulu sehingga hasilnya adalah
+        kombinasi konveks baris W_in — selalu di dalam convex hull embedding
+        nyata. Normalisasi akhir ke target_norm sama untuk semua mode.
+        """
+        mode = self.latent_step_mode
+        if mode == "raw":
+            return self.realigner.apply(last_hidden, self.model)
+
+        W_in = self.model.get_input_embeddings().weight            # [V, d]
+        target_norm = self.realigner._ensure_matrix(self.model)[1].to(last_hidden.device)
+        T = max(self.latent_step_temp, 1e-6)
+
+        out_emb = self.model.get_output_embeddings()
+        logits = (out_emb(last_hidden) if out_emb is not None
+                  else last_hidden @ W_in.T).float()               # [B, V]
+
+        if mode == "sample":
+            idx = torch.multinomial(torch.softmax(logits / T, dim=-1), 1)  # [B,1]
+            z = W_in[idx.squeeze(-1)].float()
+        else:
+            if mode == "gumbel":
+                u = torch.rand_like(logits).clamp_(1e-9, 1.0 - 1e-9)
+                logits = logits + (-torch.log(-torch.log(u)))
+            probs = torch.softmax(logits / T, dim=-1)
+            z = (probs.to(W_in.dtype) @ W_in).float()              # [B, d]
+
+        z = z * (target_norm / z.norm(dim=-1, keepdim=True).clamp_min(1e-6))
+        return z.to(last_hidden.dtype)
 
     # ── Chat formatting ────────────────────────────────────────────────────
     # [terjawab — skripsi Bab 4 §Pemrosesan Prompt dan Penggunaan-Ulang KV]:
@@ -888,7 +949,7 @@ class _CoreEngine:
         vecs: List[torch.Tensor] = []
 
         for _ in range(_n_steps):
-            latent_vec   = self.realigner.apply(last_hidden, self.model)  # [B, d]
+            latent_vec   = self._latent_step_vec(last_hidden)  # [B, d]
             latent_embed = latent_vec.unsqueeze(1)             # [B, 1, d]
 
             if record_vecs:

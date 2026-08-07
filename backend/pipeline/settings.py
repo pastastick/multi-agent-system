@@ -119,7 +119,7 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
 
     # Model HuggingFace untuk LocalLLMBackend.
     # Di-load sekali, di-share ke semua step dalam satu loop.
-    latent_model_name: str = "Qwen/Qwen3-4B"
+    latent_model_name: str = "Qwen/Qwen3-8B"
     latent_device: str = "cuda"
 
     # ── Latent reasoning steps ───────────────────────────────────────────

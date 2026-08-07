@@ -1,0 +1,539 @@
+{
+  "args": {
+    "model": "Qwen/Qwen3-8B",
+    "comm_mode": "kv",
+    "latent_steps": 20,
+    "latent_mode": "raw",
+    "latent_temp": 0.7,
+    "no_realign": false,
+    "temperature": 0.8,
+    "max_new_tokens": 4096,
+    "max_repair": 3,
+    "prompts": "",
+    "tag": "g2_kv_ls20",
+    "holdout": false
+  },
+  "runs": [
+    {
+      "duration_s": 45.9,
+      "hypothesis": "",
+      "factors": [],
+      "passing": [],
+      "gate_log": [],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "no expression from construct",
+      "construct_text_len": 1777,
+      "construct_rep_ratio": 0.607,
+      "construct_text_head": "{\"hypo thesis\": \"Shortterm reversalafterabnormallyyhigh-volumeolumeinsmall-capstocks\",\"factors\": [{\"name\":\"VolumeRankReversal\",\"expr\":\"RANK(TSPctchange($volume, 3) \",\"explaint\":\"Intent:compute therankofthepercentchangeinvolumeover3daytoIdentifstockwithrelativelyhigh.volumechange\",\"Explaint\":\" Intent:compute the rankofthepercentchangeinvolumeover3daytoidentifystockswithrel ativelysthighvolumechange\"},{\"name\":\"VolumeZScoreReversal\",\".expr\":\"ZSCORETS pctchange($volume, 7) \",\"Ex Clinton\":\"intent:standardisethepercentchangeinvolumeOver7Daysto scorethecross-sectionaldistributionofthevolume.changecha",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.39,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 900,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "kv_only",
+          "s": 1.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 3193,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 20.55,
+          "latent_s": 1.503,
+          "gen_s": 18.957,
+          "kv_len": 6176,
+          "n_out_tok": 469,
+          "text_len": 1837,
+          "rep_ratio": 0.57,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 22.63,
+          "latent_s": 1.667,
+          "gen_s": 20.854,
+          "kv_len": 9175,
+          "n_out_tok": 485,
+          "text_len": 1777,
+          "rep_ratio": 0.607,
+          "parsed_ok": false
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "construct output unparseable; retry once",
+          "head": "{\"hypo thesis\": \"short-term reversal reversal after abnormallyy high-volumeolumedays in small-capstocksocks\",\"f actors\":"
+        },
+        {
+          "level": "ERROR",
+          "msg": "no expression from construct; skipping repair"
+        }
+      ],
+      "direction": "d0",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 20,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml",
+      "tag": "g2_kv_ls20"
+    },
+    {
+      "duration_s": 35.53,
+      "hypothesis": "",
+      "factors": [],
+      "passing": [],
+      "gate_log": [],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "no expression from construct",
+      "construct_text_len": 1333,
+      "construct_rep_ratio": 0.44,
+      "construct_text_head": "{\"hypothesis\": \"short-term reversalafter.abnormally.high.volume.dayss.insmall-cap.st\",\"f\n\n[{\"name\":\"VolumeRank\",\"expr\":\"(RANK($volume,3)?(TS_PCTCHANGE($volume,3)):(TSPCT.change($.volume,7))\",\"explaint\":\"compute therankofvolumeonaday, gatedonthepercentagechangeof volumeover3vs7days,characterizingthe regimeofabnormallyyhighvolumedaySin3-7-daywindowtoidentifyabnormallyy.high.VolumePeriodanditspotentialforreturn\"},{\"name\":\"VolumeZ.Score\",\"expr\": \"ZSCORE(RANK($volume,3))\",\".Explaint\":\"computethez-scoreofth rankofvolumeoverallstock,characterizingthecross-sectionaldistributionof_VOLUME'sranktoIdentif",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.91,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 900,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "kv_only",
+          "s": 1.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 3193,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 16.21,
+          "latent_s": 1.506,
+          "gen_s": 14.616,
+          "kv_len": 6069,
+          "n_out_tok": 362,
+          "text_len": 1413,
+          "rep_ratio": 0.443,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 17.07,
+          "latent_s": 1.66,
+          "gen_s": 15.306,
+          "kv_len": 8940,
+          "n_out_tok": 357,
+          "text_len": 1333,
+          "rep_ratio": 0.44,
+          "parsed_ok": false
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "construct output unparseable; retry once",
+          "head": "{\"hypo thesis\": \"short-term reversal reversal after abnormallyy high-volumeolumedays in small-capstocksocks\",\"f\u6d3b\u6027\u70ad\": [{\""
+        },
+        {
+          "level": "ERROR",
+          "msg": "no expression from construct; skipping repair"
+        }
+      ],
+      "direction": "d0",
+      "seed": 1,
+      "comm_mode": "kv",
+      "latent_steps": 20,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml",
+      "tag": "g2_kv_ls20"
+    },
+    {
+      "duration_s": 44.45,
+      "hypothesis": "",
+      "factors": [
+        {
+          "name": "VolumeRank",
+          "expression": "(RANK($volume)) *($volume>TS_MEAN($volume,7))",
+          "explanation": "",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.026563400715132704,
+          "icir": -0.4091968235330372,
+          "tstat": -6.378747197895149,
+          "n_days": 243,
+          "coverage": 4370.349794238683,
+          "n_unique": 1736.6625514403293,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "(RANK($volume)) *($volume>TS_MEAN($volume,7))"
+      ],
+      "gate_log": [
+        {
+          "name": "VolumeRank",
+          "expression": "(RANK($volume)) *($volume>TS_MEAN($volume,7))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1454,
+      "construct_rep_ratio": 0.418,
+      "construct_text_head": "```json\n{\n  \"hypo thesis\": \"short-term reversalafterabnormallyyhighVolumeDayinsmall-capStock\",\n  \"factors\":[\n    {\n      \"name\": \"VolumeRank\",\n      \"expression\":\"(RANK($volume)) *($volume>TS_MEAN($volume,7))\",\n      \"explaint\": \"compute thecross-sectionalrankof volume, gatedonwhetheritIsAboveThe7-dayAverage,toCaptureTheReversalOfAbnormallyHighVolume\"\n    },\n    {\n      \"name\": \"VolumeZ.Score\\\"\",\n      \"\u8868\u8fbe\u5f0f\":\"(ZSCORE($volume))*($.volume>TSMEAN($.volume,7))\",\n      \"explan\": \"computeTheCross-sectionalZ.ScoreOfVolume, gatedonWhetherItIsAboveThe7dayAverage,toCaptureThe.ReversalOfAbnormally.High.V",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.91,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 900,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "kv_only",
+          "s": 1.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 3193,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 21.32,
+          "latent_s": 1.505,
+          "gen_s": 19.724,
+          "kv_len": 6195,
+          "n_out_tok": 488,
+          "text_len": 1805,
+          "rep_ratio": 0.491,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 20.61,
+          "latent_s": 1.668,
+          "gen_s": 18.842,
+          "kv_len": 9147,
+          "n_out_tok": 438,
+          "text_len": 1454,
+          "rep_ratio": 0.418,
+          "parsed_ok": true
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "construct output unparseable; retry once",
+          "head": "{\"hypo thesis\": \"short-term reversal reversal after abnormallyy high-volumeolumeolumedays insmall-capstocksocks \",\"f act"
+        }
+      ],
+      "direction": "d0",
+      "seed": 2,
+      "comm_mode": "kv",
+      "latent_steps": 20,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml",
+      "tag": "g2_kv_ls20"
+    },
+    {
+      "duration_s": 46.83,
+      "hypothesis": "",
+      "factors": [],
+      "passing": [],
+      "gate_log": [],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "no expression from construct",
+      "construct_text_len": 1545,
+      "construct_rep_ratio": 0.581,
+      "construct_text_head": "{\n  \"hypo.thesis\": \"when.low.volatility.stocks.show.re.version.during.regime.transitions,.next-period.cross.section.section.cross.cross-sectional.\",\n  \"f.\tactor\": [\n    {\n      \"name\": \"Regime.Score\",\n      \".expression\": \"(TS.ZSCORE($.return, 20) < (TS.Std($.return, 60) ? (Z.SCORE($.close, 20)) : (Z.SCORE($.close, 60))\",\n      \".ex..planation\": \"compute.cross.section.z.score.of.close.price.using.the.std.deviation.over..20.and.60.days.period).\"\n    },\n    {\n      \".name\": \"Volatility.Trend.Signal\",\n      \".expression\": \"(TS.PCT.CHANGE($volume, 10) > 0.05 && (TS.std($.return, 20) < (TS.std($.re",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.91,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 899,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "kv_only",
+          "s": 1.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 3192,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 21.6,
+          "latent_s": 1.504,
+          "gen_s": 20.01,
+          "kv_len": 6201,
+          "n_out_tok": 495,
+          "text_len": 1566,
+          "rep_ratio": 0.565,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 22.98,
+          "latent_s": 1.666,
+          "gen_s": 21.209,
+          "kv_len": 9208,
+          "n_out_tok": 493,
+          "text_len": 1545,
+          "rep_ratio": 0.581,
+          "parsed_ok": false
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "construct output unparseable; retry once",
+          "head": "{\n  \"hypothesis\": \"when low.volatility.stocks.show.mean.reversion.during.regime.transitions,.next-period.cross-sectional"
+        },
+        {
+          "level": "ERROR",
+          "msg": "no expression from construct; skipping repair"
+        }
+      ],
+      "direction": "d1",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 20,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml",
+      "tag": "g2_kv_ls20"
+    },
+    {
+      "duration_s": 51.11,
+      "hypothesis": "",
+      "factors": [],
+      "passing": [],
+      "gate_log": [],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "no expression from construct",
+      "construct_text_len": 1731,
+      "construct_rep_ratio": 0.692,
+      "construct_text_head": "{\n  \"hypothesis\": \"when.low.volatility.stocks.show.weak.engineering.in.next.period.cross.section.al.return\",\n  \"f.actor\": [\n    {\n      \"name\": \"Volatility.Z.Score\",\n      \".expression\": \"Z.SCORE(TS.ST.D($return, 20))\",\n      \".explanation\": \"compute.cross\tthe.cross.standard.of.return.over.20.days.period.to.identify.low.v.olatility.st.stocks.and.rank.them.\"\n    },\n    {\n      \".name\": \"\tVolatility.Gate\",\n      \".expression\": \"(TS.PCT.CHANGE($return, 20) > TS.M.EAN($return, 20)) ? (TS.ST.D($.return, 20)) : 0)\",\n      \".ex.plan\": \"\tgate\tthe.std.deviation.on.a.condition\tthat.the.return\tis.above\tt",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.91,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 899,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "kv_only",
+          "s": 1.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 3192,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 23.52,
+          "latent_s": 1.504,
+          "gen_s": 21.923,
+          "kv_len": 6248,
+          "n_out_tok": 542,
+          "text_len": 1724,
+          "rep_ratio": 0.636,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 25.35,
+          "latent_s": 1.669,
+          "gen_s": 23.567,
+          "kv_len": 9309,
+          "n_out_tok": 547,
+          "text_len": 1731,
+          "rep_ratio": 0.692,
+          "parsed_ok": false
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "construct output unparseable; retry once",
+          "head": "{\n  \"hypothesis\": \"when low.volatility.stocks.show.high.weakening.returns.in.next.period.cross.sectional.return\",\n  \"f.a"
+        },
+        {
+          "level": "ERROR",
+          "msg": "no expression from construct; skipping repair"
+        }
+      ],
+      "direction": "d1",
+      "seed": 1,
+      "comm_mode": "kv",
+      "latent_steps": 20,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml",
+      "tag": "g2_kv_ls20"
+    },
+    {
+      "duration_s": 78.34,
+      "hypothesis": "",
+      "factors": [],
+      "passing": [],
+      "gate_log": [],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "no expression from construct",
+      "construct_text_len": 2261,
+      "construct_rep_ratio": 0.883,
+      "construct_text_head": "{\n  \"hypothesis\": \"when.low.volatility.stocks.exhibit\t.transition\t.regime,\trevers.al\tfollow\tin\tnext-period\treturn\",\n  \"f.\tactor\": [\n    {\n      \"name\": \"Volatility\t.Revers\tal\",\n      \"expression\": \"RANK(TS.STD($return, 20)) - RANK(T.S.ST.D($.return, 10))\",\n      \"explanation\": \"\tcom\tp.are\tthe\tr\ta.n\tk\tof\tst\ta\tn\td\ti\ta\tt\ti.o\tn\t.over\t.10\td\ta.y\tto\tc.a\tp\tt\tu\tr\te\tthe\t.relative\tst\ta.b\tl\ty\tof\tl\to\tw\tv.o.l\ta\tb.i.t\ty\tst.o\tc\td\tu\tr\ti\tn\tg\ttrans\ti.t\ti.o\tn\"\n    },\n    {\n      \"name\": \"Volatility\tG\ta.t.e\",\n      \".expression\": \"(TS.ST.D($.return, 20) < TS.M.E.A.N($.return, 20) ? TS_P.C.T.CHANGE($.return, 20) : ",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.91,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 899,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "design",
+          "mode": "kv_only",
+          "s": 1.33,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 3192,
+          "n_out_tok": 0,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 35.23,
+          "latent_s": 1.504,
+          "gen_s": 33.622,
+          "kv_len": 6535,
+          "n_out_tok": 829,
+          "text_len": 2220,
+          "rep_ratio": 0.797,
+          "parsed_ok": false
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 40.88,
+          "latent_s": 1.686,
+          "gen_s": 39.074,
+          "kv_len": 9948,
+          "n_out_tok": 899,
+          "text_len": 2261,
+          "rep_ratio": 0.883,
+          "parsed_ok": false
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "construct output unparseable; retry once",
+          "head": "{\n  \"hypothesis\": \"when low.volatility.stocks.exhibit.mean\ttransition\tregime,\treversal\tfollows\tin\tnext-period\tperiod\tret"
+        },
+        {
+          "level": "ERROR",
+          "msg": "no expression from construct; skipping repair"
+        }
+      ],
+      "direction": "d1",
+      "seed": 2,
+      "comm_mode": "kv",
+      "latent_steps": 20,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml",
+      "tag": "g2_kv_ls20"
+    }
+  ]
+}

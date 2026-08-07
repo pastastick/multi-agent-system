@@ -1,0 +1,138 @@
+{
+  "model": "Qwen/Qwen3-8B",
+  "steps": 10,
+  "comm_mode": "kv",
+  "hops": [
+    {
+      "agent": "proposal",
+      "mode": "kv_only",
+      "n_prompt_tokens": 880,
+      "prompt_dup_frac_8gram": 0.0,
+      "kv_len_after": 890,
+      "latent_block": [
+        880,
+        890
+      ],
+      "text_len": 0,
+      "latent": {
+        "cos_consecutive_mean": 0.81654,
+        "cos_consecutive_last": 0.96259,
+        "first_frozen_step": null,
+        "n_effectively_duplicate": 0,
+        "pairwise_cos_mean": 0.7828
+      }
+    },
+    {
+      "agent": "design",
+      "mode": "kv_only",
+      "n_prompt_tokens": 2273,
+      "prompt_dup_frac_8gram": 0.0018,
+      "kv_len_after": 3173,
+      "latent_block": [
+        3163,
+        3173
+      ],
+      "text_len": 0,
+      "latent": {
+        "cos_consecutive_mean": 0.66837,
+        "cos_consecutive_last": 0.58135,
+        "first_frozen_step": null,
+        "n_effectively_duplicate": 0,
+        "pairwise_cos_mean": 0.5699
+      }
+    },
+    {
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "n_prompt_tokens": 2486,
+      "prompt_dup_frac_8gram": 0.5946,
+      "kv_len_after": 5955,
+      "latent_block": [
+        5659,
+        5669
+      ],
+      "text_len": 941,
+      "latent": {
+        "cos_consecutive_mean": 0.87892,
+        "cos_consecutive_last": 0.99163,
+        "first_frozen_step": null,
+        "n_effectively_duplicate": 0,
+        "pairwise_cos_mean": 0.7391
+      }
+    }
+  ],
+  "latent_cross_hop_cos": {
+    "proposal~design": 0.5631,
+    "proposal~construct": 0.6242,
+    "design~construct": 0.5511
+  },
+  "attention_at_emission": {
+    "n_layers": 36,
+    "kv_len": 5958,
+    "segments": [
+      {
+        "name": "proposal:prompt",
+        "lo": 0,
+        "hi": 880,
+        "n_tok": 880,
+        "share_of_context": 0.1477,
+        "attn_mass_mean": 0.3333,
+        "attn_mass_max_layer": 0.6389,
+        "enrichment": 2.26
+      },
+      {
+        "name": "proposal:latent",
+        "lo": 880,
+        "hi": 890,
+        "n_tok": 10,
+        "share_of_context": 0.0017,
+        "attn_mass_mean": 0.0033,
+        "attn_mass_max_layer": 0.0226,
+        "enrichment": 1.97
+      },
+      {
+        "name": "design:prompt",
+        "lo": 890,
+        "hi": 3163,
+        "n_tok": 2273,
+        "share_of_context": 0.3815,
+        "attn_mass_mean": 0.0933,
+        "attn_mass_max_layer": 0.1992,
+        "enrichment": 0.24
+      },
+      {
+        "name": "design:latent",
+        "lo": 3163,
+        "hi": 3173,
+        "n_tok": 10,
+        "share_of_context": 0.0017,
+        "attn_mass_mean": 0.0134,
+        "attn_mass_max_layer": 0.2894,
+        "enrichment": 7.96
+      },
+      {
+        "name": "construct:prompt",
+        "lo": 3173,
+        "hi": 5659,
+        "n_tok": 2486,
+        "share_of_context": 0.4173,
+        "attn_mass_mean": 0.1802,
+        "attn_mass_max_layer": 0.479,
+        "enrichment": 0.43
+      },
+      {
+        "name": "construct:latent",
+        "lo": 5659,
+        "hi": 5669,
+        "n_tok": 10,
+        "share_of_context": 0.0017,
+        "attn_mass_mean": 0.0146,
+        "attn_mass_max_layer": 0.0479,
+        "enrichment": 8.72
+      }
+    ]
+  },
+  "kv_total": 5955,
+  "latent_total": 30,
+  "latent_share": 0.005
+}
