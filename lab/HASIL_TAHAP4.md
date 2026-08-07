@@ -67,6 +67,22 @@ identik hanya akan menghasilkan selisih derau. Klaim yang didaftarkan adalah
 "tak berefek di produksi", dan tabel di atas sudah membuktikannya di tingkat
 mekanisme.
 
+**Uji asap end-to-end** (rantai produksi penuh sesudah B6+B7, `comm_mode=kv`,
+ls=10, gumbel, `proposal→innovate→construct`, 1 run):
+
+| agen | mode | anggaran → langkah nyata | sebab berhenti | KV |
+|---|---|---|---|---:|
+| `proposal` | kv_only | 10 → **10** | `budget` | 890 |
+| `innovate` | kv_only | 10 → **10** | `budget` | 2 469 |
+| `construct` | kv_and_text | 10 → **10** | `budget` | 4 531 |
+
+54 s, **6 ekspresi, 6 lolos gate, tanpa error**. Dua hal terkonfirmasi
+sekaligus: (i) B6/B7 tidak merusak jalur produksi, dan (ii) pembukuan B6
+memang menyala di produksi dan melaporkan `stop=budget` di ketiga agen —
+early-stop tidak pernah memotong, persis seperti yang diramalkan tabel
+mekanisme di atas. Panjang KV construct (4 531) juga cocok dengan A5 (4 624).
+Berkas: `lab/out/frontend_tahap4_sanity.json`.
+
 ---
 
 ## 2. B7 — ganti persamaan realignment, permanen

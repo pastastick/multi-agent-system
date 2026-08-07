@@ -1,0 +1,179 @@
+{
+  "args": {
+    "model": "Qwen/Qwen3-8B",
+    "comm_mode": "kv",
+    "latent_steps": 10,
+    "latent_mode": "gumbel",
+    "latent_temp": 0.7,
+    "early_stop_cos": null,
+    "no_realign": false,
+    "seeds": "0",
+    "directions": "d0",
+    "prompts": "",
+    "temperature": 0.8,
+    "max_new_tokens": 4096,
+    "max_repair": 3,
+    "holdout": false,
+    "chain": "proposal,innovate,construct",
+    "free_form": null,
+    "tag": "tahap4_sanity",
+    "score_only": false
+  },
+  "runs": [
+    {
+      "duration_s": 53.97,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal after abnormally high-volume days in small-cap stocks",
+      "factors": [
+        {
+          "name": "Volatility Gap",
+          "expression": "RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))",
+          "explanation": "Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion"
+        },
+        {
+          "name": "Volume Residual",
+          "expression": "REGRESI($volume, SEQUENCE(20), 20) - $volume",
+          "explanation": "Captures volume deviations from a time trend, highlighting abnormal volume patterns that may signal impending reversals"
+        },
+        {
+          "name": "Momentum Shift",
+          "expression": "TS_PCTCHANGE(TS_MEAN($return, 5), 1) * TS_ZSCORE($volume, 10)",
+          "explanation": "Weights recent return momentum by volume volatility, emphasizing stocks with divergent price and volume dynamics"
+        },
+        {
+          "name": "Volume Asymmetry",
+          "expression": "TS_ARGMAX($volume, 10) - TS_ARGMIN($volume, 10)",
+          "explanation": "Identifies stocks where extreme volume occurs at different times within a 10-day window, capturing asymmetric liquidity shifts"
+        },
+        {
+          "name": "Volume Dispersion",
+          "expression": "TS_MAD($volume, 20) / TS_STD($volume, 20)",
+          "explanation": "Normalizes volume variability relative to its standard deviation, highlighting stocks with unusually volatile trading activity"
+        },
+        {
+          "name": "Volume Lagged Impact",
+          "expression": "DELAY(TS_ZSCORE($volume, 10), 1) * TS_PCTCHANGE($return, 1)",
+          "explanation": "Combines lagged volume normalization with recent return changes, capturing delayed market reactions to volume spikes"
+        }
+      ],
+      "passing": [
+        "RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))",
+        "REGRESI($volume, SEQUENCE(20), 20) - $volume",
+        "TS_PCTCHANGE(TS_MEAN($return, 5), 1) * TS_ZSCORE($volume, 10)",
+        "TS_ARGMAX($volume, 10) - TS_ARGMIN($volume, 10)",
+        "TS_MAD($volume, 20) / TS_STD($volume, 20)",
+        "DELAY(TS_ZSCORE($volume, 10), 1) * TS_PCTCHANGE($return, 1)"
+      ],
+      "gate_log": [
+        {
+          "name": "Volatility Gap",
+          "expression": "RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "Volume Residual",
+          "expression": "REGRESI($volume, SEQUENCE(20), 20) - $volume",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "Momentum Shift",
+          "expression": "TS_PCTCHANGE(TS_MEAN($return, 5), 1) * TS_ZSCORE($volume, 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "Volume Asymmetry",
+          "expression": "TS_ARGMAX($volume, 10) - TS_ARGMIN($volume, 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "Volume Dispersion",
+          "expression": "TS_MAD($volume, 20) / TS_STD($volume, 20)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "Volume Lagged Impact",
+          "expression": "DELAY(TS_ZSCORE($volume, 10), 1) * TS_PCTCHANGE($return, 1)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1725,
+      "construct_rep_ratio": 0.41,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"Volatility Gap\",\n      \"expression\": \"RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))\",\n      \"explanation\": \"Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion\"\n    },\n    {\n      \"name\": \"Volume Residual\",\n      \"expression\": \"REGRESI($volume, SEQUENCE(20), 20) - $volume\",\n      \"explanation\": \"Captures volume deviations from a time trend, highlighting abnormal volume pat",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 2.3,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 890,
+          "n_out_tok": 0,
+          "n_in_tok": 887,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 1.17,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2469,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 20.66,
+          "latent_s": 0.988,
+          "gen_s": 19.573,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4531,
+          "n_out_tok": 453,
+          "n_in_tok": 1598,
+          "text_len": 1725,
+          "rep_ratio": 0.41,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"Volatility Gap\",\n      \"expression\": \"RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))\",\n      \"explanation\": \"Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion\"\n    },\n    {\n      \"name\": \"Volume Residual\",\n      \"expression\": \"REGRESI($volume, SEQUENCE(20), 20) - $volume\",\n      \"explanation\": \"Captures volume deviations from a time trend, highlighting abnormal volume patterns that may signal impending reversals\"\n    },\n    {\n      \"name\": \"Momentum Shift\",\n      \"expression\": \"TS_PCTCHANGE(TS_MEAN($return, 5), 1) * TS_ZSCORE($volume, 10)\",\n      \"explanation\": \"Weights recent return momentum by volume volatility, emphasizing stocks with divergent price and volume dynamics\"\n    },\n    {\n      \"name\": \"Volume Asymmetry\",\n      \"expression\": \"TS_ARGMAX($volume, 10) - TS_ARGMIN($volume, 10)\",\n      \"explanation\": \"Identifies stocks where extreme volume occurs at different times within a 10-day window, capturing asymmetric liquidity shifts\"\n    },\n    {\n      \"name\": \"Volume Dispersion\",\n      \"expression\": \"TS_MAD($volume, 20) / TS_STD($volume, 20)\",\n      \"explanation\": \"Normalizes volume variability relative to its standard deviation, highlighting stocks with unusually volatile trading activity\"\n    },\n    {\n      \"name\": \"Volume Lagged Impact\",\n      \"expression\": \"DELAY(TS_ZSCORE($volume, 10), 1) * TS_PCTCHANGE($return, 1)\",\n      \"explanation\": \"Combines lagged volume normalization with recent return changes, capturing delayed market reactions to volume spikes\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [],
+      "direction": "d0",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    }
+  ]
+}
