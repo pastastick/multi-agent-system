@@ -1,0 +1,138 @@
+{
+  "model": "Qwen/Qwen3-8B",
+  "steps": 10,
+  "comm_mode": "kv",
+  "hops": [
+    {
+      "agent": "proposal",
+      "mode": "kv_only",
+      "n_prompt_tokens": 880,
+      "prompt_dup_frac_8gram": 0.0,
+      "kv_len_after": 890,
+      "latent_block": [
+        880,
+        890
+      ],
+      "text_len": 0,
+      "latent": {
+        "cos_consecutive_mean": 0.03594,
+        "cos_consecutive_last": 0.07769,
+        "first_frozen_step": null,
+        "n_effectively_duplicate": 0,
+        "pairwise_cos_mean": 0.1723
+      }
+    },
+    {
+      "agent": "innovate",
+      "mode": "kv_only",
+      "n_prompt_tokens": 1569,
+      "prompt_dup_frac_8gram": 0.0032,
+      "kv_len_after": 2469,
+      "latent_block": [
+        2459,
+        2469
+      ],
+      "text_len": 0,
+      "latent": {
+        "cos_consecutive_mean": 0.04657,
+        "cos_consecutive_last": 0.03431,
+        "first_frozen_step": null,
+        "n_effectively_duplicate": 0,
+        "pairwise_cos_mean": 0.147
+      }
+    },
+    {
+      "agent": "construct",
+      "mode": "kv_and_text",
+      "n_prompt_tokens": 1591,
+      "prompt_dup_frac_8gram": 0.0253,
+      "kv_len_after": 4624,
+      "latent_block": [
+        4060,
+        4070
+      ],
+      "text_len": 1822,
+      "latent": {
+        "cos_consecutive_mean": 0.18755,
+        "cos_consecutive_last": 0.17758,
+        "first_frozen_step": null,
+        "n_effectively_duplicate": 0,
+        "pairwise_cos_mean": 0.2669
+      }
+    }
+  ],
+  "latent_cross_hop_cos": {
+    "proposal~innovate": 0.0844,
+    "proposal~construct": 0.1084,
+    "innovate~construct": 0.0781
+  },
+  "attention_at_emission": {
+    "n_layers": 36,
+    "kv_len": 4627,
+    "segments": [
+      {
+        "name": "proposal:prompt",
+        "lo": 0,
+        "hi": 880,
+        "n_tok": 880,
+        "share_of_context": 0.1902,
+        "attn_mass_mean": 0.3651,
+        "attn_mass_max_layer": 0.6748,
+        "enrichment": 1.92
+      },
+      {
+        "name": "proposal:latent",
+        "lo": 880,
+        "hi": 890,
+        "n_tok": 10,
+        "share_of_context": 0.0022,
+        "attn_mass_mean": 0.0077,
+        "attn_mass_max_layer": 0.0222,
+        "enrichment": 3.58
+      },
+      {
+        "name": "innovate:prompt",
+        "lo": 890,
+        "hi": 2459,
+        "n_tok": 1569,
+        "share_of_context": 0.3391,
+        "attn_mass_mean": 0.1047,
+        "attn_mass_max_layer": 0.1996,
+        "enrichment": 0.31
+      },
+      {
+        "name": "innovate:latent",
+        "lo": 2459,
+        "hi": 2469,
+        "n_tok": 10,
+        "share_of_context": 0.0022,
+        "attn_mass_mean": 0.007,
+        "attn_mass_max_layer": 0.0203,
+        "enrichment": 3.24
+      },
+      {
+        "name": "construct:prompt",
+        "lo": 2469,
+        "hi": 4060,
+        "n_tok": 1591,
+        "share_of_context": 0.3439,
+        "attn_mass_mean": 0.1064,
+        "attn_mass_max_layer": 0.2304,
+        "enrichment": 0.31
+      },
+      {
+        "name": "construct:latent",
+        "lo": 4060,
+        "hi": 4070,
+        "n_tok": 10,
+        "share_of_context": 0.0022,
+        "attn_mass_mean": 0.0184,
+        "attn_mass_max_layer": 0.0434,
+        "enrichment": 8.5
+      }
+    ]
+  },
+  "kv_total": 4624,
+  "latent_total": 30,
+  "latent_share": 0.0065
+}

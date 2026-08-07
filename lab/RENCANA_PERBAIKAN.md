@@ -7,8 +7,9 @@
 > | Tahap 0 — bekukan baseline + sumbu A6/A7 | **SELESAI** | A7 uji-3 menemukan **nol** faktor rank-equivalent ke kolom mentah (≥0,99) — kekhawatiran AUDIT §2.5 tidak bereproduksi di korpus front-end |
 > | Tahap 1 — B1 + B2 (+ B8, B9) | **SELESAI** | B8 diverifikasi: KL(perbaikan‖re-rotasi manual) = 0,0 persis. B9 baru dinyalakan SETELAH itu |
 > | Tahap 2 — B11, B12, B15, B4 | **SELESAI** | B15 diuji 17 kasus + regresi 322 ekspresi; B12 kini penyebab tolakan terbanyak; B11 NEGATIF pada rantai `design` (HASIL_A8 §3.4) tetapi kemudian dipromosikan default TERIKAT rantai `innovate` (§4b) |
-> | Tahap 3 + 3b — A8 (ablasi agen) + ronde pengganti | **SELESAI, LULUS** | hasil & keputusan: `lab/HASIL_A8.md`. A9/A10 belum dijalankan |
-> | Tahap 4–6 | belum | urutan direvisi di bawah setelah hasil A8 |
+> | Tahap 3 + 3b — A8 (ablasi agen) + ronde pengganti | **SELESAI, LULUS** | hasil & keputusan: `lab/HASIL_A8.md` |
+> | A4/A5 (geometri laten & efisiensi konteks) | **SELESAI** (diukur ulang) | A4: mekanisme identik persis dengan G1 lama (sesuai dugaan, B6/B7 belum disentuh). A5: redundansi construct 59,5%→2,5% |
+> | Tahap 4–6, A9–A11 | **belum** | lihat tabel status per-item di bawah untuk rincian |
 >
 > **Keputusan A8 — final**: `design` gugur di gerbang 1 (pengaruhnya terhadap IC
 > tidak signifikan, Welch t=0,79). Rekomendasi awal alat ("tunda satu ronde")
@@ -24,6 +25,64 @@
 > settings.py bila rantai dikembalikan ke `design`). vs rantai lama: \|IC\|/run
 > +67% (0,0182 vs 0,0109), lolos gate 88% vs 83%, 22 vs 13 fungsi DSL disentuh.
 > Rincian lengkap: `lab/HASIL_A8.md`.
+>
+> ---
+>
+> ### Status per-item — SEMUA sumbu A & katalog B
+>
+> "Tahap X selesai" tidak berarti semua item bernomor di dalamnya dikerjakan
+> (mis. B3/B5/B14 bukan bagian Tahap 2/3 meski nomornya berdekatan). Tabel ini
+> memberi status eksplisit untuk SETIAP item, supaya tak ada yang tersamar
+> sebagai "selesai" hanya karena tahap induknya selesai.
+>
+> **Sumbu benchmark (A)**
+>
+> | item | status | hasil / catatan |
+> |---|---|---|
+> | A1 mutu sinyal | ada, dipakai terus | alat lama; dipakai di semua run sesi ini |
+> | A2 keandalan produksi | ada, dipakai terus | alat lama |
+> | A3 cakupan pencarian (klaster) | ada, dipakai terus | dihitung untuk semua lengan A8 |
+> | A4 geometri & entropi jalur laten | **SELESAI**, diukur ulang | identik persis dgn G1 lama di 8 varian — mekanisme tak tersentuh (wajar, B6/B7 belum dikerjakan) |
+> | A5 efisiensi konteks | **SELESAI**, diukur ulang | redundansi construct 59,5%→2,5%; KV total −22% |
+> | A6 biaya per faktor diterima | **SELESAI** (baru sesi ini) | dipakai di seluruh A8 |
+> | A7 kesetiaan rantai | **SELESAI** (baru sesi ini) | var_recall 0,79–0,97; 0 faktor rank-equivalent ke kolom mentah |
+> | A8 ablasi agen | **SELESAI** (baru sesi ini) | `lab/HASIL_A8.md` — dasar keputusan B16 |
+> | A9 kapasitas kanal laten | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
+> | A10 sensitivitas arah | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
+> | A11 stabilitas jangka panjang | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
+>
+> **Katalog intervensi (B)**
+>
+> | item | status | hasil / catatan |
+> |---|---|---|
+> | B1 latent.steps 60→10 | **SELESAI** | settings.py + 5 file config |
+> | B2 step_mode=gumbel | **SELESAI** | dipromosikan ke kunci YAML; A4 mengonfirmasi mekanismenya (47/60 token unik vs 2/60 pada raw) |
+> | B3 kontrak DSL (prompts_v1.yaml) | ada SEBELUM sesi ini | bukan hasil sesi ini; produksi tetap pakai prompts.yaml, bukan v1 |
+> | B4 prompt ringkas (lib_in_kv) | **SELESAI** | construct −37% token; dikonfirmasi ulang lewat A5 |
+> | B5 ringkas format keluaran proposal | **BELUM DIKERJAKAN** | tak disentuh sesi ini |
+> | B6 early-stop rollout laten | **BELUM DIKERJAKAN** | gerbang Tahap 4 terpenuhi, tinggal eksekusi |
+> | B7 ganti persamaan realignment permanen | **BELUM DIKERJAKAN** | gerbang Tahap 4 terpenuhi, tinggal eksekusi |
+> | B8 perbaiki kv_truncate (RoPE) | **SELESAI**, terverifikasi | KL(perbaikan‖manual)=0,0 persis |
+> | B9 hidupkan anggaran KV | **SELESAI** | dinyalakan setelah B8 terverifikasi |
+> | B10 latent bottleneck | **BELUM DIKERJAKAN** | sengaja ditunda ke Tahap 6, riset terpisah |
+> | B11 guided decoding construct | **SELESAI**, dipromosikan bersyarat | negatif di rantai `design`; positif & default TERIKAT rantai `innovate` |
+> | B12 execution gate | **SELESAI** | `execution_gate.py` baru |
+> | B13 pangkas rantai bila design tak kontribusi | **SUPERSEDED oleh B16** | design DIGANTI, bukan dipangkas |
+> | B14 medium "konteks segar + ringkasan" | **BELUM DIKERJAKAN** | sengaja ditunda ke Bab 5 |
+> | B15 tiga lubang gate (a/b/c) | **SELESAI** | 17 unit test + regresi 322 ekspresi |
+> | B16 ganti design→innovate | **SELESAI, LULUS** | keputusan user + kriteria Tahap 3b terpenuhi |
+>
+> **Tahap (rencana bertahap §C)**
+>
+> | tahap | status |
+> |---|---|
+> | Tahap 0 | SELESAI |
+> | Tahap 1 | SELESAI |
+> | Tahap 2 | SELESAI |
+> | Tahap 3 + 3b | SELESAI, LULUS |
+> | Tahap 4 (B6, B7) | gerbang terpenuhi, **BELUM DIEKSEKUSI** |
+> | Tahap 5 (mutation/crossover/feedback) | **BELUM DISENTUH SAMA SEKALI** — bukan cuma sesi ini, sejak awal proyek |
+> | Tahap 6 (B10) | belum, menunggu Tahap 5 |
 
 **Dibuat**: 2026-08-07, setelah §8 AUDIT_KRITIS dijalankan di GPU (Qwen3-8B).
 Angka pendukung ada di `lab/HASIL_GPU.md`; dokumen ini hanya soal **apa yang
@@ -88,20 +147,75 @@ Jumlah klaster sinyal (|Spearman deret IC| > 0,7) per lengan.
 *Kenapa penting*: inilah B14 yang benar — `kv` lama menemukan 2 klaster dari 39
 faktor. Kekuatan sinyal bisa sama sementara cakupannya beda 4×.
 
-### A4. Geometri & entropi jalur laten (sudah ada)
+### A4. Geometri & entropi jalur laten (SELESAI — diukur ulang 2026-08-07)
 cos ke embedding terdekat, langkah titik tetap, identik-antar-seed,
 identik-antar-arah. *Alat*: `lab/latent_dynamics.py`.
 
-### A5. **Efisiensi konteks** (BARU — sebagian sudah diukur di G7)
-Tiga metrik, semuanya sudah bisa dihitung `lab/latent_growth.py`:
-- **redundansi**: fraksi n-gram prompt hop-k yang sudah ada verbatim di KV
-  (terukur: **59,5%** untuk construct);
-- **panjang konteks efektif**: `exp(H(attention))` pada langkah emisi — berapa
-  token yang *sebenarnya* dipakai dari sekian ribu yang disimpan;
+**HASIL**: sweep penuh 8 varian (Qwen3-8B, 60 langkah, 3 arah × 3 seed)
+diulang setelah seluruh Tahap 0–3b. **Identik persis** dengan baseline G1 lama
+di semua metrik dan semua varian — tabel penuh:
+
+| varian | H_akhir | cos ke embedding terdekat | langkah titik tetap | token unik/60 |
+|---|---:|---:|---:|---:|
+| raw (T=0) | 0,10 | 0,074 | 34 | 2 |
+| raw_realign (T=0) | 5,99 | 0,275 | tak pernah | 6 |
+| raw_noise (T=0,1) | 0,11 | 0,074 | 34 | 2 |
+| soft (T=1,0) | 1,10 | 0,898 | tak pernah | 20 |
+| soft (T=2,0) | 0,03 | 0,811 | 18 | 8 |
+| **gumbel (T=0,7)** *(default produksi, B2)* | 0,00 | 0,940 | tak pernah | **47** |
+| gumbel (T=1,0) | 0,00 | 0,895 | tak pernah | 38 |
+| sample (T=1,0) | 0,00 | 1,000 | tak pernah | 42 |
+
+Kesamaan sampai 2–3 desimal ini **BUKAN kegagalan pengukuran** — ia bukti
+langsung bahwa mekanisme rollout laten itu sendiri (matriks realignment,
+embedding, titik tetap) tidak tersentuh sepanjang Tahap 0–3b, persis sesuai
+prediksi: hanya B6 (early-stop) dan B7 (ganti persamaan realignment) yang akan
+mengubah angka-angka ini, dan keduanya **belum dikerjakan**. Baris `gumbel@0,7`
+dicetak tebal karena itulah mode yang sekarang berjalan di produksi (B2):
+47/60 token unik dan cos-ke-embedding 0,940 (selalu in-distribution) — kontras
+dengan `raw` (mode lama) yang cuma 2/60 token unik dan mencapai titik tetap di
+langkah 34. Ini menjelaskan MEKANISME di balik hasil G3 (gumbel menaikkan
+klaster sinyal 6→9, lolos gate 54%→91%): jalur laten `raw` runtuh jadi
+salinan berulang, sedangkan `gumbel` tetap bergerak dan tetap di dalam convex
+hull embedding sepanjang rollout.
+File: `lab/out/latent_dynamics_Qwen_Qwen3-8B_postB16.json`.
+
+### A5. **Efisiensi konteks** (SELESAI — diukur ulang 2026-08-07 setelah B4/B16)
+Tiga metrik, dihitung `lab/latent_growth.py`:
+- **redundansi**: fraksi n-gram prompt hop-k yang sudah ada verbatim di KV;
+- **panjang konteks efektif**: massa attention per segmen pada langkah emisi;
 - **massa attention per segmen** dengan *enrichment* = massa ÷ porsi panjang.
 *Kenapa penting*: ini menerjemahkan "penumpukan KV" dari keluhan menjadi angka,
 dan langsung memberi target optimasi (turunkan redundansi, naikkan enrichment
 segmen instruksi aktif).
+
+**HASIL** (Qwen3-8B, `comm_mode=kv`, `latent_steps=10`, sebelum vs sesudah
+B4+B16; skrip disesuaikan untuk mengukur rantai produksi SAAT INI —
+`proposal→innovate→construct` dengan `lib_in_kv=True`, bukan rantai `design`
+lama, kalau tidak angka yang keluar adalah sistem yang sudah tak dipakai):
+
+| metrik | LAMA (`design`, pra-B4) | BARU (`innovate`, pasca-B4/B16) |
+|---|---:|---:|
+| KV total di construct | 5 955 token | **4 624 token** (−22%) |
+| token prompt construct | 2 486 | **1 591** (−36%, cocok klaim B4 §Tahap 2) |
+| **redundansi verbatim (8-gram) construct** | **59,5%** | **2,5%** |
+| cos blok laten proposal↔hulu | 0,563 | 0,084 |
+| cos blok laten proposal↔construct | 0,624 | 0,108 |
+| cos blok laten hulu↔construct | 0,551 | 0,078 |
+| massa attention construct:latent | 0,0146 (8,72×) | 0,0184 (8,50×) |
+
+**Baca hati-hati**: B4 **bukan** satu-satunya penyebab turunnya redundansi dari
+59,5%→2,5% — perbandingan ini menggabungkan TIGA perubahan sekaligus (B4 prompt
+ringkas, B2 gumbel menggantikan raw, B16 innovate menggantikan design), karena
+tujuannya di sini adalah memotret KEADAAN SISTEM SAAT INI, bukan mengisolasi
+kontribusi B4 sendirian (itu sudah diverifikasi terpisah di Tahap 2: 2579→1624
+token pada prompt construct, murni dari `lib_in_kv`). Turunnya cos antar-hop
+(0,55–0,62 → 0,08–0,11) konsisten dengan G3 (gumbel menaikkan entropi/keragaman
+jalur laten dibanding raw) — bukan berarti "pikiran" antar-agen makin tak
+berkaitan, melainkan makin tak sekadar salinan satu sama lain.
+**Massa attention pada blok laten construct tetap tinggi** (8,5×) di kedua
+kondisi — kanal laten construct konsisten dominan, tak terpengaruh perubahan
+rantai/prompt di hulunya. File: `lab/out/latent_growth_Qwen3-8B_kv_ls10_postB16.json`.
 
 ### A6. **Biaya per faktor diterima** (BARU)
 `token diproses ÷ faktor lolos gate` dan `detik ÷ faktor lolos gate`.

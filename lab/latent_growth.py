@@ -138,6 +138,9 @@ def main() -> None:
         use_realign=True, enable_thinking=False, log_tensors=False,
         store_kv=False, output_log_dir=str(OUT / "llm_outputs" / "growth"),
         max_new_tokens=2048, temperature=0.8, knn_enabled=False,
+        # B2 (2026-08-07): default produksi step_mode berubah raw -> gumbel.
+        # Tanpa ini skrip diam-diam mengukur mode yang tak lagi dipakai sistem.
+        latent_step_mode="gumbel", latent_step_temp=0.7,
     )
     eng = backend._engine
     # attention weights hanya keluar pada implementasi eager (SDPA/flash tidak
@@ -154,13 +157,21 @@ def main() -> None:
     agents = load_all_agents(backend)
 
     kv_only = "kv_only" if args.comm_mode == "kv" else "kv_and_text"
+    # Rantai PRODUKSI sejak B16 (2026-08-07, lab/HASIL_A8.md): design -> innovate.
+    # Skrip ini memanggil agent.render()+backend.run() LANGSUNG (bypass
+    # FrontEndPipeline._run_chain), jadi lib_in_kv/free_form yang biasanya
+    # dihitung otomatis di sana harus disuntik manual di sini — kalau tidak,
+    # construct akan diam-diam merender pustaka LENGKAP (B4 tak teruji) dan
+    # klausa FIDELITY (bukan COVERAGE) yang salah untuk rantai innovate.
     hops = [
         ("proposal", kv_only, dict(handoff="text", direction=DIRECTION,
                                    market_context="", prior_feedback="",
                                    negative_hint="")),
-        ("design", kv_only, dict(handoff="kv")),
+        ("innovate", kv_only, dict(handoff="kv")),
         ("construct", "kv_and_text", dict(handoff="kv",
-                                          diversity_hint=diversity_hint([]))),
+                                          diversity_hint=diversity_hint([]),
+                                          lib_in_kv=True, free_form=True,
+                                          from_direction=False)),
     ]
 
     kv = None
