@@ -436,6 +436,12 @@ class FrontEndPipeline:
                     diversity_hint=diversity_hint,
                     lib_in_kv=lib_in_kv,
                     free_form=self.free_form,
+                    # Emitter yang berjalan SENDIRIAN tak boleh diberi tahu bahwa
+                    # ada hipotesis & palette dari agen hulu — kalimat itu akan
+                    # menyuruhnya membaca sesuatu yang tak pernah ada, dan lengan
+                    # `direct` akan kalah karena promptnya berbohong, bukan karena
+                    # rantai pendek memang lebih buruk.
+                    from_direction=(i == 0),
                 )
             res = self._a(name).run(
                 past_kv=None if is_text else prev_kv, mode_override=mode, **kw)
@@ -468,6 +474,7 @@ class FrontEndPipeline:
                 prior_factors=("\n\n".join(p for p in prior_parts if p).strip()
                                if len(self.chain) > 1 else direction),
                 diversity_hint=diversity_hint, lib_in_kv=lib_in_kv,
+                free_form=self.free_form, from_direction=(len(self.chain) == 1),
                 mode_override=self._agent_mode(self._NATIVE_MODE.get(emitter, "kv_and_text")),
             )
             kv_last = res.kv_cache

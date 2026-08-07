@@ -589,7 +589,13 @@ agents:
           gives every stock one of two numbers and cannot rank them; gate a magnitude
           instead, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`.
     user: |-
-      {% if handoff == 'text' %}The hypothesis and the candidate-function palette from
+      {% if from_direction | default(false) %}You are working alone in this run: there is no
+      Proposal and no Design agent upstream of you. Form your own view of the mechanism
+      from the research direction below, then write the factors for it.
+
+      Research direction:
+      {{ prior_factors }}
+      {% elif handoff == 'text' %}The hypothesis and the candidate-function palette from
       the Proposal and Design agents:
       {{ prior_factors }}
       {% else %}The hypothesis and the candidate-function palette from the Proposal and

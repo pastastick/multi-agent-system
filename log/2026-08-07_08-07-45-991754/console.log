@@ -1,0 +1,607 @@
+2026-08-07 08:08:17.041 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE($volume, 5) > 2) ? (TS_PCTCHANGE($return, 3)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 62
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:17.598 | INFO     | factors.regulator.execution_gate:df:93 - [ExecutionGate] sampel dimuat: 72899 baris, 300 instrumen
+2026-08-07 08:08:18.432 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_ZSCORE($volume, 7)) * TS_PCTCHANGE($return, 1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 54
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:19.044 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_QUANTILE($volume, 20, 0.9) > $volume) ? (RANK(TS_PCTCHANGE($return, 2))) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 82
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:19.489 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_STD($volume, 5) * TS_PCTCHANGE($return, 3)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:20.144 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_CORR($volume, $return, 5) * TS_PCTCHANGE($return, 2)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 55
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:21.022 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_QUANTILE($volume, 20, 0.95) > $volume) ? (TS_ZSCORE($return, 3)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 74
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:21.393 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4'] with expression: ['RANK(TS_ZSCORE($volume, 7)) * TS_PCTCHANGE($return, 1)', '(TS_QUANTILE($volume, 20, 0.9) > $volume) ? (RANK(TS_PCTCHANGE($return, 2))) : (0)', 'TS_STD($volume, 5) * TS_PCTCHANGE($return, 3)', 'TS_CORR($volume, $return, 5) * TS_PCTCHANGE($return, 2)', '(TS_QUANTILE($volume, 20, 0.95) > $volume) ? (TS_ZSCORE($return, 3)) : (0)']
+2026-08-07 08:08:46.635 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE($volume, 5) > 1) ? (RANK(TS_PCTCHANGE($return, 3))) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 68
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:47.396 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ZSCORE((TS_ZSCORE($volume, 5) - TS_MEAN(TS_ZSCORE($volume, 5), 20)) * TS_PCTCHANGE($return, 3))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 95
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:48.067 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((TS_ZSCORE($volume, 5) > 1) ? (TS_PCTCHANGE($return, 3)) : (0))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 68
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:08:48.609 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: REGRESI(TS_PCTCHANGE($return, 3), $volume, 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 45
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:09.417 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_QUANTILE((TS_ZSCORE($volume, 5) > 1) ? (TS_PCTCHANGE($return, 3)) : (0), 5, 0.75)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 6
+                        # Unique Vars: 2
+                        Symbol Length (SL): 84
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:10.209 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3'] with expression: ['(TS_ZSCORE($volume, 5) > 1) ? (RANK(TS_PCTCHANGE($return, 3))) : (0)', 'RANK((TS_ZSCORE($volume, 5) > 1) ? (TS_PCTCHANGE($return, 3)) : (0))', 'REGRESI(TS_PCTCHANGE($return, 3), $volume, 5)', 'TS_QUANTILE((TS_ZSCORE($volume, 5) > 1) ? (TS_PCTCHANGE($return, 3)) : (0), 5, 0.75)']
+2026-08-07 08:09:31.955 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((FILTER(TS_ZSCORE($volume, 10), $volume > TS_QUANTILE($volume, 10, 0.9))) * -1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 84
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:09:32.357 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ZSCORE((FILTER(TS_PCTCHANGE($return, 5), $volume > TS_QUANTILE($volume, 5, 0.9))) * -1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 87
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:32.898 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: PERCENTILE((FILTER(TS_PCTCHANGE($return, 7), $volume > TS_QUANTILE($volume, 7, 0.85))), 0.8)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 92
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:33.462 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_ZSCORE($return, 5) * (FILTER($volume > TS_QUANTILE($volume, 5, 0.9), $return < TS_ZSCORE($return, 5)))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 105
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:33.982 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ($volume > TS_QUANTILE($volume, 10, 0.9)) ? (TS_ZSCORE($return, 5) * -1) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 76
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:34.409 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3'] with expression: ['RANK((FILTER(TS_ZSCORE($volume, 10), $volume > TS_QUANTILE($volume, 10, 0.9))) * -1)', 'ZSCORE((FILTER(TS_PCTCHANGE($return, 5), $volume > TS_QUANTILE($volume, 5, 0.9))) * -1)', 'TS_ZSCORE($return, 5) * (FILTER($volume > TS_QUANTILE($volume, 5, 0.9), $return < TS_ZSCORE($return, 5)))', '($volume > TS_QUANTILE($volume, 10, 0.9)) ? (TS_ZSCORE($return, 5) * -1) : 0']
+2026-08-07 08:09:57.087 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_ZSCORE(TS_STD($return, 20), 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 33
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:09:57.427 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE($return, 20) < -1.5) ? (TS_PCTCHANGE($close, 5)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 65
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:57.743 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_RANK(TS_QUANTILE($volume, 20, 0.25), 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 42
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:09:57.851 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_MEAN(TS_PCTCHANGE($close, 5), 10) * TS_ZSCORE($return, 20)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:58.610 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE($return, 5) > 1) && (TS_ZSCORE($return, 20) < -1) ? (TS_PCTCHANGE($close, 5)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 2
+                        Symbol Length (SL): 94
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:59.125 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_CORR(TS_PCTCHANGE($close, 5), TS_STD($return, 20), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 57
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:09:59.716 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3'] with expression: ['TS_ZSCORE(TS_STD($return, 20), 5)', '(TS_ZSCORE($return, 20) < -1.5) ? (TS_PCTCHANGE($close, 5)) : (0)', 'TS_MEAN(TS_PCTCHANGE($close, 5), 10) * TS_ZSCORE($return, 20)', 'TS_CORR(TS_PCTCHANGE($close, 5), TS_STD($return, 20), 10)']
+2026-08-07 08:10:21.596 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ZSCORE(TS_STD($return, 10)) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 62
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:10:21.919 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_STD($return, 20)) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:10:22.262 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: DELTA(TS_STD($return, 15), 5) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 64
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:10:22.829 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_CORR(TS_STD($return, 10), $volume, 5) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 75
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:10:23.564 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_QUANTILE(TS_STD($return, 20), 20, 0.6) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 2
+                        Symbol Length (SL): 76
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:10:24.046 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: REGRESI(TS_STD($return, 15), $volume, 5) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 75
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:10:44.488 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['ZSCORE(TS_STD($return, 10)) * (TS_PCTCHANGE($volume, 5) > 0.1)', 'RANK(TS_STD($return, 20)) * (TS_PCTCHANGE($volume, 5) > 0.1)', 'DELTA(TS_STD($return, 15), 5) * (TS_PCTCHANGE($volume, 5) > 0.1)', 'TS_CORR(TS_STD($return, 10), $volume, 5) * (TS_PCTCHANGE($volume, 5) > 0.1)', 'TS_QUANTILE(TS_STD($return, 20), 20, 0.6) * (TS_PCTCHANGE($volume, 5) > 0.1)', 'REGRESI(TS_STD($return, 15), $volume, 5) * (TS_PCTCHANGE($volume, 5) > 0.1)']
+2026-08-07 08:11:08.598 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_ZSCORE(TS_ZSCORE($return, 20), 5)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 36
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:11:09.133 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_MEAN(TS_STD($return, 20), 60)) ? ZSCORE(TS_ZSCORE($return, 10)) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 93
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:11:09.800 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 20))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 58
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:11:10.119 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_ZSCORE($return, 10) - TS_ZSCORE($return, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 47
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:11:10.631 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: FILTER(RANK(TS_ZSCORE($return, 10)), TS_STD($return, 20) < TS_MEAN(TS_STD($return, 20), 60))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 92
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:11:11.523 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_PCTCHANGE(TS_ZSCORE($return, 5), 10) * (TS_STD($return, 20) < TS_MEAN(TS_STD($return, 20), 60))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 98
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:11:12.049 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ZSCORE(TS_ZSCORE($return, 20), 5)', '(TS_STD($return, 20) < TS_MEAN(TS_STD($return, 20), 60)) ? ZSCORE(TS_ZSCORE($return, 10)) : 0', 'RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 20))', 'TS_ZSCORE($return, 10) - TS_ZSCORE($return, 60)', 'FILTER(RANK(TS_ZSCORE($return, 10)), TS_STD($return, 20) < TS_MEAN(TS_STD($return, 20), 60))', 'TS_PCTCHANGE(TS_ZSCORE($return, 5), 10) * (TS_STD($return, 20) < TS_MEAN(TS_STD($return, 20), 60))']
+2026-08-07 08:11:51.779 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((($volume > TS_QUANTILE($volume, 20, 0.9)) ? (TS_ZSCORE($return, 5)) : (0)))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 81
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:11:52.198 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ($volume > TS_QUANTILE($volume, 10, 0.9)) ? (TS_PCTCHANGE($return, 5) * 2) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 2
+                        Symbol Length (SL): 80
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:11:52.675 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((($volume > TS_QUANTILE($volume, 15, 0.95)) ? (TS_ZSCORE($return, 3)) : (TS_ZSCORE($return, 3))))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 102
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:11:53.854 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((($volume > TS_QUANTILE($volume, 10, 0.9)) ? (TS_ZSCORE($return, 3)) : (TS_ZSCORE($return, 3))))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 101
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:11:54.988 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((($volume > TS_QUANTILE($volume, 20, 0.9)) ? (TS_ZSCORE($return, 7)) : (TS_ZSCORE($return, 7))))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 101
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:11:55.751 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ($volume > TS_QUANTILE($volume, 15, 0.9)) ? (TS_ZSCORE($return, 5)) : (TS_ZSCORE($return, 5))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 93
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:11:56.282 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['RANK((($volume > TS_QUANTILE($volume, 20, 0.9)) ? (TS_ZSCORE($return, 5)) : (0)))', '($volume > TS_QUANTILE($volume, 10, 0.9)) ? (TS_PCTCHANGE($return, 5) * 2) : (0)', 'RANK((($volume > TS_QUANTILE($volume, 15, 0.95)) ? (TS_ZSCORE($return, 3)) : (TS_ZSCORE($return, 3))))', 'RANK((($volume > TS_QUANTILE($volume, 10, 0.9)) ? (TS_ZSCORE($return, 3)) : (TS_ZSCORE($return, 3))))', 'RANK((($volume > TS_QUANTILE($volume, 20, 0.9)) ? (TS_ZSCORE($return, 7)) : (TS_ZSCORE($return, 7))))', '($volume > TS_QUANTILE($volume, 15, 0.9)) ? (TS_ZSCORE($return, 5)) : (TS_ZSCORE($return, 5))']
+2026-08-07 08:12:17.161 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE($volume, 20) > 1) ? (RANK(-$return)) : (RANK($return))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 65
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:17.482 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE(TS_SUM($volume, 5), 20) * RANK((-$return)))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 54
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:12:17.833 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_PCTCHANGE($volume, 5) > 0.3) ? (ZSCORE(-$return)) : (ZSCORE($return))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 73
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:18.011 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_RANK($volume, 20) * RANK(-$return)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 1
+                        # Unique Vars: 1
+                        Symbol Length (SL): 37
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:12:18.335 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_PCTCHANGE($volume, 5) > 0.3) ? (TS_ZSCORE(-$return, 20)) : (TS_ZSCORE($return, 20))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 87
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:18.933 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4'] with expression: ['(TS_ZSCORE($volume, 20) > 1) ? (RANK(-$return)) : (RANK($return))', '(TS_ZSCORE(TS_SUM($volume, 5), 20) * RANK((-$return)))', '(TS_PCTCHANGE($volume, 5) > 0.3) ? (ZSCORE(-$return)) : (ZSCORE($return))', 'TS_RANK($volume, 20) * RANK(-$return)', '(TS_PCTCHANGE($volume, 5) > 0.3) ? (TS_ZSCORE(-$return, 20)) : (TS_ZSCORE($return, 20))']
+2026-08-07 08:12:42.078 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 69
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:42.524 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ZSCORE((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 71
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:43.154 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_MAD((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 2
+                        Symbol Length (SL): 75
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:45.739 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_PCTCHANGE($return, 1)) - RANK(TS_ZSCORE($volume, 20))
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:46.165 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_ZSCORE($volume, 20) > 2) ? (ZSCORE(TS_PCTCHANGE($return, 1))) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 71
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:46.820 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0), 10)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 2
+                        Symbol Length (SL): 76
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:12:47.181 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4'] with expression: ['RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0))', 'ZSCORE((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0))', 'TS_MAD((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0), 10)', 'RANK(TS_PCTCHANGE($return, 1)) - RANK(TS_ZSCORE($volume, 20))', 'TS_RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0), 10)']
+2026-08-07 08:13:08.824 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: ZSCORE(TS_STD($return, 20)) * (TS_PCTCHANGE($volume, 5) > 0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 62
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:13:09.153 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_STD($return, 30)) * (TS_PCTCHANGE($volume, 10) < -0.1)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 62
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:13:09.771 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_MEAN($return, 10) - TS_MEAN($return, 60)) * (TS_STD($return, 30) < 0.02)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 76
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:13:10.149 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_CORR($return, $volume, 20) * (TS_STD($return, 10) < 0.015)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:13:10.771 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: PERCENTILE(TS_STD($return, 40), 0.2) * (TS_PCTCHANGE($volume, 15) > 0.05)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 73
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:13:11.284 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4'] with expression: ['ZSCORE(TS_STD($return, 20)) * (TS_PCTCHANGE($volume, 5) > 0.1)', 'RANK(TS_STD($return, 30)) * (TS_PCTCHANGE($volume, 10) < -0.1)', '(TS_MEAN($return, 10) - TS_MEAN($return, 60)) * (TS_STD($return, 30) < 0.02)', 'TS_CORR($return, $volume, 20) * (TS_STD($return, 10) < 0.015)', 'PERCENTILE(TS_STD($return, 40), 0.2) * (TS_PCTCHANGE($volume, 15) > 0.05)']
+2026-08-07 08:13:32.831 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_STD($return, 60)) ? (ZSCORE($return)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 69
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:13:33.184 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_STD($return, 60)) ? (RANK($return)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 1
+                        Symbol Length (SL): 67
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:13:33.729 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_PCTCHANGE($return, 5)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:13:34.194 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_MAD($return, 20)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 73
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:13:36.794 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_CORR($return, $volume, 20)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 2
+                        Symbol Length (SL): 83
+                        # Base Features (ER): 2
+                        
+2026-08-07 08:13:37.700 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) < TS_STD($return, 60)) ? (PERCENTILE($return, 0.3, 20)) : (0)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 5
+                        # Unique Vars: 1
+                        Symbol Length (SL): 82
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:13:37.989 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['(TS_STD($return, 20) < TS_STD($return, 60)) ? (ZSCORE($return)) : (0)', '(TS_STD($return, 20) < TS_STD($return, 60)) ? (RANK($return)) : (0)', '(TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_PCTCHANGE($return, 5)) : (0)', '(TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_MAD($return, 20)) : (0)', '(TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_CORR($return, $volume, 20)) : (0)', '(TS_STD($return, 20) < TS_STD($return, 60)) ? (PERCENTILE($return, 0.3, 20)) : (0)']
+2026-08-07 08:14:11.095 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (ZSCORE(TS_STD($return, 20)) > 0) ? TS_ZSCORE($return, 5) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:14:11.827 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_STD($return, 20) * TS_PCTCHANGE($return, 10) > 0) ? -TS_ZSCORE($return, 5) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 82
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:14:12.294 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (ZSCORE(TS_STD($return, 15)) > 0) ? TS_ZSCORE($return, 7) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:14:12.683 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: (TS_PCTCHANGE(TS_STD($return, 20), 5) > 0) ? -TS_ZSCORE($return, 10) : 0
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 4
+                        # Unique Vars: 1
+                        Symbol Length (SL): 72
+                        # Base Features (ER): 1
+                        
+2026-08-07 08:14:13.254 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3'] with expression: ['(ZSCORE(TS_STD($return, 20)) > 0) ? TS_ZSCORE($return, 5) : 0', '(TS_STD($return, 20) * TS_PCTCHANGE($return, 10) > 0) ? -TS_ZSCORE($return, 5) : 0', '(ZSCORE(TS_STD($return, 15)) > 0) ? TS_ZSCORE($return, 7) : 0', '(TS_PCTCHANGE(TS_STD($return, 20), 5) > 0) ? -TS_ZSCORE($return, 10) : 0']
