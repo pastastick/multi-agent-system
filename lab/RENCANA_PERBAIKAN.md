@@ -9,7 +9,10 @@
 > | Tahap 2 — B11, B12, B15, B4 | **SELESAI** | B15 diuji 17 kasus + regresi 322 ekspresi; B12 kini penyebab tolakan terbanyak; B11 NEGATIF pada rantai `design` (HASIL_A8 §3.4) tetapi kemudian dipromosikan default TERIKAT rantai `innovate` (§4b) |
 > | Tahap 3 + 3b — A8 (ablasi agen) + ronde pengganti | **SELESAI, LULUS** | hasil & keputusan: `lab/HASIL_A8.md` |
 > | A4/A5 (geometri laten & efisiensi konteks) | **SELESAI** (diukur ulang) | A4: mekanisme identik persis dengan G1 lama (sesuai dugaan, B6/B7 belum disentuh). A5: redundansi construct 59,5%→2,5% |
-> | Tahap 4–6, A9–A11 | **belum** | lihat tabel status per-item di bawah untuk rincian |
+> | Tahap 4 — B6 + B7 | **SELESAI** | `lab/HASIL_TAHAP4.md`. B6 nol-efek di produksi (menyala 9/9 di `raw`, 0/9 di `gumbel`) — nilainya sebagai pengaman salah-setel. B7: default kode `raw`→`gumbel` permanen; ridge M terbukti praktis ortogonal (cos 0,011) dan `use_realign` kini **inert** |
+> | A9 kapasitas kanal laten | **SELESAI** (alat baru) | `lab/channel_capacity.py`. Kanal laten murni memulihkan 19–35% muatan pada ls=10, 76–84% pada ls=40; mode `kv` lossless karena **token prompt** yang ikut diwariskan, bukan karena vektor latennya |
+> | Tahap 6 (B10) | **DITELITI + DIPROTOTIPEKAN**, tidak diadopsi | `lab/latent_bottleneck.py` + `HASIL_TAHAP4.md` §4 |
+> | A10, A11 | **belum** | lihat tabel status per-item di bawah |
 >
 > **Keputusan A8 — final**: `design` gugur di gerbang 1 (pengaruhnya terhadap IC
 > tidak signifikan, Welch t=0,79). Rekomendasi awal alat ("tunda satu ronde")
@@ -42,12 +45,12 @@
 > | A1 mutu sinyal | ada, dipakai terus | alat lama; dipakai di semua run sesi ini |
 > | A2 keandalan produksi | ada, dipakai terus | alat lama |
 > | A3 cakupan pencarian (klaster) | ada, dipakai terus | dihitung untuk semua lengan A8 |
-> | A4 geometri & entropi jalur laten | **SELESAI**, diukur ulang | identik persis dgn G1 lama di 8 varian — mekanisme tak tersentuh (wajar, B6/B7 belum dikerjakan) |
+> | A4 geometri & entropi jalur laten | **SELESAI**, diukur ulang | identik persis dgn G1 lama di 8 varian. **Tetap berlaku setelah B6/B7**: B6 nol-efek pada `gumbel` (0/9 menyala) dan B7 hanya mengubah DEFAULT kode — produksi sudah `gumbel` sejak B2 |
 > | A5 efisiensi konteks | **SELESAI**, diukur ulang | redundansi construct 59,5%→2,5%; KV total −22% |
 > | A6 biaya per faktor diterima | **SELESAI** (baru sesi ini) | dipakai di seluruh A8 |
 > | A7 kesetiaan rantai | **SELESAI** (baru sesi ini) | var_recall 0,79–0,97; 0 faktor rank-equivalent ke kolom mentah |
 > | A8 ablasi agen | **SELESAI** (baru sesi ini) | `lab/HASIL_A8.md` — dasar keputusan B16 |
-> | A9 kapasitas kanal laten | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
+> | A9 kapasitas kanal laten | **SELESAI** (alat baru sesi ini) | `lab/channel_capacity.py`; hasil di `lab/HASIL_TAHAP4.md` §3 |
 > | A10 sensitivitas arah | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
 > | A11 stabilitas jangka panjang | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
 >
@@ -60,11 +63,11 @@
 > | B3 kontrak DSL (prompts_v1.yaml) | ada SEBELUM sesi ini | bukan hasil sesi ini; produksi tetap pakai prompts.yaml, bukan v1 |
 > | B4 prompt ringkas (lib_in_kv) | **SELESAI** | construct −37% token; dikonfirmasi ulang lewat A5 |
 > | B5 ringkas format keluaran proposal | **BELUM DIKERJAKAN** | tak disentuh sesi ini |
-> | B6 early-stop rollout laten | **BELUM DIKERJAKAN** | gerbang Tahap 4 terpenuhi, tinggal eksekusi |
-> | B7 ganti persamaan realignment permanen | **BELUM DIKERJAKAN** | gerbang Tahap 4 terpenuhi, tinggal eksekusi |
+> | B6 early-stop rollout laten | **SELESAI**, terverifikasi | nol-efek di produksi (`gumbel` 0/9); menyala 9/9 & hemat 47% di `raw`. Nilainya sebagai pengaman salah-setel — HASIL_TAHAP4 §1 |
+> | B7 ganti persamaan realignment permanen | **SELESAI** | default kode `raw`→`gumbel`. Temuan ikutan: `use_realign` INERT di produksi → ablasi G6 hanya berlaku utk `raw` — HASIL_TAHAP4 §2 |
 > | B8 perbaiki kv_truncate (RoPE) | **SELESAI**, terverifikasi | KL(perbaikan‖manual)=0,0 persis |
 > | B9 hidupkan anggaran KV | **SELESAI** | dinyalakan setelah B8 terverifikasi |
-> | B10 latent bottleneck | **BELUM DIKERJAKAN** | sengaja ditunda ke Tahap 6, riset terpisah |
+> | B10 latent bottleneck | **DITELITI + DIPROTOTIPEKAN**, **tidak diadopsi** | prototipe training-free `lab/latent_bottleneck.py`; keputusan & alasan di HASIL_TAHAP4 §4 |
 > | B11 guided decoding construct | **SELESAI**, dipromosikan bersyarat | negatif di rantai `design`; positif & default TERIKAT rantai `innovate` |
 > | B12 execution gate | **SELESAI** | `execution_gate.py` baru |
 > | B13 pangkas rantai bila design tak kontribusi | **SUPERSEDED oleh B16** | design DIGANTI, bukan dipangkas |
@@ -80,9 +83,9 @@
 > | Tahap 1 | SELESAI |
 > | Tahap 2 | SELESAI |
 > | Tahap 3 + 3b | SELESAI, LULUS |
-> | Tahap 4 (B6, B7) | gerbang terpenuhi, **BELUM DIEKSEKUSI** |
+> | Tahap 4 (B6, B7) | **SELESAI** — `lab/HASIL_TAHAP4.md` |
 > | Tahap 5 (mutation/crossover/feedback) | **BELUM DISENTUH SAMA SEKALI** — bukan cuma sesi ini, sejak awal proyek |
-> | Tahap 6 (B10) | belum, menunggu Tahap 5 |
+> | Tahap 6 (B10) | **diteliti lebih awal** (A9 memberi premisnya); tidak diadopsi — HASIL_TAHAP4 §4 |
 
 **Dibuat**: 2026-08-07, setelah §8 AUDIT_KRITIS dijalankan di GPU (Qwen3-8B).
 Angka pendukung ada di `lab/HASIL_GPU.md`; dokumen ini hanya soal **apa yang

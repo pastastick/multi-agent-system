@@ -1,0 +1,3335 @@
+{
+  "_meta": {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 10,
+    "latent_steps": 10,
+    "payload": "dsl",
+    "position": "end",
+    "budgets": [
+      16,
+      64,
+      256
+    ],
+    "families": [
+      "pool_uniform",
+      "pool_vnorm",
+      "select_recent",
+      "select_knn"
+    ],
+    "L_mean": 2612.6,
+    "filler": "prompts.yaml::agents.construct.system"
+  },
+  "_summary": [
+    {
+      "family": "full",
+      "budget": 0,
+      "n": 10,
+      "kv_in": 2612.6,
+      "L": 2612.6,
+      "compression": 1.0,
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.67
+    },
+    {
+      "family": "pool_uniform",
+      "budget": 16,
+      "n": 10,
+      "kv_in": 16,
+      "L": 2612.6,
+      "compression": 163.3,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.16
+    },
+    {
+      "family": "pool_vnorm",
+      "budget": 16,
+      "n": 10,
+      "kv_in": 16,
+      "L": 2612.6,
+      "compression": 163.3,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.26
+    },
+    {
+      "family": "select_recent",
+      "budget": 16,
+      "n": 10,
+      "kv_in": 16,
+      "L": 2612.6,
+      "compression": 163.3,
+      "recall": 0.12,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 2.14
+    },
+    {
+      "family": "select_knn",
+      "budget": 16,
+      "n": 10,
+      "kv_in": 16,
+      "L": 2612.6,
+      "compression": 163.3,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.13
+    },
+    {
+      "family": "pool_uniform",
+      "budget": 64,
+      "n": 10,
+      "kv_in": 64,
+      "L": 2612.6,
+      "compression": 40.8,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.24
+    },
+    {
+      "family": "pool_vnorm",
+      "budget": 64,
+      "n": 10,
+      "kv_in": 64,
+      "L": 2612.6,
+      "compression": 40.8,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.37
+    },
+    {
+      "family": "select_recent",
+      "budget": 64,
+      "n": 10,
+      "kv_in": 64,
+      "L": 2612.6,
+      "compression": 40.8,
+      "recall": 0.92,
+      "exact": 0.9,
+      "hallucinate": 0.0,
+      "dur_s": 6.67
+    },
+    {
+      "family": "select_knn",
+      "budget": 64,
+      "n": 10,
+      "kv_in": 64,
+      "L": 2612.6,
+      "compression": 40.8,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 2.19
+    },
+    {
+      "family": "pool_uniform",
+      "budget": 256,
+      "n": 10,
+      "kv_in": 256,
+      "L": 2612.6,
+      "compression": 10.2,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 1.8
+    },
+    {
+      "family": "pool_vnorm",
+      "budget": 256,
+      "n": 10,
+      "kv_in": 256,
+      "L": 2612.6,
+      "compression": 10.2,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 2.22
+    },
+    {
+      "family": "select_recent",
+      "budget": 256,
+      "n": 10,
+      "kv_in": 256,
+      "L": 2612.6,
+      "compression": 10.2,
+      "recall": 0.96,
+      "exact": 0.8,
+      "hallucinate": 0.0,
+      "dur_s": 7.57
+    },
+    {
+      "family": "select_knn",
+      "budget": 256,
+      "n": 10,
+      "kv_in": 256,
+      "L": 2612.6,
+      "compression": 10.2,
+      "recall": 0.04,
+      "exact": 0.0,
+      "hallucinate": 0.347,
+      "dur_s": 1.52
+    },
+    {
+      "family": "none",
+      "budget": 0,
+      "n": 10,
+      "kv_in": 0,
+      "L": 1,
+      "compression": null,
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "dur_s": 0.41
+    }
+  ],
+  "records": [
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 2616,
+      "dur_s": 2.2,
+      "pred": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "SUMIF, TS_COVARIANCE, BB_UPPER, PERCENTILE, TS_SUM"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 2616,
+      "dur_s": 1.75,
+      "pred": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "TS_RANK, TS_ARGMIN, REGRESI, TS_QUANTILE, SQRT"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 2610,
+      "dur_s": 1.54,
+      "pred": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "MEAN, TS_STD, GT, RANK, EQ"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 2609,
+      "dur_s": 1.49,
+      "pred": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "OR, WHERE, HIGHDAY, RSI, EQ"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 2612,
+      "dur_s": 1.6,
+      "pred": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 2613,
+      "dur_s": 1.64,
+      "pred": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "TS_MAD, SCALE, MAX, ZSCORE, TS_QUANTILE"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 2615,
+      "dur_s": 1.71,
+      "pred": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "TS_MAX, TS_VAR, PERCENTILE, DECAYLINEAR, ZSCORE"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 2613,
+      "dur_s": 1.69,
+      "pred": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "ADD, EMA, TS_ARGMIN, ABS, TS_SKEW"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 2609,
+      "dur_s": 1.48,
+      "pred": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "SIGN, NE, SEQUENCE, DELAY, LT"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "full",
+      "budget": 0,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 2613,
+      "dur_s": 1.63,
+      "pred": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.16,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.16,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 16,
+      "dur_s": 1.09,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.16,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 16,
+      "dur_s": 1.09,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.16,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 16,
+      "dur_s": 1.16,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.27,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.18,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 16,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.16,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.21,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.19,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 16,
+      "dur_s": 1.19,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.42,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 16,
+      "dur_s": 1.41,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.41,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 16,
+      "dur_s": 1.19,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.19,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.19,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 16,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.2,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.06,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.06,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 16,
+      "dur_s": 1.38,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "5 items, comma-separated, nothing else."
+    },
+    {
+      "recall": 0.6,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 3,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.31,
+      "pred": [
+        "OR",
+        "WHERE",
+        "HIGHDAY"
+      ],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "OR, WHERE, HIGHDAY,"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 16,
+      "dur_s": 1.06,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.26,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 16,
+      "dur_s": 1.27,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.6,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 3,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 10.89,
+      "pred": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN"
+      ],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, TS_ARGMIN, ADD, EMA, T"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.06,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_recent",
+      "budget": 16,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.06,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.14,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 16,
+      "dur_s": 1.11,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 16,
+      "dur_s": 1.15,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.13,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 16,
+      "dur_s": 1.08,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.15,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 16,
+      "dur_s": 1.14,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.07,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 16,
+      "dur_s": 1.15,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 16,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 16,
+      "dur_s": 1.15,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.25,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.24,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 64,
+      "dur_s": 1.18,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.26,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 64,
+      "dur_s": 1.27,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.25,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 64,
+      "dur_s": 1.24,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.25,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.25,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 64,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.25,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.38,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.31,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 64,
+      "dur_s": 1.37,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.38,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 64,
+      "dur_s": 1.33,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.38,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 64,
+      "dur_s": 1.41,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.4,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.38,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 64,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.39,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.2,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 1,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.33,
+      "pred": [
+        "SUMIF"
+      ],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "SUMIF, TS_COVARI"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.7,
+      "pred": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "TS_RANK, TS_ARGMIN, REGRESI, TS_QUANTILE, SQRT"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 64,
+      "dur_s": 10.08,
+      "pred": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "MEAN, TS_STD, GT, RANK, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, "
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.49,
+      "pred": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "OR, WHERE, HIGHDAY, RSI, EQ"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 64,
+      "dur_s": 10.09,
+      "pred": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 10.08,
+      "pred": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "TS_MAD, SCALE, MAX, ZSCORE, TS_QUANTILE, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, "
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 64,
+      "dur_s": 1.68,
+      "pred": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "TS_MAX, TS_VAR, PERCENTILE, DECAYLINEAR, ZSCORE"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 10.09,
+      "pred": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "ADD, EMA, TS_ARGMIN, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKEW, ABS, TS_SKE"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 10.09,
+      "pred": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "SIGN, NE, SEQUENCE, DELAY, LT, SIGN, NE, SEQUENCE, DELAY, LT, SIGN, NE, SEQUENCE, DELAY, LT, SIGN, NE, SEQUENCE, DELAY, LT, SIGN, NE, SEQUENCE, DELAY, LT, SIGN, NE, SEQUENCE, DELAY, LT, SIGN, NE, SEQU"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 64,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 10.11,
+      "pred": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_M"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.41,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 64,
+      "dur_s": 1.17,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 64,
+      "dur_s": 1.26,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "no, not this."
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.67,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 64,
+      "dur_s": 1.68,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.17,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 64,
+      "dur_s": 10.07,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS_M_S_T_TS"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.15,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 64,
+      "dur_s": 1.14,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 64,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 64,
+      "dur_s": 1.14,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 1.69,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 1.83,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "5 items, comma-separated, nothing else."
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 256,
+      "dur_s": 1.56,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 1.86,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 256,
+      "dur_s": 1.91,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 1.85,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 256,
+      "dur_s": 1.84,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 1.84,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "5 items, comma-separated, nothing else."
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 1.82,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "5 items, comma-separated, nothing else."
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_uniform",
+      "budget": 256,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 1.82,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "5 items, comma-separated, nothing else."
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 2.2,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 2.34,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 256,
+      "dur_s": 2.01,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": ""
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 2.19,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 256,
+      "dur_s": 2.22,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 2.34,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "1,2,3,4,5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 256,
+      "dur_s": 2.19,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 2.33,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "5 items, comma-separated, nothing else."
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 2.21,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "pool_vnorm",
+      "budget": 256,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 2.21,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "12345"
+    },
+    {
+      "recall": 0.8,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 4,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 1.67,
+      "pred": [
+        "SUMIF",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "SUMIF, TS_COVARI, BB_UPPER, PERCENTILE, TS_SUM"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 10.11,
+      "pred": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "TS_RANK, TS_ARGMIN, REGRESI, TS_QUANTILE, SQRT, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 256,
+      "dur_s": 10.14,
+      "pred": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "MEAN, TS_STD, GT, RANK, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, EQ, "
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 1.46,
+      "pred": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "OR, WHERE, HIGHDAY, RSI, EQ"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 256,
+      "dur_s": 10.11,
+      "pred": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS_PCTCHANGE, EQ, SQRT, DELTA, SIGN, TS"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 10.12,
+      "pred": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "TS_MAD, SCALE, MAX, ZSCORE, TS_QUANTILE, SCALE, MAX, ZSCORE, TS_QUANTILE, SCALE, MAX, ZSCORE, TS_QUANTILE, SCALE, MAX, ZSCORE, TS_QUANTILE, SCALE, MAX, ZSCALE, TS_QUANTILE, SCALE, MAX, ZSCALE, TS_QUAN"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 256,
+      "dur_s": 1.67,
+      "pred": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "TS_MAX, TS_VAR, PERCENTILE, DECAYLINEAR, ZSCORE"
+    },
+    {
+      "recall": 0.8,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 4,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 10.16,
+      "pred": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS"
+      ],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "ADD, EMA, TS_ARGMIN, ABS, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA, EMA,"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 10.11,
+      "pred": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "SIGN, NE, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, SEQUENCE, DELAY, LT, S"
+    },
+    {
+      "recall": 1.0,
+      "exact": 1.0,
+      "hallucinate": 0.0,
+      "n_pred": 5,
+      "family": "select_recent",
+      "budget": 256,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 10.13,
+      "pred": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_MEAN, MEDIAN, MULTIPLY, HIGHDAY, WMA, TS_M"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 0,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 1.47,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "$volume, $open, $close, $volume"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 1,
+      "L": 2616,
+      "kv_in": 256,
+      "dur_s": 1.47,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "$volume, $open, $close, $high"
+    },
+    {
+      "recall": 0.2,
+      "exact": 0.0,
+      "hallucinate": 0.6666666666666666,
+      "n_pred": 3,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 2,
+      "L": 2610,
+      "kv_in": 256,
+      "dur_s": 1.54,
+      "pred": [
+        "TS_SUM",
+        "TS_MEAN",
+        "TS_STD"
+      ],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "$volume,$returns,$ts_sum,$ts_mean,$ts_std"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 1.0,
+      "n_pred": 3,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 3,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 1.54,
+      "pred": [
+        "TS_SUM",
+        "TS_MEAN",
+        "TS_STD"
+      ],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "$volume,$returns,$ts_sum,$ts_mean,$ts_std"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 4,
+      "L": 2612,
+      "kv_in": 256,
+      "dur_s": 1.43,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "$volume,$return,$volume,$return,$volume"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 5,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 1.43,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "$volume,$return,$volume,$return,$volume"
+    },
+    {
+      "recall": 0.2,
+      "exact": 0.0,
+      "hallucinate": 0.8,
+      "n_pred": 5,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 6,
+      "L": 2615,
+      "kv_in": 256,
+      "dur_s": 1.83,
+      "pred": [
+        "TS_MEAN",
+        "TS_SUM",
+        "TS_VAR",
+        "TS_STD",
+        "TS_MAD"
+      ],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "TS_MEAN, TS_SUM, TS_VAR, TS_STD, TS_MAD"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 7,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 1.43,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "$volume,$price,$returns,$volume,$price"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 1.0,
+      "n_pred": 3,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 8,
+      "L": 2609,
+      "kv_in": 256,
+      "dur_s": 1.53,
+      "pred": [
+        "TS_SUM",
+        "TS_MEAN",
+        "TS_STD"
+      ],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "$volume,$returns,$ts_sum,$ts_mean,$ts_std"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "select_knn",
+      "budget": 256,
+      "trial": 9,
+      "L": 2613,
+      "kv_in": 256,
+      "dur_s": 1.58,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "$volume, $price, $volume, $price, $volume"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 0,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "SUMIF",
+        "TS_COVARIANCE",
+        "BB_UPPER",
+        "PERCENTILE",
+        "TS_SUM"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 1,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "TS_RANK",
+        "TS_ARGMIN",
+        "REGRESI",
+        "TS_QUANTILE",
+        "SQRT"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 2,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.42,
+      "pred": [],
+      "truth": [
+        "MEAN",
+        "TS_STD",
+        "GT",
+        "RANK",
+        "EQ"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 3,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "OR",
+        "WHERE",
+        "HIGHDAY",
+        "RSI",
+        "EQ"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 4,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "DELTA",
+        "SIGN",
+        "TS_PCTCHANGE",
+        "EQ",
+        "SQRT"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 5,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "TS_MAD",
+        "SCALE",
+        "MAX",
+        "ZSCORE",
+        "TS_QUANTILE"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 6,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.42,
+      "pred": [],
+      "truth": [
+        "TS_MAX",
+        "TS_VAR",
+        "PERCENTILE",
+        "DECAYLINEAR",
+        "ZSCORE"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 7,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "ADD",
+        "EMA",
+        "TS_ARGMIN",
+        "ABS",
+        "TS_SKEW"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 8,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "SIGN",
+        "NE",
+        "SEQUENCE",
+        "DELAY",
+        "LT"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    },
+    {
+      "recall": 0.0,
+      "exact": 0.0,
+      "hallucinate": 0.0,
+      "n_pred": 0,
+      "family": "none",
+      "budget": 0,
+      "trial": 9,
+      "L": 0,
+      "kv_in": 0,
+      "dur_s": 0.41,
+      "pred": [],
+      "truth": [
+        "MEDIAN",
+        "MULTIPLY",
+        "HIGHDAY",
+        "WMA",
+        "TS_MEAN"
+      ],
+      "down_text": "item1,item2,item3,item4,item5"
+    }
+  ]
+}
