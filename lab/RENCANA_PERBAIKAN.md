@@ -12,7 +12,7 @@
 > | Tahap 4 — B6 + B7 | **SELESAI** | `lab/HASIL_TAHAP4.md`. B6 nol-efek di produksi (menyala 9/9 di `raw`, 0/9 di `gumbel`) — nilainya sebagai pengaman salah-setel. B7: default kode `raw`→`gumbel` permanen; ridge M terbukti praktis ortogonal (cos 0,011) dan `use_realign` kini **inert** |
 > | A9 kapasitas kanal laten | **SELESAI** (alat baru) | `lab/channel_capacity.py`. Kanal laten murni memulihkan 19–35% muatan pada ls=10, 76–84% pada ls=40; mode `kv` lossless karena **token prompt** yang ikut diwariskan, bukan karena vektor latennya |
 > | Tahap 6 (B10) | **DITELITI + DIPROTOTIPEKAN**, tidak diadopsi | `lab/latent_bottleneck.py` + `HASIL_TAHAP4.md` §4 |
-> | A10, A11 | **belum** | lihat tabel status per-item di bawah |
+> | B5, B14, A10, A11 | **SELESAI** | `lab/KESIMPULAN.md` §4–§7. **Seluruh RENCANA_PERBAIKAN kecuali Tahap 5 kini beres** |
 >
 > **Keputusan A8 — final**: `design` gugur di gerbang 1 (pengaruhnya terhadap IC
 > tidak signifikan, Welch t=0,79). Rekomendasi awal alat ("tunda satu ronde")
@@ -51,8 +51,8 @@
 > | A7 kesetiaan rantai | **SELESAI** (baru sesi ini) | var_recall 0,79–0,97; 0 faktor rank-equivalent ke kolom mentah |
 > | A8 ablasi agen | **SELESAI** (baru sesi ini) | `lab/HASIL_A8.md` — dasar keputusan B16 |
 > | A9 kapasitas kanal laten | **SELESAI** (alat baru sesi ini) | `lab/channel_capacity.py`; hasil di `lab/HASIL_TAHAP4.md` §3 |
-> | A10 sensitivitas arah | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
-> | A11 stabilitas jangka panjang | **BELUM** — alat belum dibuat | tak ada skrip sama sekali |
+> | A10 sensitivitas arah | **SELESAI** (alat baru sesi ini) | `lab/direction_sensitivity.py` + pasangan arah berlawanan `opp_mom`/`opp_rev`; hasil di `lab/KESIMPULAN.md` §5 |
+> | A11 stabilitas jangka panjang | **SELESAI** (alat baru sesi ini) | `lab/stability_probe.py`; hasil di `lab/KESIMPULAN.md` §7 |
 >
 > **Katalog intervensi (B)**
 >
@@ -62,7 +62,7 @@
 > | B2 step_mode=gumbel | **SELESAI** | dipromosikan ke kunci YAML; A4 mengonfirmasi mekanismenya (47/60 token unik vs 2/60 pada raw) |
 > | B3 kontrak DSL (prompts_v1.yaml) | ada SEBELUM sesi ini | bukan hasil sesi ini; produksi tetap pakai prompts.yaml, bukan v1 |
 > | B4 prompt ringkas (lib_in_kv) | **SELESAI** | construct −37% token; dikonfirmasi ulang lewat A5 |
-> | B5 ringkas format keluaran proposal | **BELUM DIKERJAKAN** | tak disentuh sesi ini |
+> | B5 ringkas format keluaran proposal | **SELESAI** — dgn koreksi | format 3-bagian ternyata SUDAH ada sejak `fe42127`; yang dikerjakan: perbaiki rantai usang pasca-B16 di prompt proposal + pangkas (866→788 tok). KESIMPULAN §4 |
 > | B6 early-stop rollout laten | **SELESAI**, terverifikasi | nol-efek di produksi (`gumbel` 0/9); menyala 9/9 & hemat 47% di `raw`. Nilainya sebagai pengaman salah-setel — HASIL_TAHAP4 §1 |
 > | B7 ganti persamaan realignment permanen | **SELESAI** | default kode `raw`→`gumbel`. Temuan ikutan: `use_realign` INERT di produksi → ablasi G6 hanya berlaku utk `raw` — HASIL_TAHAP4 §2 |
 > | B8 perbaiki kv_truncate (RoPE) | **SELESAI**, terverifikasi | KL(perbaikan‖manual)=0,0 persis |
@@ -71,7 +71,7 @@
 > | B11 guided decoding construct | **SELESAI**, dipromosikan bersyarat | negatif di rantai `design`; positif & default TERIKAT rantai `innovate` |
 > | B12 execution gate | **SELESAI** | `execution_gate.py` baru |
 > | B13 pangkas rantai bila design tak kontribusi | **SUPERSEDED oleh B16** | design DIGANTI, bukan dipangkas |
-> | B14 medium "konteks segar + ringkasan" | **BELUM DIKERJAKAN** | sengaja ditunda ke Bab 5 |
+> | B14 medium "konteks segar + ringkasan" | **DIIMPLEMENTASI + DIUKUR**, bukan default | `comm_mode="summary"` di pipeline.py + 8 unit test; hasil & keputusan di KESIMPULAN §6 |
 > | B15 tiga lubang gate (a/b/c) | **SELESAI** | 17 unit test + regresi 322 ekspresi |
 > | B16 ganti design→innovate | **SELESAI, LULUS** | keputusan user + kriteria Tahap 3b terpenuhi |
 >
