@@ -37,6 +37,25 @@ def welch(a: list[float], b: list[float]) -> tuple[float, float]:
     return t, df
 
 
+def historical_functions() -> set[str]:
+    """Fungsi DSL yang pernah dipakai sistem SEBELUM eksperimen A8 (korpus
+    G2/G3/G4/G6 + 2x2 prompt). Dipakai untuk menghitung berapa fungsi BARU yang
+    dibuka tiap lengan — ukuran paling langsung dari "keluar dari kemonotonan",
+    dan tidak bisa dipalsukan dengan menulis ulang idiom yang sama."""
+    used: set[str] = set()
+    for p in OUT.glob("frontend_*.json"):
+        if p.name.startswith("frontend_a8_"):
+            continue
+        try:
+            doc = json.loads(p.read_text())
+        except Exception:  # noqa: BLE001
+            continue
+        for r in doc.get("runs", []):
+            for f in (r.get("factors") or []):
+                used.update(_FUNC_RE.findall(f.get("expression", "")))
+    return used
+
+
 def load_arm(comm: str, arm: str) -> list[dict] | None:
     p = OUT / f"frontend_a8_{comm}_{arm}.json"
     if not p.exists():
@@ -113,7 +132,8 @@ def main() -> None:
     ap.add_argument("--comm-mode", dest="comm", default="kv")
     a = ap.parse_args()
 
-    S, C = {}, {}
+    hist = historical_functions()
+    S, C, NEW = {}, {}, {}
     for arm in ARMS:
         runs = load_arm(a.comm, arm)
         if runs is None:
@@ -121,18 +141,29 @@ def main() -> None:
             continue
         S[arm] = summarise(runs)
         C[arm] = clusters(runs, a.comm, arm)
+        used = set()
+        for r in runs:
+            for f in (r.get("factors") or []):
+                used.update(_FUNC_RE.findall(f.get("expression", "")))
+        NEW[arm] = sorted(used - hist)
 
     hdr = (f"{'lengan':<14s} {'run':>5s} {'expr':>5s} {'gate':>6s} {'hidup':>6s} "
-           f"{'|IC|/run':>9s} {'pustaka':>8s} {'klaster':>8s} {'dtk/fak':>8s} {'tok/fak':>8s}")
-    print(f"\nA8 ({a.comm}) — ringkasan\n{hdr}\n" + "-" * len(hdr))
+           f"{'|IC|/run':>9s} {'pustaka':>8s} {'baru':>5s} {'klaster':>8s} "
+           f"{'dtk/fak':>8s} {'tok/fak':>8s}")
+    print(f"\nA8 ({a.comm}) — ringkasan  "
+          f"(korpus lama memakai {len(hist)} fungsi)\n{hdr}\n" + "-" * len(hdr))
     for arm in ARMS:
         if arm not in S:
             continue
         s = S[arm]
         print(f"{arm:<14s} {s['n_producing']:>2d}/{s['n_runs']:<2d} {s['n_expr']:>5d} "
               f"{s['gate_rate']:>5.0%} {s['n_alive']:>6d} {s['mean_ic_run']:>9.4f} "
-              f"{s['lib_coverage']:>8d} {str(C.get(arm)):>8s} "
+              f"{s['lib_coverage']:>8d} {len(NEW[arm]):>5d} {str(C.get(arm)):>8s} "
               f"{s['secs_per_pass']:>8.1f} {s['toks_per_pass']:>8.0f}")
+    print("\nFungsi yang BELUM PERNAH dipakai sistem sebelum A8:")
+    for arm in ARMS:
+        if arm in NEW:
+            print(f"  {arm:<14s} {' '.join(NEW[arm]) or '(tak ada)'}")
 
     if "full" not in S or "nodesign" not in S:
         sys.exit("\nlengan full/nodesign belum lengkap.")

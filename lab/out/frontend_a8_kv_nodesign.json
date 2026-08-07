@@ -25,32 +25,128 @@
         {
           "name": "vol_reversal_rank",
           "expression": "RANK((($volume > TS_QUANTILE($volume, 0.9, 20)) ? (TS_ZSCORE($return, 5)) : (0)))",
-          "explanation": "Ranks stocks based on z-score of returns after high-volume days (top 10% quantile over 20 days), capturing the reversal mechanism"
+          "explanation": "Ranks stocks based on z-score of returns after high-volume days (top 10% quantile over 20 days), capturing the reversal mechanism",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got window 0.9, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.007770824677511522,
+          "icir": -0.16878199810054595,
+          "tstat": -2.631050965018254,
+          "n_days": 243,
+          "coverage": 4372.152263374485,
+          "n_unique": 489.20576131687244,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_weighted",
           "expression": "($volume > TS_QUANTILE($volume, 0.9, 20)) ? (TS_PCTCHANGE($return, 5) * 2) : (0)",
-          "explanation": "Weights the percentage change in returns after high-volume days with a multiplier, emphasizing the reversal signal"
+          "explanation": "Weights the percentage change in returns after high-volume days with a multiplier, emphasizing the reversal signal",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got window 0.9, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.0036011553346866746,
+          "icir": 0.1182904631155819,
+          "tstat": 1.8439658295033612,
+          "n_days": 243,
+          "coverage": 4354.275720164609,
+          "n_unique": 465.87654320987656,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_conditional_rank",
           "expression": "RANK((($volume > TS_QUANTILE($volume, 0.95, 15)) ? (TS_ZSCORE($return, 3)) : (TS_ZSCORE($return, 3))))",
-          "explanation": "Ranks stocks using z-scores of returns after extreme high-volume days (top 5% quantile over 15 days), testing conditional reversal"
+          "explanation": "Ranks stocks using z-scores of returns after extreme high-volume days (top 5% quantile over 15 days), testing conditional reversal",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got window 0.95, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 15, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.009140721222092552,
+          "icir": -0.10227422378816294,
+          "tstat": -1.5942973671519092,
+          "n_days": 243,
+          "coverage": 4367.123456790124,
+          "n_unique": 4365.020576131687,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_diff_window",
           "expression": "RANK((($volume > TS_QUANTILE($volume, 0.9, 10)) ? (TS_ZSCORE($return, 3)) : (TS_ZSCORE($return, 3))))",
-          "explanation": "Ranks stocks using z-scores of returns after high-volume days (top 10% quantile over 10 days), varying the window to test stability"
+          "explanation": "Ranks stocks using z-scores of returns after high-volume days (top 10% quantile over 10 days), varying the window to test stability",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got window 0.9, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 10, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.009140721222092552,
+          "icir": -0.10227422378816294,
+          "tstat": -1.5942973671519092,
+          "n_days": 243,
+          "coverage": 4367.123456790124,
+          "n_unique": 4365.020576131687,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_cross_window",
           "expression": "RANK((($volume > TS_QUANTILE($volume, 0.9, 20)) ? (TS_ZSCORE($return, 7)) : (TS_ZSCORE($return, 7))))",
-          "explanation": "Ranks stocks using z-scores of returns after high-volume days (top 10% quantile over 20 days), testing cross-window consistency"
+          "explanation": "Ranks stocks using z-scores of returns after high-volume days (top 10% quantile over 20 days), testing cross-window consistency",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got window 0.9, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.007288976478337483,
+          "icir": -0.07412334636748946,
+          "tstat": -1.1554686174196596,
+          "n_days": 243,
+          "coverage": 4369.189300411523,
+          "n_unique": 4367.460905349794,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_gated_zscore",
           "expression": "($volume > TS_QUANTILE($volume, 0.9, 15)) ? (TS_ZSCORE($return, 5)) : (TS_ZSCORE($return, 5))",
-          "explanation": "Gates the z-score of returns after high-volume days (top 10% quantile over 15 days), focusing on conditional reversal"
+          "explanation": "Gates the z-score of returns after high-volume days (top 10% quantile over 15 days), focusing on conditional reversal",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got window 0.9, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 15, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.005874341900025539,
+          "icir": -0.059888026937627244,
+          "tstat": -0.9335619487892155,
+          "n_days": 243,
+          "coverage": 4368.588477366256,
+          "n_unique": 4366.85596707819,
+          "eval_error": null,
+          "passed_gate": false
         }
       ],
       "passing": [
@@ -261,32 +357,102 @@
         {
           "name": "vol_rank_reversal",
           "expression": "(TS_ZSCORE($volume, 20) > 1) ? (RANK(-$return)) : (RANK($return))",
-          "explanation": "Ranks returns negatively when volume is above average, capturing reversal after high-volume days."
+          "explanation": "Ranks returns negatively when volume is above average, capturing reversal after high-volume days.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.005928857308960219,
+          "icir": 0.08800495833798797,
+          "tstat": 1.3718615324343972,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 3699.761316872428,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_magnitude_reversal",
           "expression": "ZSCORE(TS_SUM($volume, 5), 20) * RANK(-$return)",
-          "explanation": "Combines volume magnitude with return ranking to measure reversal strength after high-volume periods."
+          "explanation": "Combines volume magnitude with return ranking to measure reversal strength after high-volume periods.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TypeError: ZSCORE() takes 1 positional argument but 2 were given",
+          "passed_gate": false
         },
         {
           "name": "vol_conditional_zscore",
           "expression": "(TS_PCTCHANGE($volume, 5) > 0.3) ? (ZSCORE(-$return)) : (ZSCORE($return))",
-          "explanation": "Standardizes returns with a conditional gate on volume growth, emphasizing reversals after sharp volume increases."
+          "explanation": "Standardizes returns with a conditional gate on volume growth, emphasizing reversals after sharp volume increases.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.006682190697320464,
+          "icir": 0.1327259565801435,
+          "tstat": 2.0689929025199034,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4214.563786008231,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_time_rank",
           "expression": "TS_RANK($volume, 20) * RANK(-$return)",
-          "explanation": "Weights return rank by volume rank over time, highlighting stocks with both high volume and negative returns."
+          "explanation": "Weights return rank by volume rank over time, highlighting stocks with both high volume and negative returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.00943431298190097,
+          "icir": 0.11608967652909409,
+          "tstat": 1.8096589618436445,
+          "n_days": 243,
+          "coverage": 4370.349794238683,
+          "n_unique": 4055.5020576131687,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_cross_quantile",
           "expression": "PERCENTILE(TS_ZSCORE($volume, 20), 0.9) ? RANK(-$return) : RANK($return)",
-          "explanation": "Uses cross-sectional quantiles of volume to condition return ranking, isolating top volume days for reversal effect."
+          "explanation": "Uses cross-sectional quantiles of volume to condition return ranking, isolating top volume days for reversal effect.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `PERCENTILE(TS_ZSCORE($volume, 20.0), 0.9)` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(PERCENTILE(TS_ZSCORE($volume, 20.0), 0.9)) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.011257208905891259,
+          "icir": 0.10011812913440696,
+          "tstat": 1.5606871777758125,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4202.691358024691,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_momentum_reversal",
           "expression": "(TS_PCTCHANGE($volume, 5) > 0.3) ? (TS_ZSCORE(-$return, 20)) : (TS_ZSCORE($return, 20))",
-          "explanation": "Measures momentum of returns after high-volume days, using rolling z-scores to capture reversal patterns."
+          "explanation": "Measures momentum of returns after high-volume days, using rolling z-scores to capture reversal patterns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.003147185501090724,
+          "icir": 0.06265590940262768,
+          "tstat": 0.9767089663180532,
+          "n_days": 243,
+          "coverage": 4370.057613168724,
+          "n_unique": 4368.333333333333,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -405,32 +571,100 @@
         {
           "name": "vol_reversal_rank",
           "expression": "RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0))",
-          "explanation": "Scores stocks based on the percentage change in return after days with high volume relative to recent trends, ranked across the cross-section."
+          "explanation": "Scores stocks based on the percentage change in return after days with high volume relative to recent trends, ranked across the cross-section.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.00663362576412565,
+          "icir": 0.25193656314098894,
+          "tstat": 3.9273023488002963,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 284.4074074074074,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_zscore",
           "expression": "ZSCORE((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0))",
-          "explanation": "Standardizes the percentage change in return after high-volume days, capturing deviations from cross-sectional mean."
+          "explanation": "Standardizes the percentage change in return after high-volume days, capturing deviations from cross-sectional mean.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.031774122536098945,
+          "icir": 2.599764734054387,
+          "tstat": 5.199529468108774,
+          "n_days": 4,
+          "coverage": 4399.25,
+          "n_unique": 170.75,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_tsmad",
           "expression": "TS_MAD((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0), 10)",
-          "explanation": "Measures the deviation of returns after high-volume days using median absolute deviation over a 10-day window."
+          "explanation": "Measures the deviation of returns after high-volume days using median absolute deviation over a 10-day window.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.008566501551326816,
+          "icir": -0.28552267590344393,
+          "tstat": -4.450858032400082,
+          "n_days": 243,
+          "coverage": 4301.543209876543,
+          "n_unique": 22.530864197530864,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_rank_diff",
           "expression": "RANK(TS_PCTCHANGE($return, 1)) - RANK(TS_ZSCORE($volume, 20))",
-          "explanation": "Compares the rank of returns with the rank of volume anomalies, highlighting mispricing from liquidity shocks."
+          "explanation": "Compares the rank of returns with the rank of volume anomalies, highlighting mispricing from liquidity shocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.014816541927258117,
+          "icir": 0.20780113590407198,
+          "tstat": 3.239299127307401,
+          "n_days": 243,
+          "coverage": 4367.98353909465,
+          "n_unique": 4366.123456790124,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_conditional_zscore",
           "expression": "(TS_ZSCORE($volume, 20) > 2) ? (ZSCORE(TS_PCTCHANGE($return, 1))) : (0)",
-          "explanation": "Gates the standardization of return changes on the condition of high volume, isolating the reversal signal."
+          "explanation": "Gates the standardization of return changes on the condition of high volume, isolating the reversal signal.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 4081.1769547325102,
+          "n_unique": 1.0,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_rank_trend",
           "expression": "TS_RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($return, 1)) : (0), 10)",
-          "explanation": "Ranks the return changes after high-volume days within a 10-day time-series window, capturing momentum within the reversal."
+          "explanation": "Ranks the return changes after high-volume days within a 10-day time-series window, capturing momentum within the reversal.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "pct-rank-vs-threshold>1"
+          ],
+          "ic": -0.00026399147657688504,
+          "icir": -0.009756334866120975,
+          "tstat": -0.15208620915399507,
+          "n_days": 243,
+          "coverage": 4365.316872427984,
+          "n_unique": 24.415637860082306,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -549,27 +783,82 @@
         {
           "name": "vol_revert_zscore",
           "expression": "ZSCORE(TS_STD($return, 20)) * (TS_PCTCHANGE($volume, 5) > 0.1)",
-          "explanation": "Computes the z-score of rolling volatility over 20 days, weighted by a volume increase signal over 5 days, capturing mean reversion in volatile regimes."
+          "explanation": "Computes the z-score of rolling volatility over 20 days, weighted by a volume increase signal over 5 days, capturing mean reversion in volatile regimes.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.02821159256591189,
+          "icir": -0.3224181107701841,
+          "tstat": -5.026000942208962,
+          "n_days": 243,
+          "coverage": 4370.181069958848,
+          "n_unique": 1749.8024691358025,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_rank",
           "expression": "RANK(TS_STD($return, 30)) * (TS_PCTCHANGE($volume, 10) < -0.1)",
-          "explanation": "Ranks rolling volatility over 30 days, multiplied by a volume decline signal over 10 days, highlighting mean reversion in low-volume, uncertain regimes."
+          "explanation": "Ranks rolling volatility over 30 days, multiplied by a volume decline signal over 10 days, highlighting mean reversion in low-volume, uncertain regimes.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.003921312749885069,
+          "icir": 0.04674039135753138,
+          "tstat": 0.7286105933720783,
+          "n_days": 243,
+          "coverage": 4370.181069958848,
+          "n_unique": 1988.5473251028807,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_diff",
           "expression": "(TS_MEAN($return, 10) - TS_MEAN($return, 60)) * (TS_STD($return, 30) < 0.02)",
-          "explanation": "Calculates the difference between short and long-term returns, gated by low volatility over 30 days, identifying mean reversion after periods of stability."
+          "explanation": "Calculates the difference between short and long-term returns, gated by low volatility over 30 days, identifying mean reversion after periods of stability.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.008276315974619903,
+          "icir": 0.10892404918189026,
+          "tstat": 1.6979578861424862,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 1236.8683127572017,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_corr",
           "expression": "TS_CORR($return, $volume, 20) * (TS_STD($return, 10) < 0.015)",
-          "explanation": "Measures the correlation between returns and volume over 20 days, conditioned on low volatility over 10 days, capturing regime-based mean reversion."
+          "explanation": "Measures the correlation between returns and volume over 20 days, conditioned on low volatility over 10 days, capturing regime-based mean reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.007631549844662193,
+          "icir": 0.15415028679591677,
+          "tstat": 2.4029651585865754,
+          "n_days": 243,
+          "coverage": 4370.057613168724,
+          "n_unique": 892.164609053498,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_quantile",
           "expression": "PERCENTILE(TS_STD($return, 40), 0.2) * (TS_PCTCHANGE($volume, 15) > 0.05)",
-          "explanation": "Uses the 20th percentile of rolling volatility over 40 days, multiplied by a volume increase signal over 15 days, focusing on extreme low-volatility transitions."
+          "explanation": "Uses the 20th percentile of rolling volatility over 40 days, multiplied by a volume increase signal over 15 days, focusing on extreme low-volatility transitions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.014472692395276172,
+          "icir": -0.1995009256819016,
+          "tstat": -3.109911654942686,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 1954.8559670781892,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -673,32 +962,110 @@
         {
           "name": "vol_revert_zscore",
           "expression": "(TS_STD($return, 20) < TS_STD($return, 60)) ? (ZSCORE($return)) : (0)",
-          "explanation": "Captures mean-reversion by standardizing returns within low-volatility regime using z-score."
+          "explanation": "Captures mean-reversion by standardizing returns within low-volatility regime using z-score.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.013844481896932838,
+          "icir": -0.16368014427836242,
+          "tstat": -2.551520934722952,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2315.1893004115227,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_rank",
           "expression": "(TS_STD($return, 20) < TS_STD($return, 60)) ? (RANK($return)) : (0)",
-          "explanation": "Ranks returns within low-volatility regime to highlight mean-reversion candidates."
+          "explanation": "Ranks returns within low-volatility regime to highlight mean-reversion candidates.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.008073597497411782,
+          "icir": 0.1056205051204035,
+          "tstat": 1.6464607307066486,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2315.1893004115227,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_diff",
           "expression": "(TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_PCTCHANGE($return, 5)) : (0)",
-          "explanation": "Measures percentage change in returns during low-volatility regime transitions."
+          "explanation": "Measures percentage change in returns during low-volatility regime transitions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.009508009621551447,
+          "icir": -0.18577868769578862,
+          "tstat": -2.8960031344731925,
+          "n_days": 243,
+          "coverage": 4295.0123456790125,
+          "n_unique": 2248.5761316872427,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_tsmad",
           "expression": "(TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_MAD($return, 20)) : (0)",
-          "explanation": "Detects deviations from mean in low-volatility regime using median absolute deviation."
+          "explanation": "Detects deviations from mean in low-volatility regime using median absolute deviation.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.00011161072005702359,
+          "icir": -0.0014264846201862886,
+          "tstat": -0.0222366945454042,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2403.2633744855966,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_corr",
           "expression": "(TS_STD($return, 20) < TS_STD($return, 60)) ? (TS_CORR($return, $volume, 20)) : (0)",
-          "explanation": "Links return volatility with volume changes during low-volatility regime transitions."
+          "explanation": "Links return volatility with volume changes during low-volatility regime transitions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.0037093837152859413,
+          "icir": -0.07234623106350706,
+          "tstat": -1.127766131443008,
+          "n_days": 243,
+          "coverage": 4372.456790123457,
+          "n_unique": 2410.259259259259,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_revert_quantile",
           "expression": "(TS_STD($return, 20) < TS_STD($return, 60)) ? (PERCENTILE($return, 0.3, 20)) : (0)",
-          "explanation": "Identifies lower quantiles of returns during low-volatility regime transitions for mean-reversion."
+          "explanation": "Identifies lower quantiles of returns during low-volatility regime transitions for mean-reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.003479660464402753,
+          "icir": -0.038371820749542256,
+          "tstat": -0.5981574880541958,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2392.9876543209875,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -810,32 +1177,122 @@
         {
           "name": "low_vol_zscore",
           "expression": "ZSCORE(TS_STD($return, 20)) ? TS_ZSCORE($return, 5) : 0",
-          "explanation": "Computes the z-score of return volatility over 20 days and gates the 5-day return z-score, capturing regime transition signals."
+          "explanation": "Computes the z-score of return volatility over 20 days and gates the 5-day return z-score, capturing regime transition signals.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `ZSCORE(TS_STD($return, 20.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(ZSCORE(TS_STD($return, 20.0))) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.005874341900025539,
+          "icir": -0.059888026937627244,
+          "tstat": -0.9335619487892155,
+          "n_days": 243,
+          "coverage": 4368.588477366256,
+          "n_unique": 4366.85596707819,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_rank_reversal",
           "expression": "RANK(TS_STD($return, 30)) ? -TS_ZSCORE($return, 10) : 0",
-          "explanation": "Ranks volatility over 30 days and reverses the 10-day return z-score, testing mean-reversion during low-volatility regimes."
+          "explanation": "Ranks volatility over 30 days and reverses the 10-day return z-score, testing mean-reversion during low-volatility regimes.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `RANK(TS_STD($return, 30.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(RANK(TS_STD($return, 30.0))) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.006876812774369464,
+          "icir": 0.06842863566755261,
+          "tstat": 1.066696863019389,
+          "n_days": 243,
+          "coverage": 4369.3621399176955,
+          "n_unique": 4367.6378600823045,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_weighted",
           "expression": "TS_STD($return, 20) * TS_PCTCHANGE($return, 10) ? -TS_ZSCORE($return, 5) : 0",
-          "explanation": "Weights volatility with recent return momentum and reverses the 5-day return z-score to capture regime-based mean reversion."
+          "explanation": "Weights volatility with recent return momentum and reverses the 5-day return z-score to capture regime-based mean reversion.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `(TS_STD($return, 20.0) * TS_PCTCHANGE($return, 10.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((TS_STD($return, 20.0) * TS_PCTCHANGE($return, 10.0))) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.006195188752611741,
+          "icir": 0.06303406444263848,
+          "tstat": 0.9826038199999858,
+          "n_days": 243,
+          "coverage": 4369.090534979424,
+          "n_unique": 4337.419753086419,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_transition_zscore",
           "expression": "ZSCORE(TS_STD($return, 15)) ? TS_ZSCORE($return, 7) : 0",
-          "explanation": "Standardizes volatility over 15 days and uses the 7-day return z-score to detect regime transitions and mean reversion."
+          "explanation": "Standardizes volatility over 15 days and uses the 7-day return z-score to detect regime transitions and mean reversion.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `ZSCORE(TS_STD($return, 15.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(ZSCORE(TS_STD($return, 15.0))) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.007288976478337483,
+          "icir": -0.07412334636748946,
+          "tstat": -1.1554686174196596,
+          "n_days": 243,
+          "coverage": 4369.189300411523,
+          "n_unique": 4367.460905349794,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_momentum_reversal",
           "expression": "TS_PCTCHANGE(TS_STD($return, 20), 5) ? -TS_ZSCORE($return, 10) : 0",
-          "explanation": "Measures volatility momentum over 20 days and reverses the 10-day return z-score, testing for regime-driven mean reversion."
+          "explanation": "Measures volatility momentum over 20 days and reverses the 10-day return z-score, testing for regime-driven mean reversion.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `TS_PCTCHANGE(TS_STD($return, 20.0), 5.0)` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(TS_PCTCHANGE(TS_STD($return, 20.0), 5.0)) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.007181386103155789,
+          "icir": 0.07144770012793077,
+          "tstat": 1.1137594203496932,
+          "n_days": 243,
+          "coverage": 4371.786008230452,
+          "n_unique": 4357.757201646091,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_rank_momentum",
           "expression": "RANK(TS_STD($return, 30)) ? TS_PCTCHANGE($return, 5) : 0",
-          "explanation": "Ranks volatility over 30 days and uses 5-day return momentum to detect regime shifts and mean-reversion patterns."
+          "explanation": "Ranks volatility over 30 days and uses 5-day return momentum to detect regime shifts and mean-reversion patterns.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `RANK(TS_STD($return, 30.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(RANK(TS_STD($return, 30.0))) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": -0.004096152486860079,
+          "icir": -0.07940193875025083,
+          "tstat": -1.2377537292141583,
+          "n_days": 243,
+          "coverage": 4243.748971193416,
+          "n_unique": 4098.020576131687,
+          "eval_error": null,
+          "passed_gate": false
         }
       ],
       "passing": [

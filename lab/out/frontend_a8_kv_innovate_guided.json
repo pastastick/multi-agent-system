@@ -1,0 +1,455 @@
+{
+  "args": {
+    "model": "Qwen/Qwen3-8B",
+    "comm_mode": "kv",
+    "latent_steps": 10,
+    "latent_mode": "gumbel",
+    "latent_temp": 0.7,
+    "no_realign": false,
+    "seeds": "0,1,2",
+    "directions": "d0,d1",
+    "prompts": "",
+    "temperature": 0.8,
+    "max_new_tokens": 4096,
+    "max_repair": 3,
+    "holdout": false,
+    "chain": "proposal,innovate,construct",
+    "free_form": null,
+    "tag": "a8_kv_innovate_guided",
+    "score_only": false
+  },
+  "runs": [
+    {
+      "error": "Traceback (most recent call last):\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 156, in run_once\n    fe = pipe.run(direction=direction)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 350, in run\n    r_con, kv_construct, cr = self._run_chain(\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 446, in _run_chain\n    res = self._a(name).run(\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 99, in wrapped\n    res = _orig(**kw)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/agent.py\", line 179, in run\n    res = self.backend.build_messages_and_run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1385, in build_messages_and_run\n    return self.run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1461, in run\n    _prefix_fn = build_guided_json_prefix_fn(\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 223, in build_guided_json_prefix_fn\n    tokenizer_data = _build_token_enforcer_tokenizer_data(tokenizer)\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 175, in _build_token_enforcer_tokenizer_data\n    data = TokenEnforcerTokenizerData(\nTypeError: TokenEnforcerTokenizerData.__init__() takes 4 positional arguments but 6 were given\n",
+      "duration_s": 4.64,
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.06,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 890,
+          "n_out_tok": 0,
+          "n_in_tok": 887,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.87,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 2469,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        }
+      ],
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "events": [
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "proposal",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "1.049",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 890, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 125.16}",
+          "parsed": "None"
+        },
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "innovate",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.872",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2469, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 347.2}",
+          "parsed": "None"
+        }
+      ],
+      "direction": "d0",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 156, in run_once\n    fe = pipe.run(direction=direction)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 350, in run\n    r_con, kv_construct, cr = self._run_chain(\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 446, in _run_chain\n    res = self._a(name).run(\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 99, in wrapped\n    res = _orig(**kw)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/agent.py\", line 179, in run\n    res = self.backend.build_messages_and_run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1385, in build_messages_and_run\n    return self.run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1461, in run\n    _prefix_fn = build_guided_json_prefix_fn(\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 223, in build_guided_json_prefix_fn\n    tokenizer_data = _build_token_enforcer_tokenizer_data(tokenizer)\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 175, in _build_token_enforcer_tokenizer_data\n    data = TokenEnforcerTokenizerData(\nTypeError: TokenEnforcerTokenizerData.__init__() takes 4 positional arguments but 6 were given\n",
+      "duration_s": 3.62,
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.66,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 890,
+          "n_out_tok": 0,
+          "n_in_tok": 887,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.84,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 2469,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        }
+      ],
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "events": [
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "proposal",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.654",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 890, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 125.16}",
+          "parsed": "None"
+        },
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "innovate",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.833",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2469, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 347.2}",
+          "parsed": "None"
+        }
+      ],
+      "direction": "d0",
+      "seed": 1,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 156, in run_once\n    fe = pipe.run(direction=direction)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 350, in run\n    r_con, kv_construct, cr = self._run_chain(\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 446, in _run_chain\n    res = self._a(name).run(\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 99, in wrapped\n    res = _orig(**kw)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/agent.py\", line 179, in run\n    res = self.backend.build_messages_and_run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1385, in build_messages_and_run\n    return self.run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1461, in run\n    _prefix_fn = build_guided_json_prefix_fn(\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 223, in build_guided_json_prefix_fn\n    tokenizer_data = _build_token_enforcer_tokenizer_data(tokenizer)\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 175, in _build_token_enforcer_tokenizer_data\n    data = TokenEnforcerTokenizerData(\nTypeError: TokenEnforcerTokenizerData.__init__() takes 4 positional arguments but 6 were given\n",
+      "duration_s": 3.52,
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.6,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 890,
+          "n_out_tok": 0,
+          "n_in_tok": 887,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.81,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 2469,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        }
+      ],
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "events": [
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "proposal",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.594",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 890, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 125.16}",
+          "parsed": "None"
+        },
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "innovate",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.805",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2469, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 347.2}",
+          "parsed": "None"
+        }
+      ],
+      "direction": "d0",
+      "seed": 2,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 156, in run_once\n    fe = pipe.run(direction=direction)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 350, in run\n    r_con, kv_construct, cr = self._run_chain(\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 446, in _run_chain\n    res = self._a(name).run(\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 99, in wrapped\n    res = _orig(**kw)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/agent.py\", line 179, in run\n    res = self.backend.build_messages_and_run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1385, in build_messages_and_run\n    return self.run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1461, in run\n    _prefix_fn = build_guided_json_prefix_fn(\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 223, in build_guided_json_prefix_fn\n    tokenizer_data = _build_token_enforcer_tokenizer_data(tokenizer)\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 175, in _build_token_enforcer_tokenizer_data\n    data = TokenEnforcerTokenizerData(\nTypeError: TokenEnforcerTokenizerData.__init__() takes 4 positional arguments but 6 were given\n",
+      "duration_s": 3.52,
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.6,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 889,
+          "n_out_tok": 0,
+          "n_in_tok": 886,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.8,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 2468,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        }
+      ],
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "events": [
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "proposal",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.595",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 889, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 125.02}",
+          "parsed": "None"
+        },
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "innovate",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.802",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2468, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 347.06}",
+          "parsed": "None"
+        }
+      ],
+      "direction": "d1",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 156, in run_once\n    fe = pipe.run(direction=direction)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 350, in run\n    r_con, kv_construct, cr = self._run_chain(\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 446, in _run_chain\n    res = self._a(name).run(\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 99, in wrapped\n    res = _orig(**kw)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/agent.py\", line 179, in run\n    res = self.backend.build_messages_and_run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1385, in build_messages_and_run\n    return self.run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1461, in run\n    _prefix_fn = build_guided_json_prefix_fn(\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 223, in build_guided_json_prefix_fn\n    tokenizer_data = _build_token_enforcer_tokenizer_data(tokenizer)\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 175, in _build_token_enforcer_tokenizer_data\n    data = TokenEnforcerTokenizerData(\nTypeError: TokenEnforcerTokenizerData.__init__() takes 4 positional arguments but 6 were given\n",
+      "duration_s": 3.53,
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.6,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 889,
+          "n_out_tok": 0,
+          "n_in_tok": 886,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.8,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 2468,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        }
+      ],
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "events": [
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "proposal",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.595",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 889, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 125.02}",
+          "parsed": "None"
+        },
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "innovate",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.803",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2468, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 347.06}",
+          "parsed": "None"
+        }
+      ],
+      "direction": "d1",
+      "seed": 1,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "error": "Traceback (most recent call last):\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 156, in run_once\n    fe = pipe.run(direction=direction)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 350, in run\n    r_con, kv_construct, cr = self._run_chain(\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/pipeline.py\", line 446, in _run_chain\n    res = self._a(name).run(\n  File \"/workspace/project/multi-agent-system/lab/frontend_probe.py\", line 99, in wrapped\n    res = _orig(**kw)\n  File \"/workspace/project/multi-agent-system/backend/latent_mas/agent.py\", line 179, in run\n    res = self.backend.build_messages_and_run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1385, in build_messages_and_run\n    return self.run(\n  File \"/workspace/project/multi-agent-system/backend/llm/client.py\", line 1461, in run\n    _prefix_fn = build_guided_json_prefix_fn(\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 223, in build_guided_json_prefix_fn\n    tokenizer_data = _build_token_enforcer_tokenizer_data(tokenizer)\n  File \"/workspace/project/multi-agent-system/backend/llm/guided_decoding.py\", line 175, in _build_token_enforcer_tokenizer_data\n    data = TokenEnforcerTokenizerData(\nTypeError: TokenEnforcerTokenizerData.__init__() takes 4 positional arguments but 6 were given\n",
+      "duration_s": 3.53,
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 0.6,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 889,
+          "n_out_tok": 0,
+          "n_in_tok": 886,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.8,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "kv_len": 2468,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        }
+      ],
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "events": [
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "proposal",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.594",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 889, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 125.02}",
+          "parsed": "None"
+        },
+        {
+          "level": "EVENT",
+          "msg": "agent_done",
+          "role": "innovate",
+          "mode": "kv_only",
+          "ok": "True",
+          "duration_s": "0.802",
+          "latent_steps": "10",
+          "text_len": "0",
+          "n_out_tok": "0",
+          "kv": "{'present': True, 'format': 'DynamicCache', 'n_layers': 36, 'seq_len': 2468, 'n_heads': 8, 'head_dim': 128, 'device': 'cuda:0', 'dtype': 'torch.bfloat16', 'size_mb': 347.06}",
+          "parsed": "None"
+        }
+      ],
+      "direction": "d1",
+      "seed": 2,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "gumbel",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    }
+  ]
+}

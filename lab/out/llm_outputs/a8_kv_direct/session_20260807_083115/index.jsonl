@@ -1,0 +1,11 @@
+{"n": 1, "ts": "2026-08-07 08:33:12", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "40e7d1bf", "text_len": 2313, "duration_s": 29.2555, "file": "0001_construct_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-08-07 08:33:36", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "1b3892b7", "text_len": 2234, "duration_s": 24.0233, "file": "0002_construct_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-08-07 08:34:05", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "40cfa57a", "text_len": 2341, "duration_s": 28.6085, "file": "0003_construct_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-08-07 08:34:27", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "f5427c0b", "text_len": 1921, "duration_s": 22.401, "file": "0004_construct_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-08-07 08:34:51", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "22fd5390", "text_len": 2032, "duration_s": 23.8508, "file": "0005_construct_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-08-07 08:35:16", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "14110351", "text_len": 2183, "duration_s": 24.9201, "file": "0006_construct_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-08-07 08:35:44", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "ad6367a4", "text_len": 2355, "duration_s": 27.5897, "file": "0007_construct_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-08-07 08:36:10", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "1f2d04d7", "text_len": 2286, "duration_s": 25.8674, "file": "0008_construct_kv_and_text.md", "vars": []}
+{"n": 9, "ts": "2026-08-07 08:36:38", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "35f25cf7", "text_len": 2117, "duration_s": 22.6525, "file": "0009_construct_kv_and_text.md", "vars": []}
+{"n": 10, "ts": "2026-08-07 08:37:04", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "ca69f724", "text_len": 2681, "duration_s": 26.1319, "file": "0010_construct_kv_and_text.md", "vars": []}
+{"n": 11, "ts": "2026-08-07 08:38:08", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "bcfabf7e", "text_len": 2515, "duration_s": 37.5839, "file": "0011_construct_kv_and_text.md", "vars": []}

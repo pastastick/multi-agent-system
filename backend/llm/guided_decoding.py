@@ -172,10 +172,22 @@ def _build_token_enforcer_tokenizer_data(
     vocab_size = vocab_size or len(tokenizer)
     regular_tokens = _build_regular_tokens_list(tokenizer, vocab_size)
     decode_fn = functools.partial(_decode_function, tokenizer)
-    data = TokenEnforcerTokenizerData(
-        regular_tokens, decode_fn, tokenizer.eos_token_id,
-        use_bitmask, vocab_size,
-    )
+    # Signature TokenEnforcerTokenizerData berbeda antar-versi lm-format-enforcer:
+    # 0.10.12 menerima (regular_tokens, decoder, eos_token_id) saja, sedangkan
+    # versi lain juga menerima (use_bitmask, vocab_size). Replika lama di file ini
+    # ditulis untuk varian 5-argumen, sehingga di lingkungan ini SETIAP panggilan
+    # guided decoding meledak dengan TypeError — dan karena jalur ini tak pernah
+    # dipakai siapa pun (B11 kode mati), tak ada yang pernah tahu. Coba bentuk
+    # panjang dulu, jatuh ke bentuk pendek bila ditolak.
+    try:
+        data = TokenEnforcerTokenizerData(
+            regular_tokens, decode_fn, tokenizer.eos_token_id,
+            use_bitmask, vocab_size,
+        )
+    except TypeError:
+        data = TokenEnforcerTokenizerData(
+            regular_tokens, decode_fn, tokenizer.eos_token_id,
+        )
     _TOKENIZER_DATA_CACHE[key] = data
     return data
 
@@ -189,7 +201,10 @@ class _TransformersPrefixAllowedTokensFn:
 
     def __call__(self, batch_id: int, sent: Any) -> List[int]:
         token_sequence = sent.tolist()
-        return self.token_enforcer.get_allowed_tokens(token_sequence).allowed_tokens
+        allowed = self.token_enforcer.get_allowed_tokens(token_sequence)
+        # 0.10.12 mengembalikan List[int] langsung; versi lain membungkusnya
+        # dalam objek ber-atribut `.allowed_tokens`.
+        return getattr(allowed, "allowed_tokens", allowed)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
