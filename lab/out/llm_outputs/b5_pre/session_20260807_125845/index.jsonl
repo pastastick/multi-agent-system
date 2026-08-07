@@ -1,0 +1,8 @@
+{"n": 1, "ts": "2026-08-07 13:00:58", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "f015ce2a", "text_len": 1725, "duration_s": 20.8363, "file": "0001_construct_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-08-07 13:01:31", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "99412d6e", "text_len": 1, "duration_s": 1.1573, "file": "0002_construct_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-08-07 13:01:33", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "e4f4e41f", "text_len": 1, "duration_s": 1.2128, "file": "0003_construct_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-08-07 13:01:53", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "01338293", "text_len": 1513, "duration_s": 18.452, "file": "0004_construct_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-08-07 13:02:22", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "b09ada60", "text_len": 1770, "duration_s": 20.2585, "file": "0005_construct_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-08-07 13:02:53", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "befe5e34", "text_len": 29, "duration_s": 1.1683, "file": "0006_construct_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-08-07 13:02:54", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "07a0c6b4", "text_len": 29, "duration_s": 1.3344, "file": "0007_construct_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-08-07 13:03:20", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "76df0741", "text_len": 2041, "duration_s": 24.4503, "file": "0008_construct_kv_and_text.md", "vars": []}

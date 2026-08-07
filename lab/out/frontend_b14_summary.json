@@ -1,0 +1,1436 @@
+{
+  "args": {
+    "model": "Qwen/Qwen3-8B",
+    "comm_mode": "summary",
+    "latent_steps": 0,
+    "latent_mode": "raw",
+    "latent_temp": 0.7,
+    "early_stop_cos": null,
+    "no_realign": false,
+    "seeds": "0,1,2",
+    "directions": "d0,d1",
+    "prompts": "",
+    "temperature": 0.8,
+    "max_new_tokens": 4096,
+    "max_repair": 3,
+    "holdout": false,
+    "chain": "",
+    "free_form": null,
+    "tag": "b14_summary",
+    "score_only": false
+  },
+  "runs": [
+    {
+      "duration_s": 95.32,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal following abnormal volume spikes in small-cap stocks",
+      "factors": [
+        {
+          "name": "VolumeReversalDepth",
+          "expression": "TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)",
+          "explanation": "Explores the depth of reversal by measuring the difference between the top and bottom ranks of volume changes, capturing extreme volume events and their subsequent price reactions.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.009144758886676662,
+          "icir": 0.15953783270720723,
+          "tstat": 2.4869486878047606,
+          "n_days": 243,
+          "coverage": 4325.037037037037,
+          "n_unique": 19.0,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeCovarianceSignal",
+          "expression": "TS_COVARIANCE($close, $volume, 30) / TS_MAD($return, 60)",
+          "explanation": "Analyzes the covariance between price and volume over time, normalized by return volatility, to identify volume-driven price movements that may reverse.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.03392080131918831,
+          "icir": -0.29281938571177696,
+          "tstat": -4.564602481445153,
+          "n_days": 243,
+          "coverage": 4368.419753086419,
+          "n_unique": 4367.419753086419,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeTimescaleContrast",
+          "expression": "TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60)",
+          "explanation": "Compares short-term and long-term volume changes to detect sudden spikes that might precede reversals in small-cap stocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.015717907518620008,
+          "icir": 0.1574433111217538,
+          "tstat": 2.454298327572765,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4358.213991769548,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeRankNormalised",
+          "expression": "RANK(TS_PCTCHANGE($volume, 10)) / TS_MAD($return, 30)",
+          "explanation": "Normalizes volume changes by return volatility and ranks them across the cross-section to isolate extreme volume events linked to potential reversals.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.010320963320405836,
+          "icir": 0.09209293801310355,
+          "tstat": 1.435586828912879,
+          "n_days": 243,
+          "coverage": 4368.604938271605,
+          "n_unique": 4367.600823045267,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeDecayReversal",
+          "expression": "DECAYLINEAR(TS_PCTCHANGE($volume, 10), 20) - TS_PCTCHANGE($volume, 60)",
+          "explanation": "Uses a decaying linear model to weight recent volume changes against longer-term trends, highlighting abnormal spikes that may lead to reversals.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.02871860372671168,
+          "icir": 0.33107237393791095,
+          "tstat": 5.160907553786136,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4348.753086419753,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeDirectionalImpact",
+          "expression": "SUMIF(DELTA($close) > 0, TS_PCTCHANGE($volume, 5), TS_PCTCHANGE($volume, 60))",
+          "explanation": "Focuses on upward price movements and isolates the impact of volume changes during those periods, capturing the asymmetry in volume-driven reversals.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "ValueError: window must be an integer 0 or greater",
+          "passed_gate": false
+        }
+      ],
+      "passing": [
+        "TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)",
+        "TS_COVARIANCE($close, $volume, 30) / TS_MAD($return, 60)",
+        "TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60)",
+        "RANK(TS_PCTCHANGE($volume, 10)) / TS_MAD($return, 30)",
+        "DECAYLINEAR(TS_PCTCHANGE($volume, 10), 20) - TS_PCTCHANGE($volume, 60)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolumeReversalDepth",
+          "expression": "TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeCovarianceSignal",
+          "expression": "TS_COVARIANCE($close, $volume, 30) / TS_MAD($return, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeTimescaleContrast",
+          "expression": "TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeRankNormalised",
+          "expression": "RANK(TS_PCTCHANGE($volume, 10)) / TS_MAD($return, 30)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeDecayReversal",
+          "expression": "DECAYLINEAR(TS_PCTCHANGE($volume, 10), 20) - TS_PCTCHANGE($volume, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeDirectionalImpact",
+          "expression": "SUMIF(DELTA($close) > 0, TS_PCTCHANGE($volume, 5), TS_PCTCHANGE($volume, 60))",
+          "ok": false,
+          "reason": "arity: `DELTA` takes 2 argument(s) but got 1 (`DELTA($close)`).",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2032,
+      "construct_rep_ratio": 0.509,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal following abnormal volume spikes in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeReversalDepth\",\n      \"expression\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)\",\n      \"explanation\": \"Explores the depth of reversal by measuring the difference between the top and bottom ranks of volume changes, capturing extreme volume events and their subsequent price reactions.\"\n    },\n    {\n      \"name\": \"VolumeCovarianceSignal\",\n      \"expression\": \"TS_COVARIANCE($close, $volume, 30",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 8.89,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 124,
+          "n_in_tok": 809,
+          "text_len": 680,
+          "rep_ratio": 0.32,
+          "parsed_ok": false,
+          "text": "Observation: Small-cap stocks showing unusually high trading volume on a given day tend to underperform in the following days, suggesting a short-term reversal effect following volatile buying activity.\n\nDriver: This phenomenon may stem from retail traders overreacting to news or sentiment, leading to excessive volume and subsequent mean reversion as prices correct. The signal comes from volume and return data, fitting a short-term reversal mechanism. The horizon is typically one to five days, and the comparison is cross-sectional among small-cap stocks, with a negative return direction.\n\nHYPOTHESIS: Short-term reversal following abnormal volume spikes in small-cap stocks"
+        },
+        {
+          "agent": "innovate",
+          "mode": "text_only",
+          "s": 53.67,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 1436,
+          "n_in_tok": 1580,
+          "text_len": 3757,
+          "rep_ratio": 0.817,
+          "parsed_ok": false,
+          "text": "HYPOTHESIS VARIANTS:\n- Long-term momentum following gradual volume declines in large-cap stocks\n- Short-term reversal following abnormal volume spikes in sector-specific ETFs\n- Inverse correlation between volume spikes and price rebounds in mid-cap growth stocks\n\nRECIPES:\n{\n  \"axis\": \"DEPTH\",\n  \"sketch\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)\",\n  \"uses\": \"$volume, 20, 50, 10\"\n}\n{\n  \"axis\": \"UNUSUAL PAIRING\",\n  \"sketch\": \"TS_COVARIANCE($close, $volume, 30) / TS_MAD($return, 60)\",\n  \"uses\": \"$close, $volume, $return, 30, 60\"\n}\n{\n  \"axis\": \"TIMESCALE CONTRAST\",\n  \"sketch\": \"TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60)\",\n  \"uses\": \"$volume, 5, 60\"\n}\n{\n  \"axis\": \"ODD NORMALISATION\",\n  \"sketch\": \"RANK(TS_PCTCHANGE($close, 10)) / TS_MAD($return, 30)\",\n  \"uses\": \"$close, $return, 10, 30\"\n}\n{\n  \"axis\": \"ORDER STATISTICS\",\n  \"sketch\": \"TS_ARGMAX(TS_PCTCHANGE($volume, 15), 5) - TS_ARGMIN(TS_PCTCHANGE($volume, 15), 5)\",\n  \"uses\": \"$volume, 15, 5\"\n}\n{\n  \"axis\": \"CROSS-FAMILY PRODUCT\",\n  \"sketch\": \"TS_PCTCHANGE($volume, 20) * TS_ZSCORE($return, 50)\",\n  \"uses\": \"$volume, $return, 20, 50\"\n}\n{\n  \"axis\": \"NEGLECTED OPERATOR\",\n  \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($volume, 10), 20) - TS_PCTCHANGE($volume, 60)\",\n  \"uses\": \"$volume, 10, 20, 60\"\n}\n{\n  \"axis\": \"ASYMMETRY\",\n  \"sketch\": \"SUMIF(DELTA($close) > 0, TS_PCTCHANGE($volume, 5), TS_PCTCHANGE($volume, 60))\",\n  \"uses\": \"$close, $volume, 5, 60\"\n}\n{\n  \"axis\": \"INVERSION\",\n  \"sketch\": \"1 - TS_PCTCHANGE($volume, 10) / TS_PCTCHANGE($volume, 60)\",\n  \"uses\": \"$volume, 10, 60\"\n}\n{\n  \"axis\": \"SHAPE, NOT LEVEL\",\n  \"sketch\": \"TS_SKEW(TS_PCTCHANGE($volume, 15), 5) - TS_KURT(TS_PCTCHANGE($volume, 15), 5)\",\n  \"uses\": \"$volume, 15, 5\"\n}\n\n{\n  \"hypothesis\": \"Short-term reversal following abnormal volume spikes in small-cap stocks\",\n  \"hypothesis_variants\": [\n    \"Long-term momentum following gradual volume declines in large-cap stocks\",\n    \"Short-term reversal following abnormal volume spikes in sector-specific ETFs\",\n    \"Inverse correlation between volume spikes and price rebounds in mid-cap growth stocks\"\n  ],\n  \"recipes\": [\n    {\n      \"axis\": \"DEPTH\",\n      \"sketch\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)\",\n      \"uses\": \"$volume, 20, 50, 10\"\n    },\n    {\n      \"axis\": \"UNUSUAL PAIRING\",\n      \"sketch\": \"TS_COVARIANCE($close, $volume, 30) / TS_MAD($return, 60)\",\n      \"uses\": \"$close, $volume, $return, 30, 60\"\n    },\n    {\n      \"axis\": \"TIMESCALE CONTRAST\",\n      \"sketch\": \"TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60)\",\n      \"uses\": \"$volume, 5, 60\"\n    },\n    {\n      \"axis\": \"ODD NORMALISATION\",\n      \"sketch\": \"RANK(TS_PCTCHANGE($close, 10)) / TS_MAD($return, 30)\",\n      \"uses\": \"$close, $return, 10, 30\"\n    },\n    {\n      \"axis\": \"ORDER STATISTICS\",\n      \"sketch\": \"TS_ARGMAX(TS_PCTCHANGE($volume, 15), 5) - TS_ARGMIN(TS_PCTCHANGE($volume, 15), 5)\",\n      \"uses\": \"$volume, 15, 5\"\n    },\n    {\n      \"axis\": \"CROSS-FAMILY PRODUCT\",\n      \"sketch\": \"TS_PCTCHANGE($volume, 20) * TS_ZSCORE($return, 50)\",\n      \"uses\": \"$volume, $return, 20, 50\"\n    },\n    {\n      \"axis\": \"NEGLECTED OPERATOR\",\n      \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($volume, 10), 20) - TS_PCTCHANGE($volume, 60)\",\n      \"uses\": \"$volume, 10, 20, 60\"\n    },\n    {\n      \"axis\": \"ASYMMETRY\",\n      \"sketch\": \"SUMIF(DELTA($close) > 0, TS_PCTCHANGE($volume, 5), TS_PCTCHANGE($volume, 60))\",\n      \"uses\": \"$close, $volume, 5, 60\"\n    },\n    {\n      \"axis\": \"INVERSION\",\n      \"sketch\": \"1 - TS_PCTCHANGE($volume, 10) / TS_PCTCHANGE($volume, 60)\",\n      \"uses\": \"$volume, 10, 60\"\n    },\n    {\n      \"axis\": \"SHAPE, NOT LEVEL\",\n      \"sketch\": \"TS_SKEW(TS_PCTCHANGE($volume, 15), 5) - TS_KURT(TS_PCTCHANGE($volume, 15), 5)\",\n      \"uses\": \"$volume, 15, 5\"\n    }\n  ]\n}"
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 21.29,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 539,
+          "n_in_tok": 3234,
+          "text_len": 2032,
+          "rep_ratio": 0.509,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal following abnormal volume spikes in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeReversalDepth\",\n      \"expression\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)\",\n      \"explanation\": \"Explores the depth of reversal by measuring the difference between the top and bottom ranks of volume changes, capturing extreme volume events and their subsequent price reactions.\"\n    },\n    {\n      \"name\": \"VolumeCovarianceSignal\",\n      \"expression\": \"TS_COVARIANCE($close, $volume, 30) / TS_MAD($return, 60)\",\n      \"explanation\": \"Analyzes the covariance between price and volume over time, normalized by return volatility, to identify volume-driven price movements that may reverse.\"\n    },\n    {\n      \"name\": \"VolumeTimescaleContrast\",\n      \"expression\": \"TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60)\",\n      \"explanation\": \"Compares short-term and long-term volume changes to detect sudden spikes that might precede reversals in small-cap stocks.\"\n    },\n    {\n      \"name\": \"VolumeRankNormalised\",\n      \"expression\": \"RANK(TS_PCTCHANGE($volume, 10)) / TS_MAD($return, 30)\",\n      \"explanation\": \"Normalizes volume changes by return volatility and ranks them across the cross-section to isolate extreme volume events linked to potential reversals.\"\n    },\n    {\n      \"name\": \"VolumeDecayReversal\",\n      \"expression\": \"DECAYLINEAR(TS_PCTCHANGE($volume, 10), 20) - TS_PCTCHANGE($volume, 60)\",\n      \"explanation\": \"Uses a decaying linear model to weight recent volume changes against longer-term trends, highlighting abnormal spikes that may lead to reversals.\"\n    },\n    {\n      \"name\": \"VolumeDirectionalImpact\",\n      \"expression\": \"SUMIF(DELTA($close) > 0, TS_PCTCHANGE($volume, 5), TS_PCTCHANGE($volume, 60))\",\n      \"explanation\": \"Focuses on upward price movements and isolates the impact of volume changes during those periods, capturing the asymmetry in volume-driven reversals.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolumeDirectionalImpact",
+          "expr": "SUMIF(DELTA($close) > 0, TS_PCTCHANGE($volume, 5), TS_PCTCHANGE($volume, 60))",
+          "reason": "arity: `DELTA` takes 2 argument(s) but got 1 (`DELTA($close)`)."
+        }
+      ],
+      "direction": "d0",
+      "seed": 0,
+      "comm_mode": "summary",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "duration_s": 85.62,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal following abnormally high-volume days in small-cap stocks reflects overreaction and subsequent correction.",
+      "factors": [
+        {
+          "name": "VolumeReversalRank",
+          "expression": "RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($close, 5)) : (0))",
+          "explanation": "Computes the rank of a signal that gates short-term price change after high-volume days, testing if overreaction leads to reversal.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.017301222218535615,
+          "icir": -0.31240005743256805,
+          "tstat": -4.869834945845788,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 290.55555555555554,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "CorrelationOfVolumeAndPrice",
+          "expression": "TS_CORR($volume, $return, 30) * TS_COVARIANCE($close, $return, 60)",
+          "explanation": "Combines volume-return correlation with close-return covariance to measure how volume anomalies relate to price momentum.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.02896079545121954,
+          "icir": -0.3028254673109145,
+          "tstat": -4.720581856874629,
+          "n_days": 243,
+          "coverage": 4370.074074074074,
+          "n_unique": 4369.074074074074,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeMomentumContrast",
+          "expression": "TS_PCTCHANGE(TS_MEAN($volume, 10), 5) - TS_PCTCHANGE(TS_MEAN($volume, 10), 200)",
+          "explanation": "Compares short-term versus long-term momentum in volume averages to detect reversal patterns in liquidity.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.01379480557355772,
+          "icir": 0.13890962195671872,
+          "tstat": 2.165386706002999,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4360.308641975309,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "AsymmetricVolumeSignal",
+          "expression": "DECAYLINEAR((TS_ZSCORE($volume, 20) > 1) ? (TS_PCTCHANGE($close, 5)) : (TS_PCTCHANGE($close, 200)), 50)",
+          "explanation": "Weights recent price changes after high-volume days using a decayed linear function, capturing asymmetric response to liquidity shocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.012956536361481997,
+          "icir": -0.08563605202109754,
+          "tstat": -1.3349339375413716,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4301.485596707819,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeRankAndReturnZScore",
+          "expression": "RANK(TS_PCTCHANGE($volume, 10)) / TS_ZSCORE($return, 10)",
+          "explanation": "Divides the rank of volume momentum by return z-score to assess the relative importance of volume anomalies in predicting price movements.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.005267451615953416,
+          "icir": -0.09987922684589426,
+          "tstat": -1.5569630596600763,
+          "n_days": 243,
+          "coverage": 4369.3621399176955,
+          "n_unique": 4367.621399176955,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "HighVolumeArgMaxWithPriceFilter",
+          "expression": "TS_ARGMAX($volume, 30) * (HIGHDAY($close, 60) ? 1 : 0)",
+          "explanation": "Multiplies the day of peak volume with a flag indicating recent price highs, testing if volume peaks precede price corrections.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `HIGHDAY($close, 60.0)` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(HIGHDAY($close, 60.0)) > 0`."
+          ],
+          "flags": [
+            "nonboolean-condition"
+          ],
+          "ic": 0.011404057917464887,
+          "icir": 0.1552352502268398,
+          "tstat": 2.4198780646669915,
+          "n_days": 243,
+          "coverage": 4372.440329218107,
+          "n_unique": 30.0,
+          "eval_error": null,
+          "passed_gate": false
+        }
+      ],
+      "passing": [
+        "RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($close, 5)) : (0))",
+        "TS_CORR($volume, $return, 30) * TS_COVARIANCE($close, $return, 60)",
+        "TS_PCTCHANGE(TS_MEAN($volume, 10), 5) - TS_PCTCHANGE(TS_MEAN($volume, 10), 200)",
+        "DECAYLINEAR((TS_ZSCORE($volume, 20) > 1) ? (TS_PCTCHANGE($close, 5)) : (TS_PCTCHANGE($close, 200)), 50)",
+        "RANK(TS_PCTCHANGE($volume, 10)) / TS_ZSCORE($return, 10)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolumeReversalRank",
+          "expression": "RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($close, 5)) : (0))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "CorrelationOfVolumeAndPrice",
+          "expression": "TS_CORR($volume, $return, 30) * TS_COVARIANCE($close, $return, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeMomentumContrast",
+          "expression": "TS_PCTCHANGE(TS_MEAN($volume, 10), 5) - TS_PCTCHANGE(TS_MEAN($volume, 10), 200)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "AsymmetricVolumeSignal",
+          "expression": "DECAYLINEAR((TS_ZSCORE($volume, 20) > 1) ? (TS_PCTCHANGE($close, 5)) : (TS_PCTCHANGE($close, 200)), 50)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeRankAndReturnZScore",
+          "expression": "RANK(TS_PCTCHANGE($volume, 10)) / TS_ZSCORE($return, 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "HighVolumeArgMaxWithPriceFilter",
+          "expression": "TS_ARGMAX($volume, 30) * (HIGHDAY($close, 60) ? 1 : 0)",
+          "ok": false,
+          "reason": "semantics: the condition `HIGHDAY($close, 60.0)` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(HIGHDAY($close, 60.0)) > 0`.",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1970,
+      "construct_rep_ratio": 0.493,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal following abnormally high-volume days in small-cap stocks reflects overreaction and subsequent correction.\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeReversalRank\",\n      \"expression\": \"RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($close, 5)) : (0))\",\n      \"explanation\": \"Computes the rank of a signal that gates short-term price change after high-volume days, testing if overreaction leads to reversal.\"\n    },\n    {\n      \"name\": \"CorrelationOfVolumeAndPrice\",\n      \"expression\": \"TS_CORR($volume, $return, 30) * TS_COVARIANCE($close, $return, 60)\",\n",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 5.07,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 137,
+          "n_in_tok": 809,
+          "text_len": 752,
+          "rep_ratio": 0.318,
+          "parsed_ok": false,
+          "text": "Observation: After days with unusually high trading volume in small-cap stocks, subsequent returns tend to be negative across the market. This suggests that excessive buying or selling pressure may overstate price movements, leading to a correction.\n\nDriver: The abnormal volume reflects heightened attention or panic, often leading to mispricing. Small-cap stocks are more sensitive to such noise. Using volume and return data, this forms a short-term reversal pattern. The mechanism is reversal, operating in the short horizon, comparing stocks within the same day's volume quartile, predicting downward moves.\n\nHYPOTHESIS: Short-term reversal following abnormally high-volume days in small-cap stocks reflects overreaction and subsequent correction."
+        },
+        {
+          "agent": "innovate",
+          "mode": "text_only",
+          "s": 55.99,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 1497,
+          "n_in_tok": 1588,
+          "text_len": 4519,
+          "rep_ratio": 0.805,
+          "parsed_ok": false,
+          "text": "HYPOTHESIS VARIANTS:\n- Long-term momentum following abnormally low-volume days in large-cap stocks reflects underreaction and delayed recognition of fundamentals.\n- Short-term reversal following abnormally high-volume days in small-cap stocks is amplified during periods of market stress.\n- The direction of reversal following high-volume days depends on whether the stock is in a bull or bear market phase.\n\nRECIPES:\n{\n  \"axis\": \"DEPTH\",\n  \"sketch\": \"TS_ARGMAX of TS_ZSCORE($volume, 20) nested inside RANK(TS_MOMENTUM($return, 60))\",\n  \"uses\": \"$volume, $return, window sizes 20 and 60\"\n}\n{\n  \"axis\": \"UNUSUAL PAIRING\",\n  \"sketch\": \"TS_CORR($high, $volume, 30) multiplied by TS_COVARIANCE($close, $return, 60)\",\n  \"uses\": \"$high, $volume, $close, $return, window sizes 30 and 60\"\n}\n{\n  \"axis\": \"TIMESCALE CONTRAST\",\n  \"sketch\": \"TS_PCTCHANGE($close, 5) minus TS_PCTCHANGE($close, 200)\",\n  \"uses\": \"$close, window sizes 5 and 200\"\n}\n{\n  \"axis\": \"ODD NORMALISATION\",\n  \"sketch\": \"RANK(TS_PCTCHANGE($return, 10)) divided by RANK(TS_STD($return, 10))\",\n  \"uses\": \"$return, window size 10\"\n}\n{\n  \"axis\": \"ORDER STATISTICS\",\n  \"sketch\": \"TS_ARGMAX($volume, 30) filtered by HIGHDAY($close, 60)\",\n  \"uses\": \"$volume, $close, window sizes 30 and 60\"\n}\n{\n  \"axis\": \"NEGLECTED OPERATOR\",\n  \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($open, 10), 50) multiplied by LOG(TS_MAD($return, 60))\",\n  \"uses\": \"$open, $return, window sizes 10 and 60\"\n}\n{\n  \"axis\": \"ASYMMETRY\",\n  \"sketch\": \"TS_PCTCHANGE($close, 5) where $return > 0, subtracted from TS_PCTCHANGE($close, 5) where $return < 0\",\n  \"uses\": \"$close, $return, window size 5\"\n}\n{\n  \"axis\": \"CROSS-FAMILY PRODUCT\",\n  \"sketch\": \"TS_MOMENTUM($volume, 20) multiplied by TS_SKEW($return, 60)\",\n  \"uses\": \"$volume, $return, window sizes 20 and 60\"\n}\n{\n  \"axis\": \"INVERSION\",\n  \"sketch\": \"1 minus TS_ZSCORE($volume, 10) divided by TS_ZSCORE($return, 10)\",\n  \"uses\": \"$volume, $return, window size 10\"\n}\n{\n  \"axis\": \"SHAPE, NOT LEVEL\",\n  \"sketch\": \"TS_KURT($return, 30) minus TS_SKEW($return, 30)\",\n  \"uses\": \"$return, window size 30\"\n}\n\n{\n  \"hypothesis\": \"Short-term reversal following abnormally high-volume days in small-cap stocks reflects overreaction and subsequent correction.\",\n  \"hypothesis_variants\": [\n    \"Long-term momentum following abnormally low-volume days in large-cap stocks reflects underreaction and delayed recognition of fundamentals.\",\n    \"Short-term reversal following abnormally high-volume days in small-cap stocks is amplified during periods of market stress.\",\n    \"The direction of reversal following high-volume days depends on whether the stock is in a bull or bear market phase.\"\n  ],\n  \"recipes\": [\n    {\n      \"axis\": \"DEPTH\",\n      \"sketch\": \"TS_ARGMAX of TS_ZSCORE($volume, 20) nested inside RANK(TS_MOMENTUM($return, 60))\",\n      \"uses\": \"$volume, $return, window sizes 20 and 60\"\n    },\n    {\n      \"axis\": \"UNUSUAL PAIRING\",\n      \"sketch\": \"TS_CORR($high, $volume, 30) multiplied by TS_COVARIANCE($close, $return, 60)\",\n      \"uses\": \"$high, $volume, $close, $return, window sizes 30 and 60\"\n    },\n    {\n      \"axis\": \"TIMESCALE CONTRAST\",\n      \"sketch\": \"TS_PCTCHANGE($close, 5) minus TS_PCTCHANGE($close, 200)\",\n      \"uses\": \"$close, window sizes 5 and 200\"\n    },\n    {\n      \"axis\": \"ODD NORMALISATION\",\n      \"sketch\": \"RANK(TS_PCTCHANGE($return, 10)) divided by RANK(TS_STD($return, 10))\",\n      \"uses\": \"$return, window size 10\"\n    },\n    {\n      \"axis\": \"ORDER STATISTICS\",\n      \"sketch\": \"TS_ARGMAX($volume, 30) filtered by HIGHDAY($close, 60)\",\n      \"uses\": \"$volume, $close, window sizes 30 and 60\"\n    },\n    {\n      \"axis\": \"NEGLECTED OPERATOR\",\n      \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($open, 10), 50) multiplied by LOG(TS_MAD($return, 60))\",\n      \"uses\": \"$open, $return, window sizes 10 and 60\"\n    },\n    {\n      \"axis\": \"ASYMMETRY\",\n      \"sketch\": \"TS_PCTCHANGE($close, 5) where $return > 0, subtracted from TS_PCTCHANGE($close, 5) where $return < 0\",\n      \"uses\": \"$close, $return, window size 5\"\n    },\n    {\n      \"axis\": \"CROSS-FAMILY PRODUCT\",\n      \"sketch\": \"TS_MOMENTUM($volume, 20) multiplied by TS_SKEW($return, 60)\",\n      \"uses\": \"$volume, $return, window sizes 20 and 60\"\n    },\n    {\n      \"axis\": \"INVERSION\",\n      \"sketch\": \"1 minus TS_ZSCORE($volume, 10) divided by TS_ZSCORE($return, 10)\",\n      \"uses\": \"$volume, $return, window size 10\"\n    },\n    {\n      \"axis\": \"SHAPE, NOT LEVEL\",\n      \"sketch\": \"TS_KURT($return, 30) minus TS_SKEW($return, 30)\",\n      \"uses\": \"$return, window size 30\"\n    }\n  ]\n}"
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 20.93,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 534,
+          "n_in_tok": 3151,
+          "text_len": 1970,
+          "rep_ratio": 0.493,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal following abnormally high-volume days in small-cap stocks reflects overreaction and subsequent correction.\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeReversalRank\",\n      \"expression\": \"RANK((TS_ZSCORE($volume, 20) > 2) ? (TS_PCTCHANGE($close, 5)) : (0))\",\n      \"explanation\": \"Computes the rank of a signal that gates short-term price change after high-volume days, testing if overreaction leads to reversal.\"\n    },\n    {\n      \"name\": \"CorrelationOfVolumeAndPrice\",\n      \"expression\": \"TS_CORR($volume, $return, 30) * TS_COVARIANCE($close, $return, 60)\",\n      \"explanation\": \"Combines volume-return correlation with close-return covariance to measure how volume anomalies relate to price momentum.\"\n    },\n    {\n      \"name\": \"VolumeMomentumContrast\",\n      \"expression\": \"TS_PCTCHANGE(TS_MEAN($volume, 10), 5) - TS_PCTCHANGE(TS_MEAN($volume, 10), 200)\",\n      \"explanation\": \"Compares short-term versus long-term momentum in volume averages to detect reversal patterns in liquidity.\"\n    },\n    {\n      \"name\": \"AsymmetricVolumeSignal\",\n      \"expression\": \"DECAYLINEAR((TS_ZSCORE($volume, 20) > 1) ? (TS_PCTCHANGE($close, 5)) : (TS_PCTCHANGE($close, 200)), 50)\",\n      \"explanation\": \"Weights recent price changes after high-volume days using a decayed linear function, capturing asymmetric response to liquidity shocks.\"\n    },\n    {\n      \"name\": \"VolumeRankAndReturnZScore\",\n      \"expression\": \"RANK(TS_PCTCHANGE($volume, 10)) / TS_ZSCORE($return, 10)\",\n      \"explanation\": \"Divides the rank of volume momentum by return z-score to assess the relative importance of volume anomalies in predicting price movements.\"\n    },\n    {\n      \"name\": \"HighVolumeArgMaxWithPriceFilter\",\n      \"expression\": \"TS_ARGMAX($volume, 30) * (HIGHDAY($close, 60) ? 1 : 0)\",\n      \"explanation\": \"Multiplies the day of peak volume with a flag indicating recent price highs, testing if volume peaks precede price corrections.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "HighVolumeArgMaxWithPriceFilter",
+          "expr": "TS_ARGMAX($volume, 30) * (HIGHDAY($close, 60) ? 1 : 0)",
+          "reason": "semantics: the condition `HIGHDAY($close, 60.0)` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(HIGHDAY($close, 60.0)) > 0`."
+        }
+      ],
+      "direction": "d0",
+      "seed": 1,
+      "comm_mode": "summary",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "duration_s": 92.9,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal following abnormal volume spikes in small-cap stocks reflects retail-driven overbuying and subsequent correction.",
+      "factors": [
+        {
+          "name": "VolumeReversalRank",
+          "expression": "RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_STD($return, 10) / TS_STD($return, 30))",
+          "explanation": "This factor explores the TIMESCALE CONTRAST axis by comparing short-term and long-term volume changes, scaled by return volatility. It ranks stocks based on the interaction between volume dynamics and return variability.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.015922227482830623,
+          "icir": 0.16093331095111266,
+          "tstat": 2.5087020407784713,
+          "n_days": 243,
+          "coverage": 4370.074074074074,
+          "n_unique": 4358.049382716049,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityNormalizedReturn",
+          "expression": "ZSCORE($return) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0",
+          "explanation": "This factor uses the ODD NORMALISATION axis by normalizing returns and volume, then gating the signal based on extreme volume z-scores. It captures abnormal volume events and their impact on returns.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `(ZSCORE($return) * (TS_ZSCORE($volume, 20.0) > 1.5))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE($return) * (TS_ZSCORE($volume, 20.0) > 1.5))) > 0`.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
+          "flags": [],
+          "ic": -0.021017204768560182,
+          "icir": -0.3574822710392838,
+          "tstat": -5.572597106206331,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 2.0,
+          "eval_error": null,
+          "passed_gate": false
+        },
+        {
+          "name": "VolumeContrastMomentum",
+          "expression": "TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_PCTCHANGE($return, 10)",
+          "explanation": "This factor explores the TIMESCALE CONTRAST axis by contrasting short and long-term volume changes with return momentum. It highlights stocks where volume spikes precede return reversals.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.019295764327604336,
+          "icir": -0.3479189986567639,
+          "tstat": -5.4235204433280275,
+          "n_days": 243,
+          "coverage": 4240.958847736625,
+          "n_unique": 4226.6460905349795,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeRankByReturnVariance",
+          "expression": "RANK(TS_QUANTILE($volume, 5, 20) / TS_QUANTILE($return, 0.75, 60))",
+          "explanation": "This factor follows the ORDER STATISTICS axis by using quantiles to measure volume and return distributions. It ranks stocks based on the relative positioning of volume and return extremes.",
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q.",
+            "`TS_QUANTILE` got window 0.75, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "`TS_QUANTILE` got quantile 60, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "AssertionError: Quantile q must be in [0, 1], got 20.0",
+          "passed_gate": false
+        },
+        {
+          "name": "VolumeCorrelationResidual",
+          "expression": "REGRESI($return, $volume, 30) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0",
+          "explanation": "This factor uses the UNUSUAL PAIRING axis by regressing returns against volume and isolating residuals. It captures the portion of return variation unexplained by volume, emphasizing abnormal volume events.",
+          "sem_ok": false,
+          "sem_errors": [
+            "the condition `(REGRESI($return, $volume, 30.0) * (TS_ZSCORE($volume, 20.0) > 1.5))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((REGRESI($return, $volume, 30.0) * (TS_ZSCORE($volume, 20.0) > 1.5))) > 0`.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": false
+        },
+        {
+          "name": "VolumeDeltaRank",
+          "expression": "RANK(DELTA(TS_MEAN($volume, 20), 5) * TS_ZSCORE($return, 10))",
+          "explanation": "This factor explores the DEPTH axis by combining a time-series delta of volume with a cross-sectional z-score of returns. It identifies stocks where recent volume changes correlate with return anomalies.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.0016759292773076842,
+          "icir": 0.03460703591001479,
+          "tstat": 0.5394703004595562,
+          "n_days": 243,
+          "coverage": 4359.872427983539,
+          "n_unique": 4358.872427983539,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_STD($return, 10) / TS_STD($return, 30))",
+        "TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_PCTCHANGE($return, 10)",
+        "RANK(DELTA(TS_MEAN($volume, 20), 5) * TS_ZSCORE($return, 10))"
+      ],
+      "gate_log": [
+        {
+          "name": "VolumeReversalRank",
+          "expression": "RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_STD($return, 10) / TS_STD($return, 30))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityNormalizedReturn",
+          "expression": "ZSCORE($return) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0",
+          "ok": false,
+          "reason": "semantics: the condition `(ZSCORE($return) * (TS_ZSCORE($volume, 20.0) > 1.5))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE($return) * (TS_ZSCORE($volume, 20.0) > 1.5))) > 0`. this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeContrastMomentum",
+          "expression": "TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_PCTCHANGE($return, 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeRankByReturnVariance",
+          "expression": "RANK(TS_QUANTILE($volume, 5, 20) / TS_QUANTILE($return, 0.75, 60))",
+          "ok": false,
+          "reason": "semantics: `TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q. `TS_QUANTILE` got window 0.75, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeCorrelationResidual",
+          "expression": "REGRESI($return, $volume, 30) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0",
+          "ok": false,
+          "reason": "semantics: the condition `(REGRESI($return, $volume, 30.0) * (TS_ZSCORE($volume, 20.0) > 1.5))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((REGRESI($return, $volume, 30.0) * (TS_ZSCORE($volume, 20.0) > 1.5))) > 0`. this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`.",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeDeltaRank",
+          "expression": "RANK(DELTA(TS_MEAN($volume, 20), 5) * TS_ZSCORE($return, 10))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2419,
+      "construct_rep_ratio": 0.569,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal following abnormal volume spikes in small-cap stocks reflects retail-driven overbuying and subsequent correction.\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeReversalRank\",\n      \"expression\": \"RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_STD($return, 10) / TS_STD($return, 30))\",\n      \"explanation\": \"This factor explores the TIMESCALE CONTRAST axis by comparing short-term and long-term volume changes, scaled by return volatility. It ranks stocks based on the interaction between volume dynamics and return variability.\"\n    },\n    {\n     ",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 4.99,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 135,
+          "n_in_tok": 809,
+          "text_len": 741,
+          "rep_ratio": 0.302,
+          "parsed_ok": false,
+          "text": "Observation: After days with unusually high trading volume in small-cap stocks, subsequent returns tend to reverse downward. This suggests that excessive buying activity may overstate price momentum, leading to a correction.\n\nDriver: The edge likely stems from retail investor behavior, where sudden spikes in volume signal fad-driven buying. Using volume and close prices, this forms a short-term reversal pattern. The mechanism fits within the microstructure family, targeting the short horizon (1-5 days), comparing cross-sectionally within small-cap stocks, and predicting negative returns.\n\nHYPOTHESIS: Short-term reversal following abnormal volume spikes in small-cap stocks reflects retail-driven overbuying and subsequent correction."
+        },
+        {
+          "agent": "innovate",
+          "mode": "text_only",
+          "s": 61.24,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 1636,
+          "n_in_tok": 1589,
+          "text_len": 5629,
+          "rep_ratio": 0.806,
+          "parsed_ok": false,
+          "text": "HYPOTHESIS VARIANTS:  \n- Short-term reversal following abnormal volume drops in large-cap stocks reflects institutional selling pressure and subsequent rebound.  \n- Long-term momentum following sustained volume declines in mid-cap stocks indicates contrarian buying after perceived value destruction.  \n- Retail-driven overbuying in mid-cap stocks is reflected in delayed reversal patterns following volume anomalies, amplified during earnings seasons.\n\nRECIPES:  \n- **AXIS 1: DEPTH** \u2014 The difference between the rolling median of $volume over 20 days and the rolling median of $return over 60 days, nested inside a cross-sectional rank across sectors. Uses $volume, $return, window sizes 20 and 60.  \n- **AXIS 2: UNUSUAL PAIRING** \u2014 TS_COVARIANCE($volume, $high, 30) divided by TS_CORR($close, $volume, 60), then compared against the median of the same metric across all stocks. Uses $volume, $high, $close, window sizes 30 and 60.  \n- **AXIS 3: TIMESCALE CONTRAST** \u2014 TS_PCTCHANGE($volume, 5) minus TS_PCTCHANGE($volume, 60), scaled by the ratio of $return volatility over 10 days to 30 days. Uses $volume, $return, window sizes 5, 10, 30, 60.  \n- **AXIS 4: ODD NORMALISATION** \u2014 Rank($return) divided by the rank of TS_ZSCORE($volume, 20), then multiplied by the inverse of $volume. Uses $return, $volume, window size 20.  \n- **AXIS 5: ORDER STATISTICS** \u2014 TS_ARGMAX($volume, 10) minus TS_ARGMIN($volume, 10), where the maximum and minimum are defined as the top 1% and bottom 1% of daily volume. Uses $volume, window size 10.  \n- **AXIS 6: SHAPE, NOT LEVEL** \u2014 The skewness of $return over 30 days subtracted from the kurtosis of $volume over 60 days. Uses $return, $volume, window sizes 30 and 60.  \n- **AXIS 7: RESIDUAL** \u2014 The residual from regressing $return on $volume over 20 days, then multiplied by the absolute difference between $high and $low over 10 days. Uses $return, $volume, $high, $low, window sizes 10 and 20.  \n- **AXIS 8: ASYMMETRY** \u2014 If $return is positive, use TS_PCTCHANGE($volume, 5); if $return is negative, use TS_PCTCHANGE($volume, 60). Then take the difference between the two. Uses $return, $volume, window sizes 5 and 60.  \n- **AXIS 9: CROSS-FAMILY PRODUCT** \u2014 TS_ZSCORE($volume, 20) multiplied by the log of $close divided by the average $close over 60 days. Uses $volume, $close, window sizes 20 and 60.  \n- **AXIS 10: INVERSION** \u2014 One minus the ratio of TS_MAD($return, 10) to TS_MAD($return, 60), where the MADs are scaled by $volume. Uses $return, $volume, window sizes 10 and 60.\n\n{\n  \"hypothesis\": \"Short-term reversal following abnormal volume spikes in small-cap stocks reflects retail-driven overbuying and subsequent correction.\",\n  \"hypothesis_variants\": [\n    \"Short-term reversal following abnormal volume drops in large-cap stocks reflects institutional selling pressure and subsequent rebound.\",\n    \"Long-term momentum following sustained volume declines in mid-cap stocks indicates contrarian buying after perceived value destruction.\",\n    \"Retail-driven overbuying in mid-cap stocks is reflected in delayed reversal patterns following volume anomalies, amplified during earnings seasons.\"\n  ],\n  \"recipes\": [\n    {\n      \"axis\": \"DEPTH\",\n      \"sketch\": \"The difference between the rolling median of $volume over 20 days and the rolling median of $return over 60 days, nested inside a cross-sectional rank across sectors\",\n      \"uses\": \"$volume, $return, window sizes 20 and 60\"\n    },\n    {\n      \"axis\": \"UNUSUAL PAIRING\",\n      \"sketch\": \"TS_COVARIANCE($volume, $high, 30) divided by TS_CORR($close, $volume, 60), then compared against the median of the same metric across all stocks\",\n      \"uses\": \"$volume, $high, $close, window sizes 30 and 60\"\n    },\n    {\n      \"axis\": \"TIMESCALE CONTRAST\",\n      \"sketch\": \"TS_PCTCHANGE($volume, 5) minus TS_PCTCHANGE($volume, 60), scaled by the ratio of $return volatility over 10 days to 30 days\",\n      \"uses\": \"$volume, $return, window sizes 5, 10, 30, 60\"\n    },\n    {\n      \"axis\": \"ODD NORMALISATION\",\n      \"sketch\": \"Rank($return) divided by the rank of TS_ZSCORE($volume, 20), then multiplied by the inverse of $volume\",\n      \"uses\": \"$return, $volume, window size 20\"\n    },\n    {\n      \"axis\": \"ORDER STATISTICS\",\n      \"sketch\": \"TS_ARGMAX($volume, 10) minus TS_ARGMIN($volume, 10), where the maximum and minimum are defined as the top 1% and bottom 1% of daily volume\",\n      \"uses\": \"$volume, window size 10\"\n    },\n    {\n      \"axis\": \"SHAPE, NOT LEVEL\",\n      \"sketch\": \"The skewness of $return over 30 days subtracted from the kurtosis of $volume over 60 days\",\n      \"uses\": \"$return, $volume, window sizes 30 and 60\"\n    },\n    {\n      \"axis\": \"RESIDUAL\",\n      \"sketch\": \"The residual from regressing $return on $volume over 20 days, then multiplied by the absolute difference between $high and $low over 10 days\",\n      \"uses\": \"$return, $volume, $high, $low, window sizes 10 and 20\"\n    },\n    {\n      \"axis\": \"ASYMMETRY\",\n      \"sketch\": \"If $return is positive, use TS_PCTCHANGE($volume, 5); if $return is negative, use TS_PCTCHANGE($volume, 60). Then take the difference between the two\",\n      \"uses\": \"$return, $volume, window sizes 5 and 60\"\n    },\n    {\n      \"axis\": \"CROSS-FAMILY PRODUCT\",\n      \"sketch\": \"TS_ZSCORE($volume, 20) multiplied by the log of $close divided by the average $close over 60 days\",\n      \"uses\": \"$volume, $close, window sizes 20 and 60\"\n    },\n    {\n      \"axis\": \"INVERSION\",\n      \"sketch\": \"One minus the ratio of TS_MAD($return, 10) to TS_MAD($return, 60), where the MADs are scaled by $volume\",\n      \"uses\": \"$return, $volume, window sizes 10 and 60\"\n    }\n  ]\n}"
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 24.49,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 627,
+          "n_in_tok": 3078,
+          "text_len": 2419,
+          "rep_ratio": 0.569,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal following abnormal volume spikes in small-cap stocks reflects retail-driven overbuying and subsequent correction.\",\n  \"factors\": [\n    {\n      \"name\": \"VolumeReversalRank\",\n      \"expression\": \"RANK(TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_STD($return, 10) / TS_STD($return, 30))\",\n      \"explanation\": \"This factor explores the TIMESCALE CONTRAST axis by comparing short-term and long-term volume changes, scaled by return volatility. It ranks stocks based on the interaction between volume dynamics and return variability.\"\n    },\n    {\n      \"name\": \"VolatilityNormalizedReturn\",\n      \"expression\": \"ZSCORE($return) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0\",\n      \"explanation\": \"This factor uses the ODD NORMALISATION axis by normalizing returns and volume, then gating the signal based on extreme volume z-scores. It captures abnormal volume events and their impact on returns.\"\n    },\n    {\n      \"name\": \"VolumeContrastMomentum\",\n      \"expression\": \"TS_PCTCHANGE($volume, 5) - TS_PCTCHANGE($volume, 60) * TS_PCTCHANGE($return, 10)\",\n      \"explanation\": \"This factor explores the TIMESCALE CONTRAST axis by contrasting short and long-term volume changes with return momentum. It highlights stocks where volume spikes precede return reversals.\"\n    },\n    {\n      \"name\": \"VolumeRankByReturnVariance\",\n      \"expression\": \"RANK(TS_QUANTILE($volume, 5, 20) / TS_QUANTILE($return, 0.75, 60))\",\n      \"explanation\": \"This factor follows the ORDER STATISTICS axis by using quantiles to measure volume and return distributions. It ranks stocks based on the relative positioning of volume and return extremes.\"\n    },\n    {\n      \"name\": \"VolumeCorrelationResidual\",\n      \"expression\": \"REGRESI($return, $volume, 30) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0\",\n      \"explanation\": \"This factor uses the UNUSUAL PAIRING axis by regressing returns against volume and isolating residuals. It captures the portion of return variation unexplained by volume, emphasizing abnormal volume events.\"\n    },\n    {\n      \"name\": \"VolumeDeltaRank\",\n      \"expression\": \"RANK(DELTA(TS_MEAN($volume, 20), 5) * TS_ZSCORE($return, 10))\",\n      \"explanation\": \"This factor explores the DEPTH axis by combining a time-series delta of volume with a cross-sectional z-score of returns. It identifies stocks where recent volume changes correlate with return anomalies.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolatilityNormalizedReturn",
+          "expr": "ZSCORE($return) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0",
+          "reason": "semantics: the condition `(ZSCORE($return) * (TS_ZSCORE($volume, 20.0) > 1.5))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE($return) * (TS_ZSCORE($volume, 20.0) > 1.5))) > 0`. this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let th"
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolumeRankByReturnVariance",
+          "expr": "RANK(TS_QUANTILE($volume, 5, 20) / TS_QUANTILE($return, 0.75, 60))",
+          "reason": "semantics: `TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q. `TS_QUANTILE` got window 0.75, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolumeCorrelationResidual",
+          "expr": "REGRESI($return, $volume, 30) * (TS_ZSCORE($volume, 20) > 1.5) ? 1 : 0",
+          "reason": "semantics: the condition `(REGRESI($return, $volume, 30.0) * (TS_ZSCORE($volume, 20.0) > 1.5))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((REGRESI($return, $volume, 30.0) * (TS_ZSCORE($volume, 20.0) > 1.5))) > 0`. this expression only ever evaluates to fixed constants, so it gives the same handful of values to every st"
+        }
+      ],
+      "direction": "d0",
+      "seed": 2,
+      "comm_mode": "summary",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "duration_s": 90.2,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, predicting positive returns in the short to medium term.",
+      "factors": [
+        {
+          "name": "VolatilitySurgeRank",
+          "expression": "RANK(TS_PCTCHANGE($volume, 10) - TS_PCTCHANGE($volume, 60))",
+          "explanation": "Computes the difference in volume percent change over short and long horizons, then ranks stocks to identify those with recent volume surges relative to longer-term trends.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.012751784233497217,
+          "icir": 0.13327840181287942,
+          "tstat": 2.077604671423384,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4346.427983539094,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityReversionSignal",
+          "expression": "TS_ZSCORE(TS_PCTCHANGE($close, 20), 60) * TS_ZSCORE(TS_PCTCHANGE($volume, 10), 60)",
+          "explanation": "Combines the standardized short-term price change and volume change to detect stocks where both metrics deviate significantly from their cross-sectional norms, suggesting potential mean reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.008026105033106487,
+          "icir": -0.16223205460781806,
+          "tstat": -2.5289474507732654,
+          "n_days": 243,
+          "coverage": 4325.020576131687,
+          "n_unique": 4324.020576131687,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeStressIndicator",
+          "expression": "TS_ARGMAX(TS_ZSCORE($volume, 30), 10) - TS_ARGMIN(TS_ZSCORE($volume, 30), 10)",
+          "explanation": "Identifies the number of days between extreme volume events in a rolling window, highlighting stocks experiencing volatile volume patterns that may signal impending mean reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.013149714009731642,
+          "icir": 0.20940428167311215,
+          "tstat": 3.264289696622651,
+          "n_days": 243,
+          "coverage": 4369.748971193416,
+          "n_unique": 19.0,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "PriceVolatilityContrast",
+          "expression": "TS_PCTCHANGE($return, 5) / TS_RMS($return, 60)",
+          "explanation": "Compares short-term return volatility to long-term return volatility using RMS, capturing stocks with heightened recent variability relative to historical patterns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_RMS' is not defined",
+          "passed_gate": false
+        },
+        {
+          "name": "CrossSectionalVolatilityImpact",
+          "expression": "ZSCORE(TS_PCTCHANGE($volume, 10)) * TS_PCTCHANGE($return, 5)",
+          "explanation": "Standardizes the recent volume change across the cross-section and multiplies it by the short-term return change, identifying stocks where volume spikes correlate with recent price movements.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.007786435413671209,
+          "icir": 0.189215351649345,
+          "tstat": 2.949575423658094,
+          "n_days": 243,
+          "coverage": 4243.748971193416,
+          "n_unique": 4219.0329218107,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityTrendDiscrepancy",
+          "expression": "TS_COVARIANCE($volume, $close, 10) / TS_COVARIANCE($volume, $close, 60)",
+          "explanation": "Measures the ratio of short-term to long-term covariance between volume and price, capturing stocks where volume changes are more closely linked to price movements in recent periods.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.015205825945789123,
+          "icir": -0.2113908143698804,
+          "tstat": -3.295256676677946,
+          "n_days": 243,
+          "coverage": 4369.316872427984,
+          "n_unique": 4348.0329218107,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "RANK(TS_PCTCHANGE($volume, 10) - TS_PCTCHANGE($volume, 60))",
+        "TS_ZSCORE(TS_PCTCHANGE($close, 20), 60) * TS_ZSCORE(TS_PCTCHANGE($volume, 10), 60)",
+        "TS_ARGMAX(TS_ZSCORE($volume, 30), 10) - TS_ARGMIN(TS_ZSCORE($volume, 30), 10)",
+        "ZSCORE(TS_PCTCHANGE($volume, 10)) * TS_PCTCHANGE($return, 5)",
+        "TS_COVARIANCE($volume, $close, 10) / TS_COVARIANCE($volume, $close, 60)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolatilitySurgeRank",
+          "expression": "RANK(TS_PCTCHANGE($volume, 10) - TS_PCTCHANGE($volume, 60))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityReversionSignal",
+          "expression": "TS_ZSCORE(TS_PCTCHANGE($close, 20), 60) * TS_ZSCORE(TS_PCTCHANGE($volume, 10), 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeStressIndicator",
+          "expression": "TS_ARGMAX(TS_ZSCORE($volume, 30), 10) - TS_ARGMIN(TS_ZSCORE($volume, 30), 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "PriceVolatilityContrast",
+          "expression": "TS_PCTCHANGE($return, 5) / TS_RMS($return, 60)",
+          "ok": false,
+          "reason": "arity: `TS_RMS` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        },
+        {
+          "name": "CrossSectionalVolatilityImpact",
+          "expression": "ZSCORE(TS_PCTCHANGE($volume, 10)) * TS_PCTCHANGE($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityTrendDiscrepancy",
+          "expression": "TS_COVARIANCE($volume, $close, 10) / TS_COVARIANCE($volume, $close, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2295,
+      "construct_rep_ratio": 0.518,
+      "construct_text_head": "{\n  \"hypothesis\": \"Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, predicting positive returns in the short to medium term.\",\n  \"factors\": [\n    {\n      \"name\": \"VolatilitySurgeRank\",\n      \"expression\": \"RANK(TS_PCTCHANGE($volume, 10) - TS_PCTCHANGE($volume, 60))\",\n      \"explanation\": \"Computes the difference in volume percent change over short and long horizons, then ranks stocks to identify those with recent volume surges relative to longer-term trends.\"\n    },\n    {\n      \"name\": \"VolatilityReversionSignal\",\n      \"expression\": \"TS_ZSCOR",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 5.75,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 156,
+          "n_in_tok": 808,
+          "text_len": 868,
+          "rep_ratio": 0.364,
+          "parsed_ok": false,
+          "text": "Observation: Low-volatility stocks tend to reverse direction when market regimes shift, especially when volatility spikes and trading volume increases abruptly. These stocks often underperform during stable periods but show strong mean reversion following volatile regime changes.\n\nDriver: During regime transitions, liquidity constraints and investor sentiment shifts create mispricings in low-volatility stocks. Price and volume data capture these dynamics, making them predictive of subsequent returns. The mechanism is mean reversion, operating in the short to medium horizon, using close and volume data. The direction is positive for stocks that show sharp declines followed by volume spikes.\n\nHYPOTHESIS: Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, predicting positive returns in the short to medium term."
+        },
+        {
+          "agent": "innovate",
+          "mode": "text_only",
+          "s": 57.71,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 1541,
+          "n_in_tok": 1597,
+          "text_len": 4232,
+          "rep_ratio": 0.829,
+          "parsed_ok": false,
+          "text": "HYPOTHESIS VARIANTS:  \n- Mean reversion in high-volatility stocks occurs after gradual volatility decreases and volume declines, predicting negative returns in the long term.  \n- Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, but only during periods of market stress.  \n- Mean reversion in high-volatility stocks occurs after abrupt volatility decreases and volume drops, predicting negative returns in the short to medium term.  \n\nRECIPES:  \n{\n  \"axis\": \"DEPTH\",\n  \"sketch\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 60), 30)\",\n  \"uses\": \"$volume, 20, 60, 30\"\n},\n{\n  \"axis\": \"UNUSUAL PAIRING\",\n  \"sketch\": \"TS_COVARIANCE($close, $volume, 10) / TS_COVARIANCE($close, $volume, 60)\",\n  \"uses\": \"$close, $volume, 10, 60\"\n},\n{\n  \"axis\": \"TIMESCALE CONTRAST\",\n  \"sketch\": \"TS_PCTCHANGE($return, 5) - TS_PCTCHANGE($return, 60)\",\n  \"uses\": \"$return, 5, 60\"\n},\n{\n  \"axis\": \"ODD NORMALISATION\",\n  \"sketch\": \"TS_PCTCHANGE($close, 20) / TS_RMS($return, 60)\",\n  \"uses\": \"$close, $return, 20, 60\"\n},\n{\n  \"axis\": \"ORDER STATISTICS\",\n  \"sketch\": \"HIGHDAY(TS_MAD($volume, 30), 10) - LOWDAY(TS_MAD($volume, 30), 10)\",\n  \"uses\": \"$volume, 30, 10\"\n},\n{\n  \"axis\": \"NEGLECTED OPERATOR\",\n  \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($open, 10), 20) * DELAY(TS_ZSCORE($return, 60), 30)\",\n  \"uses\": \"$open, $return, 10, 20, 60, 30\"\n},\n{\n  \"axis\": \"SHAPE, NOT LEVEL\",\n  \"sketch\": \"TS_SKEW($return, 60) - TS_KURT($return, 60)\",\n  \"uses\": \"$return, 60\"\n},\n{\n  \"axis\": \"ASYMMETRY\",\n  \"sketch\": \"SUMIF(DELAY($return > 0, 5), $volume, 20) / SUMIF(DELAY($return < 0, 5), $volume, 20)\",\n  \"uses\": \"$return, $volume, 5, 20\"\n},\n{\n  \"axis\": \"CROSS-FAMILY PRODUCT\",\n  \"sketch\": \"TS_PCTCHANGE($close, 10) * TS_PCTCHANGE($volume, 60)\",\n  \"uses\": \"$close, $volume, 10, 60\"\n},\n{\n  \"axis\": \"INVERSION\",\n  \"sketch\": \"1 - TS_PCTCHANGE($close, 10) / TS_PCTCHANGE($close, 60)\",\n  \"uses\": \"$close, 10, 60\"\n}\n\n{\n  \"hypothesis\": \"Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, predicting positive returns in the short to medium term.\",\n  \"hypothesis_variants\": [\n    \"Mean reversion in high-volatility stocks occurs after gradual volatility decreases and volume declines, predicting negative returns in the long term.\",\n    \"Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, but only during periods of market stress.\",\n    \"Mean reversion in high-volatility stocks occurs after abrupt volatility decreases and volume drops, predicting negative returns in the short to medium term.\"\n  ],\n  \"recipes\": [\n    {\n      \"axis\": \"DEPTH\",\n      \"sketch\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 60), 30)\",\n      \"uses\": \"$volume, 20, 60, 30\"\n    },\n    {\n      \"axis\": \"UNUSUAL PAIRING\",\n      \"sketch\": \"TS_COVARIANCE($close, $volume, 10) / TS_COVARIANCE($close, $volume, 60)\",\n      \"uses\": \"$close, $volume, 10, 60\"\n    },\n    {\n      \"axis\": \"TIMESCALE CONTRAST\",\n      \"sketch\": \"TS_PCTCHANGE($return, 5) - TS_PCTCHANGE($return, 60)\",\n      \"uses\": \"$return, 5, 60\"\n    },\n    {\n      \"axis\": \"ODD NORMALISATION\",\n      \"sketch\": \"TS_PCTCHANGE($close, 20) / TS_RMS($return, 60)\",\n      \"uses\": \"$close, $return, 20, 60\"\n    },\n    {\n      \"axis\": \"ORDER STATISTICS\",\n      \"sketch\": \"HIGHDAY(TS_MAD($volume, 30), 10) - LOWDAY(TS_MAD($volume, 30), 10)\",\n      \"uses\": \"$volume, 30, 10\"\n    },\n    {\n      \"axis\": \"NEGLECTED OPERATOR\",\n      \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($open, 10), 20) * DELAY(TS_ZSCORE($return, 60), 30)\",\n      \"uses\": \"$open, $return, 10, 20, 60, 30\"\n    },\n    {\n      \"axis\": \"SHAPE, NOT LEVEL\",\n      \"sketch\": \"TS_SKEW($return, 60) - TS_KURT($return, 60)\",\n      \"uses\": \"$return, 60\"\n    },\n    {\n      \"axis\": \"ASYMMETRY\",\n      \"sketch\": \"SUMIF(DELAY($return > 0, 5), $volume, 20) / SUMIF(DELAY($return < 0, 5), $volume, 20)\",\n      \"uses\": \"$return, $volume, 5, 20\"\n    },\n    {\n      \"axis\": \"CROSS-FAMILY PRODUCT\",\n      \"sketch\": \"TS_PCTCHANGE($close, 10) * TS_PCTCHANGE($volume, 60)\",\n      \"uses\": \"$close, $volume, 10, 60\"\n    },\n    {\n      \"axis\": \"INVERSION\",\n      \"sketch\": \"1 - TS_PCTCHANGE($close, 10) / TS_PCTCHANGE($close, 60)\",\n      \"uses\": \"$close, 10, 60\"\n    }\n  ]\n}"
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 22.32,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 568,
+          "n_in_tok": 3206,
+          "text_len": 2295,
+          "rep_ratio": 0.518,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Mean reversion in low-volatility stocks occurs after abrupt volatility increases and volume surges, predicting positive returns in the short to medium term.\",\n  \"factors\": [\n    {\n      \"name\": \"VolatilitySurgeRank\",\n      \"expression\": \"RANK(TS_PCTCHANGE($volume, 10) - TS_PCTCHANGE($volume, 60))\",\n      \"explanation\": \"Computes the difference in volume percent change over short and long horizons, then ranks stocks to identify those with recent volume surges relative to longer-term trends.\"\n    },\n    {\n      \"name\": \"VolatilityReversionSignal\",\n      \"expression\": \"TS_ZSCORE(TS_PCTCHANGE($close, 20), 60) * TS_ZSCORE(TS_PCTCHANGE($volume, 10), 60)\",\n      \"explanation\": \"Combines the standardized short-term price change and volume change to detect stocks where both metrics deviate significantly from their cross-sectional norms, suggesting potential mean reversion.\"\n    },\n    {\n      \"name\": \"VolumeStressIndicator\",\n      \"expression\": \"TS_ARGMAX(TS_ZSCORE($volume, 30), 10) - TS_ARGMIN(TS_ZSCORE($volume, 30), 10)\",\n      \"explanation\": \"Identifies the number of days between extreme volume events in a rolling window, highlighting stocks experiencing volatile volume patterns that may signal impending mean reversion.\"\n    },\n    {\n      \"name\": \"PriceVolatilityContrast\",\n      \"expression\": \"TS_PCTCHANGE($return, 5) / TS_RMS($return, 60)\",\n      \"explanation\": \"Compares short-term return volatility to long-term return volatility using RMS, capturing stocks with heightened recent variability relative to historical patterns.\"\n    },\n    {\n      \"name\": \"CrossSectionalVolatilityImpact\",\n      \"expression\": \"ZSCORE(TS_PCTCHANGE($volume, 10)) * TS_PCTCHANGE($return, 5)\",\n      \"explanation\": \"Standardizes the recent volume change across the cross-section and multiplies it by the short-term return change, identifying stocks where volume spikes correlate with recent price movements.\"\n    },\n    {\n      \"name\": \"VolatilityTrendDiscrepancy\",\n      \"expression\": \"TS_COVARIANCE($volume, $close, 10) / TS_COVARIANCE($volume, $close, 60)\",\n      \"explanation\": \"Measures the ratio of short-term to long-term covariance between volume and price, capturing stocks where volume changes are more closely linked to price movements in recent periods.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "PriceVolatilityContrast",
+          "expr": "TS_PCTCHANGE($return, 5) / TS_RMS($return, 60)",
+          "reason": "arity: `TS_RMS` is not a known function. Use only functions from the allowed list."
+        }
+      ],
+      "direction": "d1",
+      "seed": 0,
+      "comm_mode": "summary",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "duration_s": 142.28,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Low-volatility stocks exhibit mean-reversion during sharp regime shifts, as measured by sudden changes in price volatility and trading volume, leading to downward cross-sectional returns in the short-term.",
+      "factors": [
+        {
+          "name": "VolatilityReversionRank",
+          "expression": "RANK(TS_ZSCORE(TS_MAD($volume, 30), 60) - TS_SKEW($return, 20))",
+          "explanation": "This factor measures the cross-sectional ranking of the z-score of the rolling median absolute deviation of volume contrasted with the skewness of returns, capturing regime shifts in volatility and volume.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeSkewMomentum",
+          "expression": "TS_MOMENTUM(TS_ZSCORE($volume, 120), 30) * TS_CORR($open, $return, 60)",
+          "explanation": "This factor combines the momentum of volume's z-score with the correlation between open prices and returns, exploring how volume and price dynamics interact during regime shifts.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_MOMENTUM' is not defined",
+          "passed_gate": false
+        },
+        {
+          "name": "RegimeShiftResidual",
+          "expression": "REGRESI(TS_PCTCHANGE($close, 5), $volume, 60) * TS_ARGMAX($return, 20)",
+          "explanation": "This factor uses the residual from regressing price change on volume and multiplies it by the index of the highest return over 20 days, investigating how residuals from volume-driven price movements relate to extreme returns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
+        },
+        {
+          "name": "VolatilityContrastZScore",
+          "expression": "TS_ZSCORE(TS_STD($return, 60) - TS_STD($return, 120), 30)",
+          "explanation": "This factor calculates the z-score of the difference between short and long-term return volatility, capturing the contrast in volatility regimes and its cross-sectional significance.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.01136926018882908,
+          "icir": -0.150599468731953,
+          "tstat": -2.347613382929608,
+          "n_days": 243,
+          "coverage": 4241.551440329218,
+          "n_unique": 4239.77366255144,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "VolumeSkewRanking",
+          "expression": "RANK(TS_ZSCORE(TS_SKEW($volume, 20)) * TS_PCTCHANGE($close, 5))",
+          "explanation": "This factor ranks the product of the z-score of volume skewness and the percentage change in close prices, exploring how skewed volume patterns correlate with price changes during regime shifts.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": false
+        },
+        {
+          "name": "RegimeShiftMomentum",
+          "expression": "TS_MOMENTUM(TS_ZSCORE($volume, 60), 20) - TS_MOMENTUM(TS_ZSCORE($return, 60), 20)",
+          "explanation": "This factor contrasts the momentum of volume and return z-scores, analyzing how regime shifts in volume and returns interact and affect future performance.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_MOMENTUM' is not defined",
+          "passed_gate": false
+        }
+      ],
+      "passing": [
+        "RANK(TS_ZSCORE(TS_MAD($volume, 30), 60) - TS_SKEW($return, 20))",
+        "REGRESI(TS_PCTCHANGE($close, 5), $volume, 60) * TS_ARGMAX($return, 20)",
+        "TS_ZSCORE(TS_STD($return, 60) - TS_STD($return, 120), 30)"
+      ],
+      "gate_log": [
+        {
+          "name": "VolatilityReversionRank",
+          "expression": "RANK(TS_ZSCORE(TS_MAD($volume, 30), 60) - TS_SKEW($return, 20))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeSkewMomentum",
+          "expression": "TS_MOMENTUM(TS_ZSCORE($volume, 120), 30) * TS_CORR($open, $return, 60)",
+          "ok": false,
+          "reason": "arity: `TS_MOMENTUM` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        },
+        {
+          "name": "RegimeShiftResidual",
+          "expression": "REGRESI(TS_PCTCHANGE($close, 5), $volume, 60) * TS_ARGMAX($return, 20)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolatilityContrastZScore",
+          "expression": "TS_ZSCORE(TS_STD($return, 60) - TS_STD($return, 120), 30)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "VolumeSkewRanking",
+          "expression": "RANK(TS_ZSCORE(TS_SKEW($volume, 20)) * TS_PCTCHANGE($close, 5))",
+          "ok": false,
+          "reason": "arity: `TS_ZSCORE` takes 2 argument(s) but got 1 (`TS_ZSCORE(TS_SKEW($volume, 20.0))`).",
+          "repaired_by": null
+        },
+        {
+          "name": "RegimeShiftMomentum",
+          "expression": "TS_MOMENTUM(TS_ZSCORE($volume, 60), 20) - TS_MOMENTUM(TS_ZSCORE($return, 60), 20)",
+          "ok": false,
+          "reason": "arity: `TS_MOMENTUM` is not a known function. Use only functions from the allowed list. `TS_MOMENTUM` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2383,
+      "construct_rep_ratio": 0.583,
+      "construct_text_head": "{\n  \"hypothesis\": \"Low-volatility stocks exhibit mean-reversion during sharp regime shifts, as measured by sudden changes in price volatility and trading volume, leading to downward cross-sectional returns in the short-term.\",\n  \"factors\": [\n    {\n      \"name\": \"VolatilityReversionRank\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_MAD($volume, 30), 60) - TS_SKEW($return, 20))\",\n      \"explanation\": \"This factor measures the cross-sectional ranking of the z-score of the rolling median absolute deviation of volume contrasted with the skewness of returns, capturing regime shifts in volatility and volu",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 8.42,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 185,
+          "n_in_tok": 808,
+          "text_len": 946,
+          "rep_ratio": 0.354,
+          "parsed_ok": false,
+          "text": "Observation: Low-volatility stocks tend to reverse in the days following a shift in market regime, such as from calm to volatile or vice versa. This reversal is most pronounced when the regime change is abrupt and confirmed by broad market indicators.\n\nDriver: During regime transitions, investor sentiment and risk appetite shift rapidly. Low-volatility stocks, which often act as safe havens, may overreact to regime changes, creating temporary mispricings. The signal comes from volume and return data, specifically the magnitude of recent price swings and trading activity. This fits the mean-reversion family, operates in the short horizon (1-10 days), and shows a negative return direction in cross-sectional comparisons.\n\nHYPOTHESIS: Low-volatility stocks exhibit mean-reversion during sharp regime shifts, as measured by sudden changes in price volatility and trading volume, leading to downward cross-sectional returns in the short-term."
+        },
+        {
+          "agent": "innovate",
+          "mode": "text_only",
+          "s": 68.07,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 1812,
+          "n_in_tok": 1605,
+          "text_len": 5512,
+          "rep_ratio": 0.808,
+          "parsed_ok": false,
+          "text": "HYPOTHESIS VARIANTS:\n- High-volatility stocks show momentum during prolonged market stability, as measured by gradual changes in price dispersion and trading frequency, leading to upward cross-sectional returns in the long-term.\n- Mean-reversion in low-volume stocks occurs during periods of information asymmetry, as measured by sudden spikes in price skewness and delayed volume responses, leading to upward cross-sectional returns in the medium-term.\n- Regime shifts amplify the persistence of high-volatility stocks, as measured by the divergence between price kurtosis and volume decay, leading to downward cross-sectional returns in the ultra-short-term.\n\nRECIPES:\n{\n  \"axis\": \"DEPTH\",\n  \"sketch\": \"the rolling median of TS_SKEW($return, 20) subtracted from the cross-sectional rank of TS_MAD($volume, 60), nested within a 120-day window\",\n  \"uses\": \"$return, $volume, 20, 60, 120\"\n}\n{\n  \"axis\": \"UNUSUAL PAIRING\",\n  \"sketch\": \"TS_COVARIANCE($open, $volume, 30) divided by TS_CORR($high, $return, 90)\",\n  \"uses\": \"$open, $volume, $high, $return, 30, 90\"\n}\n{\n  \"axis\": \"TIMESCALE CONTRAST\",\n  \"sketch\": \"TS_MOMENTUM($close, 5) minus TS_MOMENTUM($close, 60), scaled by TS_ZSCORE($volume, 120)\",\n  \"uses\": \"$close, $volume, 5, 60, 120\"\n}\n{\n  \"axis\": \"ODD NORMALISATION\",\n  \"sketch\": \"TS_ARGMAX($return, 20) ranked against the inverse of TS_RANK($volume, 60)\",\n  \"uses\": \"$return, $volume, 20, 60\"\n}\n{\n  \"axis\": \"ORDER STATISTICS\",\n  \"sketch\": \"the difference between TS_ARGMAX($high, 30) and TS_ARGMIN($low, 30), divided by TS_MEDIAN($return, 60)\",\n  \"uses\": \"$high, $low, $return, 30, 60\"\n}\n{\n  \"axis\": \"NEGLECTED OPERATOR\",\n  \"sketch\": \"DECAYLINEAR(TS_RSI($close, 14), 20) multiplied by the inverse of TS_SKEW($volume, 30)\",\n  \"uses\": \"$close, $volume, 14, 20, 30\"\n}\n{\n  \"axis\": \"ASYMMETRY\",\n  \"sketch\": \"a conditional gate that adds TS_ZSCORE($return, 20) when $volume > TS_MEDIAN($volume, 60), otherwise subtracts it\",\n  \"uses\": \"$return, $volume, 20, 60\"\n}\n{\n  \"axis\": \"CROSS-FAMILY PRODUCT\",\n  \"sketch\": \"TS_MAD($return, 30) multiplied by the log of TS_RSI($close, 14), normalized by TS_ZSCORE($volume, 60)\",\n  \"uses\": \"$return, $close, $volume, 30, 14, 60\"\n}\n{\n  \"axis\": \"INVERSION\",\n  \"sketch\": \"one minus the product of TS_CORR($open, $volume, 20) and TS_ZSCORE($return, 60)\",\n  \"uses\": \"$open, $volume, $return, 20, 60\"\n}\n{\n  \"axis\": \"SHAPE, NOT LEVEL\",\n  \"sketch\": \"the gap between TS_QUANTILE($return, 60, 0.9) and TS_QUANTILE($return, 60, 0.1), divided by TS_MAD($return, 60)\",\n  \"uses\": \"$return, 60\"\n}\n\n{\n  \"hypothesis\": \"Low-volatility stocks exhibit mean-reversion during sharp regime shifts, as measured by sudden changes in price volatility and trading volume, leading to downward cross-sectional returns in the short-term.\",\n  \"hypothesis_variants\": [\n    \"High-volatility stocks show momentum during prolonged market stability, as measured by gradual changes in price dispersion and trading frequency, leading to upward cross-sectional returns in the long-term.\",\n    \"Mean-reversion in low-volume stocks occurs during periods of information asymmetry, as measured by sudden spikes in price skewness and delayed volume responses, leading to upward cross-sectional returns in the medium-term.\",\n    \"Regime shifts amplify the persistence of high-volatility stocks, as measured by the divergence between price kurtosis and volume decay, leading to downward cross-sectional returns in the ultra-short-term.\"\n  ],\n  \"recipes\": [\n    {\n      \"axis\": \"DEPTH\",\n      \"sketch\": \"the rolling median of TS_SKEW($return, 20) subtracted from the cross-sectional rank of TS_MAD($volume, 60), nested within a 120-day window\",\n      \"uses\": \"$return, $volume, 20, 60, 120\"\n    },\n    {\n      \"axis\": \"UNUSUAL PAIRING\",\n      \"sketch\": \"TS_COVARIANCE($open, $volume, 30) divided by TS_CORR($high, $return, 90)\",\n      \"uses\": \"$open, $volume, $high, $return, 30, 90\"\n    },\n    {\n      \"axis\": \"TIMESCALE CONTRAST\",\n      \"sketch\": \"TS_MOMENTUM($close, 5) minus TS_MOMENTUM($close, 60), scaled by TS_ZSCORE($volume, 120)\",\n      \"uses\": \"$close, $volume, 5, 60, 120\"\n    },\n    {\n      \"axis\": \"ODD NORMALISATION\",\n      \"sketch\": \"TS_ARGMAX($return, 20) ranked against the inverse of TS_RANK($volume, 60)\",\n      \"uses\": \"$return, $volume, 20, 60\"\n    },\n    {\n      \"axis\": \"ORDER STATISTICS\",\n      \"sketch\": \"the difference between TS_ARGMAX($high, 30) and TS_ARGMIN($low, 30), divided by TS_MEDIAN($return, 60)\",\n      \"uses\": \"$high, $low, $return, 30, 60\"\n    },\n    {\n      \"axis\": \"NEGLECTED OPERATOR\",\n      \"sketch\": \"DECAYLINEAR(TS_RSI($close, 14), 20) multiplied by the inverse of TS_SKEW($volume, 30)\",\n      \"uses\": \"$close, $volume, 14, 20, 30\"\n    },\n    {\n      \"axis\": \"ASYMMETRY\",\n      \"sketch\": \"a conditional gate that adds TS_ZSCORE($return, 20) when $volume > TS_MEDIAN($volume, 60), otherwise subtracts it\",\n      \"uses\": \"$return, $volume, 20, 60\"\n    },\n    {\n      \"axis\": \"CROSS-FAMILY PRODUCT\",\n      \"sketch\": \"TS_MAD($return, 30) multiplied by the log of TS_RSI($close, 14), normalized by TS_ZSCORE($volume, 60)\",\n      \"uses\": \"$return, $close, $volume, 30, 14, 60\"\n    },\n    {\n      \"axis\": \"INVERSION\",\n      \"sketch\": \"one minus the product of TS_CORR($open, $volume, 20) and TS_ZSCORE($return, 60)\",\n      \"uses\": \"$open, $volume, $return, 20, 60\"\n    },\n    {\n      \"axis\": \"SHAPE, NOT LEVEL\",\n      \"sketch\": \"the gap between TS_QUANTILE($return, 60, 0.9) and TS_QUANTILE($return, 60, 0.1), divided by TS_MAD($return, 60)\",\n      \"uses\": \"$return, 60\"\n    }\n  ]\n}"
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 23.86,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 610,
+          "n_in_tok": 3121,
+          "text_len": 2383,
+          "rep_ratio": 0.583,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Low-volatility stocks exhibit mean-reversion during sharp regime shifts, as measured by sudden changes in price volatility and trading volume, leading to downward cross-sectional returns in the short-term.\",\n  \"factors\": [\n    {\n      \"name\": \"VolatilityReversionRank\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_MAD($volume, 30), 60) - TS_SKEW($return, 20))\",\n      \"explanation\": \"This factor measures the cross-sectional ranking of the z-score of the rolling median absolute deviation of volume contrasted with the skewness of returns, capturing regime shifts in volatility and volume.\"\n    },\n    {\n      \"name\": \"VolumeSkewMomentum\",\n      \"expression\": \"TS_MOMENTUM(TS_ZSCORE($volume, 120), 30) * TS_CORR($open, $return, 60)\",\n      \"explanation\": \"This factor combines the momentum of volume's z-score with the correlation between open prices and returns, exploring how volume and price dynamics interact during regime shifts.\"\n    },\n    {\n      \"name\": \"RegimeShiftResidual\",\n      \"expression\": \"REGRESI(TS_PCTCHANGE($close, 5), $volume, 60) * TS_ARGMAX($return, 20)\",\n      \"explanation\": \"This factor uses the residual from regressing price change on volume and multiplies it by the index of the highest return over 20 days, investigating how residuals from volume-driven price movements relate to extreme returns.\"\n    },\n    {\n      \"name\": \"VolatilityContrastZScore\",\n      \"expression\": \"TS_ZSCORE(TS_STD($return, 60) - TS_STD($return, 120), 30)\",\n      \"explanation\": \"This factor calculates the z-score of the difference between short and long-term return volatility, capturing the contrast in volatility regimes and its cross-sectional significance.\"\n    },\n    {\n      \"name\": \"VolumeSkewRanking\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_SKEW($volume, 20)) * TS_PCTCHANGE($close, 5))\",\n      \"explanation\": \"This factor ranks the product of the z-score of volume skewness and the percentage change in close prices, exploring how skewed volume patterns correlate with price changes during regime shifts.\"\n    },\n    {\n      \"name\": \"RegimeShiftMomentum\",\n      \"expression\": \"TS_MOMENTUM(TS_ZSCORE($volume, 60), 20) - TS_MOMENTUM(TS_ZSCORE($return, 60), 20)\",\n      \"explanation\": \"This factor contrasts the momentum of volume and return z-scores, analyzing how regime shifts in volume and returns interact and affect future performance.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolumeSkewMomentum",
+          "expr": "TS_MOMENTUM(TS_ZSCORE($volume, 120), 30) * TS_CORR($open, $return, 60)",
+          "reason": "arity: `TS_MOMENTUM` is not a known function. Use only functions from the allowed list."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "VolumeSkewRanking",
+          "expr": "RANK(TS_ZSCORE(TS_SKEW($volume, 20)) * TS_PCTCHANGE($close, 5))",
+          "reason": "arity: `TS_ZSCORE` takes 2 argument(s) but got 1 (`TS_ZSCORE(TS_SKEW($volume, 20.0))`)."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "RegimeShiftMomentum",
+          "expr": "TS_MOMENTUM(TS_ZSCORE($volume, 60), 20) - TS_MOMENTUM(TS_ZSCORE($return, 60), 20)",
+          "reason": "arity: `TS_MOMENTUM` is not a known function. Use only functions from the allowed list. `TS_MOMENTUM` is not a known function. Use only functions from the allowed list."
+        }
+      ],
+      "direction": "d1",
+      "seed": 1,
+      "comm_mode": "summary",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    },
+    {
+      "duration_s": 102.4,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Low-volatility stocks exhibit short-term mean-reversion after regime shifts, driven by risk-off behavior and volatility-driven undervaluation.",
+      "factors": [
+        {
+          "name": "volatility_reversion_rank",
+          "expression": "RANK(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50) - TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50))",
+          "explanation": "This factor explores the DEPTH axis by calculating the difference in z-scores of volume changes over different windows, then ranks the result to identify stocks with divergent behavior post-regime shifts.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 4324.991769547325,
+          "n_unique": 1.0,
+          "eval_error": null,
+          "passed_gate": false
+        },
+        {
+          "name": "covariance_shift_signal",
+          "expression": "TS_COVARIANCE($open, $volume, 30) / TS_COVARIANCE($close, $return, 60)",
+          "explanation": "This factor implements the UNUSUAL PAIRING axis by comparing the covariance between open and volume with that of close and return, capturing potential shifts in market dynamics.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.015012675334463814,
+          "icir": -0.17509132122379673,
+          "tstat": -2.7294035789158095,
+          "n_days": 243,
+          "coverage": 4370.074074074074,
+          "n_unique": 4369.074074074074,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "momentum_mean_reversion",
+          "expression": "TS_PCTCHANGE(TS_SMA($return, 5), 20) - TS_PCTCHANGE(TS_SMA($return, 60), 120)",
+          "explanation": "This factor follows the TIMESCALE CONTRAST axis by contrasting short-term and long-term momentum signals derived from moving averages, highlighting mean-reversion opportunities.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "NameError: name 'TS_SMA' is not defined",
+          "passed_gate": false
+        },
+        {
+          "name": "volume_rank_normalization",
+          "expression": "TS_RANK(TS_PCTCHANGE($close, 20), 50) / TS_ZSCORE(TS_PCTCHANGE($close, 20), 50)",
+          "explanation": "This factor adheres to the ODD NORMALISATION axis by normalizing the rank of close price changes against their z-score, emphasizing relative positioning in volatile regimes.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.004450063349807637,
+          "icir": 0.07249346512645968,
+          "tstat": 1.1300612833417567,
+          "n_days": 243,
+          "coverage": 4324.991769547325,
+          "n_unique": 4323.222222222223,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "high_low_day_difference",
+          "expression": "HIGHDAY(TS_PCTCHANGE($return, 10), 30) - LOWDAY(TS_PCTCHANGE($return, 10), 30)",
+          "explanation": "This factor explores the ORDER STATISTICS axis by measuring the time elapsed since the highest and lowest returns over a window, identifying stocks with delayed mean-reversion patterns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.0005478248710140389,
+          "icir": 0.03392820216567741,
+          "tstat": 0.5288883296437952,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 58.74485596707819,
+          "eval_error": null,
+          "passed_gate": true
+        },
+        {
+          "name": "decay_volume_interaction",
+          "expression": "DECAYLINEAR(TS_PCTCHANGE($volume, 20), 10) * DELAY(TS_PCTCHANGE($close, 60), 10)",
+          "explanation": "This factor applies the NEGLECTED OPERATOR axis by combining a decayed volume change with a delayed close price change, capturing the interplay of retail activity and price inertia.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.006018202817187307,
+          "icir": 0.08772106002837977,
+          "tstat": 1.3674359957665785,
+          "n_days": 243,
+          "coverage": 4349.267489711934,
+          "n_unique": 4191.028806584362,
+          "eval_error": null,
+          "passed_gate": true
+        }
+      ],
+      "passing": [
+        "TS_COVARIANCE($open, $volume, 30) / TS_COVARIANCE($close, $return, 60)",
+        "TS_RANK(TS_PCTCHANGE($close, 20), 50) / TS_ZSCORE(TS_PCTCHANGE($close, 20), 50)",
+        "HIGHDAY(TS_PCTCHANGE($return, 10), 30) - LOWDAY(TS_PCTCHANGE($return, 10), 30)",
+        "DECAYLINEAR(TS_PCTCHANGE($volume, 20), 10) * DELAY(TS_PCTCHANGE($close, 60), 10)"
+      ],
+      "gate_log": [
+        {
+          "name": "volatility_reversion_rank",
+          "expression": "RANK(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50) - TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50))",
+          "ok": false,
+          "reason": "execution: the expression gives only 1.0 distinct values per day, so it cannot rank stocks against each other. Let the data reach the VALUE (gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return,5)) : (0)`), not just the condition.",
+          "repaired_by": null
+        },
+        {
+          "name": "covariance_shift_signal",
+          "expression": "TS_COVARIANCE($open, $volume, 30) / TS_COVARIANCE($close, $return, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "momentum_mean_reversion",
+          "expression": "TS_PCTCHANGE(TS_SMA($return, 5), 20) - TS_PCTCHANGE(TS_SMA($return, 60), 120)",
+          "ok": false,
+          "reason": "arity: `TS_SMA` is not a known function. Use only functions from the allowed list. `TS_SMA` is not a known function. Use only functions from the allowed list.",
+          "repaired_by": null
+        },
+        {
+          "name": "volume_rank_normalization",
+          "expression": "TS_RANK(TS_PCTCHANGE($close, 20), 50) / TS_ZSCORE(TS_PCTCHANGE($close, 20), 50)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "high_low_day_difference",
+          "expression": "HIGHDAY(TS_PCTCHANGE($return, 10), 30) - LOWDAY(TS_PCTCHANGE($return, 10), 30)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "decay_volume_interaction",
+          "expression": "DECAYLINEAR(TS_PCTCHANGE($volume, 20), 10) * DELAY(TS_PCTCHANGE($close, 60), 10)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 2370,
+      "construct_rep_ratio": 0.5,
+      "construct_text_head": "{\n  \"hypothesis\": \"Low-volatility stocks exhibit short-term mean-reversion after regime shifts, driven by risk-off behavior and volatility-driven undervaluation.\",\n  \"factors\": [\n    {\n      \"name\": \"volatility_reversion_rank\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50) - TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50))\",\n      \"explanation\": \"This factor explores the DEPTH axis by calculating the difference in z-scores of volume changes over different windows, then ranks the result to identify stocks with divergent behavior post-regime shifts.\"\n    },\n    {\n      \"name\": \"cov",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "text_only",
+          "s": 7.79,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 154,
+          "n_in_tok": 808,
+          "text_len": 790,
+          "rep_ratio": 0.316,
+          "parsed_ok": false,
+          "text": "Observation: Low-volatility stocks show mean-reversion patterns when market regimes shift, particularly when volatility spikes and uncertainty rises. These stocks tend to outperform in the following days as the market corrects from extreme conditions.\n\nDriver: During regime transitions, especially when volatility increases, low-volatility stocks may become undervalued due to risk-off sentiment. Their lower price swings make them more attractive as the market stabilizes. The signal comes from close and volume data, fits a mean-reversion mechanism, operates in the short horizon (1\u201310 days), and shows a positive return direction.\n\nHYPOTHESIS: Low-volatility stocks exhibit short-term mean-reversion after regime shifts, driven by risk-off behavior and volatility-driven undervaluation."
+        },
+        {
+          "agent": "innovate",
+          "mode": "text_only",
+          "s": 66.11,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 1762,
+          "n_in_tok": 1595,
+          "text_len": 4803,
+          "rep_ratio": 0.801,
+          "parsed_ok": false,
+          "text": "HYPOTHESIS VARIANTS:\n- High-volatility stocks show long-term momentum during periods of market stress, fueled by panic selling and liquidity crunches.\n- Short-term reversal in high-volume stocks occurs following unexpected earnings reports, triggered by information asymmetry and retail trading activity.\n- Low-volatility stocks experience delayed mean reversion after macroeconomic shocks, as institutional investors adjust positions gradually.\n\nRECIPES:\n{\n  \"axis\": \"DEPTH\",\n  \"sketch\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)\",\n  \"uses\": \"$volume, window sizes 20, 50, 10\"\n}\n{\n  \"axis\": \"UNUSUAL PAIRING\",\n  \"sketch\": \"TS_COVARIANCE($open, $volume, 30) / TS_COVARIANCE($close, $return, 60)\",\n  \"uses\": \"$open, $volume, $close, $return, window sizes 30, 60\"\n}\n{\n  \"axis\": \"TIMESCALE CONTRAST\",\n  \"sketch\": \"TS_PCTCHANGE(TS_SMA($return, 5), 20) - TS_PCTCHANGE(TS_SMA($return, 60), 120)\",\n  \"uses\": \"$return, window sizes 5, 20, 60, 120\"\n}\n{\n  \"axis\": \"ODD NORMALISATION\",\n  \"sketch\": \"TS_RANK(TS_PCTCHANGE($close, 20), 50) / TS_ZSCORE(TS_PCTCHANGE($close, 20), 50)\",\n  \"uses\": \"$close, window sizes 20, 50\"\n}\n{\n  \"axis\": \"ORDER STATISTICS\",\n  \"sketch\": \"HIGHDAY(TS_PCTCHANGE($return, 10), 30) - LOWDAY(TS_PCTCHANGE($return, 10), 30)\",\n  \"uses\": \"$return, window sizes 10, 30\"\n}\n{\n  \"axis\": \"NEGLECTED OPERATOR\",\n  \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($volume, 20), 10) * DELAY(TS_PCTCHANGE($close, 60), 10)\",\n  \"uses\": \"$volume, $close, window sizes 20, 60, 10\"\n}\n{\n  \"axis\": \"SHAPE, NOT LEVEL\",\n  \"sketch\": \"TS_SKEW(TS_PCTCHANGE($open, 10), 30) - TS_KURT(TS_PCTCHANGE($close, 10), 30)\",\n  \"uses\": \"$open, $close, window sizes 10, 30\"\n}\n{\n  \"axis\": \"ASYMMETRY\",\n  \"sketch\": \"SUMIF(TS_PCTCHANGE($return, 20) > 0, $volume, 10) / SUMIF(TS_PCTCHANGE($return, 20) < 0, $volume, 10)\",\n  \"uses\": \"$return, $volume, window sizes 20, 10\"\n}\n{\n  \"axis\": \"CROSS-FAMILY PRODUCT\",\n  \"sketch\": \"TS_MAD($return, 30) * TS_PCTCHANGE($volume, 60)\",\n  \"uses\": \"$return, $volume, window sizes 30, 60\"\n}\n{\n  \"axis\": \"INVERSION\",\n  \"sketch\": \"1 - TS_PCTCHANGE($close, 10) / TS_PCTCHANGE($open, 10)\",\n  \"uses\": \"$close, $open, window sizes 10\"\n}\n\n{\n  \"hypothesis\": \"Low-volatility stocks exhibit short-term mean-reversion after regime shifts, driven by risk-off behavior and volatility-driven undervaluation.\",\n  \"hypothesis_variants\": [\n    \"High-volatility stocks show long-term momentum during periods of market stress, fueled by panic selling and liquidity crunches.\",\n    \"Short-term reversal in high-volume stocks occurs following unexpected earnings reports, triggered by information asymmetry and retail trading activity.\",\n    \"Low-volatility stocks experience delayed mean reversion after macroeconomic shocks, as institutional investors adjust positions gradually.\"\n  ],\n  \"recipes\": [\n    {\n      \"axis\": \"DEPTH\",\n      \"sketch\": \"TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10) - TS_ARGMIN(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)\",\n      \"uses\": \"$volume, window sizes 20, 50, 10\"\n    },\n    {\n      \"axis\": \"UNUSUAL PAIRING\",\n      \"sketch\": \"TS_COVARIANCE($open, $volume, 30) / TS_COVARIANCE($close, $return, 60)\",\n      \"uses\": \"$open, $volume, $close, $return, window sizes 30, 60\"\n    },\n    {\n      \"axis\": \"TIMESCALE CONTRAST\",\n      \"sketch\": \"TS_PCTCHANGE(TS_SMA($return, 5), 20) - TS_PCTCHANGE(TS_SMA($return, 60), 120)\",\n      \"uses\": \"$return, window sizes 5, 20, 60, 120\"\n    },\n    {\n      \"axis\": \"ODD NORMALISATION\",\n      \"sketch\": \"TS_RANK(TS_PCTCHANGE($close, 20), 50) / TS_ZSCORE(TS_PCTCHANGE($close, 20), 50)\",\n      \"uses\": \"$close, window sizes 20, 50\"\n    },\n    {\n      \"axis\": \"ORDER STATISTICS\",\n      \"sketch\": \"HIGHDAY(TS_PCTCHANGE($return, 10), 30) - LOWDAY(TS_PCTCHANGE($return, 10), 30)\",\n      \"uses\": \"$return, window sizes 10, 30\"\n    },\n    {\n      \"axis\": \"NEGLECTED OPERATOR\",\n      \"sketch\": \"DECAYLINEAR(TS_PCTCHANGE($volume, 20), 10) * DELAY(TS_PCTCHANGE($close, 60), 10)\",\n      \"uses\": \"$volume, $close, window sizes 20, 60, 10\"\n    },\n    {\n      \"axis\": \"SHAPE, NOT LEVEL\",\n      \"sketch\": \"TS_SKEW(TS_PCTCHANGE($open, 10), 30) - TS_KURT(TS_PCTCHANGE($close, 10), 30)\",\n      \"uses\": \"$open, $close, window sizes 10, 30\"\n    },\n    {\n      \"axis\": \"ASYMMETRY\",\n      \"sketch\": \"SUMIF(TS_PCTCHANGE($return, 20) > 0, $volume, 10) / SUMIF(TS_PCTCHANGE($return, 20) < 0, $volume, 10)\",\n      \"uses\": \"$return, $volume, window sizes 20, 10\"\n    },\n    {\n      \"axis\": \"CROSS-FAMILY PRODUCT\",\n      \"sketch\": \"TS_MAD($return, 30) * TS_PCTCHANGE($volume, 60)\",\n      \"uses\": \"$return, $volume, window sizes 30, 60\"\n    },\n    {\n      \"axis\": \"INVERSION\",\n      \"sketch\": \"1 - TS_PCTCHANGE($close, 10) / TS_PCTCHANGE($open, 10)\",\n      \"uses\": \"$close, $open, window sizes 10\"\n    }\n  ]\n}"
+        },
+        {
+          "agent": "construct",
+          "mode": "text_only",
+          "s": 24.41,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 0,
+          "latent_stop": "off",
+          "kv_len": 0,
+          "n_out_tok": 623,
+          "n_in_tok": 3202,
+          "text_len": 2370,
+          "rep_ratio": 0.5,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Low-volatility stocks exhibit short-term mean-reversion after regime shifts, driven by risk-off behavior and volatility-driven undervaluation.\",\n  \"factors\": [\n    {\n      \"name\": \"volatility_reversion_rank\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50) - TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50))\",\n      \"explanation\": \"This factor explores the DEPTH axis by calculating the difference in z-scores of volume changes over different windows, then ranks the result to identify stocks with divergent behavior post-regime shifts.\"\n    },\n    {\n      \"name\": \"covariance_shift_signal\",\n      \"expression\": \"TS_COVARIANCE($open, $volume, 30) / TS_COVARIANCE($close, $return, 60)\",\n      \"explanation\": \"This factor implements the UNUSUAL PAIRING axis by comparing the covariance between open and volume with that of close and return, capturing potential shifts in market dynamics.\"\n    },\n    {\n      \"name\": \"momentum_mean_reversion\",\n      \"expression\": \"TS_PCTCHANGE(TS_SMA($return, 5), 20) - TS_PCTCHANGE(TS_SMA($return, 60), 120)\",\n      \"explanation\": \"This factor follows the TIMESCALE CONTRAST axis by contrasting short-term and long-term momentum signals derived from moving averages, highlighting mean-reversion opportunities.\"\n    },\n    {\n      \"name\": \"volume_rank_normalization\",\n      \"expression\": \"TS_RANK(TS_PCTCHANGE($close, 20), 50) / TS_ZSCORE(TS_PCTCHANGE($close, 20), 50)\",\n      \"explanation\": \"This factor adheres to the ODD NORMALISATION axis by normalizing the rank of close price changes against their z-score, emphasizing relative positioning in volatile regimes.\"\n    },\n    {\n      \"name\": \"high_low_day_difference\",\n      \"expression\": \"HIGHDAY(TS_PCTCHANGE($return, 10), 30) - LOWDAY(TS_PCTCHANGE($return, 10), 30)\",\n      \"explanation\": \"This factor explores the ORDER STATISTICS axis by measuring the time elapsed since the highest and lowest returns over a window, identifying stocks with delayed mean-reversion patterns.\"\n    },\n    {\n      \"name\": \"decay_volume_interaction\",\n      \"expression\": \"DECAYLINEAR(TS_PCTCHANGE($volume, 20), 10) * DELAY(TS_PCTCHANGE($close, 60), 10)\",\n      \"explanation\": \"This factor applies the NEGLECTED OPERATOR axis by combining a decayed volume change with a delayed close price change, capturing the interplay of retail activity and price inertia.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "volatility_reversion_rank",
+          "expr": "RANK(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50) - TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50))",
+          "reason": "execution: the expression gives only 1.0 distinct values per day, so it cannot rank stocks against each other. Let the data reach the VALUE (gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return,5)) : (0)`), not just the condition."
+        },
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "momentum_mean_reversion",
+          "expr": "TS_PCTCHANGE(TS_SMA($return, 5), 20) - TS_PCTCHANGE(TS_SMA($return, 60), 120)",
+          "reason": "arity: `TS_SMA` is not a known function. Use only functions from the allowed list. `TS_SMA` is not a known function. Use only functions from the allowed list."
+        }
+      ],
+      "direction": "d1",
+      "seed": 2,
+      "comm_mode": "summary",
+      "latent_steps": 0,
+      "latent_mode": "raw",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/latent_mas/prompts.yaml"
+    }
+  ]
+}

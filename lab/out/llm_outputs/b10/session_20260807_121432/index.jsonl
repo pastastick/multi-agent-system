@@ -1,0 +1,12 @@
+{"n": 1, "ts": "2026-08-07 12:16:01", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "57f50ca6", "text_len": 46, "duration_s": 2.186, "file": "0001_b10_down_kv_and_text.md", "vars": []}
+{"n": 2, "ts": "2026-08-07 12:16:05", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "b31587b5", "text_len": 46, "duration_s": 1.597, "file": "0002_b10_down_kv_and_text.md", "vars": []}
+{"n": 3, "ts": "2026-08-07 12:16:07", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "07b00e2f", "text_len": 0, "duration_s": 0.3347, "file": "0003_b10_down_kv_and_text.md", "vars": []}
+{"n": 4, "ts": "2026-08-07 12:16:10", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "b2b10884", "text_len": 0, "duration_s": 0.3325, "file": "0004_b10_down_kv_and_text.md", "vars": []}
+{"n": 5, "ts": "2026-08-07 12:16:12", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "afe1607d", "text_len": 0, "duration_s": 0.3331, "file": "0005_b10_down_kv_and_text.md", "vars": []}
+{"n": 6, "ts": "2026-08-07 12:16:15", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "ccc87629", "text_len": 0, "duration_s": 0.3085, "file": "0006_b10_down_kv_and_text.md", "vars": []}
+{"n": 7, "ts": "2026-08-07 12:16:18", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "5a011bb7", "text_len": 37, "duration_s": 1.3086, "file": "0007_b10_down_kv_and_text.md", "vars": []}
+{"n": 8, "ts": "2026-08-07 12:16:22", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "14d11994", "text_len": 46, "duration_s": 1.531, "file": "0008_b10_down_kv_and_text.md", "vars": []}
+{"n": 9, "ts": "2026-08-07 12:16:25", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "88369ef9", "text_len": 9, "duration_s": 0.8538, "file": "0009_b10_down_kv_and_text.md", "vars": []}
+{"n": 10, "ts": "2026-08-07 12:16:27", "role": "b10_down", "mode": "kv_and_text", "step": 0, "conv_id": "9efa5420", "text_len": 0, "duration_s": 0.3124, "file": "0010_b10_down_kv_and_text.md", "vars": []}
+{"n": 11, "ts": "2026-08-07 12:16:28", "role": "b10_down", "mode": "text_only", "step": 0, "conv_id": "7a8cd470", "text_len": 29, "duration_s": 0.8394, "file": "0011_b10_down_text_only.md", "vars": []}
+{"n": 12, "ts": "2026-08-07 12:16:29", "role": "b10_down", "mode": "text_only", "step": 0, "conv_id": "23910b1a", "text_len": 29, "duration_s": 0.8081, "file": "0012_b10_down_text_only.md", "vars": []}
