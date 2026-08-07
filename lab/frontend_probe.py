@@ -48,6 +48,20 @@ OUT = QL / "lab" / "out"
 DIRECTIONS = {
     "d0": "short-term reversal after abnormally high-volume days in small-cap stocks",
     "d1": "mean-reversion in low-volatility stocks during regime transitions",
+    # ── Pasangan BERLAWANAN untuk A10 (sensitivitas arah) ────────────────────
+    # d0/d1 di atas TIDAK bisa dipakai untuk A10: keduanya sama-sama keluarga
+    # mean-reversion, jadi keluaran yang mirip bisa berarti "arahnya memang
+    # mirip", bukan "sistem mengabaikan arah". Pasangan di bawah dibuat
+    # berlawanan pada TIGA sumbu sekaligus — tanda efek (lanjut vs balik),
+    # horizon (panjang vs sangat pendek), dan kolom pembawa sinyal (tren harga
+    # vs rentang intraday) — sehingga sistem yang membaca arahnya TIDAK MUNGKIN
+    # menghasilkan himpunan ekspresi yang sama untuk keduanya.
+    "opp_mom": ("long-horizon price momentum continuation: stocks that trended "
+                "up over 30-60 days keep outperforming, signal carried by "
+                "sustained directional drift in close prices"),
+    "opp_rev": ("very short-horizon contrarian reversal: stocks with the "
+                "largest 1-3 day intraday range expansion snap back and "
+                "underperform, signal carried by high-low range spikes"),
 }
 
 
@@ -278,7 +292,8 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", default="Qwen/Qwen3-8B")
-    ap.add_argument("--comm-mode", default="kv", choices=["kv", "kv_and_text", "text"])
+    ap.add_argument("--comm-mode", default="kv",
+                    choices=["kv", "kv_and_text", "text", "summary"])
     ap.add_argument("--latent-steps", type=int, default=60)
     ap.add_argument("--latent-mode", default="raw",
                     help="raw | gumbel | sample | soft  (G3; via LATENT_STEP_MODE)")

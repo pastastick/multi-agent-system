@@ -40,7 +40,9 @@ Aliran KV (front-end NO-CROP, dipromosikan dari prod — DESIGN drift fix):
 
 from __future__ import annotations
 
+import json
 import os
+import re
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Callable, List, Optional
@@ -60,7 +62,70 @@ QualityGate = Callable[[str], "tuple[bool, str]"]
 Backtester = Callable[[str, str], dict]
 
 # Medium komunikasi antar-agen (lihat FrontEndPipeline.__init__).
-_COMM_MODES = ("text", "kv_and_text", "kv")
+_COMM_MODES = ("text", "kv_and_text", "kv", "summary")
+
+
+# ── B14: ringkasan terstruktur untuk handoff "konteks segar" ────────────────
+# Mode `text` sudah memberi tiap agen konteks bersih, tetapi ia mengoper SELURUH
+# teks agen hulu. Mode `summary` mengoper hanya bagian yang KONTRAKTUAL dari
+# keluaran itu. Ekstraksinya DETERMINISTIK (regex atas kontrak yang sudah
+# ditegakkan prompt) — tanpa panggilan LLM tambahan, jadi ia tak menambah hop,
+# latensi, atau sumber kegagalan baru.
+_HYP_LINE = re.compile(r"^\s*HYPOTHESIS\s*:\s*(.+)$", re.IGNORECASE | re.MULTILINE)
+
+
+def summarize_for_handoff(agent: str, text: str, max_chars: int = 1800) -> str:
+    """Ringkas keluaran satu agen jadi materi handoff terstruktur (B14).
+
+    Kontrak yang dimanfaatkan (sudah ditegakkan prompts.yaml):
+      proposal  — baris terakhir berformat "HYPOTHESIS: ..."
+      innovate  — hal TERAKHIR yang ditulis adalah blok JSON {hypothesis,
+                  hypothesis_variants, recipes}
+
+    FAIL-OPEN: kalau kontraknya tidak terpenuhi, kembalikan teks asli yang
+    dipotong. Ini disengaja — B14 tidak boleh mengubah keandalan menjadi
+    lebih buruk hanya karena satu keluaran tak sesuai format; kalau ia
+    memangkas jadi kosong, lengan ini akan terlihat buruk karena parsing,
+    bukan karena mediumnya.
+    """
+    t = (text or "").strip()
+    if not t:
+        return ""
+    if agent == "proposal":
+        hits = _HYP_LINE.findall(t)
+        if hits:
+            return f"HYPOTHESIS: {hits[-1].strip()}"
+    elif agent in ("innovate", "design"):
+        # Ambil blok JSON TERLUAR yang paling akhir ditulis.
+        # Catatan (ditemukan lab/test_b14_summary.py): mencari dari `{` TERAKHIR
+        # itu salah — `{` terakhir adalah objek resep yang BERSARANG di dalam
+        # blok utama, sehingga yang terekstrak cuma satu resep dan seluruh
+        # hypothesis/variants-nya hilang. Karena itu semua kandidat dievaluasi,
+        # lalu dipilih yang berakhir paling belakang (dan, bila seri, yang mulai
+        # paling awal = paling luar).
+        best: "tuple[int, int, str] | None" = None
+        for start, ch in enumerate(t):
+            if ch != "{":
+                continue
+            depth = 0
+            for i in range(start, len(t)):
+                if t[i] == "{":
+                    depth += 1
+                elif t[i] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        blob = t[start:i + 1]
+                        try:
+                            json.loads(blob)
+                        except ValueError:
+                            break
+                        cand = (i, -start, blob)
+                        if best is None or cand[:2] > best[:2]:
+                            best = cand
+                        break
+        if best is not None:
+            return best[2][:max_chars]
+    return t[:max_chars]
 
 
 def default_quality_gate(expression: str) -> "tuple[bool, str]":
@@ -176,6 +241,11 @@ class FrontEndPipeline:
         #   "kv_and_text" : SEMUA agen generate teks, tetapi handoff tetap via KV-cache.
         #   "text"        : SEMUA agen generate teks, handoff via TEKS (no KV).
         #                   = baseline TEKS terkontrol (prompt sama, beda medium saja).
+        #   "summary"     : B14 — seperti `text` (konteks bersih tiap agen), tetapi
+        #                   yang dioper adalah RINGKASAN TERSTRUKTUR keluaran hulu
+        #                   (baris HYPOTHESIS proposal; blok JSON innovate), bukan
+        #                   seluruh teksnya. Ekstraksi deterministik, tanpa
+        #                   panggilan LLM tambahan — lihat summarize_for_handoff().
         if comm_mode not in _COMM_MODES:
             raise ValueError(f"comm_mode harus salah satu dari {_COMM_MODES}, "
                              f"dapat {comm_mode!r}")
@@ -197,18 +267,29 @@ class FrontEndPipeline:
 
     @property
     def _is_text(self) -> bool:
-        """True bila handoff antar-agen lewat TEKS (no KV)."""
-        return self.comm_mode == "text"
+        """True bila handoff antar-agen lewat TEKS (no KV).
+
+        Mencakup `summary` (B14): mediumnya tetap teks dan konteksnya tetap
+        bersih — yang berbeda hanya APA yang dioper (ringkasan terstruktur,
+        bukan seluruh keluaran). Menyatukannya di sini menjaga agar tak ada
+        cabang alur baru yang harus dijaga tetap sinkron.
+        """
+        return self.comm_mode in ("text", "summary")
+
+    @property
+    def _is_summary(self) -> bool:
+        """True bila materi handoff diringkas dulu (B14)."""
+        return self.comm_mode == "summary"
 
     def _agent_mode(self, native_mode: str) -> str:
         """Mode efektif satu agen di bawah comm_mode global.
 
-          - "text"        : semua agen → text_only.
-          - "kv_and_text" : agen yang aslinya kv_only (proposal/design/guidance)
-                            dinaikkan → kv_and_text (ikut generate teks); agen lain tetap.
-          - "kv"          : pakai mode asli dari spec (default; tak ada override).
+          - "text"/"summary" : semua agen → text_only.
+          - "kv_and_text"    : agen yang aslinya kv_only (proposal/design/guidance)
+                               dinaikkan → kv_and_text (ikut generate teks); lain tetap.
+          - "kv"             : pakai mode asli dari spec (default; tak ada override).
         """
-        if self.comm_mode == "text":
+        if self._is_text:
             return "text_only"
         if self.comm_mode == "kv_and_text":
             return "kv_and_text" if native_mode == "kv_only" else native_mode
@@ -455,9 +536,16 @@ class FrontEndPipeline:
                 lib_in_kv = not is_text
             text = (res.text or "").strip()
             if text:
-                prior_parts.append(text)
+                # B14: di mode `summary` yang dioper ke hilir adalah ringkasan
+                # TERSTRUKTUR keluaran ini, bukan seluruh teksnya. `text` asli
+                # tetap utuh di AgentResult (untuk log & sumbu A7), jadi yang
+                # menyempit hanya materi handoff.
+                handoff_text = (summarize_for_handoff(name, text)
+                                if self._is_summary else text)
+                if handoff_text:
+                    prior_parts.append(handoff_text)
                 if name == "proposal":
-                    hyp_text = text
+                    hyp_text = handoff_text or text
             if is_last:
                 break
 

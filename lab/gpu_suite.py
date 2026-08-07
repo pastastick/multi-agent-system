@@ -152,7 +152,7 @@ def main() -> None:
     ap.add_argument("--directions", default="d0,d1")
     ap.add_argument("--ls", type=int, default=10, help="latent_steps untuk g3/g4/g6/a8")
     ap.add_argument("--comm-mode", dest="comm_mode", default="kv",
-                    choices=["kv", "kv_and_text", "text"],
+                    choices=["kv", "kv_and_text", "text", "summary"],
                     help="medium untuk plan a8")
     ap.add_argument("--skip-existing", action="store_true")
     a = ap.parse_args()

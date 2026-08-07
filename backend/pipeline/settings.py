@@ -113,7 +113,10 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     latent_enabled: bool = True
 
     # Medium komunikasi antar-agen front-end (hanya saat latent_enabled=True).
-    # Salah satu: "text" | "kv_and_text" | "kv". Lihat docstring kelas.
+    # Salah satu: "text" | "kv_and_text" | "kv" | "summary". Lihat docstring kelas.
+    # "summary" (B14) = konteks bersih tiap agen + RINGKASAN TERSTRUKTUR keluaran
+    # hulu (bukan seluruh teksnya, bukan KV). Ekstraksi deterministik di
+    # latent_mas/pipeline.py::summarize_for_handoff — tanpa panggilan LLM ekstra.
     # Diteruskan ke FrontEndPipeline(comm_mode=...) di loop.py.
     comm_mode: str = "kv"
 
