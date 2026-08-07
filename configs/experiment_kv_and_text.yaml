@@ -217,6 +217,12 @@ latent:
   # Untuk mereplikasi rantai lama: "proposal,design,construct".
   chain: "proposal,innovate,construct"
 
+  # Guided decoding di construct, khusus rantai `innovate` (B11/B16).
+  # PERINGATAN: matikan bila `chain` dikembalikan ke rantai lama
+  # (proposal,design,construct) — di sana guided decoding MERUGIKAN
+  # (lolos gate 83% -> 62%, biaya 7x). Lihat lab/HASIL_A8.md §3.4 & §4b.
+  guided_decoding: true
+
   # HuggingFace model name (loaded once, shared by all steps).
   # Required: same model across steps — KV-cache is model-specific.
   model_name: "Qwen/Qwen3-8B"

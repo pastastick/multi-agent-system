@@ -255,6 +255,13 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 _chain_str = getattr(PROP_SETTING, "frontend_chain",
                                      "proposal,innovate,construct")
                 _chain = tuple(c.strip() for c in _chain_str.split(",") if c.strip())
+                # Guided decoding di construct (B11/B16, lihat settings.py).
+                # HARUS di-set SEBELUM FrontEndPipeline() — agen dimuat di
+                # __init__ dan json_schema diresolusi saat itu, bukan per-run.
+                import os as _os
+                _os.environ["LATENTMAS_GUIDED"] = (
+                    "1" if getattr(PROP_SETTING, "guided_decoding", True) else "0"
+                )
                 self._front = FrontEndPipeline(
                     llm_backend, runlog=self._runlog, max_repair_attempts=3,
                     comm_mode=_comm_mode, chain=_chain,

@@ -234,11 +234,18 @@ class LatentAgent:
 def _resolve_json_schema(value: Any) -> Optional[Any]:
     """`json_schema:` di YAML boleh berupa nama terdaftar atau schema penuh.
 
-    DEFAULT MATI. Guided decoding baru menyala bila env `LATENTMAS_GUIDED=1`.
-    Alasannya metodologis, bukan teknis: B11 belum diukur, dan menyalakannya
-    diam-diam akan mengubah objek studi di tengah jalan — laju tak-terparse
-    sebelum/sesudah tak lagi bisa dibandingkan. Nyalakan sebagai LENGAN,
-    promosikan setelah angkanya ada.
+    Dikontrol lewat env `LATENTMAS_GUIDED` (di-set dari `settings.guided_decoding`
+    oleh `pipeline/loop.py` SEBELUM agen dimuat — lihat komentar di sana).
+
+    PROMOSI 2026-08-07 (B16, lab/HASIL_A8.md §4b): diukur sebagai lengan
+    (`innovate_guided`) dan LULUS — pada rantai `innovate` guided decoding di
+    construct menaikkan keandalan 4/6 -> 6/6 tanpa mengorbankan cakupan pustaka
+    maupun mutu sinyal, sehingga default produksi kini AKTIF
+    (`settings.guided_decoding = True`). Ini TERIKAT PADA rantai `innovate`: pada
+    rantai lama (`design`) hasilnya justru negatif (lengan `full_guided`, §3.4).
+    Skrip lab yang belum memakai settings.py (mis. pemanggilan `_load_specs`
+    langsung) tetap default ke env var mentah (mati bila tak di-set) — lihat
+    pemanggil masing-masing.
 
     Nama yang tak dikenal DIABAIKAN dengan peringatan, bukan crash: salah ketik
     di prompts.yaml tak boleh menjatuhkan seluruh run — ia cuma mematikan guided

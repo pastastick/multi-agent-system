@@ -137,6 +137,23 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # replikasi, atau "construct" saja) tetap bisa dipilih tanpa ubah kode.
     frontend_chain: str = "proposal,innovate,construct"
 
+    # ── Guided decoding di construct (B11, dikaitkan ke B16) ─────────────
+    # DEFAULT True KHUSUS UNTUK rantai `innovate` di atas. Emitter pada rantai
+    # itu sempat kolaps 2/6 run ("I understand the instruction." lalu berhenti
+    # — register instruksi-meta dari prompt innovate menular ke construct).
+    # Guided decoding pada construct SAJA menutup celah itu: keandalan 4/6 ->
+    # 6/6, cakupan pustaka 23 -> 22 (tak berkurang), |IC|/run 0,0174 -> 0,0182,
+    # dan tak lagi beda dari lantai acak (p 0,316 -> 0,633). Lihat
+    # lab/HASIL_A8.md §4b.
+    #
+    # PERINGATAN bila `frontend_chain` dikembalikan ke rantai LAMA
+    # (proposal,design,construct): matikan setting ini juga. Diukur pada rantai
+    # itu (lengan `full_guided`), guided decoding MERUGIKAN — lolos gate turun
+    # 83% -> 62%, biaya naik 7x, model menghalusinasikan nama fungsi
+    # (TS_RESIDUAL). Guided decoding bukan perbaikan universal; ia menutup
+    # kegagalan format SPESIFIK pada emitter `innovate`, bukan pada semua rantai.
+    guided_decoding: bool = True
+
     # Model HuggingFace untuk LocalLLMBackend.
     # Di-load sekali, di-share ke semua step dalam satu loop.
     latent_model_name: str = "Qwen/Qwen3-8B"

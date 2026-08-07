@@ -230,7 +230,52 @@ per faktor diterima.
 
 ---
 
-## 5. Ronde berikutnya — didaftarkan SEBELUM dijalankan
+## 4b. Update — ronde `innovate_guided` LULUS, keputusan final ditimpa oleh user
+
+Sesaat setelah §4 ditulis, lengan lanjutan `innovate_guided` (guided decoding
+HANYA di emitter, prompt `innovate` apa adanya) selesai dan **lulus ketiga
+kriteria Tahap 3b yang didaftarkan di §5**:
+
+| kriteria (didaftarkan di muka) | syarat | hasil |
+|---|---|---:|
+| keandalan | ≥ 5/6 | **6/6** |
+| cakupan pustaka | ≥ 20 | **22** |
+| \|IC\| vs lantai acak (Mann-Whitney) | tak beda, p > 0,05 | **p = 0,633** |
+
+| | `full` (rujukan) | `innovate_guided` |
+|---|---:|---:|
+| run produktif | 6/6 | 6/6 |
+| lolos gate | 83% | **88%** |
+| \|IC\|/run | 0,0109 | **0,0182** (+67%) |
+| pustaka DSL | 13 | **22** |
+| fungsi baru | 3 | **7** |
+| klaster sinyal | 20 | 9 |
+| detik/token per faktor | 7,0 / 1095 | 15,8 / **997** |
+| mean \|IC\| vs lantai acak | BEDA, p=0,039 (lebih buruk) | **tak beda, p=0,633** |
+
+Satu sumbu yang turun: klaster sinyal (9 vs 20) — cakupan fungsi lebih luas,
+tetapi sinyalnya belum tentu tersebar merata di ruang sinyal. Dicatat sebagai
+batasan, bukan disembunyikan.
+
+**Sebelum angka ini masuk, user secara eksplisit memutuskan mengganti `design`
+dengan `innovate` — menimpa rekomendasi "tunda satu ronde" di §4.** Keputusan
+itu dihormati dan diterapkan sebagai default sistemik (lihat commit `B16`).
+Kebetulan angka `innovate_guided` yang menyusul memenuhi kriteria yang sudah
+didaftarkan sebelumnya, sehingga keputusan user dan aturan Tahap 3a/3b
+akhirnya bertemu — bukan karena aturan dilonggarkan untuk mencocokkan
+keputusan, melainkan karena datanya memang mendukung.
+
+**Konfigurasi produksi final**: rantai `proposal → innovate → construct`,
+`comm_mode=kv`, dengan **guided decoding aktif khusus di `construct`**
+(`LATENTMAS_GUIDED=1`, schema `latent_construct`). Ini BUKAN B11 sebagai
+default global (§3.4 tetap berlaku — pada rantai `full`, guided decoding
+merugikan) — guided decoding di sini menyasar tepat kegagalan format yang
+diamati pada emitter di rantai `innovate` (§3.3), dan hasilnya positif justru
+pada rantai itu.
+
+---
+
+## 5. Ronde berikutnya — didaftarkan SEBELUM dijalankan (§4b menuntaskan sebagian)
 
 **Hipotesis**: kolaps `innovate` disebabkan register instruksi-meta di prompt
 hulu yang diteruskan lewat KV, bukan oleh mandat inovasinya.

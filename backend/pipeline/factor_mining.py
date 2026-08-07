@@ -73,6 +73,7 @@ _LATENT_YAML_TO_SETTING = {
     "step_mode":             "latent_step_mode",
     "step_temp":             "latent_step_temp",
     "chain":                 "frontend_chain",
+    "guided_decoding":       "guided_decoding",
     "use_realign":           "use_realign",
     "enable_thinking":       "enable_thinking",
     "kv_max_tokens":         "kv_max_tokens",
