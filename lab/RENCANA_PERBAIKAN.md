@@ -6,17 +6,24 @@
 > |---|---|---|
 > | Tahap 0 — bekukan baseline + sumbu A6/A7 | **SELESAI** | A7 uji-3 menemukan **nol** faktor rank-equivalent ke kolom mentah (≥0,99) — kekhawatiran AUDIT §2.5 tidak bereproduksi di korpus front-end |
 > | Tahap 1 — B1 + B2 (+ B8, B9) | **SELESAI** | B8 diverifikasi: KL(perbaikan‖re-rotasi manual) = 0,0 persis. B9 baru dinyalakan SETELAH itu |
-> | Tahap 2 — B11, B12, B15, B4 | **SELESAI** | B15 diuji 17 kasus + regresi 322 ekspresi; B12 kini penyebab tolakan terbanyak; **B11 tidak direkomendasikan sebagai default** (lihat HASIL_A8 §3.4) |
-> | Tahap 3 — A8 (ablasi agen) | **SELESAI** | hasil & keputusan: `lab/HASIL_A8.md`. A9/A10 belum dijalankan |
+> | Tahap 2 — B11, B12, B15, B4 | **SELESAI** | B15 diuji 17 kasus + regresi 322 ekspresi; B12 kini penyebab tolakan terbanyak; B11 NEGATIF pada rantai `design` (HASIL_A8 §3.4) tetapi kemudian dipromosikan default TERIKAT rantai `innovate` (§4b) |
+> | Tahap 3 + 3b — A8 (ablasi agen) + ronde pengganti | **SELESAI, LULUS** | hasil & keputusan: `lab/HASIL_A8.md`. A9/A10 belum dijalankan |
 > | Tahap 4–6 | belum | urutan direvisi di bawah setelah hasil A8 |
 >
-> **Keputusan A8 secara ringkas**: `design` gugur di gerbang 1 (pengaruhnya
-> terhadap IC tidak signifikan, Welch t=0,79). Agen pengganti `innovate` unggul
-> pada mutu sinyal (\|IC\|/run 0,0174 vs 0,0109) dan cakupan pencarian (23 vs 13
-> fungsi DSL, 7 fungsi yang belum pernah dipakai) tetapi **gagal syarat
-> keandalan** (4/6 vs 6/6). Penyebabnya teridentifikasi sebagai kegagalan format,
-> bukan kegagalan ide. `design` DIPERTAHANKAN satu ronde lagi sampai pengganti
-> yang stabil ada, supaya Bab 4 hanya perlu menjelaskan SATU perubahan arsitektur.
+> **Keputusan A8 — final**: `design` gugur di gerbang 1 (pengaruhnya terhadap IC
+> tidak signifikan, Welch t=0,79). Rekomendasi awal alat ("tunda satu ronde")
+> **ditimpa keputusan eksplisit user** (2026-08-07) untuk mengganti `design` →
+> `innovate` sekarang. Ronde lanjutan `innovate_guided` (guided decoding di
+> emitter) kemudian LULUS ketiga kriteria yang sudah didaftarkan di muka
+> (keandalan 6/6, pustaka 22, IC tak beda dari lantai acak p=0,633) — sehingga
+> keputusan user dan aturan yang terdaftar bertemu di titik yang sama.
+>
+> **Konfigurasi produksi sekarang**: rantai `proposal → innovate → construct`
+> (`frontend_chain` di settings.py/YAML) + guided decoding aktif di construct
+> (`guided_decoding: true`, TERIKAT pada rantai ini — lihat peringatan di
+> settings.py bila rantai dikembalikan ke `design`). vs rantai lama: \|IC\|/run
+> +67% (0,0182 vs 0,0109), lolos gate 88% vs 83%, 22 vs 13 fungsi DSL disentuh.
+> Rincian lengkap: `lab/HASIL_A8.md`.
 
 **Dibuat**: 2026-08-07, setelah §8 AUDIT_KRITIS dijalankan di GPU (Qwen3-8B).
 Angka pendukung ada di `lab/HASIL_GPU.md`; dokumen ini hanya soal **apa yang
@@ -400,37 +407,43 @@ klaster sinyal, laju lolos gate, dan biaya A6. Keputusan mengganti `design`
 karena itu digantung pada sumbu-sumbu tersebut, dan |IC| dilaporkan sebagai
 sumbu yang **tidak** membedakan, bila memang begitu hasilnya.
 
-### Tahap 3b — RONDE PENGGANTI `design` (≈1 jam GPU) — didaftarkan sebelum dijalankan
+### Tahap 3b — RONDE PENGGANTI `design` — SELESAI, LULUS
 
-Ini konsekuensi langsung hasil A8, dan mendahului Tahap 4 karena Tahap 4 (§Gerbang
-Tahap 4) mensyaratkan rantai agennya sudah final.
+*Hipotesis yang diuji*: kolaps `innovate` (2 dari 6 run; emitter menjawab "I
+understand the instruction." lalu berhenti) disebabkan register instruksi-meta
+di prompt hulu yang diteruskan lewat KV, bukan oleh mandat inovasinya sendiri.
 
-*Hipotesis*: kolaps `innovate` (2 dari 6 run; emitter menjawab "I understand the
-instruction." lalu berhenti) disebabkan register instruksi-meta di prompt hulu
-yang diteruskan lewat KV — bukan oleh mandat inovasinya. Bukti pendukung:
-`innovate_fid` memakai agen hulu yang SAMA dan mencapai 6/6; yang berbeda hanya
-prompt emitter.
+*Lengan yang dijalankan*: `innovate_guided` (`innovate` apa adanya + guided
+decoding HANYA di emitter). `innovate_lean` (versi prompt dipangkas) tidak jadi
+dijalankan karena lengan guided sudah lulus ketiga kriteria sekaligus.
 
-*Lengan* (satu variabel per lengan):
-1. `innovate_lean` — buang paragraf retoris "WHAT YOU ARE FREE FROM / BOUND BY"
-   dari prompt `innovate`; menu 11 sumbu, larangan idiom jenuh, dan swauji tetap.
-2. `innovate_guided` — `innovate` apa adanya + guided decoding di emitter saja.
-3. `innovate_fid` sebagai rujukan stabil (sudah terukur 6/6).
+*Hasil vs kriteria yang didaftarkan di muka*:
 
-*Kriteria lulus* (ketiganya wajib): keandalan ≥ 5/6 **dan** cakupan pustaka ≥ 20
-**dan** mean |IC| per-ekspresi tidak berbeda dari lantai acak (p > 0,05).
+| kriteria | syarat | hasil |
+|---|---|---:|
+| keandalan | ≥ 5/6 | **6/6** |
+| cakupan pustaka | ≥ 20 | **22** |
+| \|IC\| vs lantai acak (Mann-Whitney) | p > 0,05 | **p = 0,633** |
 
-*Bila lulus*: `design` diganti permanen (B16), dilaporkan sebagai satu perubahan
-arsitektur dengan alasan terukur.
-*Bila tidak*: jalankan B13 (pangkas `design`), dan agen inovasi masuk Bab 5
-sebagai arah lanjutan, bukan komponen sistem.
+**LULUS ketiganya.** `design` diganti `innovate` secara permanen (B16); rantai
+produksi kini `proposal → innovate → construct` dengan guided decoding aktif di
+construct. Detail lengkap & angka pembanding: `lab/HASIL_A8.md` §4b.
+
+*Catatan metodologis*: user memutuskan mengganti `design` SEBELUM angka
+`innovate_guided` ini selesai dihitung — menimpa rekomendasi awal alat ("tunda
+satu ronde"). Keputusan itu dihormati lebih dulu; hasil ronde lanjutan
+kebetulan memenuhi kriteria yang sudah didaftarkan, sehingga tak ada
+pelonggaran aturan yang terjadi di sini.
 
 ### Tahap 4 — matematika laten (≈2 jam GPU)
 **B6** (early-stop) → **B8**+**B9** (anggaran KV yang benar) → baru **B7**
 (ganti persamaan realignment secara permanen).
 *Gerbang*: B7 hanya dikerjakan kalau Tahap 3 menyimpulkan rantai agennya layak
-dipertahankan. Kalau tidak, memperbaiki matematika kanal yang tak dipakai adalah
-pekerjaan sia-sia.
+dipertahankan. **Terpenuhi** — Tahap 3/3b menyimpulkan rantai front-end
+(`proposal→innovate→construct`) layak dipertahankan (mengungguli rujukan lama
+pada mutu sinyal & cakupan pencarian, dan menyamai lantai acak). B8+B9 sudah
+selesai di Tahap 1 (di luar urutan awal, karena keduanya konfigurasi berisiko
+rendah); B6 dan B7 masih menunggu Tahap 4.
 
 ### Tahap 5 — agen yang belum diuji (≈3 jam GPU)
 Baru di sini `mutation`, `crossover`, `feedback` diuji, dengan front-end yang
