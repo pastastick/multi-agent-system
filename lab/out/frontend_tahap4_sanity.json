@@ -29,32 +29,98 @@
         {
           "name": "Volatility Gap",
           "expression": "RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))",
-          "explanation": "Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion"
+          "explanation": "Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.03939286092334897,
+          "icir": -0.3720120488984744,
+          "tstat": -5.799093927479597,
+          "n_days": 243,
+          "coverage": 4372.432098765432,
+          "n_unique": 4369.938271604939,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Residual",
           "expression": "REGRESI($volume, SEQUENCE(20), 20) - $volume",
-          "explanation": "Captures volume deviations from a time trend, highlighting abnormal volume patterns that may signal impending reversals"
+          "explanation": "Captures volume deviations from a time trend, highlighting abnormal volume patterns that may signal impending reversals",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
         },
         {
           "name": "Momentum Shift",
           "expression": "TS_PCTCHANGE(TS_MEAN($return, 5), 1) * TS_ZSCORE($volume, 10)",
-          "explanation": "Weights recent return momentum by volume volatility, emphasizing stocks with divergent price and volume dynamics"
+          "explanation": "Weights recent return momentum by volume volatility, emphasizing stocks with divergent price and volume dynamics",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.003644743922613219,
+          "icir": -0.10784805473970885,
+          "tstat": -1.6811847927598067,
+          "n_days": 243,
+          "coverage": 4364.460905349794,
+          "n_unique": 4353.534979423868,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Asymmetry",
           "expression": "TS_ARGMAX($volume, 10) - TS_ARGMIN($volume, 10)",
-          "explanation": "Identifies stocks where extreme volume occurs at different times within a 10-day window, capturing asymmetric liquidity shifts"
+          "explanation": "Identifies stocks where extreme volume occurs at different times within a 10-day window, capturing asymmetric liquidity shifts",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.015912136796013165,
+          "icir": 0.22275520057801917,
+          "tstat": 3.4724099254619283,
+          "n_days": 243,
+          "coverage": 4372.106995884774,
+          "n_unique": 19.0,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Dispersion",
           "expression": "TS_MAD($volume, 20) / TS_STD($volume, 20)",
-          "explanation": "Normalizes volume variability relative to its standard deviation, highlighting stocks with unusually volatile trading activity"
+          "explanation": "Normalizes volume variability relative to its standard deviation, highlighting stocks with unusually volatile trading activity",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.0011560146171861827,
+          "icir": 0.02417801411040717,
+          "tstat": 0.37689793978808206,
+          "n_days": 243,
+          "coverage": 4328.432098765432,
+          "n_unique": 4326.448559670782,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Lagged Impact",
           "expression": "DELAY(TS_ZSCORE($volume, 10), 1) * TS_PCTCHANGE($return, 1)",
-          "explanation": "Combines lagged volume normalization with recent return changes, capturing delayed market reactions to volume spikes"
+          "explanation": "Combines lagged volume normalization with recent return changes, capturing delayed market reactions to volume spikes",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.00477580142149313,
+          "icir": 0.10458296023595143,
+          "tstat": 1.630287006611611,
+          "n_days": 243,
+          "coverage": 4243.168724279835,
+          "n_unique": 4234.255144032922,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [

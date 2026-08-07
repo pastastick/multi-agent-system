@@ -76,11 +76,21 @@ ls=10, gumbel, `proposal→innovate→construct`, 1 run):
 | `innovate` | kv_only | 10 → **10** | `budget` | 2 469 |
 | `construct` | kv_and_text | 10 → **10** | `budget` | 4 531 |
 
-54 s, **6 ekspresi, 6 lolos gate, tanpa error**. Dua hal terkonfirmasi
+54 s, **6 ekspresi, 6 lolos gate, 0 cacat semantik**; skoring CPU: 5 ber-IC,
+5 hidup, mean \|IC\| = 0,0130, maks \|IC\| = 0,0394. Dua hal terkonfirmasi
 sekaligus: (i) B6/B7 tidak merusak jalur produksi, dan (ii) pembukuan B6
 memang menyala di produksi dan melaporkan `stop=budget` di ketiga agen —
 early-stop tidak pernah memotong, persis seperti yang diramalkan tabel
 mekanisme di atas. Panjang KV construct (4 531) juga cocok dengan A5 (4 624).
+
+Satu ekspresi dari enam tak ber-IC: `REGRESI($volume, SEQUENCE(20), 20) -
+$volume` kena `TimeoutError` pada anggaran 90 s/ekspresi. Ini artefak
+pengukuran yang SUDAH diketahui dan sudah dimitigasi (RENCANA §B16 risiko
+kedua: REGBETA/REGRESI bisa memakan belasan menit per ekspresi, karena itu
+skoring CPU diberi anggaran waktu) — bukan regresi dari B6/B7.
+
+Angka \|IC\| dari SATU run tidak boleh dibandingkan dengan rujukan 6-run di
+HASIL_A8 (\|IC\|/run 0,0182); uji ini menguji **keutuhan jalur**, bukan mutu.
 Berkas: `lab/out/frontend_tahap4_sanity.json`.
 
 ---
