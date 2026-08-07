@@ -66,7 +66,7 @@ def main() -> None:
     )
     import os
     os.environ["LATENT_STEP_MODE"] = a.latent_mode
-    os.environ["LATENT_STEP_TEMP"] = str(a.latent_temp)
+    os.environ["LATENT_STEP_TEMP"] = str(cfg.latent_temp)
 
     OUT.mkdir(parents=True, exist_ok=True)
     backend = build_backend(cfg)

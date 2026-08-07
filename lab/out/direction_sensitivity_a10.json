@@ -1,0 +1,69 @@
+{
+  "tag": "a10",
+  "dirs": [
+    "opp_mom",
+    "opp_rev"
+  ],
+  "within_jaccard": [
+    0.5,
+    1.0,
+    1.0,
+    0.5714285714285714,
+    1.0,
+    1.0
+  ],
+  "across_jaccard": [
+    0.4,
+    0.5714285714285714,
+    1.0,
+    0.5,
+    0.4285714285714286,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "within_corr": [
+    0.4354007957910179,
+    0.19836421007558613
+  ],
+  "across_corr": [
+    0.20167357741459413,
+    0.27998902894374,
+    0.1748728216090362,
+    0.2646904548047121
+  ],
+  "delta_jaccard": -0.10773809523809519,
+  "verdict": "TIDAK terbukti membaca arah (antar \u2248 dalam)",
+  "funcs_per_dir": {
+    "opp_mom": [
+      "DECAYLINEAR",
+      "RANK",
+      "REGRESI",
+      "SEQUENCE",
+      "TS_ARGMAX",
+      "TS_ARGMIN",
+      "TS_CORR",
+      "TS_MEAN",
+      "TS_PCTCHANGE",
+      "TS_QUANTILE",
+      "TS_STD",
+      "TS_ZSCORE"
+    ],
+    "opp_rev": [
+      "DECAYLINEAR",
+      "RANK",
+      "TS_ARGMAX",
+      "TS_ARGMIN",
+      "TS_CORR",
+      "TS_KURT",
+      "TS_MAD",
+      "TS_MEAN",
+      "TS_MEDIAN",
+      "TS_PCTCHANGE",
+      "TS_QUANTILE",
+      "TS_SKEW",
+      "TS_STD",
+      "TS_ZSCORE"
+    ]
+  }
+}

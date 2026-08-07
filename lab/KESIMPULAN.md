@@ -7,7 +7,16 @@
 >
 > Dokumen sumber per tahap: `lab/HASIL_GPU.md` (G1–G7, baseline),
 > `lab/HASIL_A8.md` (ablasi agen), `lab/HASIL_TAHAP4.md` (B6/B7/A9/B10),
-> dan §3–§5 di bawah untuk B5/A10/B14.
+> dan §4–§7 di bawah untuk B5/A10/B14/A11.
+>
+> **Status artefak**: seluruh angka di dokumen ini terverifikasi terhadap
+> `lab/out/*.json` yang di-commit. Satu berkas turunan CPU-only
+> (`lab/out/icseries_b14_summary.parquet` — dipakai HANYA untuk deret IC per
+> hari, bukan untuk tabel §6) belum sempat diregenerasi ulang saat sesi ini
+> dihentikan; `*.parquet` memang gitignored di repo ini. Regenerasi (murni
+> CPU, tanpa GPU): `python lab/frontend_probe.py --score-only --tag
+> b14_summary`. Tidak ada klaim di §6 yang bergantung padanya — tabel B14
+> memakai `lab/analyze_gpu.py`, yang bekerja langsung dari `frontend_*.json`.
 
 ---
 
@@ -36,8 +45,12 @@ kelas kebocoran baru ditambal (B15) plus gate eksekusi (B12). Lebih penting
 lagi, tiga klaim mekanisme yang selama ini dipegang ternyata **salah atau tak
 berlaku**, dan sekarang terukur — lihat §2.
 
-**Mode mana yang optimal?** Lihat §5. Jawaban singkatnya: **tergantung sumbu,
-dan itu sendiri temuannya** — tidak ada mode yang menang di semua sumbu.
+**Mode mana yang optimal?** Lihat §6. Jawaban singkatnya: **`kv` — dan bukan
+"tergantung sumbu".** Pada konfigurasi produksi sekarang, `kv` menang atau
+menyamai `summary` dan `text` di SETIAP sumbu yang diukur (mutu sinyal, laju
+lolos gate, biaya waktu, biaya token, cakupan pustaka). Ini berbeda dari
+temuan lama (G4): pasca-B16/B11, `kv` tidak lagi harus dipertukarkan antara
+keandalan dan mutu — ia menang keduanya sekaligus.
 
 ---
 
@@ -94,7 +107,7 @@ Hanya butir di tabel ini yang mengubah perilaku sistem yang berjalan. Selebihnya
 | **B6** | early-stop rollout laten | `client.py`, `settings.py`, `configs/*` | **nol-efek di produksi** (0/9 menyala pada `gumbel`); hemat 47% bila `step_mode` kembali ke `raw` |
 | **B7** | default persamaan laten `raw` → `gumbel` permanen | `client.py` | menutup celah "default kode ≠ default produksi" |
 | **B5** | prompt `proposal`: rantai usang diperbaiki + dipangkas | `prompts.yaml` | §4 |
-| **B14** | medium baru `comm_mode="summary"` | `pipeline.py`, `settings.py` | §5 — **tersedia, bukan default** |
+| **B14** | medium baru `comm_mode="summary"` | `pipeline.py`, `settings.py` | §6 — **tersedia, bukan default; `kv` tetap menang** |
 
 **Yang TIDAK diterapkan, dengan alasan**: B3 (`prompts_v1.yaml` ada tetapi
 produksi tetap `prompts.yaml`), B13 (digantikan B16 — slot diisi, bukan
@@ -152,30 +165,168 @@ benar-benar bisa dipertahankan adalah **koreksi drift**, bukan penghematannya.
 
 ## 5. A10 — apakah sistem membaca arah risetnya?
 
-*(diisi setelah run selesai — lihat `lab/out/direction_sensitivity_a10.json`)*
+**Desain**: dua arah yang benar-benar berlawanan pada tiga sumbu sekaligus —
+tanda efek (`opp_mom`: lanjutkan tren 30-60 hari) vs (`opp_rev`: balik tajam
+1-3 hari) — dijalankan 3 seed/arah, `comm_mode=kv`, ls=10. Dibandingkan jarak
+**ANTAR**-arah dengan jarak **DALAM**-arah (seed berbeda, arah sama) sebagai
+kontrol derau; tanpa kontrol ini angka kemiripan tak bisa ditafsirkan.
+
+| ukuran | DALAM-arah (kontrol derau) | ANTAR-arah |
+|---|---:|---:|
+| jarak Jaccard fungsi (↑ = lebih beda) | 0,845 (n=6) | **0,738** (n=8) |
+| \|Spearman\| deret IC (↓ = lebih beda) | 0,317 (n=2) | 0,230 (n=4) |
+
+**VONIS: tidak terbukti membaca arah.** Jarak Jaccard ANTAR-arah (0,738) justru
+**lebih rendah** (lebih mirip) daripada jarak DALAM-arah (0,845) — dua run
+dengan arah yang **sama** tapi seed berbeda menghasilkan himpunan fungsi yang
+LEBIH berbeda daripada dua run dengan arah **berlawanan**. Selisihnya (−0,108)
+berada jauh di dalam sebaran derau dalam-arah (0,220). Korelasi deret IC
+bergerak searah dugaan (antar-arah 0,230 < dalam-arah 0,317, sesuai harapan
+kalau arah membedakan sinyal) tetapi n=2 vs n=4 terlalu kecil untuk berarti
+apa pun sendirian.
+
+**Satu sinyal kualitatif yang tetap layak dicatat.** Fungsi yang HANYA muncul
+di satu arah cukup masuk akal secara domain:
+
+| arah | fungsi khas |
+|---|---|
+| `opp_mom` (momentum panjang) | `REGRESI`, `SEQUENCE` — cocok untuk menangkap tren |
+| `opp_rev` (balik pendek) | `TS_KURT`, `TS_MAD`, `TS_MEDIAN`, `TS_SKEW` — statistik sebaran/ketahanan, cocok untuk range spike |
+
+Jadi vokabuler fungsi **bergeser ke arah yang masuk akal**, tetapi pergeseran
+itu tidak cukup besar untuk membuat KESELURUHAN himpunan fungsi satu run lebih
+mirip ke arah yang sama daripada ke seed yang sama. Bacaan paling jujur: sistem
+ini **membaca arah SEBAGIAN** — cukup untuk memiringkan pilihan fungsi individual,
+tidak cukup untuk mendominasi varian seed-ke-seed pada n sekecil ini.
+
+*Batas berlaku*: n=3 seed/arah adalah eksperimen kecil untuk klaim negatif yang
+kuat. "Tidak terbukti" bukan "terbukti tidak" — ada kemungkinan efeknya nyata
+tapi lebih kecil dari derau pada n ini. Berkas:
+`lab/out/direction_sensitivity_a10.json`.
 
 ---
 
 ## 6. B14 — medium `summary`: mana medium yang optimal?
 
-*(diisi setelah run selesai)*
+**Desain.** `comm_mode="summary"` = konteks bersih tiap agen (seperti `text`)
+tetapi materi handoff diringkas DETERMINISTIK ke kontrak yang sudah ditegakkan
+prompt (baris `HYPOTHESIS:` dari proposal; blok JSON dari innovate) — tanpa
+panggilan LLM tambahan. Dijalankan 6 run (2 arah × 3 seed) untuk `summary` dan
+`text`, rantai `innovate` + guided decoding aktif (sama seperti produksi).
+Dibandingkan dengan `kv` produksi memakai rujukan A8 `innovate_guided`
+(HASIL_A8 §4b) — konfigurasi identik (chain, guided decoding, seed & arah)
+kecuali medium.
+
+| ukuran | `kv` (produksi) | `summary` (B14) | `text` |
+|---|---:|---:|---:|
+| run produktif | 6/6 | 6/6 | 6/6 |
+| lolos gate | **88%** | 69% | 44% |
+| \|IC\|/run | **0,0182** | 0,0127 | 0,0180 |
+| pustaka DSL | **22** | 20 | 20 |
+| detik/faktor diterima | **15,8** | 24,3 | 32,8 |
+| token/faktor diterima | **997** | 1 899 | 2 602 |
+| cacat semantik | 0% | 11% | 0% |
+
+**`kv` menang atau menyamai di SETIAP sumbu.** Ini jawaban langsung untuk
+"mode mana yang optimal" pada konfigurasi sekarang (Qwen3-8B, chain `innovate`,
+guided decoding aktif): **`kv` adalah medium terbaik di sistem ini sekarang**,
+bukan cuma tercepat.
+
+**`summary` vs `text` — nilai B14 yang sebenarnya.** `summary` mengalahkan
+`text` pada TIGA dari empat sumbu: efisiensi (24,3 vs 32,8 detik/faktor;
+1 899 vs 2 602 token/faktor — sekitar **27% lebih hemat** di kedua sumbu) DAN
+lolos gate (69% vs 44%), tanpa kehilangan run produktif. Satu-satunya sumbu
+yang lebih baik pada `text` adalah cacat semantik (0% vs 11% pada `summary`)
+— indikasi bahwa meringkas keluaran hulu kadang membuang nuansa yang
+dibutuhkan hilir untuk tetap presisi semantik, meski efeknya kecil (4 dari 36
+ekspresi). Welch t pada \|IC\|/run: `summary` vs `text` t=−1,17 (p tak
+signifikan pada n=6) — **tak ada beda mutu sinyal yang bisa diklaim** antara
+keduanya pada n ini; `summary` menang pada keandalan-format dan biaya, bukan
+pada mutu.
+
+**Keputusan: `summary` DIIMPLEMENTASI dan diukur, TIDAK dijadikan default.**
+Tiga alasan: (i) `kv` tetap unggul pada sumbu yang paling penting (mutu sinyal
+DAN biaya sekaligus) — tak ada alasan berpindah dari medium yang menang; (ii)
+motivasi asli B14 ("`text` menang di keandalan, `kv` menang di mutu" — G4 lama)
+sudah tidak berlaku pasca-B16/B11: `kv` sekarang menang di keduanya sekaligus;
+(iii) `summary` tetap bernilai sebagai **medium cadangan** — kalau backbone
+atau chain berubah lagi dan `kv` kembali menunjukkan pola G2 (kolaps pada
+konfigurasi tertentu), `summary` adalah titik tengah yang sudah siap pakai
+antara keandalan `text` dan efisiensi `kv`, tanpa perlu menulis medium baru
+dari nol.
+
+*Kejujuran yang harus ikut*: G4 lama (HASIL_GPU §4) memperingatkan bahwa
+**peringkat medium berubah setiap kali backbone, metrik, atau `latent_steps`
+berubah**. Tabel di atas berlaku untuk (Qwen3-8B, chain `innovate`, guided
+decoding ON, ls=10). Ia BUKAN klaim umum "KV selalu menang" — ia klaim
+"KV menang PADA KONFIGURASI PRODUKSI SEKARANG", dan itu klaim yang lebih
+sempit tapi jujur.
 
 ---
 
-## 7. Batas berlaku SELURUH kesimpulan ini
+## 7. A11 — stabilitas jangka panjang: VRAM puncak, KV/hop, kebocoran
 
-Empat batasan yang harus ikut disebut di sidang, karena tanpanya angka-angka di
+**Desain.** 6 trajectory berturut-turut dalam SATU proses (`comm_mode=kv`,
+ls=10), karena kebocoran hanya terlihat lintas-run. VRAM puncak diukur per
+run (`reset_peak_memory_stats`); residu diukur SETELAH `gc.collect()` +
+`torch.cuda.empty_cache()` — apa yang tersisa itulah yang benar-benar tak
+terlepas.
+
+| ukuran | hasil |
+|---|---|
+| VRAM puncak di atas bobot | 2 154,7 MB rata-rata [1 483–2 953] |
+| residu setelah run (vs sebelum run pertama) | +640,6 MB rata-rata [+630,6 – +657,7] |
+| kemiringan residu lintas-run | **+5,71 MB/run** |
+
+**KV kumulatif per hop** (rata-rata 6 run): `proposal` 811,5 tok →
+`innovate` 2 390,5 tok (+1 579) → `construct` 4 725,6 tok (+2 335). Angka ini
+**cocok persis** dengan pengukuran independen B5 (811,5 dan 2 390,5 — sampai
+satu desimal) dan konsisten dengan A5 (KV construct produksi 4 624 tok) —
+saling menguatkan bahwa metodologi pengukuran token/KV di seluruh sesi ini
+konsisten satu sama lain.
+
+**Kebocoran: sinyal lemah, bukan tanpa sinyal.** Residu per run: 630,6 →
+631,3 → 631,3 → 639,4 → 657,7 → 653,1 MB. Ini **bukan** garis lurus naik —
+run terakhir justru turun dari run sebelumnya — tetapi juga bukan derau murni
+di sekitar konstanta: run 4-5 (657,7 dan 653,1 MB) jelas di atas run 0-2
+(~631 MB). Pertumbuhan total ≈ **27 MB dalam 6 run** (≈4,3%). Pada 46 GB VRAM
+ini jauh dari mengkhawatirkan dalam horizon pendek, tetapi **kemiringan
+positif pada n=6 tidak bisa diabaikan begitu saja** sebagai temuan jangka
+panjang — 100 run dengan laju yang sama (dengan asumsi linear, yang TIDAK
+terbukti dari 6 titik ini) akan menambah ±450 MB.
+
+**Sumber residu yang paling mungkin, bukan tafsiran tunggal**: `LatentRealigner`
+menyimpan matriks `M` dan `target_norm` dalam `_cache` yang di-keying per
+`(id(model), device)` — ini **cache yang disengaja**, bukan kebocoran, dan
+menjelaskan sebagian besar dari 630 MB dasar (bertahan sejak run pertama,
+tidak bertambah). Yang bertambah pelan-pelan (630→657 MB) kemungkinan
+fragmentasi CUDA caching allocator atau buffer log (`TensorConvManager`) —
+**belum diisolasi mana yang mana**; itu pekerjaan lanjutan, bukan kesimpulan
+sesi ini.
+
+**Peringatan n**: 6 run adalah jumlah yang sangat kecil untuk klaim kebocoran.
+Verdict "ADA indikasi" di skrip memakai ambang mekanis (>5 MB/run) yang belum
+divalidasi terhadap horizon panjang sungguhan — ini **sinyal untuk diselidiki**,
+bukan kesimpulan yang bisa dipertahankan sebagai "sistem ini bocor". Berkas:
+`lab/out/stability_a11.json`.
+
+---
+
+## 8. Batas berlaku SELURUH kesimpulan ini
+
+Lima batasan yang harus ikut disebut di sidang, karena tanpanya angka-angka di
 atas terdengar lebih kuat daripada yang sebenarnya.
 
-1. **n = 6 run per lengan.** Terlalu kecil untuk uji beda pada |IC|. Sumbu yang
-   benar-benar bisa diputuskan pada n ini adalah yang variansnya rendah dan
-   efeknya besar: cakupan pustaka, laju lolos gate, laju run produktif, dan
-   biaya per faktor. Setiap kali |IC| dipakai untuk memutuskan, itu disebutkan
-   sebagai sumbu yang **tidak** membedakan.
+1. **n = 6 run per lengan.** Terlalu kecil untuk uji beda pada |IC| ATAU pada
+   kebocoran memori. Sumbu yang benar-benar bisa diputuskan pada n ini adalah
+   yang variansnya rendah dan efeknya besar: cakupan pustaka, laju lolos gate,
+   laju run produktif, dan biaya per faktor. Setiap kali |IC| dipakai untuk
+   memutuskan, itu disebutkan sebagai sumbu yang **tidak** membedakan.
 2. **Satu backbone, satu pasar, satu periode.** Semua pada Qwen3-8B dan
    CSI300. HASIL_GPU §4 sudah menunjukkan peringkat medium **berbalik** ketika
    backbone / metrik / `latent_steps` berubah — jadi peringkat apa pun di sini
-   berlaku untuk konfigurasi ini, bukan untuk "KV vs teks" secara umum.
+   (termasuk "`kv` menang", §6) berlaku untuk konfigurasi ini, bukan untuk
+   "KV vs teks" secara umum.
 3. **Tahap 5 belum tersentuh.** `mutation`, `crossover`, `feedback`, dan seluruh
    siklus evolusi belum pernah diuji. Yang berlaku untuk front-end adalah
    **batas atas** bagi sistem evolusioner (karena evolusi memanggil ulang
@@ -185,5 +336,12 @@ atas terdengar lebih kuat daripada yang sebenarnya.
    |IC| ekspresi acak (0,0170) secara signifikan. Semua klaim "membaik" di
    dokumen ini adalah membaik **relatif terhadap konfigurasi sebelumnya**, bukan
    membaik terhadap pencarian tanpa teori.
+5. **A10 dan A11 keduanya berakhir pada verdict "sinyal lemah, n terlalu kecil
+   untuk klaim kuat".** Ini pola yang konsisten dan harus dilaporkan sebagai
+   pola, bukan disembunyikan sebagai dua kegagalan terpisah: n=6 adalah
+   anggaran GPU yang wajar untuk *keputusan arsitektur* (A8, B5) tetapi bukan
+   untuk *deteksi statistik halus* (sensitivitas arah, kebocoran memori). Kalau
+   sumbu itu perlu diputuskan tegas, anggarannya harus dinaikkan ke n=20-30,
+   bukan diberi kesimpulan tegas dari n=6.
 
 ---

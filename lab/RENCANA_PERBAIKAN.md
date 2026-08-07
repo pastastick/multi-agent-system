@@ -12,7 +12,7 @@
 > | Tahap 4 — B6 + B7 | **SELESAI** | `lab/HASIL_TAHAP4.md`. B6 nol-efek di produksi (menyala 9/9 di `raw`, 0/9 di `gumbel`) — nilainya sebagai pengaman salah-setel. B7: default kode `raw`→`gumbel` permanen; ridge M terbukti praktis ortogonal (cos 0,011) dan `use_realign` kini **inert** |
 > | A9 kapasitas kanal laten | **SELESAI** (alat baru) | `lab/channel_capacity.py`. Kanal laten murni memulihkan 19–35% muatan pada ls=10, 76–84% pada ls=40; mode `kv` lossless karena **token prompt** yang ikut diwariskan, bukan karena vektor latennya |
 > | Tahap 6 (B10) | **DITELITI + DIPROTOTIPEKAN**, tidak diadopsi | `lab/latent_bottleneck.py` + `HASIL_TAHAP4.md` §4 |
-> | B5, B14, A10, A11 | **SELESAI** | `lab/KESIMPULAN.md` §4–§7. **Seluruh RENCANA_PERBAIKAN kecuali Tahap 5 kini beres** |
+> | B5, B14, A10, A11 | **SELESAI** | `lab/KESIMPULAN.md` §4–§8 (§8 = batas berlaku gabungan). **Seluruh RENCANA_PERBAIKAN kecuali Tahap 5 kini beres** |
 >
 > **Keputusan A8 — final**: `design` gugur di gerbang 1 (pengaruhnya terhadap IC
 > tidak signifikan, Welch t=0,79). Rekomendasi awal alat ("tunda satu ronde")

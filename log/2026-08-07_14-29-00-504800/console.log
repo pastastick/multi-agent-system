@@ -196,3 +196,68 @@
                         # Base Features (ER): 2
                         
 2026-08-07 14:38:08.729 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ARGMAX(TS_ZSCORE(TS_PCTCHANGE($volume, 20), 50), 10)', 'TS_COVARIANCE($open, $volume, 30) / TS_STD($return, 60)', 'TS_PCTCHANGE($close, 5) - TS_PCTCHANGE($close, 60)', 'RANK(TS_ARGMAX($return, 20)) / TS_MAD($volume, 30)', 'TS_ARGMIN(TS_PCTCHANGE($close, 10), 20) - TS_ARGMAX(TS_PCTCHANGE($close, 10), 20)', 'DECAYLINEAR(TS_PCTCHANGE($volume, 15), 20) * LOG(TS_STD($return, 30))']
+2026-08-07 14:41:16.968 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_PCTCHANGE($close, 5) - TS_PCTCHANGE($close, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 50
+                        # Base Features (ER): 1
+                        
+2026-08-07 14:41:17.265 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_MAD($volume, 10) / TS_MAD($volume, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 41
+                        # Base Features (ER): 1
+                        
+2026-08-07 14:41:21.783 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: REGRESI($return, $volume, 10) - REGRESI($return, $volume, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 61
+                        # Base Features (ER): 2
+                        
+2026-08-07 14:41:42.423 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_RANK($volume, 20) / TS_STD($volume, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 42
+                        # Base Features (ER): 1
+                        
+2026-08-07 14:41:42.758 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3'] with expression: ['TS_PCTCHANGE($close, 5) - TS_PCTCHANGE($close, 60)', 'TS_MAD($volume, 10) / TS_MAD($volume, 60)', 'REGRESI($return, $volume, 10) - REGRESI($return, $volume, 60)', 'TS_RANK($volume, 20) / TS_STD($volume, 60)']
+2026-08-07 14:43:15.212 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: RANK(TS_PCTCHANGE($close, 5) - TS_PCTCHANGE($close, 30)) / TS_STD($volume, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 3
+                        # Unique Vars: 2
+                        Symbol Length (SL): 78
+                        # Base Features (ER): 2
+                        
+2026-08-07 14:43:15.638 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_COVARIANCE($volume, $return, 20) / TS_MEDIAN($volume, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 2
+                        Symbol Length (SL): 60
+                        # Base Features (ER): 2
+                        
+2026-08-07 14:43:16.244 | INFO     | factors.regulator.factor_regulator:evaluate:631 - 
+                        Evaluated expr: TS_ARGMAX($volume, 60) - TS_ARGMIN($volume, 60)
+                        Duplicated Size: 0
+                        Duplicated Subtree: None
+                        # Free Args: 2
+                        # Unique Vars: 1
+                        Symbol Length (SL): 47
+                        # Base Features (ER): 1
+                        
+2026-08-07 14:43:16.581 | INFO     | factors.regulator.factor_regulator:add_factor:736 - Added new factor: ['latent_0', 'latent_1', 'latent_2'] with expression: ['RANK(TS_PCTCHANGE($close, 5) - TS_PCTCHANGE($close, 30)) / TS_STD($volume, 60)', 'TS_COVARIANCE($volume, $return, 20) / TS_MEDIAN($volume, 60)', 'TS_ARGMAX($volume, 60) - TS_ARGMIN($volume, 60)']
