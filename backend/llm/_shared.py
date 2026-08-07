@@ -122,7 +122,7 @@ def kv_size_bytes(kv: KVCache) -> int:
     return total
 
 
-def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
+def kv_truncate(kv: KVCache, max_tokens: int, model=None) -> KVCache:
     """
     Truncate KV-cache to keep only the last `max_tokens` tokens.
 
@@ -132,6 +132,20 @@ def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
     transformers 5.x DynamicCache: dimodifikasi in-place (layer tensors di-slice)
     dan dikembalikan sebagai DynamicCache agar bisa langsung dipakai sebagai
     past_key_values di model.generate() / model.forward() berikutnya.
+
+    PEMBUKUAN RoPE (B8 — HASIL_GPU §8.2). Memotong ekor cache menyisakan token
+    yang KEY-nya masih membawa fase RoPE dari posisi ASLI [N−k, N), sementara
+    panjang fisik cache menyusut jadi k. Token berikutnya diberi posisi mulai
+    dari k oleh HF → seluruh konteks lama tampak "bergeser" sejauh N−k posisi.
+    Ini persis kelas galat yang sudah ditangani `kv_knn_filter` lewat
+    `_rerotate_keys_contiguous`, tetapi jalur truncate tak pernah memakainya.
+
+    Karena itu `model` diminta di sini: dengan model tersedia, key di-re-rotasi
+    dari posisi asli ke posisi kontigu [0, k) sehingga cache tampak persis
+    seperti cache normal panjang k. Tanpa `model` fungsi ini FAIL-OPEN ke
+    perilaku lama (slice saja) supaya pemanggil lama tidak pecah — tetapi
+    jalur produksi WAJIB mengoper model, kalau tidak menyalakan anggaran KV
+    (B9) hanya menukar satu bug dengan bug lain.
     """
     seq_len = _past_length(kv)
     if seq_len <= max_tokens:
@@ -141,12 +155,23 @@ def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
             if getattr(layer, 'is_initialized', False) and layer.keys is not None:
                 layer.keys = layer.keys[..., -max_tokens:, :]
                 layer.values = layer.values[..., -max_tokens:, :]
-        return kv
-    # Legacy tuple format
-    return tuple(
-        tuple(t[..., -max_tokens:, :] for t in layer if t is not None)
-        for layer in kv
-    )
+        out = kv
+    else:
+        # Legacy tuple format
+        out = tuple(
+            tuple(t[..., -max_tokens:, :] for t in layer if t is not None)
+            for layer in kv
+        )
+    if model is None:
+        return out
+    pairs = _kv_pairs(out)
+    if not pairs:
+        return out
+    batch = pairs[0][0].shape[0]
+    device = pairs[0][0].device
+    orig = torch.arange(seq_len - max_tokens, seq_len, device=device)
+    orig = orig.unsqueeze(0).expand(batch, -1)
+    return _rerotate_keys_contiguous(out, orig, model)
 
 
 # ─────────────────────────────────────────────────────────────────────────────

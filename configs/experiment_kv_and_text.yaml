@@ -219,7 +219,20 @@ latent:
   # Number of "silent thinking" passes per LLM call. Model injects
   # virtual tokens into KV-cache without generating text, then
   # generates output. Higher = deeper reasoning, slower.
-  steps: 60
+  # B1 (G2, Qwen3-8B): pada 60 mode `kv` menghasilkan 0 ekspresi dalam 6 run;
+  # pada 5/10 menghasilkan 6/6 tanpa penurunan |IC|. Titik tetap rollout laten
+  # tercapai di langkah 12-34 (G1), jadi langkah di atas itu hanya menyalin
+  # vektor yang sama dan mendesak konteks. Lihat lab/HASIL_GPU.md §2 & §7.4.
+  steps: 10
+
+  # Mode langkah laten (B2, dari G3). "raw" = perilaku lama (di luar manifold
+  # embedding, rollout deterministik). "gumbel" = kombinasi konveks embedding
+  # NYATA + noise Gumbel → selalu in-distribution, T jadi knob entropi.
+  # Terukur pada ls=10, 18 run: lolos gate 54% -> 91%, faktor hidup 13 -> 27,
+  # klaster sinyal 6 -> 9. PERINGATAN: kekuatan sinyal TIDAK membaik
+  # (t = -0,27) — ini perbaikan KEANDALAN, jangan diklaim sebagai perbaikan mutu.
+  step_mode: "gumbel"
+  step_temp: 0.7
 
   # Per-step override (null = use global `steps` above).
   # Semua agent disamakan ke 10 mengikuti hasil /try latent_steps_sweep.

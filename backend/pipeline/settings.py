@@ -127,7 +127,11 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # ke KV-cache tanpa generate text) per LLM call.
     # Lebih tinggi = reasoning lebih dalam, tapi lebih lambat.
     # Referensi: LatentMASMethod.latent_steps di core/latent/latent_method.py
-    latent_steps: int = 60                      # default global untuk _CoreEngine
+    # B1 (dari G2, Qwen3-8B): pada ls=60 mode `kv` menghasilkan 0 ekspresi dalam
+    # 6 run, sementara ls=5/10 menghasilkan 6/6 — tanpa penurunan |IC|. Nilai 60
+    # yang lama adalah penyebab langsung kolaps produksi, bukan setelan "reasoning
+    # lebih dalam". Lihat lab/HASIL_GPU.md §2.
+    latent_steps: int = 10                      # default global untuk _CoreEngine
 
     # Per-step override (None = pakai latent_steps global).
     # Dinaikkan 10 → 40: dengan reasoning-via-latent sebagai jalur utama (output
@@ -137,6 +141,17 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     latent_steps_construct: Optional[int] = None
     latent_steps_coder: Optional[int] = None
     latent_steps_feedback: Optional[int] = None
+
+    # ── Mode langkah laten (B2, dari G3) ─────────────────────────────────
+    # "raw" = perilaku lama (realign(h) dinormalkan): vektornya di LUAR manifold
+    # embedding dan rollout-nya deterministik → entropi jalur laten nol.
+    # "gumbel" memakai kombinasi konveks embedding NYATA + noise Gumbel, jadi
+    # vektor laten selalu in-distribution dan T menjadi knob entropi.
+    # Terukur G3 (Qwen3-8B, ls=10, 18 run): lolos gate 54% → 91%, faktor hidup
+    # 13 → 27, klaster sinyal 6 → 9. PERINGATAN: kekuatan sinyal TIDAK membaik
+    # (t = −0,27) — ini perbaikan KEANDALAN PRODUKSI, bukan perbaikan mutu.
+    latent_step_mode: str = "gumbel"
+    latent_step_temp: float = 0.7
 
     # ── Latent realignment ───────────────────────────────────────────────
     # Proyeksi hidden state sebelum inject sebagai virtual token.
@@ -263,6 +278,14 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
             knn_percentage=self.knn_percentage,
             knn_min_keep=self.knn_min_keep,
             knn_strategy=self.knn_strategy,
+            latent_step_mode=self.latent_step_mode,
+            latent_step_temp=self.latent_step_temp,
+            # B9: `kv_max_tokens` selama ini kode mati — nilainya tak pernah
+            # sampai ke backend, dan `knn_enabled` otomatis mati saat
+            # latent_steps>0, sehingga TIDAK ADA kendali ukuran KV sama sekali
+            # (HASIL_GPU §8.1). Prasyaratnya (B8, pembukuan RoPE di kv_truncate)
+            # sudah dipasang di llm/_shared.py.
+            kv_max_seq_len=self.kv_max_tokens,
             output_log_dir=self.output_log_dir,
             conv_dir=str(_run_dir / "conv_logs"),
             kv_dir=str(_run_dir / "kv_store"),

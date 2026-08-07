@@ -221,6 +221,15 @@ latent:
   # generates output. Higher = deeper reasoning, slower.
   steps: 10
 
+  # Mode langkah laten (B2, dari G3). "raw" = perilaku lama (di luar manifold
+  # embedding, rollout deterministik). "gumbel" = kombinasi konveks embedding
+  # NYATA + noise Gumbel → selalu in-distribution, T jadi knob entropi.
+  # Terukur pada ls=10, 18 run: lolos gate 54% -> 91%, faktor hidup 13 -> 27,
+  # klaster sinyal 6 -> 9. PERINGATAN: kekuatan sinyal TIDAK membaik
+  # (t = -0,27) — ini perbaikan KEANDALAN, jangan diklaim sebagai perbaikan mutu.
+  step_mode: "gumbel"
+  step_temp: 0.7
+
   # Per-step override (null = use global `steps` above).
   # Semua agent disamakan ke 10 mengikuti hasil /try latent_steps_sweep.
   steps_propose: null

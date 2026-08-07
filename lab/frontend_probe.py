@@ -78,9 +78,18 @@ def repetition_ratio(text: str) -> float:
     return 1.0 - len(set(w)) / len(w)
 
 
-def instrument(pipeline, collector):
+def instrument(pipeline, collector, keep_text: int = 6000):
     """Bungkus tiap LatentAgent.run agar per-agen tercatat (durasi, panjang KV,
-    panjang teks, rasio repetisi) tanpa mengubah kode produksi."""
+    panjang teks, rasio repetisi) tanpa mengubah kode produksi.
+
+    `n_in_tok` dicatat karena sumbu A6 (biaya per faktor diterima) butuh TOKEN
+    DIPROSES, bukan hanya token yang di-emit; tanpa ini biaya lengan `text`
+    (prompt panjang, KV nol) tak bisa dibandingkan adil dengan lengan `kv`.
+
+    `text` (dipotong `keep_text` char) dicatat karena sumbu A7 butuh membaca
+    keluaran ASLI agen hulu: kepatuhan palette hanya bisa dihitung bila palette
+    design tersimpan. Nol biaya GPU, ~5 KB per run.
+    """
     trace: list[dict] = []
     for name, agent in pipeline.agents.items():
         orig = agent.run
@@ -93,9 +102,11 @@ def instrument(pipeline, collector):
                 "s": round(time.time() - t0, 2),
                 "latent_s": res.latent_s, "gen_s": res.gen_s,
                 "kv_len": res.kv_seq_len, "n_out_tok": res.n_output_tokens,
+                "n_in_tok": res.n_input_tokens,
                 "text_len": len(res.text or ""),
                 "rep_ratio": round(repetition_ratio(res.text or ""), 3),
                 "parsed_ok": res.parsed is not None,
+                "text": (res.text or "")[:keep_text],
             })
             return res
 

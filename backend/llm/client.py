@@ -656,6 +656,8 @@ class _CoreEngine:
         knn_percentage : float = 0.8,
         knn_min_keep   : int   = 5,
         knn_strategy   : str   = "top",
+        latent_step_mode: Optional[str]   = None,
+        latent_step_temp: Optional[float] = None,
     ) -> None:
         self.model_name      = model_name
         self.device          = device
@@ -713,8 +715,21 @@ class _CoreEngine:
         #   sample  z = W_in[i], i ~ softmax(W_out h / T)      (batas diskretnya)
         # Semua varian tetap dinormalkan ke target_norm, jadi hanya ARAH vektor
         # yang berubah — sisa pipeline (KV, chat template, parser) tak tersentuh.
-        self.latent_step_mode = os.environ.get("LATENT_STEP_MODE", "raw").strip().lower()
-        self.latent_step_temp = float(os.environ.get("LATENT_STEP_TEMP", "0.7"))
+        # Argumen eksplisit MENANG atas env var: dengan B2 dipromosikan jadi
+        # konfigurasi produksi, mode langkah laten harus terbaca dari
+        # configs/experiment.yaml (satu file = satu eksperimen reproducible).
+        # Env var dipertahankan sebagai default supaya lab/gpu_suite.py — yang
+        # men-set LATENT_STEP_MODE sebelum membangun backend — tetap bekerja.
+        self.latent_step_mode = (
+            latent_step_mode
+            if latent_step_mode is not None
+            else os.environ.get("LATENT_STEP_MODE", "raw")
+        ).strip().lower()
+        self.latent_step_temp = float(
+            latent_step_temp
+            if latent_step_temp is not None
+            else os.environ.get("LATENT_STEP_TEMP", "0.7")
+        )
         if self.latent_step_mode not in _LATENT_STEP_MODES:
             raise ValueError(
                 f"LATENT_STEP_MODE={self.latent_step_mode!r} tidak dikenal; "
@@ -1228,6 +1243,9 @@ class LocalLLMBackend:
         knn_percentage : float = 0.8,
         knn_min_keep   : int   = 5,
         knn_strategy   : str   = "top",
+        # Mode langkah laten (B2/G3). None = pakai env LATENT_STEP_MODE.
+        latent_step_mode: Optional[str]   = None,
+        latent_step_temp: Optional[float] = None,
     ) -> None:
 
         self.max_new_tokens = max_new_tokens
@@ -1254,6 +1272,7 @@ class LocalLLMBackend:
             enable_thinking=enable_thinking,
             knn_enabled=knn_enabled, knn_percentage=knn_percentage,
             knn_min_keep=knn_min_keep, knn_strategy=knn_strategy,
+            latent_step_mode=latent_step_mode, latent_step_temp=latent_step_temp,
         )
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
         self._kv_store = KVCacheStore(kv_dir)        if store_kv    else None
@@ -1655,7 +1674,11 @@ class LocalLLMBackend:
             #   K_l ← K_l[..., -n:, :], V_l ← V_l[..., -n:, :] (pertahankan n token terakhir).
             # ── In-memory KV-cache truncation ─────────────────────────
             if result.kv_cache is not None and self._kv_max_seq_len is not None:
-                result.kv_cache = kv_truncate(result.kv_cache, self._kv_max_seq_len)
+                # `model` dioper agar key di-re-rotasi ke posisi kontigu (B8);
+                # tanpa itu setiap pemotongan men-desync RoPE seluruh konteks.
+                result.kv_cache = kv_truncate(
+                    result.kv_cache, self._kv_max_seq_len, model=self._engine.model
+                )
 
             # ── Simpan KV-cache ke disk ────────────────────────────────
             if self._kv_store is not None and result.kv_cache is not None:

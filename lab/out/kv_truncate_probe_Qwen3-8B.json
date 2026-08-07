@@ -5,6 +5,8 @@
   "dropped": 2249,
   "KL(A||C)_potong_saja": 5.0902,
   "KL(B||C)_potong_plus_rerotasi": 0.9367,
+  "KL(B8||C)_kv_truncate_dgn_model": 0.9367,
+  "KL(B8||B)_harus_nol": 0.0,
   "KL(A||B)": 1.575,
   "top1_A": " is",
   "top1_B": " the",

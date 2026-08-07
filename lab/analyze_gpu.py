@@ -119,6 +119,25 @@ def signal_clusters(exprs: list[str], series_files: list[Path], thr: float = 0.7
     return len({find(c) for c in cols})
 
 
+def cost_of_run(r: dict) -> tuple[float, bool]:
+    """A6 — TOKEN DIPROSES satu run (prompt + output, seluruh agen).
+
+    Kembalikan (token, exact). `exact=False` untuk artefak lama yang belum
+    merekam `n_in_tok`: di sana panjang prompt dihampiri dari `kv_len` (panjang
+    KV setelah agen selesai) dikurangi output — hampiran ini menghitung terlalu
+    rendah untuk mode `text` (tanpa KV), jadi kolomnya ditandai '~'.
+    """
+    tr = r.get("agent_trace") or []
+    if not tr:
+        return float("nan"), True
+    if all("n_in_tok" in t for t in tr):
+        return float(sum(t.get("n_in_tok", 0) + t.get("n_out_tok", 0) for t in tr)), True
+    tot = 0.0
+    for t in tr:
+        tot += max(t.get("kv_len", 0), t.get("n_out_tok", 0)) or t.get("n_out_tok", 0)
+    return tot, False
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--glob", nargs="+", default=["frontend_*.json"])
@@ -126,6 +145,10 @@ def main() -> None:
                     help="kunci pembentuk lengan, mis. comm_mode / latent_steps / model _prompts")
     ap.add_argument("--baseline", default="random_baseline_s0.json")
     ap.add_argument("--clusters", action="store_true", help="hitung klaster sinyal (lambat)")
+    ap.add_argument("--a7", action="store_true",
+                    help="tambahkan sumbu A7 (kesetiaan rantai); --a7-full ikut rank-equivalence")
+    ap.add_argument("--a7-full", action="store_true",
+                    help="A7 termasuk rank-equivalence ke kolom mentah (evaluasi CPU, lambat)")
     args = ap.parse_args()
 
     runs = load(args.glob)
@@ -188,6 +211,27 @@ def main() -> None:
               f"{(st.mean(t['rep_ratio'] for t in con) if con else float('nan')):>5.2f} "
               f"{unparse:>4d}/{len(rs):<3d} {rep:>3d}/{len(rs):<3d} {err:>4d}")
 
+    # ── A6: biaya per FAKTOR DITERIMA ───────────────────────────────────────
+    # Satu-satunya metrik yang menghukum arsitektur boros secara adil. Biaya
+    # "per run" menyembunyikannya: lengan yang menghasilkan 30 faktor lolos gate
+    # dalam 67 s jauh lebih murah daripada lengan 99 s untuk 11 faktor, walau
+    # keduanya "1 run".
+    print(f"\nA6 — biaya per faktor diterima\n"
+          f"{'lengan':<46s} {'lolos':>6s} {'detik/run':>10s} {'token/run':>10s} "
+          f"{'detik/fak':>10s} {'token/fak':>10s}")
+    for name, d in sorted(per_arm.items()):
+        rs = d["runs"]
+        n_pass = sum(len(r.get("passing") or []) for r in rs)
+        secs = sum(r.get("duration_s", 0) for r in rs)
+        costs = [cost_of_run(r) for r in rs]
+        toks = sum(c for c, _ in costs if c == c)
+        exact = all(e for _, e in costs)
+        m = "" if exact else "~"
+        print(f"{name:<46s} {n_pass:>6d} {secs/max(len(rs),1):>10.1f} "
+              f"{m + format(toks/max(len(rs),1), '.0f'):>10s} "
+              f"{(secs/n_pass if n_pass else float('nan')):>10.1f} "
+              f"{(m + format(toks/n_pass, '.0f') if n_pass else 'nan'):>10s}")
+
     # ── uji beda antar-lengan pada unit RUN ─────────────────────────────────
     names = sorted(per_arm)
     if len(names) > 1:
@@ -220,6 +264,29 @@ def main() -> None:
             exprs = [f["expression"] for f in d["alive"]]
             k = signal_clusters(exprs, series_files)
             print(f"  {name:<44s} faktor hidup={len(exprs):>3d} klaster={k}")
+
+    # ── A7: kesetiaan rantai ────────────────────────────────────────────────
+    if args.a7 or args.a7_full:
+        from lab.chain_fidelity import annotate_runs, looks_degenerate
+        annotate_runs(runs, rank_equiv=args.a7_full)
+        print(f"\nA7 — kesetiaan rantai\n"
+              f"{'lengan':<46s} {'expr':>5s} {'var_rec':>8s} {'var_prec':>9s} "
+              f"{'horizon':>8s} {'palette':>8s} {'raw≈':>7s} {'hip.rusak':>10s}")
+        for name, d in sorted(per_arm.items()):
+            facs = [f for f in d["facs"] if f.get("expression")]
+
+            def _m(key, fs=facs):
+                v = [f[key] for f in fs if f.get(key) is not None]
+                return st.mean(v) if v else float("nan")
+
+            hz = [f["horizon_ok"] for f in facs if f.get("horizon_ok") is not None]
+            rs_ = d["runs"]
+            bad = sum(1 for r in rs_ if looks_degenerate(r.get("hypothesis") or ""))
+            print(f"{name:<46s} {len(facs):>5d} {_m('var_recall'):>8.2f} "
+                  f"{_m('var_precision'):>9.2f} "
+                  f"{(sum(hz)/len(hz) if hz else float('nan')):>8.2f} "
+                  f"{_m('palette_compliance'):>8.2f} {_m('raw_equiv_max'):>7.2f} "
+                  f"{bad:>4d}/{len(rs_):<5d}")
 
 
 if __name__ == "__main__":

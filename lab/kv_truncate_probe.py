@@ -100,6 +100,13 @@ def main() -> None:
     pb = _rerotate_keys_contiguous(pb, orig, model)
     b = next_dist(model, tok, probe, pb)
 
+    # B8 — jalur PRODUKSI setelah perbaikan: kv_truncate(model=...) harus
+    # melakukan sendiri apa yang di lengan B dikerjakan manual. Kalau KL(B8||B)
+    # tidak ~0, perbaikan itu tidak benar-benar terpasang di jalur yang dipakai
+    # LocalLLMBackend.run — dan menyalakan anggaran KV (B9) akan berbahaya.
+    pb8 = kv_truncate(full_cache(), k, model=model)
+    b8 = next_dist(model, tok, probe, pb8)
+
     # C — rujukan: konteks segar berisi k token yang SAMA
     pc = model(input_ids=ids[:, -k:], use_cache=True, return_dict=True).past_key_values
     c = next_dist(model, tok, probe, pc)
@@ -108,6 +115,8 @@ def main() -> None:
         "model": args.model, "n_context": int(N), "keep": k, "dropped": int(d),
         "KL(A||C)_potong_saja": round(kl(a, c), 4),
         "KL(B||C)_potong_plus_rerotasi": round(kl(b, c), 4),
+        "KL(B8||C)_kv_truncate_dgn_model": round(kl(b8, c), 4),
+        "KL(B8||B)_harus_nol": round(kl(b8, b), 6),
         "KL(A||B)": round(kl(a, b), 4),
         "top1_A": tok.decode([int(a.argmax())]),
         "top1_B": tok.decode([int(b.argmax())]),
@@ -123,6 +132,12 @@ def main() -> None:
         json.dumps(res, indent=2, ensure_ascii=False))
 
     print("\nBACAAN:")
+    if res["KL(B8||B)_harus_nol"] < 1e-4:
+        print("  kv_truncate(model=...) IDENTIK dengan re-rotasi manual → B8 terpasang "
+              "di jalur produksi.")
+    else:
+        print(f"  PERINGATAN: KL(B8||B)={res['KL(B8||B)_harus_nol']} ≠ 0 — perbaikan B8 "
+              f"TIDAK aktif di jalur produksi; jangan nyalakan anggaran KV (B9).")
     if res["KL(A||C)_potong_saja"] > 5 * max(res["KL(B||C)_potong_plus_rerotasi"], 1e-6):
         print("  kv_truncate apa adanya MENYIMPANG jauh dari rujukan; re-rotasi "
               "memulihkannya → pembukuan posisi RoPE memang salah.")
