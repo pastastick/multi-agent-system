@@ -249,9 +249,15 @@ class AlphaAgentLoop(LoopBase, metaclass=LoopMeta):
                 # (complexity SL/PC/ER + redundansi alpha-zoo), bukan sekadar sintaks.
                 # comm_mode (text|kv_and_text|kv) = variabel eksperimen medium komunikasi.
                 _comm_mode = getattr(PROP_SETTING, "comm_mode", "kv")
+                # B16 (2026-08-07): rantai front-end dibaca dari setting, default
+                # proposal->innovate->construct. Lihat komentar di settings.py dan
+                # lab/HASIL_A8.md untuk dasar keputusannya.
+                _chain_str = getattr(PROP_SETTING, "frontend_chain",
+                                     "proposal,innovate,construct")
+                _chain = tuple(c.strip() for c in _chain_str.split(",") if c.strip())
                 self._front = FrontEndPipeline(
                     llm_backend, runlog=self._runlog, max_repair_attempts=3,
-                    comm_mode=_comm_mode,
+                    comm_mode=_comm_mode, chain=_chain,
                 )
                 # Atribut path-standar di-set None agar pickle-exclusion & getattr aman.
                 self.hypothesis_generator = None

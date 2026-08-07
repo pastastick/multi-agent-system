@@ -117,6 +117,26 @@ class AlphaAgentFactorBasePropSetting(BasePropSetting):
     # Diteruskan ke FrontEndPipeline(comm_mode=...) di loop.py.
     comm_mode: str = "kv"
 
+    # ── Susunan agen front-end (A8/B16) ──────────────────────────────────
+    # Diputuskan 2026-08-07 (lab/HASIL_A8.md): `design` diganti `innovate`.
+    # A8 (n=6/lengan, Qwen3-8B) mengukur `design` TIDAK berpengaruh signifikan
+    # terhadap IC (Welch t=0,79 pada mean|IC|/run full vs nodesign), sementara
+    # `innovate` unggul pada mutu sinyal (+60% |IC|/run) dan cakupan pencarian
+    # (23 vs 13 fungsi DSL disentuh, 7 di antaranya belum pernah dipakai sistem
+    # sekali pun). Keandalan lengan innovate awal sempat 4/6 (vs 6/6 rujukan);
+    # ronde lanjutan `innovate_guided` (guided decoding di emitter) menutup
+    # celah itu — lihat lab/HASIL_A8.md §5 untuk angka finalnya.
+    #
+    # `free_form` di FrontEndPipeline menyala OTOMATIS saat "innovate" ada di
+    # chain (lihat latent_mas/pipeline.py) — klausa "FIDELITY FIRST" di emitter
+    # diganti klausa cakupan struktural, karena keduanya terbukti saling
+    # meniadakan bila dipasang bersamaan (A8 §3.2b).
+    #
+    # String dipisah koma di YAML (`frontend_chain: "proposal,innovate,construct"`)
+    # supaya lengan lain (mis. kembali ke "proposal,design,construct" untuk
+    # replikasi, atau "construct" saja) tetap bisa dipilih tanpa ubah kode.
+    frontend_chain: str = "proposal,innovate,construct"
+
     # Model HuggingFace untuk LocalLLMBackend.
     # Di-load sekali, di-share ke semua step dalam satu loop.
     latent_model_name: str = "Qwen/Qwen3-8B"

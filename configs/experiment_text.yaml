@@ -210,6 +210,13 @@ latent:
   #                   design/guidance laten murni (kv_only). Handoff via KV-cache.
   comm_mode: "text"
 
+  # Susunan agen front-end (B16, 2026-08-07 - lab/HASIL_A8.md).
+  # A8 mengukur `design` TIDAK berpengaruh signifikan terhadap IC
+  # (Welch t=0,79); `innovate` unggul pada |IC|/run (+60%) dan cakupan
+  # pencarian (23 vs 13 fungsi DSL, 7 belum pernah dipakai sebelumnya).
+  # Untuk mereplikasi rantai lama: "proposal,design,construct".
+  chain: "proposal,innovate,construct"
+
   # HuggingFace model name (loaded once, shared by all steps).
   # Required: same model across steps — KV-cache is model-specific.
   model_name: "Qwen/Qwen3-8B"

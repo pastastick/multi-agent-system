@@ -42,11 +42,21 @@ BASE = dict(
     max_repair=3, prompts="", tag="", holdout=False, chain="", free_form=None,
 )
 
+# Rantai LAMA (sebelum B16), dipatok eksplisit di G2/G3/G4/G6/prompt di bawah.
+# Default FrontEndPipeline berubah 2026-08-07 (proposal,design,construct ->
+# proposal,innovate,construct — lihat lab/HASIL_A8.md). Rencana G-series ini
+# mengukur latent_steps/comm_mode/realign/prompt SEBAGAI VARIABEL; membiarkan
+# `chain` ikut default baru akan diam-diam mengganti apa yang dibandingkan bila
+# rencana ini dijalankan ulang nanti untuk memperluas seed. Dipatok agar hasil
+# lama & baru tetap bisa disandingkan pada sumbu yang sama.
+_LEGACY_CHAIN = "proposal,design,construct"
+
 
 def plan_g2(a) -> list[dict]:
     """G2 — uji cepat latent_steps. Set {5,10,20,40} atas permintaan; 60 ikut
     sebagai REFERENSI konfigurasi produksi saat ini (experiment.yaml)."""
-    return [dict(comm_mode="kv", latent_steps=ls, tag=f"g2_kv_ls{ls}")
+    return [dict(comm_mode="kv", latent_steps=ls, chain=_LEGACY_CHAIN,
+                 tag=f"g2_kv_ls{ls}")
             for ls in (5, 10, 20, 40, 60)]
 
 
@@ -54,6 +64,7 @@ def plan_g3(a) -> list[dict]:
     """G3 — mode langkah laten pada latent_steps yang dipilih (default 10)."""
     ls = a.ls
     return [dict(comm_mode="kv", latent_steps=ls, latent_mode=m, latent_temp=t,
+                 chain=_LEGACY_CHAIN,
                  tag=f"g3_kv_ls{ls}_{m}{'' if m == 'raw' else f'T{t}'}")
             for m, t in (("raw", 0.7), ("gumbel", 0.7), ("sample", 1.0))]
 
@@ -65,18 +76,19 @@ def plan_g4(a) -> list[dict]:
     dan 60 (nilai produksi di experiment.yaml). Lengan kv@60 tidak diulang di
     sini karena sudah ada 6 run darinya di G2. `text` tak memakai jalur laten
     sama sekali, jadi latent_steps tidak relevan untuknya."""
-    return [dict(comm_mode="text", latent_steps=0, tag="g4_text"),
-            dict(comm_mode="kv_and_text", latent_steps=a.ls,
+    return [dict(comm_mode="text", latent_steps=0, chain=_LEGACY_CHAIN, tag="g4_text"),
+            dict(comm_mode="kv_and_text", latent_steps=a.ls, chain=_LEGACY_CHAIN,
                  tag=f"g4_kv_and_text_ls{a.ls}"),
-            dict(comm_mode="kv", latent_steps=a.ls, tag=f"g4_kv_ls{a.ls}"),
-            dict(comm_mode="kv_and_text", latent_steps=60,
+            dict(comm_mode="kv", latent_steps=a.ls, chain=_LEGACY_CHAIN,
+                 tag=f"g4_kv_ls{a.ls}"),
+            dict(comm_mode="kv_and_text", latent_steps=60, chain=_LEGACY_CHAIN,
                  tag="g4_kv_and_text_ls60")]
 
 
 def plan_g6(a) -> list[dict]:
     """G6 — ablasi use_realign. Bermakna HANYA pada backbone tidak-tied
     (Qwen3-8B); pada Qwen3-4B kedua cabang identik (lab/realign_probe.py)."""
-    return [dict(comm_mode="kv", latent_steps=a.ls, no_realign=b,
+    return [dict(comm_mode="kv", latent_steps=a.ls, no_realign=b, chain=_LEGACY_CHAIN,
                  tag=f"g6_kv_ls{a.ls}_realign{'OFF' if b else 'ON'}")
             for b in (False, True)]
 
@@ -87,7 +99,7 @@ def plan_prompt(a) -> list[dict]:
     v1 = str(QL / "backend" / "latent_mas" / "prompts_v1.yaml")
     short = a.model.split("/")[-1].replace("Qwen3-", "")
     return [dict(comm_mode="text", latent_steps=0, model=a.model, prompts=pp,
-                 tag=f"px_{short}_{nm}")
+                 chain=_LEGACY_CHAIN, tag=f"px_{short}_{nm}")
             for nm, pp in (("v0", ""), ("v1", v1))]
 
 

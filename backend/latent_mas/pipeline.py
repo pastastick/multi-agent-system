@@ -142,13 +142,18 @@ class FrontEndPipeline:
         # ── chain: SUSUNAN agen front-end (sumbu A8, ablasi arsitektur) ──────
         # Agen terakhir WAJIB emitter (menulis JSON faktor); agen sebelumnya
         # menyempitkan arah. Varian yang dipakai eksperimen:
-        #   ("proposal","design","construct")   rantai produksi sekarang
-        #   ("proposal","construct")            tanpa design
-        #   ("construct",)                      direction langsung ke builder
-        #   ("proposal","innovate","construct") design diganti agen inovasi
-        # Ini menjadikan "apakah design berkontribusi" pertanyaan yang bisa
-        # DIJALANKAN, bukan diperdebatkan.
-        self.chain: tuple = tuple(chain or ("proposal", "design", "construct"))
+        #   ("proposal","design","construct")    rantai LAMA (sebelum B16)
+        #   ("proposal","construct")             tanpa design
+        #   ("construct",)                       direction langsung ke builder
+        #   ("proposal","innovate","construct")  RANTAI PRODUKSI (sejak B16)
+        #
+        # DEFAULT diganti 2026-08-07 (B16, lab/HASIL_A8.md): A8 mengukur `design`
+        # TIDAK berpengaruh signifikan terhadap IC (Welch t=0,79), sementara
+        # `innovate` unggul pada |IC|/run (+60%) dan cakupan pencarian (23 vs 13
+        # fungsi DSL disentuh). Keputusan user, ditegaskan eksplisit setelah
+        # meninjau hasil A8 — lihat lab/HASIL_A8.md §5 untuk angka ronde final.
+        # Untuk mereplikasi rantai lama: `chain=("proposal","design","construct")`.
+        self.chain: tuple = tuple(chain or ("proposal", "innovate", "construct"))
         unknown = [a for a in self.chain if a not in self.agents]
         if unknown:
             raise KeyError(f"agen {unknown} tak ada di prompts.yaml; "
