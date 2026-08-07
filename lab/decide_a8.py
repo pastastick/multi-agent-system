@@ -23,7 +23,15 @@ if str(QL) not in sys.path:
 OUT = QL / "lab" / "out"
 
 _FUNC_RE = re.compile(r"\b([A-Z][A-Z0-9_]{1,})\s*\(")
+# Lengan yang TERDAFTAR DI MUKA di RENCANA_PERBAIKAN §Tahap 3a. Hanya lengan ini
+# yang boleh masuk aturan keputusan formal.
 ARMS = ("full", "nodesign", "direct", "innovate", "innovate_fid")
+# Lengan yang lahir DARI temuan saat menjalankan A8 (guided decoding baru bisa
+# dipakai setelah bug lintas-versi lm-format-enforcer diperbaiki). Dilaporkan,
+# tetapi TIDAK dipakai untuk memutuskan — menambah lengan setelah melihat data
+# lalu memakainya sebagai dasar keputusan adalah cara paling halus untuk menipu
+# diri sendiri. Ia menjadi dasar untuk RONDE BERIKUTNYA yang didaftarkan ulang.
+EXTRA_ARMS = ("full_guided", "innovate_guided")
 
 
 def welch(a: list[float], b: list[float]) -> tuple[float, float]:
@@ -134,10 +142,11 @@ def main() -> None:
 
     hist = historical_functions()
     S, C, NEW = {}, {}, {}
-    for arm in ARMS:
+    for arm in ARMS + EXTRA_ARMS:
         runs = load_arm(a.comm, arm)
         if runs is None:
-            print(f"[!] lengan {arm} belum ada — keputusan tak bisa dituntaskan")
+            if arm in ARMS:
+                print(f"[!] lengan {arm} belum ada — keputusan tak bisa dituntaskan")
             continue
         S[arm] = summarise(runs)
         C[arm] = clusters(runs, a.comm, arm)
@@ -150,20 +159,28 @@ def main() -> None:
     hdr = (f"{'lengan':<14s} {'run':>5s} {'expr':>5s} {'gate':>6s} {'hidup':>6s} "
            f"{'|IC|/run':>9s} {'pustaka':>8s} {'baru':>5s} {'klaster':>8s} "
            f"{'dtk/fak':>8s} {'tok/fak':>8s}")
-    print(f"\nA8 ({a.comm}) — ringkasan  "
-          f"(korpus lama memakai {len(hist)} fungsi)\n{hdr}\n" + "-" * len(hdr))
-    for arm in ARMS:
-        if arm not in S:
-            continue
+    def row(arm: str) -> None:
         s = S[arm]
         print(f"{arm:<14s} {s['n_producing']:>2d}/{s['n_runs']:<2d} {s['n_expr']:>5d} "
               f"{s['gate_rate']:>5.0%} {s['n_alive']:>6d} {s['mean_ic_run']:>9.4f} "
               f"{s['lib_coverage']:>8d} {len(NEW[arm]):>5d} {str(C.get(arm)):>8s} "
               f"{s['secs_per_pass']:>8.1f} {s['toks_per_pass']:>8.0f}")
-    print("\nFungsi yang BELUM PERNAH dipakai sistem sebelum A8:")
+
+    print(f"\nA8 ({a.comm}) — ringkasan  "
+          f"(korpus lama memakai {len(hist)} fungsi)\n{hdr}\n" + "-" * len(hdr))
     for arm in ARMS:
+        if arm in S:
+            row(arm)
+    extra = [x for x in EXTRA_ARMS if x in S]
+    if extra:
+        print("- " * (len(hdr) // 2))
+        print("lengan lanjutan (LUAR pendaftaran; hanya dilaporkan, tidak memutuskan):")
+        for arm in extra:
+            row(arm)
+    print("\nFungsi yang BELUM PERNAH dipakai sistem sebelum A8:")
+    for arm in ARMS + EXTRA_ARMS:
         if arm in NEW:
-            print(f"  {arm:<14s} {' '.join(NEW[arm]) or '(tak ada)'}")
+            print(f"  {arm:<16s} {' '.join(NEW[arm]) or '(tak ada)'}")
 
     if "full" not in S or "nodesign" not in S:
         sys.exit("\nlengan full/nodesign belum lengkap.")
@@ -171,7 +188,9 @@ def main() -> None:
     # sebelum itu `per_run` kosong dan setiap perbandingan menghasilkan nan.
     # Tanpa penjaga ini skrip akan mencetak putusan yang terlihat yakin padahal
     # dihitung dari ketiadaan — kegagalan yang jauh lebih buruk daripada diam.
-    belum = [a for a in S if not S[a]["per_run"]]
+    # Hanya lengan TERDAFTAR yang menghalangi keputusan; lengan lanjutan boleh
+    # belum lengkap karena memang tidak dipakai memutuskan.
+    belum = [x for x in ARMS if x in S and not S[x]["per_run"]]
     if belum:
         sys.exit(f"\nBELUM BISA MEMUTUSKAN: lengan {belum} belum di-skor IC-nya "
                  f"(jalankan `lab/frontend_probe.py --score-only --tag a8_...`, "
@@ -236,6 +255,23 @@ def main() -> None:
     print("\n" + "=" * 78)
     if design_gagal and wins and andal:
         print(f"KEPUTUSAN: GANTI `design` dengan `innovate`. Dasar: {'; '.join(wins)}.")
+    elif design_gagal and wins and not andal:
+        # Kasus yang benar-benar terjadi: `innovate` MENANG pada sumbu mutu &
+        # cakupan tetapi KALAH pada keandalan. Membedakannya dari "tidak menang
+        # sama sekali" itu penting — yang satu berarti idenya salah, yang lain
+        # berarti idenya benar tapi implementasinya belum stabil, dan keduanya
+        # menuntut langkah lanjut yang berbeda.
+        print("KEPUTUSAN: BELUM GANTI. `design` gugur di gerbang 1, dan `innovate` "
+              "unggul pada:\n  - " + "\n  - ".join(wins) +
+              "\ntetapi GAGAL syarat keandalan "
+              f"({S['innovate']['n_producing']}/{S['innovate']['n_runs']} vs "
+              f"{S['full']['n_producing']}/{S['full']['n_runs']}).\n"
+              "Jadi yang terbukti bukan 'ide inovasi salah', melainkan "
+              "'implementasinya belum stabil'.\nLangkah yang sah: perbaiki penyebab "
+              "kolaps, DAFTARKAN ULANG lengannya, jalankan lagi.\n"
+              "Memangkas `design` sekarang (B13) sah secara aturan, tetapi menunda "
+              "sampai pengganti\nyang stabil ada akan menghindari dua perubahan "
+              "arsitektur berturut-turut.")
     elif design_gagal:
         print("KEPUTUSAN: PANGKAS `design` (B13, jadi proposal→construct). `innovate` "
               "tidak melampaui rujukan pada sumbu mana pun,\nsehingga tak ada alasan "

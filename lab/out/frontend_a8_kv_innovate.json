@@ -25,32 +25,98 @@
         {
           "name": "Volatility Gap",
           "expression": "RANK(TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1))",
-          "explanation": "Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion"
+          "explanation": "Measures the spread between top and bottom volume quantiles over 20 days, ranking stocks based on extreme volume dispersion",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.03939286092334897,
+          "icir": -0.3720120488984744,
+          "tstat": -5.799093927479597,
+          "n_days": 243,
+          "coverage": 4372.432098765432,
+          "n_unique": 4369.938271604939,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Residual",
           "expression": "REGRESI($volume, SEQUENCE(20), 20) - $volume",
-          "explanation": "Captures volume deviations from a time trend, highlighting abnormal volume patterns that may signal impending reversals"
+          "explanation": "Captures volume deviations from a time trend, highlighting abnormal volume patterns that may signal impending reversals",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
         },
         {
           "name": "Momentum Shift",
           "expression": "TS_PCTCHANGE(TS_MEAN($return, 5), 1) * TS_ZSCORE($volume, 10)",
-          "explanation": "Weights recent return momentum by volume volatility, emphasizing stocks with divergent price and volume dynamics"
+          "explanation": "Weights recent return momentum by volume volatility, emphasizing stocks with divergent price and volume dynamics",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.003644743922613219,
+          "icir": -0.10784805473970885,
+          "tstat": -1.6811847927598067,
+          "n_days": 243,
+          "coverage": 4364.460905349794,
+          "n_unique": 4353.534979423868,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Asymmetry",
           "expression": "TS_ARGMAX($volume, 10) - TS_ARGMIN($volume, 10)",
-          "explanation": "Identifies stocks where extreme volume occurs at different times within a 10-day window, capturing asymmetric liquidity shifts"
+          "explanation": "Identifies stocks where extreme volume occurs at different times within a 10-day window, capturing asymmetric liquidity shifts",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.015912136796013165,
+          "icir": 0.22275520057801917,
+          "tstat": 3.4724099254619283,
+          "n_days": 243,
+          "coverage": 4372.106995884774,
+          "n_unique": 19.0,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Dispersion",
           "expression": "TS_MAD($volume, 20) / TS_STD($volume, 20)",
-          "explanation": "Normalizes volume variability relative to its standard deviation, highlighting stocks with unusually volatile trading activity"
+          "explanation": "Normalizes volume variability relative to its standard deviation, highlighting stocks with unusually volatile trading activity",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.0011560146171861827,
+          "icir": 0.02417801411040717,
+          "tstat": 0.37689793978808206,
+          "n_days": 243,
+          "coverage": 4328.432098765432,
+          "n_unique": 4326.448559670782,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "Volume Lagged Impact",
           "expression": "DELAY(TS_ZSCORE($volume, 10), 1) * TS_PCTCHANGE($return, 1)",
-          "explanation": "Combines lagged volume normalization with recent return changes, capturing delayed market reactions to volume spikes"
+          "explanation": "Combines lagged volume normalization with recent return changes, capturing delayed market reactions to volume spikes",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.00477580142149313,
+          "icir": 0.10458296023595143,
+          "tstat": 1.630287006611611,
+          "n_days": 243,
+          "coverage": 4243.168724279835,
+          "n_unique": 4234.255144032922,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -270,27 +336,82 @@
         {
           "name": "vol_reversal_1",
           "expression": "RANK(TS_ZSCORE(DELAY(TS_SUM($volume, 5), 1), 20))",
-          "explanation": "Measures the rank of volume accumulation over 5 days, lagged by one day, standardized across 20 days, to detect reversal patterns"
+          "explanation": "Measures the rank of volume accumulation over 5 days, lagged by one day, standardized across 20 days, to detect reversal patterns",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.007801978425980321,
+          "icir": -0.08711369229692466,
+          "tstat": -1.3579680698387553,
+          "n_days": 243,
+          "coverage": 4366.567901234568,
+          "n_unique": 4364.497942386832,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_2",
           "expression": "TS_PCTCHANGE(TS_QUANTILE($volume, 20, 0.9), TS_QUANTILE($volume, 20, 0.1))",
-          "explanation": "Compares the percent change between the 90th and 10th percentile volume levels over 20 days to identify volume concentration effects"
+          "explanation": "Compares the percent change between the 90th and 10th percentile volume levels over 20 days to identify volume concentration effects",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().",
+          "passed_gate": false
         },
         {
           "name": "vol_reversal_3",
           "expression": "RANK(TS_CORR($return, $volume, 10))",
-          "explanation": "Ranks the correlation between daily returns and volume over 10 days to find stocks where volume predicts return direction"
+          "explanation": "Ranks the correlation between daily returns and volume over 10 days to find stocks where volume predicts return direction",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.016871594203819295,
+          "icir": -0.21379799376803232,
+          "tstat": -3.3327808898627356,
+          "n_days": 243,
+          "coverage": 4369.3127572016465,
+          "n_unique": 4366.962962962963,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_4",
           "expression": "TS_ARGMAX(TS_MAD($return, 5), 5) - TS_ARGMIN(TS_MAD($return, 5), 5)",
-          "explanation": "Calculates the difference between the top and bottom extreme return deviations over 5 days to measure dispersion effects"
+          "explanation": "Calculates the difference between the top and bottom extreme return deviations over 5 days to measure dispersion effects",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
         },
         {
           "name": "vol_reversal_5",
           "expression": "FILTER(TS_ZSCORE($return, 5), TS_SUM($volume, 5) > TS_MEDIAN(TS_SUM($volume, 5), 20))",
-          "explanation": "Filters returns with high volume accumulation over 5 days, standardized across 20 days, to isolate volume-driven reversals"
+          "explanation": "Filters returns with high volume accumulation over 5 days, standardized across 20 days, to isolate volume-driven reversals",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.002301222521254001,
+          "icir": -0.034870620279339876,
+          "tstat": -0.5435791741373247,
+          "n_days": 243,
+          "coverage": 4368.588477366256,
+          "n_unique": 2016.761316872428,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -415,32 +536,98 @@
         {
           "name": "vol_revert_diff",
           "expression": "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1))",
-          "explanation": "Measures the difference between upper and lower quantiles of returns for low-volatility stocks, capturing mean-reversion during regime shifts."
+          "explanation": "Measures the difference between upper and lower quantiles of returns for low-volatility stocks, capturing mean-reversion during regime shifts.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.049373267336385834,
+          "icir": -0.32447087821459586,
+          "tstat": -5.058000419797563,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4369.711934156378,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_skew_flip",
           "expression": "RANK(SKEW(TS_ZSCORE($return, 30)))",
-          "explanation": "Captures skewness in rolling return distributions to identify mean-reverting patterns in low-volatility regimes."
+          "explanation": "Captures skewness in rolling return distributions to identify mean-reverting patterns in low-volatility regimes.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 4372.489711934157,
+          "n_unique": 1.0,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_resid_gap",
           "expression": "RANK(REGRESI($return, $volume, 60) - REGRESI($return, $open, 60))",
-          "explanation": "Compares residuals from regressions of returns on volume and open prices to isolate volatility-driven mean-reversion."
+          "explanation": "Compares residuals from regressions of returns on volume and open prices to isolate volatility-driven mean-reversion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
         },
         {
           "name": "vol_mad_shift",
           "expression": "RANK(TS_MAD($return, 40) - TS_MAD($return, 20))",
-          "explanation": "Detects changes in dispersion across time horizons as a proxy for regime transitions in low-volatility environments."
+          "explanation": "Detects changes in dispersion across time horizons as a proxy for regime transitions in low-volatility environments.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
         },
         {
           "name": "vol_asymmetry",
           "expression": "RANK(TS_ARGMAX($return, 30) - TS_ARGMIN($return, 30))",
-          "explanation": "Measures the gap between extreme return days to identify asymmetric mean-reversion in low-volatility stocks."
+          "explanation": "Measures the gap between extreme return days to identify asymmetric mean-reversion in low-volatility stocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.000870670622670545,
+          "icir": 0.014454515464452738,
+          "tstat": 0.2253235966489997,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 58.382716049382715,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_quantile_flip",
           "expression": "RANK(INV(PERCENTILE($return, 0.9, 20)) - INV(PERCENTILE($return, 0.1, 20)))",
-          "explanation": "Inverts quantile rankings to detect reversal patterns in low-volatility regimes through asymmetrical distribution shifts."
+          "explanation": "Inverts quantile rankings to detect reversal patterns in low-volatility regimes through asymmetrical distribution shifts.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.047387456990042306,
+          "icir": 0.3186569658243912,
+          "tstat": 4.967370494942264,
+          "n_days": 243,
+          "coverage": 4369.991769547325,
+          "n_unique": 4368.22633744856,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
@@ -667,32 +854,98 @@
         {
           "name": "vol_gap_zscore",
           "expression": "RANK(ZSCORE(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1), 20))",
-          "explanation": "Computes the gap between upper and lower quantiles of returns in a 20-day window, z-scores it, and ranks to capture mean-reversion in low-volatility stocks."
+          "explanation": "Computes the gap between upper and lower quantiles of returns in a 20-day window, z-scores it, and ranks to capture mean-reversion in low-volatility stocks.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TypeError: ZSCORE() takes 1 positional argument but 2 were given",
+          "passed_gate": false
         },
         {
           "name": "vol_skew_resid",
           "expression": "RANK(SKEW(REGRESI($return, $volume, 30), 30))",
-          "explanation": "Uses regression residuals of returns on volume to isolate price movements, then applies skewness to detect asymmetry in low-volatility regimes."
+          "explanation": "Uses regression residuals of returns on volume to isolate price movements, then applies skewness to detect asymmetry in low-volatility regimes.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": false
         },
         {
           "name": "vol_mad_diff",
           "expression": "RANK((TS_MAD($return, 60) - TS_MAD($return, 10)) / TS_MAD($return, 60))",
-          "explanation": "Measures dispersion change between short and long windows, normalizes by long-term volatility, and ranks to highlight regime shifts."
+          "explanation": "Measures dispersion change between short and long windows, normalizes by long-term volatility, and ranks to highlight regime shifts.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": null,
+          "icir": null,
+          "tstat": null,
+          "n_days": 0,
+          "coverage": 0.0,
+          "n_unique": 0.0,
+          "eval_error": "TimeoutError: melebihi 90s",
+          "passed_gate": true
         },
         {
           "name": "vol_bb_dist",
           "expression": "RANK((BB_UPPER($return, 20, 2) - BB_LOWER($return, 20, 2)) / (BB_UPPER($return, 20, 2) + BB_LOWER($return, 20, 2)))",
-          "explanation": "Calculates the normalized Bollinger Band width for low-volatility stocks, ranks it to capture regime transitions via volatility expansion."
+          "explanation": "Calculates the normalized Bollinger Band width for low-volatility stocks, ranks it to capture regime transitions via volatility expansion.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.003203118456911811,
+          "icir": -0.04563328175485744,
+          "tstat": -0.7113524626396704,
+          "n_days": 243,
+          "coverage": 4370.057613168724,
+          "n_unique": 4368.399176954733,
+          "eval_error": null,
+          "passed_gate": false
         },
         {
           "name": "vol_quantile_diff",
           "expression": "RANK(TS_QUANTILE($return, 60, 0.8) - TS_QUANTILE($return, 60, 0.2))",
-          "explanation": "Captures the spread between high and low quantiles in a 60-day window to identify mean-reversion opportunities in low-volatility regimes."
+          "explanation": "Captures the spread between high and low quantiles in a 60-day window to identify mean-reversion opportunities in low-volatility regimes.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": -0.039764375400991335,
+          "icir": -0.2614066264258982,
+          "tstat": -4.074926025643495,
+          "n_days": 243,
+          "coverage": 4372.489711934157,
+          "n_unique": 4368.452674897119,
+          "eval_error": null,
+          "passed_gate": true
         },
         {
           "name": "vol_decay_diff",
           "expression": "RANK(DECAYLINEAR(TS_PCTCHANGE($return, 10), 20) - DECAYLINEAR(TS_PCTCHANGE($return, 30), 20))",
-          "explanation": "Compares decayed percentage changes over different timeframes to detect structural shifts in low-volatility return patterns."
+          "explanation": "Compares decayed percentage changes over different timeframes to detect structural shifts in low-volatility return patterns.",
+          "sem_ok": true,
+          "sem_errors": [],
+          "flags": [],
+          "ic": 0.0020062741525608435,
+          "icir": 0.0849498792142508,
+          "tstat": 1.3242375620632951,
+          "n_days": 243,
+          "coverage": 1930.2880658436213,
+          "n_unique": 1906.9753086419753,
+          "eval_error": null,
+          "passed_gate": true
         }
       ],
       "passing": [
