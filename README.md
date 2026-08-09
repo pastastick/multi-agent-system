@@ -1,4 +1,33 @@
-# QuantaLatent — Panduan Setup RunPod
+# QuantaLatent — branch `exp/alt3-gumbel-fidelitas`
+
+> **Branch ini fokus TUNGGAL pada satu pertanyaan**: apakah mengganti
+> persamaan langkah laten LatentMAS (ridge $W_a$ resmi paper → relaksasi
+> Gumbel-softmax) memulihkan fidelitas konten simbolik diskret yang gagal
+> dipertahankan kanal laten murni (A9: recall 0,35, **exact 0,00** pada
+> `latent_mode=gumbel`, k=5 nama fungsi DSL). Cabang dari `exp/rencana-perbaikan`
+> (2026-08-08, commit `06d6b1c`), dipangkas dari ~1300 berkas riset lain
+> (rantai agen/mutu pencarian evolusioner — pertanyaan berbeda, ada di
+> branch asalnya) agar tak jadi distraksi.
+>
+> **Rencana lengkap, argumen, dan tiga risiko yang harus diketahui sebelum
+> GPU dinyalakan**: `skripsi/alternatif_gumbel_latentmas.md` di repo utama
+> (`first-experiment`, satu tingkat di atas direktori ini — bukan bagian
+> dari git repo `quantalatent` ini). Perbandingan dengan dua alternatif
+> lain: `skripsi/alternatif_perbandingan.md`.
+>
+> **Status**: Tahap 0 (§7 di bawah) BELUM dijalankan. Ini gerbang penentu —
+> jangan lanjut ke Tahap 1/2 sebelum tahu apakah `gumbel` > `raw` pada
+> kapasitas kanal. Kalau hasilnya `gumbel` ≈ `raw`, arah skripsi ini
+> **gagal secara empiris** dan turun jadi Alt 2 (`alternatif_fidelitas_simbol.md`,
+> nol-GPU, sudah lengkap) — itu bukan kegagalan sesi, itu jawaban yang sah.
+>
+> Berkas yang tersisa di `lab/` (12 berkas, sengaja minimal):
+> `channel_capacity.py` (Tahap 0), `realign_probe.py` + `b7_probe.py`
+> (bukti geometri ridge-vs-gumbel yang sudah ada), `AUDIT_KRITIS.md` §4.1/§4.3
+> + `HASIL_TAHAP4.md` §2-3 (tulisan lengkap bukti yang sudah ada), dan
+> data JSON rujukannya (`lab/out/`).
+
+---
 
 Proyek ini adalah adaptasi QuantaAlpha dengan **Latent-MAS pipeline**: model lokal (Qwen3) menjalankan latent reasoning via KV-cache, lalu factor mining berjalan sepenuhnya di GPU tanpa API eksternal untuk step utama.
 
@@ -332,71 +361,50 @@ python -c "import torch; print('CUDA:', torch.cuda.is_available(), '| GPU:', tor
 
 ---
 
-## 7. Jalankan Factor Mining
+## 7. Jalankan Eksperimen Alt 3
 
 ```bash
 source /workspace/runpod_env.sh
 source /workspace/project/multi-agent-system/.venv/bin/activate
 cd /workspace/project/multi-agent-system
-
-# Mode standar (latent pipeline dengan Qwen3)
-PYTHONPATH=backend python launcher.py mine \
-  --direction "price-volume momentum factor" \
-  --config_path configs/experiment.yaml
-
-# Dengan arah custom
-PYTHONPATH=backend python launcher.py mine \
-  --direction "microstructure alpha from bid-ask spread" \
-  --config_path configs/experiment.yaml
-
-# Mode teks-only (tanpa latent, gunakan API eksternal)
-PYTHONPATH=backend python launcher.py mine \
-  --direction "price-volume momentum factor" \
-  --config_path configs/experiment.yaml \
-  --text_only
+export PYTHONPATH=backend
 ```
 
-Progress disimpan di `log/` dan `data/results/`. Factor library tersimpan di `all_factors_library*.json`.
+### Tahap 0 — lengan `raw` pada A9 (WAJIB pertama, ~5-10 menit)
 
-### Jalankan di background (agar tidak terputus saat koneksi SSH putus):
+Data `gumbel` sudah ada (`lab/out/channel_capacity_Qwen_Qwen3-8B_m10.json`,
+`_m40.json` — lihat `_meta.latent_mode`). Yang belum ada adalah pembanding
+`raw`, dengan konfigurasi identik supaya berpasangan:
 
 ```bash
-nohup PYTHONPATH=backend python launcher.py mine \
-  --direction "price-volume momentum factor" \
-  --config_path configs/experiment.yaml \
-  > log/mining_run.log 2>&1 &
-
-echo "PID: $!"
-tail -f log/mining_run.log
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
+  --latent-steps 10 --k 5 --trials 20 --seed 0
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
+  --latent-steps 40 --k 5 --trials 20 --seed 0
 ```
 
----
+**Sebelum membaca hasilnya**: cek dulu argumen yang benar-benar didukung
+skrip (`python lab/channel_capacity.py --help`) — signature di atas
+disusun dari isi skrip saat branch ini dibuat, bukan dijalankan ulang di
+sini untuk verifikasi.
 
-## 8. Jalankan Backtest
+**Gerbang keputusan**: bandingkan `kv_latent_only.recall`/`.exact` hasil
+`raw` di atas terhadap `gumbel` di `_m10.json`/`_m40.json`.
+- `gumbel` > `raw` meyakinkan → lanjut Tahap 1 (`alternatif_gumbel_latentmas.md` §6).
+- `gumbel` ≈ `raw` → berhenti di sini; tulis hasil negatifnya, arah
+  skripsi turun ke Alt 2. Ini tetap hasil yang bisa dipertahankan — lihat
+  catatan status di atas.
 
-```bash
-source /workspace/runpod_env.sh
-source /workspace/project/multi-agent-system/.venv/bin/activate
-cd /workspace/project/multi-agent-system
+Opsional, murah: tambah lengan `soft` (proyeksi manifold TANPA noise
+Gumbel) untuk memisahkan efek proyeksi dari efek entropi — lihat
+`alternatif_gumbel_latentmas.md` §6 Tahap 0.
 
-# Backtest dengan factor library hasil mining
-PYTHONPATH=backend python launcher.py backtest \
-  --factor-source custom \
-  --factor-json all_factors_library.json \
-  -c configs/backtest.yaml
+### Tahap 1-2 — probe simbolik & kontrol gist (hanya jika Tahap 0 lolos)
 
-# Backtest dengan Alpha158 baseline
-PYTHONPATH=backend python launcher.py backtest \
-  --factor-source alpha158_20 \
-  -c configs/backtest.yaml
-
-# Dry run (cek factor tanpa backtest)
-PYTHONPATH=backend python launcher.py backtest \
-  --factor-source custom \
-  --factor-json all_factors_library.json \
-  -c configs/backtest.yaml \
-  --dry-run
-```
+Belum ada skrip siap pakai untuk ini di branch ini — desainnya ada di
+`alternatif_gumbel_latentmas.md` §6 Tahap 1-2 (subsample HumanEval+/MBPP+,
+lalu subsample GSM8K/MedQA sebagai kontrol). Turunkan dari pola
+`channel_capacity.py` yang sudah ada, bukan dari nol.
 
 ---
 
