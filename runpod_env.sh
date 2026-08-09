@@ -21,8 +21,19 @@ export HF_HOME=/workspace/.cache/huggingface
 export HUGGINGFACE_HUB_CACHE=/workspace/.cache/huggingface/hub
 export TRANSFORMERS_CACHE=/workspace/.cache/huggingface/hub
 
-# HuggingFace token — untuk download model/dataset private (Qwen3, qlib_csi300)
-export HF_TOKEN="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"
+# HuggingFace token — SENGAJA TIDAK di-hardcode di sini lagi (2026-08-09).
+# File ini di-track git; commit 33dd614 pernah menaruh token asli langsung di
+# baris ini (`export HF_TOKEN="hf_otarf...gcQv"`) — token itu sekarang berstatus
+# expired ("skripsi" is expired di Hub) dan sudah bocor ke riwayat git terlepas
+# dari itu. Sebaiknya di-revoke di https://huggingface.co/settings/tokens kalau
+# belum. Token yang masih berlaku ("skripsi2") ada di `.env` (git-ignored) dan
+# sudah otomatis dimuat oleh launcher.py / lab/*.py via load_dotenv — TIDAK
+# perlu diulang di sini. Kalau shell butuh HF_TOKEN untuk perintah `hf` manual,
+# source .env langsung: `set -a; source .env; set +a`.
+#
+# Qwen3 (Apache-2.0) dan repo publik lain tetap bisa diunduh tanpa token sama
+# sekali (akses anonim, lebih lambat/rate-limited) — jadi tidak fatal bila
+# HF_TOKEN kosong di shell ini.
 
 # Torch hub & inductor cache
 export TORCH_HOME=/workspace/.cache/torch

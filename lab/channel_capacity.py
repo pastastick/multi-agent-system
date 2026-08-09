@@ -77,6 +77,20 @@ for p in (str(QL), str(QL / "backend")):
     if p not in sys.path:
         sys.path.insert(0, p)
 
+# `.env` proyek dimuat DI SINI, sebelum modul apa pun dari `backend/` diimpor.
+# Alasannya bukan kerapian: `llm/client.py` dan `llm/models.py` membaca
+# HF_LOCAL_ONLY dari os.environ pada saat MODUL diimpor (bukan saat dipanggil),
+# jadi memuat .env belakangan tidak berpengaruh. Tanpa ini, lab script berjalan
+# dengan default local_files_only=True dan gagal saat model belum ada di cache —
+# beda dari `launcher.py` yang memang sudah memanggil load_dotenv().
+# Nilai yang SUDAH ada di shell tidak ditimpa (override=False), supaya
+# `HF_LOCAL_ONLY=1 python lab/...` tetap bisa memaksa mode offline.
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _load_dotenv(QL / ".env", override=False)
+except ImportError:  # dotenv belum terpasang → jatuh ke env shell apa adanya
+    pass
+
 OUT = QL / "lab" / "out"
 
 ARMS = ("text", "kv_full", "kv_prompt_only", "kv_latent_only", "none")
@@ -249,6 +263,15 @@ def main() -> None:
                     help="m — panjang blok laten hulu (default = produksi)")
     ap.add_argument("--latent-mode", default="gumbel")
     ap.add_argument("--latent-temp", type=float, default=0.7)
+    # Hanya berpengaruh pada --latent-mode raw (mode lain tak pernah memakai M).
+    # Repo resmi LatentMAS memperlakukan realignment sebagai HYPERPARAMETER:
+    # tanpa flag `--latent_space_realign`, `_build_latent_realign_matrix`
+    # mengembalikan matriks IDENTITAS dan hanya magnitudo yang dinormalkan.
+    # Jadi `raw`+`--no-realign` = konfigurasi DEFAULT paper, sedangkan
+    # `raw` (realign aktif) = jalur $W_a$ Teorema A.1. Keduanya perlu diukur;
+    # menyamakannya akan salah mengatributkan hasilnya ke mekanisme yang keliru.
+    ap.add_argument("--no-realign", action="store_true",
+                    help="mode raw tanpa matriks ridge M (M = I, hanya renormalisasi)")
     ap.add_argument("--max-new-tokens", type=int, default=256)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tag", default="")
@@ -264,7 +287,7 @@ def main() -> None:
 
     backend = LocalLLMBackend(
         model_name=a.model, device=a.device, latent_steps=a.latent_steps,
-        use_realign=True, enable_thinking=False, log_tensors=False,
+        use_realign=not a.no_realign, enable_thinking=False, log_tensors=False,
         store_kv=False, output_log_dir=str(OUT / "llm_outputs" / "a9"),
         max_new_tokens=a.max_new_tokens, temperature=0.6, top_p=0.95,
         knn_enabled=False, latent_step_mode=a.latent_mode,
@@ -276,7 +299,8 @@ def main() -> None:
     model = backend._engine.model   # noqa: SLF001 — dibutuhkan kv_truncate (B8)
 
     print(f"[a9] {a.model} k={a.k} trials={a.trials} m={a.latent_steps} "
-          f"mode={a.latent_mode} muatan={kinds} lengan={arms}")
+          f"mode={a.latent_mode} realign={not a.no_realign} "
+          f"muatan={kinds} lengan={arms}")
 
     records, rows = [], []
     for kind in kinds:
@@ -321,11 +345,20 @@ def main() -> None:
                   f"pos=[{' '.join(f'{p:.2f}' for p in by_pos)}] "
                   f"{row['dur_s']:5.2f}s", flush=True)
 
+    # `use_realign` DICATAT walau berkas lama tak memuatnya: run lama semuanya
+    # memakai True (nilai hardcoded saat itu), jadi ketiadaan kunci ini pada
+    # berkas lama berarti True — bukan tidak diketahui.
     doc = {"_meta": {"model": a.model, "k": a.k, "trials": a.trials,
                      "latent_steps": a.latent_steps, "latent_mode": a.latent_mode,
+                     "use_realign": not a.no_realign,
                      "seed": a.seed, "dsl_pool_size": len(pool)},
            "_summary": rows, "records": records}
-    suffix = f"_{a.tag}" if a.tag else ""
+    # Nama berkas WAJIB memuat mode+m. Tanpa ini dua run yang berbeda hanya pada
+    # --latent-mode/--latent-steps menulis ke berkas yang SAMA dan yang kedua
+    # menimpa yang pertama tanpa peringatan — persis pasangan yang dibandingkan
+    # di Tahap 0. Tag eksplisit tetap menang bila diberikan.
+    _nr = "_norealign" if a.no_realign else ""
+    suffix = f"_{a.tag}" if a.tag else f"_{a.latent_mode}{_nr}_m{a.latent_steps}"
     path = OUT / f"channel_capacity_{a.model.replace('/', '_')}{suffix}.json"
     path.write_text(json.dumps(doc, indent=2))
     print(f"tersimpan → {path}")

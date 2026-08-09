@@ -15,17 +15,20 @@
 > dari git repo `quantalatent` ini). Perbandingan dengan dua alternatif
 > lain: `skripsi/alternatif_perbandingan.md`.
 >
-> **Status**: Tahap 0 (§7 di bawah) BELUM dijalankan. Ini gerbang penentu —
-> jangan lanjut ke Tahap 1/2 sebelum tahu apakah `gumbel` > `raw` pada
-> kapasitas kanal. Kalau hasilnya `gumbel` ≈ `raw`, arah skripsi ini
-> **gagal secara empiris** dan turun jadi Alt 2 (`alternatif_fidelitas_simbol.md`,
-> nol-GPU, sudah lengkap) — itu bukan kegagalan sesi, itu jawaban yang sah.
+> **Status (2026-08-09): Tahap 0 SELESAI — gerbang LOLOS.** `gumbel` > `raw`
+> terbukti meyakinkan (Wilcoxon p≤0,001 di 4/4 sel m×payload; `raw` presisi
+> nol di SEMUA sel, dengan atau tanpa matriks ridge $W_a$). Ditambah kontrol
+> `soft` yang memisahkan efek proyeksi-manifold dari efek entropi Gumbel.
+> **Hasil lengkap + angka + keputusan: `lab/HASIL_TAHAP0.md`.** Rekomendasi:
+> lanjut ke Tahap 1 (probe simbolik HumanEval+/MBPP+) sesuai
+> `skripsi/alternatif_gumbel_latentmas.md` §6.
 >
-> Berkas yang tersisa di `lab/` (12 berkas, sengaja minimal):
-> `channel_capacity.py` (Tahap 0), `realign_probe.py` + `b7_probe.py`
-> (bukti geometri ridge-vs-gumbel yang sudah ada), `AUDIT_KRITIS.md` §4.1/§4.3
-> + `HASIL_TAHAP4.md` §2-3 (tulisan lengkap bukti yang sudah ada), dan
-> data JSON rujukannya (`lab/out/`).
+> Berkas yang tersisa di `lab/` (14 berkas, sengaja minimal):
+> `channel_capacity.py` + `compare_channel_modes.py` (Tahap 0 + analisis
+> statistiknya), `realign_probe.py` + `b7_probe.py` (bukti geometri
+> ridge-vs-gumbel yang sudah ada), `AUDIT_KRITIS.md` §4.1/§4.3 +
+> `HASIL_TAHAP4.md` §2-3 (tulisan lengkap bukti lama) + `HASIL_TAHAP0.md`
+> (hasil baru), dan data JSON rujukannya (`lab/out/`).
 
 ---
 
@@ -370,41 +373,42 @@ cd /workspace/project/multi-agent-system
 export PYTHONPATH=backend
 ```
 
-### Tahap 0 — lengan `raw` pada A9 (WAJIB pertama, ~5-10 menit)
+### Tahap 0 — lengan `raw` pada A9 ✅ SELESAI (2026-08-09)
 
-Data `gumbel` sudah ada (`lab/out/channel_capacity_Qwen_Qwen3-8B_m10.json`,
-`_m40.json` — lihat `_meta.latent_mode`). Yang belum ada adalah pembanding
-`raw`, dengan konfigurasi identik supaya berpasangan:
+**Gerbang LOLOS**: `gumbel` > `raw` terbukti meyakinkan di semua sel yang
+diuji. Hasil lengkap + tabel + uji statistik: **`lab/HASIL_TAHAP0.md`**.
+Empat konfigurasi dijalankan (dua WAJIB + dua tambahan murah):
 
 ```bash
 python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
   --latent-steps 10 --k 5 --trials 20 --seed 0
 python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
   --latent-steps 40 --k 5 --trials 20 --seed 0
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
+  --no-realign --latent-steps 10 --k 5 --trials 20 --seed 0   # default resmi LatentMAS (M=I)
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode soft \
+  --latent-steps 10 --k 5 --trials 20 --seed 0                # kontrol: proyeksi tanpa noise Gumbel
+
+python lab/compare_channel_modes.py --out lab/out/tahap0_analysis.json
 ```
 
-**Sebelum membaca hasilnya**: cek dulu argumen yang benar-benar didukung
-skrip (`python lab/channel_capacity.py --help`) — signature di atas
-disusun dari isi skrip saat branch ini dibuat, bukan dijalankan ulang di
-sini untuk verifikasi.
+Ringkasan: `raw` (ridge $W_a$ resmi paper) DAN `raw(M=I)` (default resmi
+repo LatentMAS, realignment OFF) sama-sama memberi `kv_latent_only.recall
+= 0,000` — identik bit-per-bit, di m=10 maupun m=40, di kedua payload.
+`gumbel` memberi 0,35→0,84 (dsl) dan 0,19→0,76 (token) naik dari m=10 ke
+m=40 (Wilcoxon p≤0,001 di semua perbandingan gumbel-vs-raw). Kontrol `soft`
+menunjukkan proyeksi-manifold-tanpa-noise sudah cukup untuk payload `dsl`
+(p=0,975, tak beda dari gumbel) tapi TIDAK cukup untuk payload `token`
+(p=0,005) — noise Gumbel berkontribusi independen untuk muatan tanpa prior
+leksikal. Detail dan batas berlaku: `lab/HASIL_TAHAP0.md` §4–§5.
 
-**Gerbang keputusan**: bandingkan `kv_latent_only.recall`/`.exact` hasil
-`raw` di atas terhadap `gumbel` di `_m10.json`/`_m40.json`.
-- `gumbel` > `raw` meyakinkan → lanjut Tahap 1 (`alternatif_gumbel_latentmas.md` §6).
-- `gumbel` ≈ `raw` → berhenti di sini; tulis hasil negatifnya, arah
-  skripsi turun ke Alt 2. Ini tetap hasil yang bisa dipertahankan — lihat
-  catatan status di atas.
+### Tahap 1-2 — probe simbolik & kontrol gist (langkah berikutnya)
 
-Opsional, murah: tambah lengan `soft` (proyeksi manifold TANPA noise
-Gumbel) untuk memisahkan efek proyeksi dari efek entropi — lihat
-`alternatif_gumbel_latentmas.md` §6 Tahap 0.
-
-### Tahap 1-2 — probe simbolik & kontrol gist (hanya jika Tahap 0 lolos)
-
-Belum ada skrip siap pakai untuk ini di branch ini — desainnya ada di
-`alternatif_gumbel_latentmas.md` §6 Tahap 1-2 (subsample HumanEval+/MBPP+,
-lalu subsample GSM8K/MedQA sebagai kontrol). Turunkan dari pola
-`channel_capacity.py` yang sudah ada, bukan dari nol.
+Belum dijalankan. Rekomendasi Tahap 0 (§6 `HASIL_TAHAP0.md`): **lanjut ke
+Tahap 1**. Desainnya ada di `alternatif_gumbel_latentmas.md` §6 Tahap 1-2
+(subsample HumanEval+/MBPP+, lalu subsample GSM8K/MedQA sebagai kontrol).
+Belum ada skrip siap pakai — turunkan dari pola `channel_capacity.py` yang
+sudah ada, bukan dari nol.
 
 ---
 

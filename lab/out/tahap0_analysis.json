@@ -1,0 +1,380 @@
+[
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "gumbel",
+    "mode_b": "raw",
+    "recall_a": 0.35,
+    "recall_b": 0.0,
+    "d_recall": 0.35,
+    "ci95": [
+      0.27,
+      0.43
+    ],
+    "p_wilcoxon": 0.0002,
+    "n_nonzero": 18,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "gumbel",
+    "mode_b": "raw(M=I)",
+    "recall_a": 0.35,
+    "recall_b": 0.0,
+    "d_recall": 0.35,
+    "ci95": [
+      0.27,
+      0.43
+    ],
+    "p_wilcoxon": 0.0002,
+    "n_nonzero": 18,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "gumbel",
+    "mode_b": "soft",
+    "recall_a": 0.35,
+    "recall_b": 0.34,
+    "d_recall": 0.01,
+    "ci95": [
+      -0.09,
+      0.12
+    ],
+    "p_wilcoxon": 0.9746,
+    "n_nonzero": 14,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "raw",
+    "mode_b": "raw(M=I)",
+    "recall_a": 0.0,
+    "recall_b": 0.0,
+    "d_recall": 0.0,
+    "ci95": [
+      0.0,
+      0.0
+    ],
+    "p_wilcoxon": 1.0,
+    "n_nonzero": 0,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "raw",
+    "mode_b": "soft",
+    "recall_a": 0.0,
+    "recall_b": 0.34,
+    "d_recall": -0.34,
+    "ci95": [
+      -0.42,
+      -0.25
+    ],
+    "p_wilcoxon": 0.0003,
+    "n_nonzero": 16,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "raw(M=I)",
+    "mode_b": "soft",
+    "recall_a": 0.0,
+    "recall_b": 0.34,
+    "d_recall": -0.34,
+    "ci95": [
+      -0.42,
+      -0.25
+    ],
+    "p_wilcoxon": 0.0003,
+    "n_nonzero": 16,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "gumbel",
+    "mode_b": "raw",
+    "recall_a": 0.19,
+    "recall_b": 0.0,
+    "d_recall": 0.19,
+    "ci95": [
+      0.12,
+      0.25
+    ],
+    "p_wilcoxon": 0.0006,
+    "n_nonzero": 14,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "gumbel",
+    "mode_b": "raw(M=I)",
+    "recall_a": 0.19,
+    "recall_b": 0.0,
+    "d_recall": 0.19,
+    "ci95": [
+      0.12,
+      0.25
+    ],
+    "p_wilcoxon": 0.0006,
+    "n_nonzero": 14,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "gumbel",
+    "mode_b": "soft",
+    "recall_a": 0.19,
+    "recall_b": 0.06,
+    "d_recall": 0.13,
+    "ci95": [
+      0.06,
+      0.2
+    ],
+    "p_wilcoxon": 0.005,
+    "n_nonzero": 12,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "raw",
+    "mode_b": "raw(M=I)",
+    "recall_a": 0.0,
+    "recall_b": 0.0,
+    "d_recall": 0.0,
+    "ci95": [
+      0.0,
+      0.0
+    ],
+    "p_wilcoxon": 1.0,
+    "n_nonzero": 0,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "raw",
+    "mode_b": "soft",
+    "recall_a": 0.0,
+    "recall_b": 0.06,
+    "d_recall": -0.06,
+    "ci95": [
+      -0.11,
+      -0.02
+    ],
+    "p_wilcoxon": 0.0339,
+    "n_nonzero": 5,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 10,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "raw(M=I)",
+    "mode_b": "soft",
+    "recall_a": 0.0,
+    "recall_b": 0.06,
+    "d_recall": -0.06,
+    "ci95": [
+      -0.11,
+      -0.02
+    ],
+    "p_wilcoxon": 0.0339,
+    "n_nonzero": 5,
+    "exact_a": 0.0,
+    "exact_b": 0.0,
+    "p_mcnemar": 1.0,
+    "discordant": [
+      0,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 40,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "dsl",
+    "mode_a": "gumbel",
+    "mode_b": "raw",
+    "recall_a": 0.84,
+    "recall_b": 0.0,
+    "d_recall": 0.84,
+    "ci95": [
+      0.69,
+      0.96
+    ],
+    "p_wilcoxon": 0.0001,
+    "n_nonzero": 18,
+    "exact_a": 0.7,
+    "exact_b": 0.0,
+    "p_mcnemar": 0.0001,
+    "discordant": [
+      14,
+      0
+    ]
+  },
+  {
+    "model": "Qwen/Qwen3-8B",
+    "k": 5,
+    "trials": 20,
+    "m": 40,
+    "seed": 0,
+    "arm": "kv_latent_only",
+    "payload": "token",
+    "mode_a": "gumbel",
+    "mode_b": "raw",
+    "recall_a": 0.76,
+    "recall_b": 0.0,
+    "d_recall": 0.76,
+    "ci95": [
+      0.57,
+      0.92
+    ],
+    "p_wilcoxon": 0.0002,
+    "n_nonzero": 16,
+    "exact_a": 0.6,
+    "exact_b": 0.0,
+    "p_mcnemar": 0.0005,
+    "discordant": [
+      12,
+      0
+    ]
+  }
+]
