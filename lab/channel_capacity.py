@@ -361,8 +361,12 @@ def main() -> None:
     # --latent-mode/--latent-steps menulis ke berkas yang SAMA dan yang kedua
     # menimpa yang pertama tanpa peringatan — persis pasangan yang dibandingkan
     # di Tahap 0. Tag eksplisit tetap menang bila diberikan.
+    # Mode "moi" WAJIB menyertakan beta di nama berkas: beta adalah sumbu bebas
+    # (bukan biner seperti no-realign), jadi tanpa ini setiap nilai beta yang
+    # berbeda saling menimpa satu sama lain diam-diam.
     _nr = "_norealign" if a.no_realign else ""
-    suffix = f"_{a.tag}" if a.tag else f"_{a.latent_mode}{_nr}_m{a.latent_steps}"
+    _beta = f"_b{a.latent_beta:g}" if a.latent_mode == "moi" else ""
+    suffix = f"_{a.tag}" if a.tag else f"_{a.latent_mode}{_nr}{_beta}_m{a.latent_steps}"
     path = OUT / f"channel_capacity_{a.model.replace('/', '_')}{suffix}.json"
     path.write_text(json.dumps(doc, indent=2))
     print(f"tersimpan → {path}")

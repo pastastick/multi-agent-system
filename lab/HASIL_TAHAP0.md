@@ -218,7 +218,7 @@ memperbaiki keandalan/format tanpa memulihkan fidelitas simbolik penuh.
 > (a) apakah "Gumbel untuk kolaborasi laten multi-agen training-free" benar-benar
 > belum ada di literatur, dan (b) adakah algoritma yang lebih baik dari Gumbel?
 
-## 8. Hasil cek literatur — posisi klaim orisinalitas
+## 7. Hasil cek literatur — posisi klaim orisinalitas
 
 Empat sumber yang menentukan, dibaca penuh (bukan dari abstrak saja):
 
@@ -236,7 +236,7 @@ multi-agen** — yang menurut survei 2606.05711 belum dilakukan siapa pun, dan (
 **alat ukur kapasitas kanal simbolik** yang survei itu sendiri sebut sebagai celah,
 dan yang audit kausal terbaru (2607.26773) nyatakan belum ia lakukan.
 
-## 9. Dua algoritma kandidat: `sample` dan `moi`
+## 8. Dua algoritma kandidat: `sample` dan `moi`
 
 - **`sample`** — sudah ada di kode (`z = W_in[i], i ~ softmax(W_out h/T)`) tapi
   **belum pernah diuji A9**. Ini batas ekstrem: token diskret murni, nol superposisi.
@@ -251,7 +251,7 @@ dan yang audit kausal terbaru (2607.26773) nyatakan belum ia lakukan.
 Konfigurasi identik Tahap 0 (k=5, 20 trial, seed=0, m ∈ {10, 40}) → berpasangan
 penuh dengan semua data sebelumnya.
 
-### 9.1. Hasil — m=10 (setelan produksi)
+### 8.1. Hasil — m=10 (setelan produksi)
 
 `kv_latent_only`, n=20/sel:
 
@@ -263,7 +263,7 @@ penuh dengan semua data sebelumnya.
 | soft | 0,340 | 0,105 | 0,060 | **0,050** |
 | raw / raw(M=I) | 0,000 | 0,000 | 0,000 | 0,000 |
 
-### 9.2. Hasil — m=40
+### 8.2. Hasil — m=40
 
 | mode | dsl recall | dsl exact | token recall | token exact |
 |---|---:|---:|---:|---:|
@@ -272,7 +272,7 @@ penuh dengan semua data sebelumnya.
 | sample | 0,720 | 0,600 | 0,810 | 0,650 |
 | raw | 0,000 | 0,000 | 0,000 | 0,000 |
 
-### 9.3. Uji berpasangan — yang signifikan dan yang TIDAK
+### 8.3. Uji berpasangan — yang signifikan dan yang TIDAK
 
 **Signifikan (p<0,01), tanpa kecuali:** setiap mode berbasis proyeksi
 (`soft`/`gumbel`/`sample`/`moi`) mengalahkan `raw` di **8 dari 8** sel
@@ -294,7 +294,7 @@ Di m=40 juga signifikan pada exact-match (McNemar p<0,001, mis. moi−raw 15/0).
 `token`, `gumbel` mengalahkan `moi` dan `sample` (Δ=+0,060, p=0,034 keduanya) dan
 `soft` (Δ=+0,130, p=0,005).
 
-### 9.4. Kesimpulan Tahap 0B
+### 8.4. Kesimpulan Tahap 0B
 
 **(a) `moi` adalah pemenang nominal di 3 dari 4 sel** (dsl m=10, dsl m=40, token
 m=40) dan mencapai angka tertinggi yang pernah terukur di proyek ini
@@ -325,16 +325,114 @@ kecil dan tak signifikan, sehingga yang menentukan adalah keputusan desain
 proyeksi-ke-embedding, bukan pilihan varian."* Ini justru lebih kuat dari klaim
 "algoritma saya menang", karena tak bisa dipatahkan dengan mengganti varian.
 
-### 9.5. Batas berlaku Tahap 0B
+### 8.5. Batas berlaku Tahap 0B
 
-- n=20/sel, **satu seed**, satu β (β=1). Sweep β MoI ({0,25…8}) belum dilakukan —
-  paper MoI melaporkan β optimal bergantung tugas, jadi angka MoI di sini adalah
-  **setelan default, bukan yang terbaik yang mungkin**.
+- n=20/sel, **satu seed**. Angka MoI di §8.1–8.2 memakai β=1 (default paper);
+  sweep β lengkap ({0,25…8}, §8.6) menunjukkan ini **tidak masalah** — β tak
+  berpengaruh signifikan pada domain ini, beda dengan temuan MoI di tugas
+  penalaran umum.
 - `raw(M=I)` hanya diuji di m=10 (di m=40 hanya `raw` dengan ridge).
 - Perbedaan nominal 0,03–0,15 pada n=20 **tidak bisa dibedakan dari derau** — untuk
   memutuskan pemenang sejati butuh n≫20 atau multi-seed.
 
-### 9.6. Catatan efisiensi GPU untuk tahap berikutnya
+### 8.6. Sweep β MoI — TIDAK ADA β optimal yang bisa dibedakan dari derau
+
+> Dijalankan 2026-08-09 (lanjutan sesi yang sama). Paper MoI melaporkan β optimal
+> **bergantung tugas** (β≤1 menolong AIME, β>1 menolong Count Down 4). Pertanyaannya:
+> apakah itu berlaku juga di kanal laten murni domain faktor alpha?
+
+Enam nilai β diuji di m=10 (β=1 dari §9.1, lima nilai baru dijalankan **paralel
+2×** per batch — 2 proses @ ~16GB muat bersamaan di GPU 46GB, lihat §9.6):
+
+| β | dsl recall | dsl halus | token recall | token halus | rata-rata |
+|---:|---:|---:|---:|---:|---:|
+| 0,25 | 0,350 | 0,054 | 0,130 | 0,165 | 0,240 |
+| 0,5  | 0,370 | 0,054 | 0,130 | 0,165 | 0,250 |
+| **1,0** (default paper) | 0,380 | 0,068 | 0,130 | 0,140 | 0,255 |
+| 2,0  | 0,380 | 0,054 | 0,130 | 0,165 | 0,255 |
+| 4,0  | 0,360 | 0,054 | 0,110 | 0,135 | 0,235 |
+| 8,0  | 0,380 | 0,071 | 0,130 | 0,190 | 0,255 |
+
+**Uji berpasangan (Wilcoxon, 15 pasangan β×β, kedua payload = 30 uji total):
+TIDAK SATU PUN signifikan.** p berkisar 0,499–1,000; sebagian besar pasangan
+punya n≠ ≤ 2 dari 20 trial (praktis identik trial-per-trial, bukan hanya
+rata-ratanya kebetulan dekat). Rentang **32×** pada β (0,25 → 8) tidak
+menghasilkan perbedaan yang bisa dibedakan dari derau sampel.
+
+**Kesimpulan: tidak ada β optimal yang bisa diklaim di domain ini.** Tiga nilai
+(β=1, β=2, β=8) berbagi rata-rata tertinggi (0,255) secara tepat — bukan karena
+istimewa, tapi karena recall dsl/token masing-masing sudah jenuh di nilai yang
+sama (0,380/0,130) untuk ketiganya. β=1 (default universal paper) sudah optimal
+sejauh yang bisa dibuktikan data ini, jadi **tidak perlu diganti** untuk domain
+faktor alpha — beda dengan temuan MoI di tugas penalaran umum (AIME, Count Down)
+tempat β bergantung tugas. **Konfirmasi tambahan di m=40 sengaja TIDAK
+dijalankan**: dengan efek sekecil ini pada m=10 (dan pola serupa hampir pasti
+berulang di m=40, mengingat mekanisme yang sama), biaya GPU tambahan tidak
+sepadan dengan nilai informasi yang didapat — sweep m=10 sudah menjawab
+pertanyaannya secara meyakinkan (bukan "belum cukup data", tapi "efeknya
+memang tidak ada pada rentang yang diuji").
+
+## 9. Asal-usul algoritma — rujukan arXiv persis
+
+Tiga mode stokastik yang diuji Tahap 0B bukan diciptakan proyek ini; berikut
+rujukan persis untuk masing-masing, supaya atribusi di skripsi tepat.
+
+### 9.1. `gumbel` — Stochastic Soft Thinking
+
+**Wu, J., Lu, J., Ren, Z., Hu, G., Wu, Z., Dai, D., Wu, H.** *LLMs are
+Single-threaded Reasoners: Demystifying the Working Mechanism of Soft
+Thinking.* arXiv:2508.03440v4 [cs.CL], 2025.
+
+Persamaan Gumbel-Softmax mereka (Eq. 4, §5.1.2), untuk logit asli $\pi_i$ dan
+suhu $\tau$:
+
+$$y_i = \frac{\exp((g_i + \log \pi_i)/\tau)}{\sum_k \exp((g_k + \log \pi_k)/\tau)},
+\qquad g_i \sim \text{Gumbel}(0,1)$$
+
+Keluaran $y$ dipakai sebagai kombinasi konveks atas matriks embedding (bukan
+sampel keras) — **identik secara matematis** dengan yang diimplementasikan di
+`_latent_step_vec` mode `"gumbel"` (`client.py`): `logits += -log(-log(u))`,
+`z = softmax(logits/T) @ W_in`. Satu-satunya beda adalah nilai suhu: paper
+memakai $\tau=0{,}5$ sebagai default, harness ini memakai $T=0{,}7$ (warisan
+setelan produksi B2, bukan tuning ulang untuk kesetaraan dengan paper ini —
+lihat §7 `HASIL_TAHAP4.md`). Training-free di waktu inferensi, sama seperti
+mode lain di sini. **Konteksnya single-model** (satu model bernalar sendiri),
+bukan multi-agen — proyek ini yang pertama menerapkannya pada transfer KV
+antar-agen (lihat §8).
+
+### 9.2. `moi` — Mixture of Inputs
+
+**Zhuang, Y., dkk.** *Mixture of Inputs: Text Generation Beyond Discrete Token
+Sampling.* NeurIPS 2025, arXiv:2505.14827.
+
+Model Bayesian Dirichlet-Multinomial: distribusi $p$ (output softmax) sebagai
+prior, token tersampel $y\sim p$ sebagai observasi dengan pseudo-count
+$(\beta{+}1{-}H)$, $H$ = entropi ternormalisasi $\in[0,1]$:
+
+$$w_i = \frac{H \cdot p_i + (\beta+1-H)\cdot \mathbb{1}[i=y]}{\beta+1},
+\qquad z = w \cdot W_{\text{in}}$$
+
+Diimplementasikan persis sesuai rumus ini di `_latent_step_vec` mode `"moi"`.
+Paper tidak me-rescale embedding hasil; normalisasi ke `target_norm` di
+harness ini adalah **konvensi seragam proyek** untuk semua mode (supaya
+perbandingan antar-mode adil), bukan bagian dari definisi MoI aslinya.
+β=1 dipakai sebagai default (setelan universal paper mereka untuk
+GPQA-Diamond/LiveCodeBench) — sweep §9.5b menunjukkan pada domain ini β tidak
+berpengaruh sama sekali, jadi default itu tak perlu diganti.
+
+### 9.3. `sample` — pengambilan sampel kategoris standar
+
+Tidak berasal dari satu paper tunggal — ini teknik dekode standar tekstual
+($y\sim\text{Categorical}(\text{softmax}(\text{logits}/T))$, lalu $z=W_{\text{in}}[y]$),
+lebih tua dari ketiga paper laten di atas. Disebut eksplisit sebagai baseline
+**"Token (Sampling)"** di tabel evaluasi Stochastic Soft Thinking (§10.1) dan
+dipakai sebagai pembanding di hampir semua paper penalaran laten (CoCoNut,
+Soft Thinking). Fungsinya di Tahap 0B adalah **batas ekstrem**: superposisi
+nol, identitas token diskret penuh — kebalikan `soft` yang superposisi penuh
+tanpa identitas diskret sama sekali. `gumbel` dan `moi` adalah dua cara
+berbeda menyeimbangkan kedua ekstrem ini.
+
+### 8.7. Catatan efisiensi GPU untuk tahap berikutnya
 
 Tiap run memakai **~16 GB dari 46 GB** VRAM A40 dan GPU hanya 70–95% terpakai oleh
 satu proses. **2–3 run bisa jalan paralel** — Tahap 0B yang berjalan serial memakan
@@ -344,7 +442,7 @@ storage tidak rebutan I/O), bukan berurutan.
 
 ---
 
-## 7. Cara mereproduksi
+## 10. Cara mereproduksi
 
 ```bash
 source /workspace/runpod_env.sh

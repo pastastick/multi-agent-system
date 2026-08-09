@@ -132,6 +132,11 @@ def main() -> None:
         # memuat kuncinya; semuanya dijalankan dengan realign aktif → default True.
         if mode == "raw" and not r["_meta"].get("use_realign", True):
             mode = "raw(M=I)"
+        # beta adalah sumbu bebas untuk mode "moi" (bukan biner) — setiap nilai
+        # HARUS jadi label mode terpisah, atau sweep beta akan saling menimpa
+        # satu sama lain di dalam satu sel dan sweep-nya tak pernah terlihat.
+        if mode == "moi":
+            mode = f"moi(β={r['_meta'].get('latent_beta', 1.0):g})"
         cell = cells.setdefault(key_of(r["_meta"]), {})
         if mode in cell:
             print(f"  ! dua run mode={mode} untuk sel yang sama; "
