@@ -32,6 +32,14 @@ BACKEND = QL_ROOT / "backend"
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
+# Batasi worker joblib SEBELUM `function_lib` (dan karenanya joblib) di-import.
+# REGBETA/REGRESI/BB_* dipanggil dengan `n_jobs=-1`, jadi satu ekspresi yang
+# memakai salah satunya men-spawn satu worker per core; tiap worker mem-fork
+# induknya bersama data pasar (~320 MB terukur di mesin 16-core → +5 GB sekali
+# jalan). Di mesin GPU 46 GB itu tak terasa; di laptop/CPU-box ia membunuh
+# proses skoring lewat OOM di tengah korpus. Batasnya bisa dinaikkan lewat env.
+os.environ.setdefault("LOKY_MAX_CPU_COUNT", os.environ.get("LAB_MAX_WORKERS", "3"))
+
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
@@ -162,14 +170,22 @@ class Lab:
         return out
 
     # ── metrik ────────────────────────────────────────────────────────────
-    def ic_of_values(self, vals: pd.Series) -> ICResult:
+    def _ic_core(self, vals: pd.Series) -> tuple[ICResult, "pd.Series | None"]:
+        """Hitung ICResult DAN deret IC harian dalam satu kali groupby.
+
+        Dipisah karena `ic_of_values` dan `ic_full` dulu menghitung `per_day`
+        yang persis sama dua kali — dan groupby-spearman atas ±1 jt baris itulah
+        biaya dominan skoring korpus (bukan evaluasi ekspresinya). Angkanya
+        tidak berubah sedikit pun; hanya dihitung sekali.
+        """
         d = pd.DataFrame({"f": vals, "y": self.label})
         d = d.replace([np.inf, -np.inf], np.nan).dropna()
         if not d.empty:
             dts = d.index.get_level_values("datetime")
             d = d[(dts >= self.oos_start) & (dts <= self.oos_end)]
         if d.empty:
-            return ICResult(None, None, 0, None, 0.0, 0.0, error="empty after dropna/OOS")
+            return (ICResult(None, None, 0, None, 0.0, 0.0,
+                             error="empty after dropna/OOS"), None)
 
         grp = d.groupby(level="datetime")
         per_day = grp.apply(
@@ -181,10 +197,11 @@ class Lab:
         n = int(per_day.notna().sum())
         icir = float(ic / sd) if pd.notna(ic) and pd.notna(sd) and sd > 0 else None
         t = float(icir * np.sqrt(n)) if icir is not None and n > 1 else None
-        return ICResult(
-            float(ic) if pd.notna(ic) else None, icir, n, t,
-            float(cov), float(uniq),
-        )
+        return (ICResult(float(ic) if pd.notna(ic) else None, icir, n, t,
+                         float(cov), float(uniq)), per_day)
+
+    def ic_of_values(self, vals: pd.Series) -> ICResult:
+        return self._ic_core(vals)[0]
 
     def ic(self, expr: str) -> ICResult:
         try:
@@ -194,23 +211,17 @@ class Lab:
                             error=f"{type(e).__name__}: {e}")
 
     def ic_full(self, expr: str) -> tuple[ICResult, "pd.Series | None"]:
-        """IC + deret IC harian dari SATU kali evaluasi ekspresi (dua kali panggil
-        values() menggandakan biaya; itu yang membuat audit pertama sangat lambat)."""
+        """IC + deret IC harian dari SATU kali evaluasi ekspresi DAN satu kali
+        groupby (dua-duanya dulu dihitung dobel; itu yang membuat skoring korpus
+        sangat lambat)."""
         try:
             vals = self.values(expr)
         except Exception as e:  # noqa: BLE001
             return ICResult(None, None, 0, None, 0.0, 0.0,
                             error=f"{type(e).__name__}: {e}"), None
-        res = self.ic_of_values(vals)
+        res, series = self._ic_core(vals)
         if res.error is not None or res.ic is None:
             return res, None
-        d = pd.DataFrame({"f": vals, "y": self.label})
-        d = d.replace([np.inf, -np.inf], np.nan).dropna()
-        dts = d.index.get_level_values("datetime")
-        d = d[(dts >= self.oos_start) & (dts <= self.oos_end)]
-        series = d.groupby(level="datetime").apply(
-            lambda x: x["f"].corr(x["y"], method="spearman") if len(x) > 2 else np.nan
-        )
         return res, series
 
     def ic_series(self, expr: str) -> pd.Series | None:

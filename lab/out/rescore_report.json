@@ -1,0 +1,22 @@
+{
+  "window": [
+    "2021-01-01",
+    "2021-12-31"
+  ],
+  "budget_s": 90,
+  "n_unique_expr": 609,
+  "n_with_series": 434,
+  "per_tag": [
+    {
+      "tag": "g4_kv_and_text_ls60",
+      "ekspresi": 0,
+      "ber_ic": 0,
+      "hidup": 0,
+      "deret": 0,
+      "beda": 0,
+      "mean_abs_ic": null
+    }
+  ],
+  "diffs": [],
+  "missing_before": []
+}

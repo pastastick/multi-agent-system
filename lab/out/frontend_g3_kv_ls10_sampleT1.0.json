@@ -62,8 +62,10 @@
           "name": "ConditionalVolatility",
           "expression": "($volume > TS_QUANTILE($volume, 20, 5)) ? TS_PCTCHANGE($close, 1) : 0",
           "explanation": "Identifies top 20% volume days and gates the next-day return on those events",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "`TS_QUANTILE` got quantile 5, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q."
+          ],
           "flags": [
             "nonboolean-condition"
           ],

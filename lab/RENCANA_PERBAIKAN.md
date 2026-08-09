@@ -1,5 +1,40 @@
 # Rencana perbaikan QuantaLatent — dari temuan G1–G7 ke intervensi
 
+> ## ⚠️ KOREKSI 2026-08-08 — keputusan B16 diambil pada sumbu yang buta
+>
+> Sesi CPU 2026-08-08 memasang **lantai acak pada sumbu cakupan pencarian (A3)**
+> — sumbu yang dipakai seluruh rantai keputusan di dokumen ini, tetapi yang tak
+> pernah punya pembanding. Bootstrap n-tercocok atas 271 ekspresi acak
+> (`lab/random_clusters.py`) memberi hasil yang membalik sebagian §Tahap 3a/3b:
+>
+> | lengan | klaster | sebaran nol n-tercocok | p(acak ≥ LLM) |
+> |---|---:|---:|---:|
+> | `full` (proposal→**design**→construct) | **21** | 11 (7–15) | **<0,003** |
+> | `innovate_guided` (produksi sekarang) | 10 | 9 (6–13) | 0,443 |
+> | `nodesign` (proposal→construct) | 7 | 12 (8–16) | **0,993** |
+>
+> Ablasi `full` vs `nodesign` terkontrol sempurna (beda tunggal = agen `design`;
+> LLM/DSL/prompt/seed/arah identik). Artinya **agen `design` adalah satu-satunya
+> sebab sistem ini mengungguli pencarian acak sama sekali** — pada sumbu mutu
+> (\|IC\|) semua lengan setara atau lebih buruk dari acak.
+>
+> Gerbang 1 Tahap 3a menggugurkan `design` karena pengaruhnya pada \|IC\| tidak
+> signifikan (Welch t=0,79). Itu prosedur yang sah dan didaftarkan di muka —
+> tetapi diterapkan pada sumbu yang kini terbukti **tidak membedakan lengan mana
+> pun dari acak**. Keputusan B16 karena itu **tidak dibatalkan, tetapi harus
+> dibaca ulang**: ia menukar satu-satunya keunggulan terbukti demi perbaikan
+> pada sumbu yang buta.
+>
+> **Tindak lanjut yang diusulkan** (belum dijalankan, butuh 1 ronde GPU 6 run):
+> rantai gabungan `proposal → design → innovate → construct`, dengan kriteria
+> lulus didaftarkan di muka — klaster > p95 sebaran nol **dan** \|IC\| tak beda
+> dari lantai acak. Belum ada lengan yang mengungguli lantai pada kedua sumbu.
+>
+> Rincian, angka, confound yang diperiksa, dan batas berlaku: `lab/KESIMPULAN.md`
+> §11.3 (dan §9.1b untuk konsekuensinya bagi fokus skripsi).
+>
+> ---
+>
 > **STATUS PELAKSANAAN** (diperbarui 2026-08-07, branch `exp/rencana-perbaikan`)
 >
 > | tahap | status | catatan |

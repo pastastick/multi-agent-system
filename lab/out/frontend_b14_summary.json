@@ -1009,7 +1009,7 @@
           "n_days": 0,
           "coverage": 0.0,
           "n_unique": 0.0,
-          "eval_error": "TimeoutError: melebihi 90s",
+          "eval_error": "timeout>90s",
           "passed_gate": true
         },
         {

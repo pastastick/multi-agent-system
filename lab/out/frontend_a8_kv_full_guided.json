@@ -786,13 +786,13 @@
           "flags": [
             "nonboolean-condition"
           ],
-          "ic": null,
-          "icir": null,
-          "tstat": null,
-          "n_days": 0,
-          "coverage": 0.0,
-          "n_unique": 0.0,
-          "eval_error": "TimeoutError: melebihi 90s",
+          "ic": 0.027260620212332397,
+          "icir": 1.8934544744988537,
+          "tstat": 8.253376708535416,
+          "n_days": 19,
+          "coverage": 4372.489711934157,
+          "n_unique": 1.0781893004115226,
+          "eval_error": null,
           "passed_gate": false
         },
         {

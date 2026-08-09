@@ -1117,7 +1117,9 @@
           "sem_ok": false,
           "sem_errors": [
             "`TS_QUANTILE` got window 0.2, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
-            "`TS_QUANTILE` got window 0.4, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days."
+            "`TS_QUANTILE` got quantile 20, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q.",
+            "`TS_QUANTILE` got window 0.4, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 2 days.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
           ],
           "flags": [
             "nonboolean-condition"

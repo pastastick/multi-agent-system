@@ -269,8 +269,10 @@
           "name": "VolCorrReturn",
           "expression": "TS_CORR($volume, $return, 5) < 0.2",
           "explanation": "Measures the correlation between volume and return over 5 days, focusing on weak positive correlations that might indicate reversal effects.",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
           "flags": [],
           "ic": 0.01753445072186338,
           "icir": 0.26228364909597485,
@@ -305,8 +307,10 @@
           "name": "VolCovReturn",
           "expression": "TS_COVARIANCE($volume, $return, 5) < 0",
           "explanation": "Identifies stocks with negative covariance between volume and return, suggesting a liquidity-induced reversal effect.",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
           "flags": [],
           "ic": 0.016339293345037614,
           "icir": 0.2409459508095406,

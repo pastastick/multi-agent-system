@@ -238,12 +238,18 @@ class _time_budget:
 
 
 def score_expressions(runs: list[dict], window=None, series_path: Path | None = None,
-                      budget_s: int = 90) -> None:
+                      budget_s: int = 90, cache: dict | None = None,
+                      lab=None, series_cache: dict | None = None) -> None:
     """Isi setiap faktor dengan cacat semantik + IC/ICIR OOS (in-place).
 
     Deret IC harian juga disimpan (parquet) supaya analisis bisa mengelompokkan
     faktor jadi KLASTER SINYAL — ukuran keragaman pencarian (AUDIT_KRITIS §2.4)
     yang jauh lebih informatif daripada sekadar jumlah ekspresi.
+
+    `cache`/`series_cache`/`lab` boleh dioper dari luar supaya skoring BANYAK
+    tag berjalan dalam satu proses tanpa memuat ulang data pasar dan tanpa
+    mengevaluasi ulang ekspresi yang sama (631 ekspresi unik dari 805 total
+    lintas-tag). Dipakai `lab/rescore_all.py`.
     """
     import pandas as pd
 
@@ -255,8 +261,11 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
     import factors.coder.factor_ast  # noqa: F401
     from factors.regulator.factor_regulator import validate_semantics
 
-    lab = Lab(mode="fast", window=window)
-    cache: dict[str, dict] = {}
+    if lab is None:
+        lab = Lab(mode="fast", window=window)
+    if cache is None:
+        cache = {}
+    series_all: dict[str, "pd.Series"] = series_cache if series_cache is not None else {}
     series: dict[str, "pd.Series"] = {}
 
     for r in runs:
@@ -281,7 +290,9 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
                     "n_unique": res.n_unique, "eval_error": res.error,
                 }
                 if ser is not None:
-                    series[e] = ser
+                    series_all[e] = ser
+            if e in series_all:
+                series[e] = series_all[e]
             f.update(cache[e])
             f["passed_gate"] = e in (r.get("passing") or [])
 

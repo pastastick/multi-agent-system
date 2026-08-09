@@ -494,8 +494,10 @@
           "name": "vol_reversal_zscore",
           "expression": "ZSCORE( (TS_ZSCORE($volume, 5) > 1 ? 1 : (TS_ZSCORE($volume, 5) < -1 ? -1 : 0)) )",
           "explanation": "This gates extreme volume z-scores and standardizes them across the cross-section. It serves the conditional regime detection and normalization.",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
           "flags": [],
           "ic": -0.014231870599349583,
           "icir": -0.2578105079335864,
@@ -892,7 +894,8 @@
           "explanation": "Computes a cross-sectional z-score of the rolling return z-score, weighted by volume volatility, serving the mean-reversion mechanism during regime transitions.",
           "sem_ok": false,
           "sem_errors": [
-            "the condition `(ZSCORE(TS_ZSCORE($return, 20.0)) * (TS_STD($volume, 20.0) > TS_MEDIAN($volume, 20.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE(TS_ZSCORE($return, 20.0)) * (TS_STD($volume, 20.0) > TS_MEDIAN($volume, 20.0)))) > 0`."
+            "the condition `(ZSCORE(TS_ZSCORE($return, 20.0)) * (TS_STD($volume, 20.0) > TS_MEDIAN($volume, 20.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE(TS_ZSCORE($return, 20.0)) * (TS_STD($volume, 20.0) > TS_MEDIAN($volume, 20.0)))) > 0`.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
           ],
           "flags": [
             "nonboolean-condition"
@@ -912,7 +915,9 @@
           "explanation": "Ranks the percentage change in return, adjusted by volume quantiles, capturing mean-reversion during volatility shifts.",
           "sem_ok": false,
           "sem_errors": [
-            "the condition `(RANK(TS_PCTCHANGE($return, 15.0)) * (TS_QUANTILE($volume, 25.0, 10.0) < TS_QUANTILE($volume, 75.0, 10.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((RANK(TS_PCTCHANGE($return, 15.0)) * (TS_QUANTILE($volume, 25.0, 10.0) < TS_QUANTILE($volume, 75.0, 10.0)))) > 0`."
+            "the condition `(RANK(TS_PCTCHANGE($return, 15.0)) * (TS_QUANTILE($volume, 25.0, 10.0) < TS_QUANTILE($volume, 75.0, 10.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((RANK(TS_PCTCHANGE($return, 15.0)) * (TS_QUANTILE($volume, 25.0, 10.0) < TS_QUANTILE($volume, 75.0, 10.0)))) > 0`.",
+            "`TS_QUANTILE` got quantile 10, but a quantile must be a fraction between 0 and 1 (e.g. 0.9 for the 90th percentile). Mind the argument order \u2014 TS_QUANTILE(A, p, q): window p first, then quantile q.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
           ],
           "flags": [
             "nonboolean-condition"
@@ -932,7 +937,8 @@
           "explanation": "Compares short-term and long-term return z-scores, conditioned on volume volatility changes, highlighting mean-reversion during regime transitions.",
           "sem_ok": false,
           "sem_errors": [
-            "the condition `((TS_ZSCORE($return, 10.0) - TS_ZSCORE($return, 30.0)) * (TS_STD($volume, 10.0) > TS_STD($volume, 30.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(((TS_ZSCORE($return, 10.0) - TS_ZSCORE($return, 30.0)) * (TS_STD($volume, 10.0) > TS_STD($volume, 30.0)))) > 0`."
+            "the condition `((TS_ZSCORE($return, 10.0) - TS_ZSCORE($return, 30.0)) * (TS_STD($volume, 10.0) > TS_STD($volume, 30.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `(((TS_ZSCORE($return, 10.0) - TS_ZSCORE($return, 30.0)) * (TS_STD($volume, 10.0) > TS_STD($volume, 30.0)))) > 0`.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
           ],
           "flags": [
             "nonboolean-condition"
@@ -953,7 +959,8 @@
           "sem_ok": false,
           "sem_errors": [
             "the condition `(TS_PCTCHANGE($return, 20.0) * (TS_ZSCORE($volume, 15.0) < (-1.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((TS_PCTCHANGE($return, 20.0) * (TS_ZSCORE($volume, 15.0) < (-1.0)))) > 0`.",
-            "the condition `(TS_PCTCHANGE($return, 20.0) * (TS_ZSCORE($volume, 15.0) > 1.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((TS_PCTCHANGE($return, 20.0) * (TS_ZSCORE($volume, 15.0) > 1.0))) > 0`."
+            "the condition `(TS_PCTCHANGE($return, 20.0) * (TS_ZSCORE($volume, 15.0) > 1.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((TS_PCTCHANGE($return, 20.0) * (TS_ZSCORE($volume, 15.0) > 1.0))) > 0`.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
           ],
           "flags": [],
           "ic": 0.017486831147374805,
@@ -972,7 +979,8 @@
           "sem_ok": false,
           "sem_errors": [
             "the condition `(ZSCORE(TS_PCTCHANGE($return, 10.0)) * (TS_ZSCORE($volume, 10.0) > 1.0))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE(TS_PCTCHANGE($return, 10.0)) * (TS_ZSCORE($volume, 10.0) > 1.0))) > 0`.",
-            "the condition `(ZSCORE(TS_PCTCHANGE($return, 10.0)) * (TS_ZSCORE($volume, 10.0) < (-1.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE(TS_PCTCHANGE($return, 10.0)) * (TS_ZSCORE($volume, 10.0) < (-1.0)))) > 0`."
+            "the condition `(ZSCORE(TS_PCTCHANGE($return, 10.0)) * (TS_ZSCORE($volume, 10.0) < (-1.0)))` is a continuous score, not a true/false test, so `? :` always takes the same branch. Write an explicit comparison, e.g. `((ZSCORE(TS_PCTCHANGE($return, 10.0)) * (TS_ZSCORE($volume, 10.0) < (-1.0)))) > 0`.",
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
           ],
           "flags": [],
           "ic": null,

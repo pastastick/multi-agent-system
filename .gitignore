@@ -32,6 +32,12 @@ backend/debug/conv_logs/
 backend/workspace/
 backend/__session__/
 backend/factors/data_template/daily_pv*.h5
+# rdagent menulis satu direktori log per pemanggilan; alat di lab/ meng-import
+# backend sehingga ikut memicunya (ratusan direktori per sweep skoring CPU).
+log/
+# cache skoring korpus lab/rescore_all.py (regenerable, bisa ratusan MB)
+lab/out/.rescore_cache.json
+lab/out/.rescore_series.parquet
 
 # model checkpoints / cache
 .cache/

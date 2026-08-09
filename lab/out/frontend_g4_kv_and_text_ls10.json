@@ -417,8 +417,10 @@
           "name": "PriceMomentumGate",
           "expression": "(TS_PCTCHANGE($close,5) < -0.5 ? (1) : (0))",
           "explanation": "Flagssstockswithsignificantnegativepricemovementover5daystoindicatemeanreversionduringregimetransitio n.",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
           "flags": [],
           "ic": -0.005216879165124543,
           "icir": -0.2668708145208751,
@@ -465,8 +467,10 @@
           "name": "Price.Variance.Gate",
           "expression": "(TS_STD($close,10) >1.5 ? (1) : (0))",
           "explanation": "FlagsstocksOCKswithhighvolatilityover10.daystosuggestingRegime.Shift.",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
           "flags": [],
           "ic": -0.004138962526260274,
           "icir": -0.07259155097237784,
@@ -481,8 +485,10 @@
           "name": "Volume.Correlation.Gate",
           "expression": "(ZSCORE(TS_CORR($volume,$close,10))>1.5 ? (1) : (0))",
           "explanation": "",
-          "sem_ok": true,
-          "sem_errors": [],
+          "sem_ok": false,
+          "sem_errors": [
+            "this expression only ever evaluates to fixed constants, so it gives the same handful of values to every stock and cannot rank them. Let the data reach the VALUE, not just the condition: instead of `(C) ? (-1) : (1)`, gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return, 5)) : (0)`."
+          ],
           "flags": [],
           "ic": -0.009502297937432347,
           "icir": -0.33820553069915743,
