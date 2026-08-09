@@ -210,6 +210,140 @@ raw vs gumbel), lalu Tahap 2 (kontrol *gist* — GSM8K/MedQA subsample) untuk
 menegakkan bentuk disosiasi (§4 dokumen itu): kolaborasi laten mungkin
 memperbaiki keandalan/format tanpa memulihkan fidelitas simbolik penuh.
 
+---
+
+# Tahap 0B — cek literatur + dua algoritma kandidat baru
+
+> Dijalankan 2026-08-09 (lanjutan sesi yang sama, setup identik). Dua pertanyaan:
+> (a) apakah "Gumbel untuk kolaborasi laten multi-agen training-free" benar-benar
+> belum ada di literatur, dan (b) adakah algoritma yang lebih baik dari Gumbel?
+
+## 8. Hasil cek literatur — posisi klaim orisinalitas
+
+Empat sumber yang menentukan, dibaca penuh (bukan dari abstrak saja):
+
+| sumber | apa isinya | konsekuensi untuk klaim skripsi |
+|---|---|---|
+| **Stochastic Soft Thinking** (arXiv:2508.03440, Wu dkk.) | Persis mengusulkan Gumbel-Softmax di atas Soft Thinking untuk mengatasi "Greedy Pitfall"; unggul di 8 benchmark penalaran | ⚠️ **Gumbel di langkah laten BUKAN ide baru** — tapi ini **single-model**, bukan multi-agen, dan tidak mengukur fidelitas simbolik |
+| **Beyond Tokens: survei komunikasi laten MAS** (arXiv:2606.05711, 18 metode 2024–2026) | Taksonomi WHAT/WHICH/HOW. **Tidak satu pun** dari 18 metode memakai langkah laten stokastik/relaksasi diskret. **Tidak satu pun** mengukur kapasitas kanal/fidelitas simbolik — mereka menyebutnya celah eksplisit di §7.4 ("a complementary statistical account would characterise when a receiver can decode a sender representation") | ✅ **Celah yang diisi proyek ini terkonfirmasi oleh survei terbaru**, dua-duanya: stokastisitas DI MAS laten, dan pengukuran kapasitas kanal |
+| **Do Latent Channels Actually Communicate?** (arXiv:2607.26773, Jul 2026) | Audit kausal LatentMAS (Qwen3-4B/8B), intervensi pesan (other-example/self-generated). Eksplisit: **"No systematic symbolic-content test — they don't isolate prompt-KV from latent-KV mechanistically"** | ✅ Karya terdekat yang ada; **justru menyatakan isolasi prompt-KV vs latent-KV sebagai yang belum dilakukan** — itu persis desain A9 lengan `kv_prompt_only`/`kv_latent_only` |
+| **Mixture of Inputs** (arXiv:2505.14827, NeurIPS 2025) | Training-free, Bayesian Dirichlet: distribusi = prior, token tersampel = observasi, input = ekspektasi posterior | Kandidat algoritma baru → diuji di §9 |
+
+**Posisi klaim yang jujur setelah cek ini** (turun dari "menemukan Gumbel", naik di
+sisi lain): kontribusinya **bukan** relaksasi Gumbel-nya (sudah ada untuk single-model),
+melainkan (i) **mentransplantasikan keluarga relaksasi diskret ke kolaborasi laten
+multi-agen** — yang menurut survei 2606.05711 belum dilakukan siapa pun, dan (ii)
+**alat ukur kapasitas kanal simbolik** yang survei itu sendiri sebut sebagai celah,
+dan yang audit kausal terbaru (2607.26773) nyatakan belum ia lakukan.
+
+## 9. Dua algoritma kandidat: `sample` dan `moi`
+
+- **`sample`** — sudah ada di kode (`z = W_in[i], i ~ softmax(W_out h/T)`) tapi
+  **belum pernah diuji A9**. Ini batas ekstrem: token diskret murni, nol superposisi.
+- **`moi`** — **implementasi baru** (`_latent_step_vec`, mode `"moi"`), setia pada
+  MoI paper: `w = [H·p + (β+1−H)·onehot(i~p)] / (β+1)`, `z = w @ W_in`, dengan
+  `H` = entropi ternormalisasi ∈ [0,1], β=1 (setelan universal paper).
+  Intuisinya cocok dengan masalah kita: one-hot **menjangkarkan identitas token
+  diskret** (yang hilang di `soft`/`gumbel` karena merata-rata seluruh vocab),
+  sementara suku `H·p` mempertahankan superposisi. Model yakin → nyaris one-hot;
+  model ragu → condong ke distribusi.
+
+Konfigurasi identik Tahap 0 (k=5, 20 trial, seed=0, m ∈ {10, 40}) → berpasangan
+penuh dengan semua data sebelumnya.
+
+### 9.1. Hasil — m=10 (setelan produksi)
+
+`kv_latent_only`, n=20/sel:
+
+| mode | dsl recall | dsl halus | token recall | token halus |
+|---|---:|---:|---:|---:|
+| **moi** | **0,380** | 0,068 | 0,130 | 0,140 |
+| sample | 0,360 | **0,029** | 0,130 | 0,165 |
+| gumbel | 0,350 | 0,083 | **0,190** | 0,259 |
+| soft | 0,340 | 0,105 | 0,060 | **0,050** |
+| raw / raw(M=I) | 0,000 | 0,000 | 0,000 | 0,000 |
+
+### 9.2. Hasil — m=40
+
+| mode | dsl recall | dsl exact | token recall | token exact |
+|---|---:|---:|---:|---:|
+| **moi** | **0,870** | **0,750** | **0,850** | **0,650** |
+| gumbel | 0,840 | 0,700 | 0,760 | 0,600 |
+| sample | 0,720 | 0,600 | 0,810 | 0,650 |
+| raw | 0,000 | 0,000 | 0,000 | 0,000 |
+
+### 9.3. Uji berpasangan — yang signifikan dan yang TIDAK
+
+**Signifikan (p<0,01), tanpa kecuali:** setiap mode berbasis proyeksi
+(`soft`/`gumbel`/`sample`/`moi`) mengalahkan `raw` di **8 dari 8** sel
+(m × payload × varian raw), Δrecall +0,06 s/d +0,87, CI 95% tak pernah menyentuh nol.
+Di m=40 juga signifikan pada exact-match (McNemar p<0,001, mis. moi−raw 15/0).
+
+**TIDAK signifikan — dan ini yang penting untuk kejujuran klaim:**
+
+| perbandingan | m | payload | Δrecall | p |
+|---|---|---|---:|---:|
+| moi − gumbel | 10 | dsl | +0,030 | 0,394 |
+| moi − gumbel | 40 | dsl | +0,030 | 0,666 |
+| moi − gumbel | 40 | token | +0,090 | 0,288 |
+| moi − sample | 40 | dsl | +0,150 | 0,083 |
+| gumbel − sample | 40 | dsl | +0,120 | 0,157 |
+| gumbel − sample | 40 | token | −0,050 | 0,496 |
+
+**Satu-satunya perbedaan antar-mode-proyeksi yang signifikan:** pada m=10 payload
+`token`, `gumbel` mengalahkan `moi` dan `sample` (Δ=+0,060, p=0,034 keduanya) dan
+`soft` (Δ=+0,130, p=0,005).
+
+### 9.4. Kesimpulan Tahap 0B
+
+**(a) `moi` adalah pemenang nominal di 3 dari 4 sel** (dsl m=10, dsl m=40, token
+m=40) dan mencapai angka tertinggi yang pernah terukur di proyek ini
+(recall 0,870 / exact 0,750). **Tetapi tidak satu pun keunggulannya atas `gumbel`
+mencapai signifikansi pada n=20.** Menyebut MoI "lebih baik dari Gumbel" saat ini
+**tidak didukung data** — yang sah dikatakan: "setara, dengan kecenderungan nominal
+konsisten ke arah MoI yang perlu n lebih besar untuk diuji."
+
+**(b) Batas yang nyata bukan antar-algoritma-stokastik, melainkan proyeksi vs
+tidak.** Empat mode dengan mekanisme sangat berbeda — rata-rata lunak (`soft`),
+noise Gumbel (`gumbel`), sampel keras (`sample`), campuran Bayesian (`moi`) —
+semuanya mendarat di rentang sempit 0,34–0,38 (dsl m=10) dan 0,72–0,87 (m=40),
+sementara ridge `W_a` resmi paper mendarat di **0,000 mutlak**. Ini menguatkan
+temuan inti Tahap 0: yang menentukan adalah **apakah langkah laten dikembalikan ke
+ruang embedding sama sekali**, bukan bagaimana persisnya.
+
+**(c) Trade-off halusinasi yang bisa dilaporkan terpisah.** Pada m=10 dsl, `sample`
+punya halusinasi jauh terendah (0,029 vs gumbel 0,083 vs soft 0,105) dengan recall
+setara — untuk domain DSL faktor alpha (di mana ekspresi ngawur lolos gate lebih
+mahal daripada ekspresi hilang), ini sumbu yang mungkin lebih relevan daripada recall.
+
+**(d) Konsekuensi untuk arah skripsi.** Karena tak ada algoritma yang terbukti
+unggul, bingkai "mengusulkan algoritma baru yang menang" **tidak didukung**.
+Bingkai yang didukung penuh data: *"keluarga relaksasi diskret (empat varian,
+termasuk satu yang belum pernah diterapkan ke kolaborasi laten) memulihkan kapasitas
+kanal simbolik yang hilang total pada mekanisme resmi LatentMAS; perbedaan antar-varian
+kecil dan tak signifikan, sehingga yang menentukan adalah keputusan desain
+proyeksi-ke-embedding, bukan pilihan varian."* Ini justru lebih kuat dari klaim
+"algoritma saya menang", karena tak bisa dipatahkan dengan mengganti varian.
+
+### 9.5. Batas berlaku Tahap 0B
+
+- n=20/sel, **satu seed**, satu β (β=1). Sweep β MoI ({0,25…8}) belum dilakukan —
+  paper MoI melaporkan β optimal bergantung tugas, jadi angka MoI di sini adalah
+  **setelan default, bukan yang terbaik yang mungkin**.
+- `raw(M=I)` hanya diuji di m=10 (di m=40 hanya `raw` dengan ridge).
+- Perbedaan nominal 0,03–0,15 pada n=20 **tidak bisa dibedakan dari derau** — untuk
+  memutuskan pemenang sejati butuh n≫20 atau multi-seed.
+
+### 9.6. Catatan efisiensi GPU untuk tahap berikutnya
+
+Tiap run memakai **~16 GB dari 46 GB** VRAM A40 dan GPU hanya 70–95% terpakai oleh
+satu proses. **2–3 run bisa jalan paralel** — Tahap 0B yang berjalan serial memakan
+~35 menit dan seharusnya bisa ~12–15 menit. Untuk Tahap 1/2 dan sweep β, jalankan
+proses bersamaan dengan jeda start ~30 detik (agar fase muat model dari network
+storage tidak rebutan I/O), bukan berurutan.
+
+---
+
 ## 7. Cara mereproduksi
 
 ```bash
@@ -227,6 +361,16 @@ python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
     --no-realign --latent-steps 10 --k 5 --trials 20 --seed 0
 python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode soft \
     --latent-steps 10 --k 5 --trials 20 --seed 0
+
+# Tahap 0B — dua algoritma kandidat (bisa & sebaiknya PARALEL, lihat §9.6)
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode sample \
+    --latent-steps 10 --k 5 --trials 20 --seed 0
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode moi \
+    --latent-steps 10 --k 5 --trials 20 --seed 0        # --latent-beta 1.0 (default)
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode sample \
+    --latent-steps 40 --k 5 --trials 20 --seed 0
+python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode moi \
+    --latent-steps 40 --k 5 --trials 20 --seed 0
 
 # Analisis statistik berpasangan (Wilcoxon + McNemar + bootstrap CI)
 python lab/compare_channel_modes.py --out lab/out/tahap0_analysis.json

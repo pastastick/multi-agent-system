@@ -263,6 +263,9 @@ def main() -> None:
                     help="m — panjang blok laten hulu (default = produksi)")
     ap.add_argument("--latent-mode", default="gumbel")
     ap.add_argument("--latent-temp", type=float, default=0.7)
+    # Hanya dipakai mode "moi" (Mixture of Inputs, arXiv:2505.14827) — β=1
+    # adalah setelan universal paper; sweep {0.25..8} bila perlu per-task.
+    ap.add_argument("--latent-beta", type=float, default=1.0)
     # Hanya berpengaruh pada --latent-mode raw (mode lain tak pernah memakai M).
     # Repo resmi LatentMAS memperlakukan realignment sebagai HYPERPARAMETER:
     # tanpa flag `--latent_space_realign`, `_build_latent_realign_matrix`
@@ -291,7 +294,7 @@ def main() -> None:
         store_kv=False, output_log_dir=str(OUT / "llm_outputs" / "a9"),
         max_new_tokens=a.max_new_tokens, temperature=0.6, top_p=0.95,
         knn_enabled=False, latent_step_mode=a.latent_mode,
-        latent_step_temp=a.latent_temp,
+        latent_step_temp=a.latent_temp, latent_step_beta=a.latent_beta,
         # Early-stop dimatikan: A9 mengukur kapasitas blok laten sepanjang m,
         # jadi m harus benar-benar m di semua lengan.
         latent_early_stop_cos=1.0,
@@ -351,6 +354,7 @@ def main() -> None:
     doc = {"_meta": {"model": a.model, "k": a.k, "trials": a.trials,
                      "latent_steps": a.latent_steps, "latent_mode": a.latent_mode,
                      "use_realign": not a.no_realign,
+                     "latent_beta": a.latent_beta,
                      "seed": a.seed, "dsl_pool_size": len(pool)},
            "_summary": rows, "records": records}
     # Nama berkas WAJIB memuat mode+m. Tanpa ini dua run yang berbeda hanya pada

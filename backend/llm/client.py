@@ -544,7 +544,12 @@ _MODEL_CACHE: Dict[Tuple[str, str], Tuple[Any, Any]] = {}
 _MODEL_CACHE_LOCK = threading.Lock()
 
 # Mode langkah laten yang sah (lihat _CoreEngine._latent_step_vec).
-_LATENT_STEP_MODES = ("raw", "soft", "gumbel", "sample")
+# "moi" = Mixture of Inputs (Zhuang dkk., NeurIPS 2025, arXiv:2505.14827):
+# sampel token diskret sebagai OBSERVASI, distribusi sebagai PRIOR Dirichlet,
+# input berikutnya = ekspektasi posterior (campuran one-hot + distribusi).
+# Training-free seperti mode lain; ditambahkan 2026-08-09 untuk Tahap 0 lanjutan
+# (kandidat literatur yang menjembatani `sample` dan `soft`).
+_LATENT_STEP_MODES = ("raw", "soft", "gumbel", "sample", "moi")
 
 # ── Global LLM output log state ───────────────────────────────────────────────
 # Semua LocalLLMBackend instance berbagi satu session dir dan satu counter
@@ -664,6 +669,7 @@ class _CoreEngine:
         knn_strategy   : str   = "top",
         latent_step_mode: Optional[str]   = None,
         latent_step_temp: Optional[float] = None,
+        latent_step_beta: Optional[float] = None,
         latent_early_stop_cos: Optional[float] = None,
     ) -> None:
         self.model_name      = model_name
@@ -750,6 +756,13 @@ class _CoreEngine:
             if latent_step_temp is not None
             else os.environ.get("LATENT_STEP_TEMP", "0.7")
         )
+        # β hanya dipakai mode "moi" (konsentrasi pseudo-count observasi;
+        # paper MoI: β=1 sebagai setelan universal, sweep {0.25..8} per-task).
+        self.latent_step_beta = float(
+            latent_step_beta
+            if latent_step_beta is not None
+            else os.environ.get("LATENT_STEP_BETA", "1.0")
+        )
         if self.latent_step_mode not in _LATENT_STEP_MODES:
             raise ValueError(
                 f"LATENT_STEP_MODE={self.latent_step_mode!r} tidak dikenal; "
@@ -768,6 +781,9 @@ class _CoreEngine:
                 "soft":   "z = softmax(W_out h / T) @ W_in   [M ridge TIDAK dipakai]",
                 "gumbel": "z = softmax((W_out h + g) / T) @ W_in   [M ridge TIDAK dipakai]",
                 "sample": "z = W_in[i], i ~ softmax(W_out h / T)   [M ridge TIDAK dipakai]",
+                "moi":    "z = [(H·p + (β+1−H)·onehot(i~p)) / (β+1)] @ W_in, "
+                          f"p = softmax(W_out h / T), β={self.latent_step_beta}"
+                          "   [MoI arXiv:2505.14827; M ridge TIDAK dipakai]",
             }
             print(f"[CoreEngine] latent step mode={self.latent_step_mode} "
                   f"T={self.latent_step_temp} → {_EQ[self.latent_step_mode]}")
@@ -828,6 +844,29 @@ class _CoreEngine:
         if mode == "sample":
             idx = torch.multinomial(torch.softmax(logits / T, dim=-1), 1)  # [B,1]
             z = W_in[idx.squeeze(-1)].float()
+        elif mode == "moi":
+            # Mixture of Inputs (arXiv:2505.14827, training-free). Distribusi
+            # p adalah PRIOR Dirichlet (α_i = H·p_i, H = entropi ternormalisasi
+            # ∈ [0,1]); token tersampel adalah OBSERVASI dengan pseudo-count
+            # (β+1−H); input berikutnya = ekspektasi posterior:
+            #   w_i = [H·p_i + (β+1−H)·1[i=y]] / (β+1),  z = w @ W_in.
+            # Intuisi untuk kanal simbolik: one-hot menjangkarkan identitas
+            # token diskret (yang hilang di `soft`/`gumbel` karena rata-rata
+            # seluruh vocab), sementara suku H·p mempertahankan superposisi.
+            # H tinggi (model ragu) → campuran condong ke distribusi; H rendah
+            # (model yakin) → nyaris one-hot murni. β=1 = default paper.
+            # Catatan: paper tidak me-rescale embedding; normalisasi ke
+            # target_norm di bawah adalah konvensi SERAGAM harness ini untuk
+            # semua mode, dipertahankan agar perbandingan antar-mode adil.
+            probs = torch.softmax(logits / T, dim=-1)                  # [B, V]
+            idx = torch.multinomial(probs, 1)                          # [B, 1]
+            onehot = torch.zeros_like(probs).scatter_(-1, idx, 1.0)
+            H = (-(probs * probs.clamp_min(1e-12).log()).sum(-1, keepdim=True)
+                 / torch.log(torch.tensor(float(probs.shape[-1]),
+                                          device=probs.device)))       # [B, 1]
+            beta = self.latent_step_beta
+            w = (H * probs + (beta + 1.0 - H) * onehot) / (beta + 1.0)
+            z = (w.to(W_in.dtype) @ W_in).float()                      # [B, d]
         else:
             if mode == "gumbel":
                 u = torch.rand_like(logits).clamp_(1e-9, 1.0 - 1e-9)
@@ -1334,6 +1373,8 @@ class LocalLLMBackend:
         # Mode langkah laten (B2/G3). None = pakai env LATENT_STEP_MODE.
         latent_step_mode: Optional[str]   = None,
         latent_step_temp: Optional[float] = None,
+        # β untuk mode "moi" (MoI arXiv:2505.14827). None = env LATENT_STEP_BETA.
+        latent_step_beta: Optional[float] = None,
         # Early-stop rollout laten (B6). None = pakai env LATENT_EARLY_STOP_COS
         # (default 0.999); ≥ 1.0 mematikan early-stop.
         latent_early_stop_cos: Optional[float] = None,
@@ -1364,6 +1405,7 @@ class LocalLLMBackend:
             knn_enabled=knn_enabled, knn_percentage=knn_percentage,
             knn_min_keep=knn_min_keep, knn_strategy=knn_strategy,
             latent_step_mode=latent_step_mode, latent_step_temp=latent_step_temp,
+            latent_step_beta=latent_step_beta,
             latent_early_stop_cos=latent_early_stop_cos,
         )
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
