@@ -1,7 +1,0 @@
-[    0.00s] INFO    run started  run_dir=/workspace/project/multi-agent-system/backend/runs/prod_text_2026-07-05_09-36-48-resume/latent pid=70186
-[  150.14s] INFO    GATE PASS  name=VolRankZScore expr=TS_ZSCORE($volume, 20) * TS_ZSCORE($high - $low, 20)
-[  150.37s] INFO    GATE PASS  name=VolRankCorr expr=TS_CORR($return, $volume, 20) * TS_RANK($volume, 20)
-[  150.79s] INFO    GATE PASS  name=VolRangeZScore expr=TS_ZSCORE($high - $low, 20) * TS_RANK($volume, 20)
-[  150.91s] INFO    GATE PASS  name=VolStdReversal expr=TS_STD($return, 20) < 0.5 ? TS_RANK($volume, 20) : 0
-[  151.13s] INFO    GATE PASS  name=VolRangeMin expr=TS_MIN($high - $low, 20) * TS_RANK($volume, 20)
-[  151.32s] INFO    GATE PASS  name=VolZScoreReversal expr=TS_ZSCORE($volume, 20) > 1.5 ? TS_ZSCORE($high - $low, 20) : 0

@@ -1,0 +1,87 @@
+# =============================================================================
+# MATRIKS EKSPERIMEN SKRIPSI — 4 metode × 3 medium × 4 tugas
+#
+# Berkas ini adalah SATU sumber kebenaran untuk "sel apa saja yang harus
+# dijalankan". Ia TIDAK dibaca otomatis oleh runner mana pun: `run_bench.py`
+# dan `run_factor.py` sengaja mengambil parameter dari argumen CLI, satu proses
+# per sel, supaya 2–3 sel bisa jalan paralel di satu GPU (docs/HASIL_TAHAP0.md
+# §8.7). Berkas ini yang MENURUNKAN perintah-perintah itu — lihat
+# `scripts/gen_perintah.py`.
+#
+# Konfigurasi lama (`experiment*.yaml`, `backtest.yaml`) dihapus bersama
+# pipeline evolusi + RD-Agent yang membacanya. Riwayatnya ada di branch
+# `exp/alt3-gumbel-fidelitas`.
+# =============================================================================
+
+model: "Qwen/Qwen3-8B"          # dipatok satu backbone (keputusan desain skripsi)
+
+# ── SUMBU A — persamaan langkah laten (hidden state → input embedding) ──────
+# Inilah yang skripsi sebut "latent realignment". `raw` adalah mekanisme resmi
+# LatentMAS (ridge W_a, Teorema A.1); tiga lainnya memproyeksikan balik ke
+# convex hull embedding nyata. `soft` BUKAN salah satu dari 4 metode yang
+# dibandingkan — ia kontrol yang memisahkan efek "berada di manifold embedding"
+# dari efek "entropi tambahan" (docs/HASIL_TAHAP0.md §4c).
+latent_modes: [raw, gumbel, moi, sample]
+kontrol_latent_mode: soft
+
+# ── SUMBU B — medium komunikasi antar-agen (rantai SEKUENSIAL) ──────────────
+#   text        : handoff via teks, tanpa KV, tanpa langkah laten
+#   kv_and_text : handoff via KV, agen tetap mengeluarkan teks
+#   kv          : handoff via KV, agen perantara laten murni (tak emit teks)
+# CATATAN PENTING: pada `text` tidak ada langkah laten sama sekali, sehingga
+# keempat nilai Sumbu A menghasilkan sel yang IDENTIK. Karena itu `text`
+# dijalankan SEKALI saja, bukan empat kali — ia satu baseline, bukan empat.
+comm_modes: [kv, kv_and_text]
+comm_mode_tanpa_laten: text
+
+# Lantai pembanding: satu agen (judger saja), tanpa rantai.
+baseline: true
+
+latent_steps: 10                # setelan produksi (B1); 40 dipakai di probe kanal
+latent_temp: 0.7
+latent_beta: 1.0                # mode moi; sweep β menunjukkan tak berpengaruh (§8.6)
+early_stop_cos: 0.999
+
+# ── LENGAN 1 — replikasi LatentMAS (1 benchmark per kategori) ───────────────
+bench:
+  tasks:
+    math:      gsm8k            # openai/gsm8k, split test
+    commonsense: arc_challenge  # allenai/ai2_arc ARC-Challenge, split test
+    code:      humanevalplus    # evalplus/humanevalplus, split test
+  limit: 200                    # subsample berpasangan; humanevalplus hanya 164 soal
+  sample_seed: 0                # WAJIB sama di semua sel → uji berpasangan sah
+  seeds: [0]                    # seed generasi; tambah untuk replikasi multi-seed
+  temperature: 0.6
+  top_p: 0.95
+  max_new_tokens: 2048
+  metrik:
+    - accuracy                  # exact-match \boxed{} / pass@1 eksekusi
+    - format_rate               # keandalan format (disosiasi mutu vs format)
+    - total_time_s              # biaya
+
+# ── LENGAN 2 — tugas faktor alpha (simbolik / DSL) ──────────────────────────
+factor:
+  chain: "proposal,innovate,construct"   # rantai produksi (B16)
+  directions: [d0, d1]
+  seeds: [0, 1, 2]
+  guided_decoding: true
+  max_repair: 3
+  metrik:
+    gate:      [lolos_gate, n_ekspresi_hidup, cakupan_fungsi_dsl]
+    ic:        [ic, icir, tstat, n_days, coverage, n_unique]
+    backtest:  [ann_return, sharpe, max_drawdown, turnover, hit_rate]
+    fidelitas: [fidelity_pd, fidelity_dc, mech_drift, corruption_hits]
+  backtest:
+    quantile: 0.1               # desil long–short
+    cost_bps: 0.0               # biaya satu-arah; naikkan untuk sensitivitas
+    window: seleksi             # "seleksi" = 2021 (segmen test conf); "holdout" = 2022-2025
+
+# ── LENGAN 3 — probe kapasitas kanal (sudah dijalankan, Tahap 0/0B) ─────────
+# Tidak perlu diulang kecuali backbone berubah. Angka: docs/HASIL_TAHAP0.md.
+probe:
+  k: 5
+  trials: 20
+  seed: 0
+  payloads: [dsl, token]
+  latent_steps: [10, 40]
+  arm: kv_latent_only

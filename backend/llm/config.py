@@ -4,7 +4,7 @@ llm/config.py
 LLM configuration settings used across the pipeline.
 """
 
-from core.conf import ExtendedBaseSettings
+from conf import ExtendedBaseSettings
 
 
 class LLMConfig(ExtendedBaseSettings):

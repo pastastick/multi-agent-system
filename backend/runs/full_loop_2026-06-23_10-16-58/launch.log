@@ -1,186 +1,0 @@
-2026-06-23 10:18:50.701 | INFO     | latent_mas.runlog:log:154 - [latent] run started  run_dir=/workspace/project/multi-agent-system/backend/runs/full_loop_2026-06-23_10-16-58/latent pid=94081
-2026-06-23 10:18:50.751 | INFO     | pipeline.factor_mining:main:1031 - Unified run dir: /workspace/project/multi-agent-system/backend/runs/full_loop_2026-06-23_10-16-58
-2026-06-23 10:18:51.720 | INFO     | pipeline.factor_mining:main:1041 - factor.py executor python_bin → /workspace/project/multi-agent-system/.venv/bin/python
-2026-06-23 10:18:51.759 | INFO     | pipeline.factor_mining:main:1043 - ============================================================
-2026-06-23 10:18:51.792 | INFO     | pipeline.factor_mining:main:1044 - Experiment config
-2026-06-23 10:18:51.837 | INFO     | pipeline.factor_mining:main:1045 -   Workspace: /workspace/project/multi-agent-system/backend/data/results/workspace
-2026-06-23 10:18:51.875 | INFO     | pipeline.factor_mining:main:1046 -   Cache dir: /workspace/project/multi-agent-system/backend/data/results/pickle_cache
-2026-06-23 10:18:51.919 | INFO     | pipeline.factor_mining:main:1047 -   Cache enabled: True
-2026-06-23 10:18:51.975 | INFO     | pipeline.factor_mining:main:1048 - ============================================================
-2026-06-23 10:18:52.069 | INFO     | pipeline.factor_mining:_apply_latent_overrides:114 - [Config] Latent overrides from YAML → latent_enabled=True, latent_model_name=Qwen/Qwen3-4B, latent_device=cuda, latent_steps=60, latent_steps_propose=None, latent_steps_construct=None, latent_steps_coder=None, latent_steps_feedback=None, use_realign=True, enable_thinking=False, kv_max_tokens=20480, store_kv=True, knn_enabled=True, knn_percentage=0.8, knn_min_keep=5, knn_strategy=top, max_new_tokens=40960, temperature=0.8, top_p=0.95, temperature_propose=None, temperature_construct=0.7, temperature_coder=0.4, temperature_feedback=None, log_tensors=True
-2026-06-23 10:18:52.115 | INFO     | pipeline.factor_mining:_apply_factor_overrides:156 - [Config] Factor overrides from YAML → symbol_length_threshold=200, base_features_threshold=5, duplication_threshold=5
-2026-06-23 10:18:52.155 | INFO     | pipeline.factor_mining:main:1079 - [Config] insight_mode from YAML → sequential
-2026-06-23 10:18:52.196 | INFO     | pipeline.factor_mining:main:1091 - [LatentPipeline] latent_enabled=True, creating LocalLLMBackend...
-/workspace/project/multi-agent-system/backend/llm/client.py:1174: RuntimeWarning: KNN dinonaktifkan otomatis: tidak kompatibel dengan latent_steps > 0 (RoPE virtual-token desync, lihat konteks.txt Temuan #5).
-  self._engine   = _CoreEngine(
-[CoreEngine] KNN auto-disabled (latent_steps > 0; incompatible with virtual tokens)
-[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=False) ...
-Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]Loading weights:   3%|▎         | 12/398 [00:00<00:03, 104.15it/s]Loading weights:   7%|▋         | 26/398 [00:00<00:04, 74.65it/s] Loading weights:   9%|▉         | 35/398 [00:00<00:04, 75.33it/s]Loading weights:  13%|█▎        | 50/398 [00:00<00:04, 86.63it/s]Loading weights:  16%|█▌        | 64/398 [00:00<00:03, 90.35it/s]Loading weights: 100%|██████████| 398/398 [00:00<00:00, 508.44it/s]
-2026-06-23 10:19:48.939 | INFO     | pipeline.factor_mining:main:1099 - [LatentPipeline] Backend ready: model=Qwen/Qwen3-4B, device=cuda, latent_steps=60, use_realign=True, knn=80%/top
-2026-06-23 10:19:48.959 | INFO     | pipeline.factor_mining:main:1122 - Use Local to execute factor backtest
-2026-06-23 10:19:48.975 | INFO     | pipeline.factor_mining:main:1125 - ============================================================
-2026-06-23 10:19:48.991 | INFO     | pipeline.factor_mining:main:1126 - Evolution mode: Original -> Mutation -> Crossover loop
-2026-06-23 10:19:49.014 | INFO     | pipeline.factor_mining:main:1127 - ============================================================
-2026-06-23 10:19:49.034 | INFO     | pipeline.factor_mining:run_evolution_loop:579 - Evolution mode: file lock disabled to avoid deadlock
-2026-06-23 10:19:49.057 | INFO     | pipeline.factor_mining:run_evolution_loop:590 - [Monitor] Session started: evolution_full_loop_2026-06-23_10-16-58
-2026-06-23 10:19:57.375 | INFO     | pipeline.factor_mining:run_evolution_loop:675 - Generated 2 exploration directions
-2026-06-23 10:19:57.424 | INFO     | pipeline.factor_mining:run_evolution_loop:677 -   Direction 0: short-term reversal after abnormally high-volume days in small-cap stocks
-2026-06-23 10:19:57.469 | INFO     | pipeline.factor_mining:run_evolution_loop:677 -   Direction 1: mean-reversion in mid-cap stocks during regime transitions between trending and mean-reverting conditions
-2026-06-23 10:19:57.520 | INFO     | pipeline.factor_mining:run_evolution_loop:708 - Trajectory pool path: /workspace/project/multi-agent-system/backend/runs/full_loop_2026-06-23_10-16-58/trajectory_pool.json (fresh_start=True)
-2026-06-23 10:19:57.635 | INFO     | pipeline.factor_mining:run_evolution_loop:757 - ========================================
-2026-06-23 10:19:57.667 | INFO     | pipeline.factor_mining:run_evolution_loop:758 - Starting evolution loop
-2026-06-23 10:19:57.712 | INFO     | pipeline.factor_mining:run_evolution_loop:759 - Config: directions=2, max_rounds=3, crossover_size=2, crossover_n=2
-2026-06-23 10:19:57.753 | INFO     | pipeline.factor_mining:run_evolution_loop:761 - Phases: mutation=on, crossover=on
-2026-06-23 10:19:57.820 | INFO     | pipeline.factor_mining:run_evolution_loop:768 - Mode: full evolution (Original -> Mutation -> Crossover -> ...)
-2026-06-23 10:19:57.860 | INFO     | pipeline.factor_mining:run_evolution_loop:771 - Parent selection: best
-2026-06-23 10:19:57.897 | INFO     | pipeline.factor_mining:run_evolution_loop:773 - Parallel execution: off
-2026-06-23 10:19:57.942 | INFO     | pipeline.factor_mining:run_evolution_loop:774 - ============================================================
-2026-06-23 10:19:57.980 | INFO     | pipeline.factor_mining:run_evolution_loop:838 - Running task: phase=original, round=0, direction=0
-2026-06-23 10:19:58.048 | INFO     | pipeline.factor_mining:_run_evolution_task:267 - Starting evolution task: phase=original, round=0, direction=0
-2026-06-23 10:19:58.116 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
-2026-06-23 10:19:58.168 | INFO     | pipeline.loop:__init__:156 - Initial direction: short-term reversal after abnormally high-volume days in small-cap stocks
-2026-06-23 10:19:58.224 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
-2026-06-23 10:19:58.278 | INFO     | pipeline.loop:__init__:174 - Quality gate: consistency=off, complexity=on, redundancy=on
-2026-06-23 10:20:37.279 | INFO     | pipeline.loop:__init__:249 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
-2026-06-23 10:20:37.387 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
-2026-06-23 10:20:37.652 | INFO     | log.time:wrapper:16 - __init__ took 39.55s
-[CoreEngine] Realigner built (use_realign=True)
-[CoreEngine] Ready. latent_steps=60
-Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s]▶ proposal ...
-✓ proposal  10.69s
-▶ design ...
-✓ design  21.81s
-▶ construct ...
-✓ construct  30.86s
-2026-06-23 10:21:41.630 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 3
-                        # Unique Vars: 2
-                        Symbol Length (SL): 51
-                        # Base Features (ER): 2
-                        
-2026-06-23 10:21:41.671 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=volume_zscore_return expr=TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0
-2026-06-23 10:21:42.217 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 3
-                        # Unique Vars: 2
-                        Symbol Length (SL): 55
-                        # Base Features (ER): 2
-                        
-2026-06-23 10:21:42.285 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=volume_rank_return expr=RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0
-2026-06-23 10:21:42.487 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 3
-                        # Unique Vars: 2
-                        Symbol Length (SL): 58
-                        # Base Features (ER): 2
-                        
-2026-06-23 10:21:42.558 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=volume_corr_return expr=TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0
-2026-06-23 10:21:42.739 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 3
-                        # Unique Vars: 2
-                        Symbol Length (SL): 47
-                        # Base Features (ER): 2
-                        
-2026-06-23 10:21:42.794 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=volume_tsrank_return expr=TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0
-2026-06-23 10:21:42.952 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 3
-                        # Unique Vars: 2
-                        Symbol Length (SL): 49
-                        # Base Features (ER): 2
-                        
-2026-06-23 10:21:42.983 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=volume_tsmean_return expr=TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0
-2026-06-23 10:21:43.143 | INFO     | factors.regulator.factor_regulator:evaluate:382 - 
-                        Evaluated expr: TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0
-                        Duplicated Size: 0
-                        Duplicated Subtree: None
-                        # Free Args: 3
-                        # Unique Vars: 2
-                        Symbol Length (SL): 49
-                        # Base Features (ER): 2
-                        
-2026-06-23 10:21:43.199 | INFO     | latent_mas.runlog:log:154 - [latent] GATE PASS  name=volume_tsargmax_return expr=TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0
-2026-06-23 10:21:43.259 | INFO     | factors.regulator.factor_regulator:add_factor:487 - Added new factor: ['latent_0', 'latent_1', 'latent_2', 'latent_3', 'latent_4', 'latent_5'] with expression: ['TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0', 'RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0', 'TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0', 'TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0', 'TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0', 'TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0']
-2026-06-23 10:21:43.315 | INFO     | pipeline.loop:factor_propose:341 - [LatentMAS] phase=original: hypo_len=144, n_expr=6, exprs=['TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0', 'RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0', 'TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0', 'TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0', 'TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0', 'TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0'], repaired=False, gate_error=none
-2026-06-23 10:21:43.358 | INFO     | log.time:wrapper:16 - factor_propose took 65.66s
-Workflow Progress:   0%|          | 0/5 [01:05<?, ?step/s, loop_index=0, step_index=0, step_name=factor_propose]Workflow Progress:  20%|██        | 1/5 [01:05<04:22, 65.71s/step, loop_index=0, step_index=0, step_name=factor_propose]2026-06-23 10:21:43.763 | INFO     | factors.workspace:__init__:27 - Overrode rdagent default config with project template: /workspace/project/multi-agent-system/backend/factors/factor_template
-2026-06-23 10:21:43.814 | INFO     | log.time:wrapper:16 - factor_construct took 0.40s
-Workflow Progress:  20%|██        | 1/5 [01:06<04:22, 65.71s/step, loop_index=0, step_index=1, step_name=factor_construct]Workflow Progress:  40%|████      | 2/5 [01:06<01:21, 27.32s/step, loop_index=0, step_index=1, step_name=factor_construct]2026-06-23 10:21:43.873 | INFO     | log.time:wrapper:16 - factor_calculate took 0.00s
-Workflow Progress:  40%|████      | 2/5 [01:06<01:21, 27.32s/step, loop_index=0, step_index=2, step_name=factor_calculate]2026-06-23 10:21:43.947 | INFO     | pipeline.loop:factor_backtest:441 - Start factor backtest (Local: True)
-2026-06-23 10:31:07.243 | INFO     | factors.runner:develop:430 - Per-factor RankIC (OOS): {'small_cap_stocks_with_unusually_0': -0.00479764841783379, 'small_cap_stocks_with_unusually_1': -0.016336835388344677, 'small_cap_stocks_with_unusually_2': -0.00479764841783379, 'small_cap_stocks_with_unusually_3': -0.016336835388344677, 'small_cap_stocks_with_unusually_4': -0.00479764841783379, 'small_cap_stocks_with_unusually_5': -0.010222762289732177}
-2026-06-23 10:31:07.272 | INFO     | factors.runner:develop:431 - Per-factor RankICIR (OOS): {'small_cap_stocks_with_unusually_0': -0.0368469366496448, 'small_cap_stocks_with_unusually_1': -0.10173963998649682, 'small_cap_stocks_with_unusually_2': -0.0368469366496448, 'small_cap_stocks_with_unusually_3': -0.10173963998649682, 'small_cap_stocks_with_unusually_4': -0.0368469366496448, 'small_cap_stocks_with_unusually_5': -0.06864680723993778}
-2026-06-23 10:31:07.395 | INFO     | factors.runner:_correlation_gate:242 - [CorrGate] drop small_cap_stocks_with_unusually_2: within-round |corr|=1.000 with small_cap_stocks_with_unusually_0
-2026-06-23 10:31:07.432 | INFO     | factors.runner:_correlation_gate:242 - [CorrGate] drop small_cap_stocks_with_unusually_4: within-round |corr|=1.000 with small_cap_stocks_with_unusually_0
-2026-06-23 10:31:07.464 | INFO     | factors.runner:_correlation_gate:242 - [CorrGate] drop small_cap_stocks_with_unusually_3: within-round |corr|=1.000 with small_cap_stocks_with_unusually_1
-2026-06-23 10:31:07.496 | INFO     | factors.runner:_correlation_gate:242 - [CorrGate] drop small_cap_stocks_with_unusually_1: within-round |corr|=0.927 with small_cap_stocks_with_unusually_5
-/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/numpy/_core/_methods.py:135: RuntimeWarning: invalid value encountered in reduce
-  ret = umr_sum(arr, axis, dtype, out, keepdims, where=where)
-/workspace/project/multi-agent-system/.venv/lib/python3.10/site-packages/numpy/lib/_function_base_impl.py:2888: RuntimeWarning: invalid value encountered in subtract
-  X -= avg[:, None]
-2026-06-23 10:31:07.929 | INFO     | factors.runner:develop:449 - [CorrGate] 4 faktor di-drop: ['small_cap_stocks_with_unusually_2 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]', 'small_cap_stocks_with_unusually_4 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_0]', 'small_cap_stocks_with_unusually_3 [within-round |corr|=1.000 with small_cap_stocks_with_unusually_1]', 'small_cap_stocks_with_unusually_1 [within-round |corr|=0.927 with small_cap_stocks_with_unusually_5]']
-2026-06-23 10:31:08.039 | INFO     | factors.runner:develop:464 - Factor correlation (setelah gate): 
-
-                                   small_cap_stocks_with_unusually_0  small_cap_stocks_with_unusually_5
-small_cap_stocks_with_unusually_0                           1.000000                          -0.078972
-small_cap_stocks_with_unusually_5                          -0.078972                           1.000000
-
-2026-06-23 10:31:08.097 | INFO     | factors.runner:develop:471 - Factor values this round: 
-
-                                                feature                                  
-                      small_cap_stocks_with_unusually_0 small_cap_stocks_with_unusually_5
-datetime   instrument                                                                    
-2023-12-29 SH600343                            0.337966                          0.000000
-           SH600345                            0.815097                         -0.007703
-           SH600346                            0.917581                          0.000504
-           SH600348                           -0.243108                          0.010882
-           SH600350                            0.438793                         -0.001538
-
-
-2026-06-23 10:31:11.610 | INFO     | factors.runner:_save_factor_logs:373 - [FactorLogs] correlation & factor values disimpan ke /workspace/project/multi-agent-system/backend/runs/full_loop_2026-06-23_10-16-58/factor_logs/20260623_103108_098082
-2026-06-23 10:31:11.967 | INFO     | factors.runner:develop:478 - Saved combined factors to /workspace/project/multi-agent-system/backend/data/results/workspace/18a2a70a7452472a91e74850d8350c8e/combined_factors_df.parquet
-2026-06-23 10:31:12.017 | INFO     | factors.runner:develop:482 - Execute factor backtest (Use Local): conf_combined_factors.yaml
-2026-06-23 10:31:12.325 | ERROR    | factors.runner:_local_execute:75 - [LocalExec] qrun exception: [Errno 2] No such file or directory: 'qrun'
-2026-06-23 10:31:12.357 | WARNING  | factors.runner:develop:507 - Backtesting result is None. Check the execution logs above for errors.
-2026-06-23 10:31:12.423 | INFO     | factors.runner:develop:509 - Execution log: [Errno 2] No such file or directory: 'qrun'...
-2026-06-23 10:31:12.473 | INFO     | log.time:wrapper:16 - factor_backtest took 568.56s
-Workflow Progress:  60%|██████    | 3/5 [10:34<00:54, 27.32s/step, loop_index=0, step_index=3, step_name=factor_backtest] Workflow Progress:  80%|████████  | 4/5 [10:34<03:08, 188.46s/step, loop_index=0, step_index=3, step_name=factor_backtest]▶ feedback ...
-✓ feedback  18.08s
-2026-06-23 10:31:30.930 | INFO     | pipeline.loop:_save_metrics_snapshot:1109 - Metrics snapshot saved → metrics/round_000_c2563f75ef5c.json
-2026-06-23 10:31:31.968 | INFO     | pipeline.loop:feedback:560 - Saved factors to library: /workspace/project/multi-agent-system/data/factorlib/all_factors_library.json (phase=original)
-2026-06-23 10:31:32.029 | INFO     | log.time:wrapper:16 - feedback took 19.49s
-Workflow Progress:  80%|████████  | 4/5 [10:54<03:08, 188.46s/step, loop_index=0, step_index=4, step_name=feedback]       Workflow Progress: 100%|██████████| 5/5 [10:54<00:00, 136.21s/step, loop_index=0, step_index=4, step_name=feedback]Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s, loop_index=0, step_index=4, step_name=feedback]         Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s, loop_index=0, step_index=4, step_name=feedback]
-2026-06-23 10:31:32.126 | INFO     | pipeline.evolution.trajectory:add:234 - Added trajectory c304345fa4ba (direction=0, phase=original, round=0)
-2026-06-23 10:31:32.183 | INFO     | pipeline.evolution.trajectory:_save:395 - Saved trajectory pool to /workspace/project/multi-agent-system/backend/runs/full_loop_2026-06-23_10-16-58/trajectory_pool.json
-2026-06-23 10:31:32.247 | INFO     | pipeline.evolution.controller:report_task_complete:853 - Negative memory: recorded failed mechanism c304345fa4ba [weak_ic]
-2026-06-23 10:31:32.292 | INFO     | pipeline.evolution.controller:report_task_complete:864 - Original round complete for direction 0
-2026-06-23 10:31:32.340 | INFO     | pipeline.factor_mining:run_evolution_loop:867 - Task done: trajectory_id=c304345fa4ba, RankIC=-0.007510205353782984
-2026-06-23 10:31:32.381 | INFO     | pipeline.factor_mining:run_evolution_loop:838 - Running task: phase=original, round=0, direction=1
-2026-06-23 10:31:32.456 | INFO     | pipeline.factor_mining:_run_evolution_task:267 - Starting evolution task: phase=original, round=0, direction=1
-2026-06-23 10:31:32.517 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
-2026-06-23 10:31:32.591 | INFO     | pipeline.loop:__init__:156 - Initial direction: mean-reversion in mid-cap stocks during regime transitions between trending and mean-reverting conditions
-2026-06-23 10:31:32.648 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
-2026-06-23 10:31:32.708 | INFO     | pipeline.loop:__init__:174 - Quality gate: consistency=off, complexity=on, redundancy=on
-2026-06-23 10:31:34.021 | INFO     | pipeline.loop:__init__:249 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
-2026-06-23 10:31:34.150 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
-2026-06-23 10:31:34.252 | INFO     | log.time:wrapper:16 - __init__ took 1.74s
-factor_expression:  TS_ZSCORE($volume, 10) ? TS_ZSCORE($return, 10) : 0
-factor_expression:  RANK(TS_ZSCORE($volume, 10)) ? TS_MEAN($return, 10) : 0
-factor_expression:  TS_CORR($volume, $return, 10) ? TS_ZSCORE($return, 10) : 0
-factor_expression:  TS_RANK($volume, 10) ? TS_MEAN($return, 10) : 0
-factor_expression:  TS_MEAN($volume, 10) ? TS_ZSCORE($return, 10) : 0
-factor_expression:  TS_ARGMAX($volume, 10) ? TS_MEAN($return, 10) : 0
-Workflow Progress:   0%|          | 0/5 [00:00<?, ?step/s]▶ proposal ...
-✓ proposal  9.73s
-▶ design ...

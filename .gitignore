@@ -1,4 +1,4 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
 .uv/
@@ -14,8 +14,9 @@ venv/
 .env.*
 !.env.example
 
-# heavy
-books/
+# Berkas berat / biner. *.parquet termasuk deret IC harian
+# (results/icseries_*.parquet) — regenerable dengan
+# `PYTHONPATH=backend python backend/eval/rescore_all.py`.
 *.pkl
 *.h5
 *.pt
@@ -26,65 +27,26 @@ books/
 *.bin
 *.gguf
 
-# logs & runtime artifacts
-
-backend/debug/conv_logs/
-backend/workspace/
-backend/__session__/
-backend/factors/data_template/daily_pv*.h5
-# rdagent menulis satu direktori log per pemanggilan; alat di lab/ meng-import
-# backend sehingga ikut memicunya (ratusan direktori per sweep skoring CPU).
-log/
-# cache skoring korpus lab/rescore_all.py (regenerable, bisa ratusan MB)
-lab/out/.rescore_cache.json
-lab/out/.rescore_series.parquet
-
-# model checkpoints / cache
+# Data pasar & model — diunduh saat setup, bukan di-commit (lihat README §2).
+backend/hf_data/
+backend/data/
 .cache/
 huggingface/
+
+# Keluaran runtime.
+# `llm/client.py` menulis snapshot output LLM ke ./debug/llm_outputs relatif cwd,
+# dan pemanggilan lama meninggalkan direktori log per-run.
+debug/
+log/
+backend/workspace/
+backend/latent_runs/
+
+# results/ DI-TRACK (probe Tahap 0, hasil bench & faktor menopang angka skripsi).
+# Pengecualian per-jenis ada di results/.gitignore.
 
 # IDE
 .vscode/
 .idea/
 *.swp
 .DS_Store
-
-# downloaded datasets & runtime data (post-setup, regenerated from HF)
-hf_data/
-backend/hf_data/
-backend/data/
-data/results/
-data/qlib/
-
-git_ignore_folder/
-
-# LLM output snapshots — KEEP tracked for debugging/reproducibility
-!backend/debug/llm_outputs/
-!backend/debug/llm_outputs/**
-!backend/debug/llm_outputs/**/*.jsonl
-!backend/data/factorlib/*.json
-## output agent
 ~
-# unified run output — ignore binary/heavy, track readable artifacts
-# pkl  = serialized Python objects (RD-Agent checkpoint, resume state)
-# pt   = PyTorch KV-cache tensors (binary, bisa ratusan MB)
-# db   = SQLite KV index
-# __session__ = legacy RD-Agent session dir (berisi pkl-pkl di atas)
-backend/runs/**/*.pkl
-backend/runs/**/*.pt
-backend/runs/**/*.db
-backend/runs/**/__session__/
-# factor_values.csv = matrix (saham × hari × faktor), 10-50 MB, regeneratable
-backend/runs/**/factor_values.csv
-backend/latent_runs/
-
-# 2026-07-06: factor_values.csv.gz individual > batas keras GitHub 100MB/file
-# (runner.py sekarang gzip; 4 run ini besar krn window OOS + "All" data lebih
-# lebar dari perkiraan). Raw matrix, regeneratable dari factor expression +
-# rerun backtest (lihat trajectory_pool.json, tetap ter-track). File .gz LAIN
-# yang <100MB TETAP di-track (keputusan user: exclude seminimal mungkin).
-# Lihat MONITORING_NOTES.md untuk detail.
-backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_104711_020567/factor_values.csv.gz
-backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_100056_832465/factor_values.csv.gz
-backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_102545_250146/factor_values.csv.gz
-backend/runs/prod_text_2026-07-05_09-36-48/factor_logs/20260705_094730_433440/factor_values.csv.gz

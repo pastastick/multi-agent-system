@@ -1,9 +1,0 @@
-2026-06-23 08:03:57.514 | INFO     | pipeline.factor_mining:_run_evolution_task:267 - Starting evolution task: phase=mutation, round=1, direction=0
-2026-06-23 08:03:57.561 | INFO     | pipeline.loop:__init__:154 - Initialized AlphaAgentLoop, backtest in local
-2026-06-23 08:03:57.614 | INFO     | pipeline.loop:__init__:158 - Evolution phase: mutation, round: 1, trajectory_id: 0f15d1299031
-2026-06-23 08:03:57.680 | INFO     | pipeline.loop:__init__:162 - [LatentPipeline] LocalLLMBackend active, past_kv=no
-2026-06-23 08:03:57.739 | INFO     | pipeline.loop:__init__:174 - Quality gate: consistency=off, complexity=on, redundancy=on
-2026-06-23 08:03:58.961 | INFO     | pipeline.loop:__init__:249 - [LatentMAS] FrontEndPipeline active (kv_max_tokens=20480)
-2026-06-23 08:03:59.087 | INFO     | coder.costeer.knowledge_management:__init__:722 - Knowledge Graph loaded, size=0
-2026-06-23 08:03:59.179 | INFO     | log.time:wrapper:16 - __init__ took 1.62s
-2026-06-23 08:04:15.658 | INFO     | pipeline.factor_mining:main:1242 - Run finished or terminated

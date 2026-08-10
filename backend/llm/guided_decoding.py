@@ -51,7 +51,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 # `required` mem-paksa keempat field ada sebelum object bisa ditutup.
 # `minProperties: 1` menjamin setidaknya satu factor ter-generate.
 
-# Schema yang DIPAKAI jalur latent_mas (B11). Bentuknya mengikuti
+# Schema yang DIPAKAI jalur mas (B11). Bentuknya mengikuti
 # `parsers.parse_construct_json`: {hypothesis, factors:[{name, expression,
 # explanation}]}. Schema lama di bawah (CONSTRUCT_FACTOR_JSON_SCHEMA) melayani
 # format rdagent yang berbeda dan dipertahankan untuk jalur itu.

@@ -1,696 +1,211 @@
-# QuantaLatent — branch `exp/alt3-gumbel-fidelitas`
+# QuantaLatent — branch `exp/empat-metode-v1`
 
-> **Branch ini fokus TUNGGAL pada satu pertanyaan**: apakah mengganti
-> persamaan langkah laten LatentMAS (ridge $W_a$ resmi paper → relaksasi
-> Gumbel-softmax) memulihkan fidelitas konten simbolik diskret yang gagal
-> dipertahankan kanal laten murni (A9: recall 0,35, **exact 0,00** pada
-> `latent_mode=gumbel`, k=5 nama fungsi DSL). Cabang dari `exp/rencana-perbaikan`
-> (2026-08-08, commit `06d6b1c`), dipangkas dari ~1300 berkas riset lain
-> (rantai agen/mutu pencarian evolusioner — pertanyaan berbeda, ada di
-> branch asalnya) agar tak jadi distraksi.
+> **Pertanyaan branch ini**: apakah keunggulan keluarga relaksasi diskret
+> (`gumbel`/`moi`/`sample`) atas persamaan langkah laten resmi LatentMAS
+> (`raw`, ridge $W_a$) — yang di Tahap 0 terbukti mutlak pada muatan
+> **simbolik** — juga bertahan pada benchmark penalaran umum tempat LatentMAS
+> asli dievaluasi? Empat metode × tiga medium komunikasi × empat tugas.
 >
-> **Rencana lengkap, argumen, dan tiga risiko yang harus diketahui sebelum
-> GPU dinyalakan**: `skripsi/alternatif_gumbel_latentmas.md` di repo utama
-> (`first-experiment`, satu tingkat di atas direktori ini — bukan bagian
-> dari git repo `quantalatent` ini). Perbandingan dengan dua alternatif
-> lain: `skripsi/alternatif_perbandingan.md`.
->
-> **Status (2026-08-09): Tahap 0 SELESAI — gerbang LOLOS.** `gumbel` > `raw`
-> terbukti meyakinkan (Wilcoxon p≤0,001 di 4/4 sel m×payload; `raw` presisi
-> nol di SEMUA sel, dengan atau tanpa matriks ridge $W_a$). Ditambah kontrol
-> `soft` yang memisahkan efek proyeksi-manifold dari efek entropi Gumbel.
-> **Hasil lengkap + angka + keputusan: `lab/HASIL_TAHAP0.md`.** Rekomendasi:
-> lanjut ke Tahap 1 (probe simbolik HumanEval+/MBPP+) sesuai
-> `skripsi/alternatif_gumbel_latentmas.md` §6.
->
-> Berkas yang tersisa di `lab/` (14 berkas, sengaja minimal):
-> `channel_capacity.py` + `compare_channel_modes.py` (Tahap 0 + analisis
-> statistiknya), `realign_probe.py` + `b7_probe.py` (bukti geometri
-> ridge-vs-gumbel yang sudah ada), `AUDIT_KRITIS.md` §4.1/§4.3 +
-> `HASIL_TAHAP4.md` §2-3 (tulisan lengkap bukti lama) + `HASIL_TAHAP0.md`
-> (hasil baru), dan data JSON rujukannya (`lab/out/`).
+> **Baca dulu**: [`docs/DESAIN_EKSPERIMEN.md`](docs/DESAIN_EKSPERIMEN.md) (apa
+> yang diukur dan kenapa) lalu [`docs/HASIL_TAHAP0.md`](docs/HASIL_TAHAP0.md)
+> (angka yang mendasari branch ini).
+
+Branch ini adalah **perombakan total** dari `exp/alt3-gumbel-fidelitas`
+(`99721ec`): `lab/` dilebur ke `backend/`, seluruh warisan RD-Agent/QuantaAlpha
+yang tak terpakai dihapus (pipeline evolusi, CoSTEER, `core/`, agen eksternal,
+loader dokumen — ±95 berkas Python), dan dua lengan eksperimen baru dibangun.
+**Tidak ada kode yang hilang**: semuanya tetap ada di branch lama.
 
 ---
 
-Proyek ini adalah adaptasi QuantaAlpha dengan **Latent-MAS pipeline**: model lokal (Qwen3) menjalankan latent reasoning via KV-cache, lalu factor mining berjalan sepenuhnya di GPU tanpa API eksternal untuk step utama.
+## 1. Peta repo
 
----
-
-## 0. Catatan Penting RunPod — `/workspace` vs `/root`
-
-Di RunPod, **hanya direktori `/workspace` yang persisten** (network storage). Semua yang ada di `/root` (HOME default) akan hilang ketika pod di-stop atau di-restart. Ini berarti:
-
-- ❌ JANGAN install `uv`, `.venv`, atau dependency apa pun di `~/` (`/root/`).
-- ✅ Semua artifact (binary `uv`, virtualenv `.venv`, torch wheels, HuggingFace model cache, pip cache, uv cache) **harus** berada di bawah `/workspace/`.
-- ✅ Project root proyek ini: **`/workspace/project/multi-agent-system`**.
-
-Sebelum apa pun, set environment variable berikut **di awal setiap session SSH baru** (atau tambahkan ke `~/.bashrc` — tapi `~/.bashrc` sendiri tidak persisten, jadi simpan juga salinannya di `/workspace/runpod_env.sh`):
-
-```bash
-# /workspace/runpod_env.sh — sumber file ini di awal setiap session
-
-# uv & cargo binary location (uv installer default ke ~/.local/bin → ephemeral)
-export XDG_DATA_HOME=/workspace/.local/share
-export XDG_CONFIG_HOME=/workspace/.config
-export XDG_CACHE_HOME=/workspace/.cache
-export PATH=/workspace/.local/bin:$PATH
-
-# uv cache & virtualenv
-export UV_CACHE_DIR=/workspace/.cache/uv
-export UV_PYTHON_INSTALL_DIR=/workspace/.local/share/uv/python
-export UV_TOOL_DIR=/workspace/.local/share/uv/tools
-
-# pip cache (untuk fallback jika tidak pakai uv)
-export PIP_CACHE_DIR=/workspace/.cache/pip
-
-# HuggingFace model & dataset cache (default ~/.cache/huggingface → ephemeral)
-export HF_HOME=/workspace/.cache/huggingface
-export HUGGINGFACE_HUB_CACHE=/workspace/.cache/huggingface/hub
-export TRANSFORMERS_CACHE=/workspace/.cache/huggingface/hub
-
-# Torch hub & inductor cache
-export TORCH_HOME=/workspace/.cache/torch
-export TORCHINDUCTOR_CACHE_DIR=/workspace/.cache/torchinductor
-
-# Izinkan transformers download model dari HF saat run pertama.
-# Default kode adalah local_files_only=True (offline) — set 0 agar model
-# Qwen3 ter-download otomatis jika belum ada di cache HF.
-export HF_LOCAL_ONLY=0
-
-# Project-specific
-export PYTHONPATH=/workspace/project/multi-agent-system/backend
+```
+backend/
+  llm/        mesin LLM: model, KV-cache, latent_pass, _latent_step_vec   ← SUMBU A
+  mas/        agen + operasi KV + pipeline rantai faktor                  ← SUMBU B
+  bench/      lengan replikasi LatentMAS  (data · scoring · pipeline · run_bench · compare)
+  factor/     lengan faktor alpha         (run_factor.py)
+  dsl/        parser ekspresi · AST · pustaka fungsi (71 fungsi)
+  gate/       gate mutu ekspresi: regulator, arity, redundansi, kompleksitas
+  eval/       ic.py · backtest.py · stats.py · fidelity.py · channel_capacity.py
+              compare_modes.py · realign_probe.py · b7_probe.py · rescore_all.py
+  prompts/    factor.yaml (QuantaLatent) · bench.yaml (port LatentMAS)
+  paths.py    jalur kanonik + bootstrap sys.path      qlog.py  logger (loguru)
+configs/      matriks.yaml — daftar sel eksperimen (sumber kebenaran tunggal)
+scripts/      gen_perintah.py — turunkan perintah run dari matriks.yaml
+reference/    LatentMAS @9a9e4d3 · mixinputs @7aef34b (rujukan, READ-ONLY)
+docs/         DESAIN_EKSPERIMEN.md · HASIL_TAHAP0.md · HASIL_TAHAP4.md · AUDIT_KRITIS.md
+results/      keluaran run — probe/ (artefak Tahap 0) · bench/ · factor/
 ```
 
-Buat sekali, lalu di setiap session baru cukup:
-
-```bash
-source /workspace/runpod_env.sh
-```
-
-> Tip: tambahkan `source /workspace/runpod_env.sh` ke `~/.bashrc` agar otomatis tiap login. Karena `~/.bashrc` ephemeral, simpan juga template-nya di `/workspace/bashrc.template` dan re-copy setelah pod restart.
+Aturan import: `backend/` adalah root paket. Jalankan apa pun dengan
+`PYTHONPATH=backend`, atau panggil skrip langsung — tiap skrip CLI memanggil
+`paths.bootstrap()` sendiri.
 
 ---
 
-## 1. Spesifikasi Pod RunPod
+## 2. Setup RunPod
 
-| Komponen                               | Minimum               | Rekomendasi      |
-| -------------------------------------- | --------------------- | ---------------- |
-| GPU                                    | RTX 4090 (24 GB VRAM) | A100 40 GB       |
-| RAM                                    | 32 GB                 | 64 GB            |
-| Container Disk                         | 30 GB                 | 50 GB            |
-| **Volume Disk (`/workspace`)** | **100 GB**      | **200 GB** |
-| Python                                 | 3.10                  | 3.10             |
-| CUDA                                   | 11.8+                 | 12.1+            |
-
-> **Catatan model**: `Qwen3-14B` butuh ~28 GB VRAM (float16). Untuk 4090 24 GB, gunakan `Qwen3-4B` (~8 GB VRAM). Lihat bagian [Ganti Model](#9-ganti-model-untuk-vram-terbatas).
-
-> **Volume disk = network storage RunPod**, mount otomatis di `/workspace`. Pastikan ukurannya cukup untuk: model HF (~8 GB Qwen3-4B atau ~28 GB Qwen3-14B) + dataset Qlib (~3 GB) + venv (~10 GB) + cache.
-
----
-
-## 2. Transfer Proyek ke `/workspace`
-
-Dari mesin lokal (WSL), kirim folder proyek via `rsync` ke `/workspace/project/`:
+Di RunPod **hanya `/workspace` yang persisten**; `/root` hilang saat pod
+restart. Semua artefak (uv, `.venv`, cache HF, model) harus di bawah
+`/workspace`.
 
 ```bash
-# Ganti <user>@<host>:<port> dengan kredensial SSH RunPod kamu
-rsync -avz -e "ssh -p <port>" \
-  --exclude='.venv' --exclude='__pycache__' --exclude='*.pyc' \
-  --exclude='data/' --exclude='hf_data/' --exclude='log/' \
-  /path/to/local/multi-agent-system/ \
-  <user>@<host>:/workspace/project/multi-agent-system/
-```
-
-> Data Qlib dan HDF5 tidak perlu di-transfer karena akan didownload langsung di RunPod.
-
----
-
-## 3. Install Dependencies di RunPod (semuanya ke `/workspace`)
-
-```bash
-# WAJIB: load env var dulu agar uv/.venv/cache semua ke /workspace
-source /workspace/runpod_env.sh
-
+# sekali per session SSH baru
+source /workspace/runpod_env.sh          # salinan ada di repo: runpod_env.sh
 cd /workspace/project/multi-agent-system
-
-# Install uv ke /workspace/.local/bin (BUKAN ~/.local/bin)
-curl -LsSf https://astral.sh/uv/install.sh | \
-  env UV_INSTALL_DIR=/workspace/.local/bin sh
-
-# Verifikasi uv terinstall di /workspace
-which uv   # harus: /workspace/.local/bin/uv
-
-# Buat venv di .venv dan install semua deps
-# (pip sudah ada di pyproject.toml sebagai dependency, jadi uv sync cukup)
-uv sync
-
-# Aktivasi venv
+uv sync                                   # torch 2.6.0+cu124 dari index cu124
 source .venv/bin/activate
-
-# Verifikasi venv aktif dari /workspace
-which python   # harus: /workspace/project/multi-agent-system/.venv/bin/python
 ```
 
-> Karena `XDG_*` dan `UV_CACHE_DIR` sudah diarahkan ke `/workspace/.cache`, semua wheel cache, python interpreter, dan tool uv tidak akan menyentuh `/root`.
+Spesifikasi pod: A40 46 GB (Qwen3-8B butuh ~16 GB → **2–3 run muat paralel**),
+volume disk ≥ 100 GB, CUDA ≥ 12.1.
 
-> `pip` sudah disertakan di `pyproject.toml` sebagai dependency, jadi `uv sync` otomatis menginstallnya.
-
-### 3a. Torch + CUDA — sudah dikonfigurasi otomatis untuk A40 driver 550
-
-`pyproject.toml` menggunakan `[tool.uv.sources]` untuk memaksa `uv sync` menarik torch dari indeks PyTorch cu124:
-
-```toml
-[[tool.uv.index]]
-name = "pytorch-cu124"
-url = "https://download.pytorch.org/whl/cu124"
-explicit = true
-
-[tool.uv.sources]
-torch = { index = "pytorch-cu124" }
-torchvision = { index = "pytorch-cu124" }
-torchaudio = { index = "pytorch-cu124" }
-```
-
-Hasilnya: `uv sync` langsung menginstall `torch 2.6.0+cu124` — **tidak perlu reinstall manual**. cu124 kompatibel dengan driver ≥ 550.54 (CUDA 12.4), cocok untuk A40 driver 550.x yang ada di pod ini.
-
-Verifikasi setelah `uv sync`:
-
-```bash
-.venv/bin/python -c "import torch; print('cuda:', torch.cuda.is_available(), '| torch:', torch.__version__, '| cu:', torch.version.cuda)"
-# Expected: cuda: True | torch: 2.6.0+cu124 | cu: 12.4
-```
-
-> **Jika pod diganti ke driver ≥ 560**: bisa upgrade ke cu126 dengan mengubah URL index di `pyproject.toml` dan menghapus `uv.lock`, lalu jalankan ulang `uv sync`. Lihat tabel kompatibilitas di bawah.
-
-| CUDA Variant | Driver Min | torch Max | Pod A40 (driver 550)       |
-| ------------ | ---------- | --------- | -------------------------- |
-| cu124        | ≥ 550.54  | 2.6.0     | **✓ digunakan**     |
-| cu126        | ≥ 560.28  | latest    | ✗ butuh driver lebih baru |
-| cu128        | ≥ 570.00  | latest    | ✗ butuh driver lebih baru |
-| cu130        | ≥ 580.00  | latest    | ✗ butuh driver lebih baru |
-
----
-
-## 4. Konfigurasi `.env`
-
-```bash
-cd /workspace/project/multi-agent-system
-cp configs/.env.example .env
-```
-
-Edit `.env` sesuai environment RunPod:
-
-```bash
-nano .env   # atau vim, code, dsb.
-```
-
-Isi minimal yang **wajib** diset (semua path di bawah `/workspace`):
+### `.env`
 
 ```env
-# === Paths ===
-QLIB_DATA_DIR=/workspace/project/multi-agent-system/backend/data/qlib/cn_data
-QLIB_PROVIDER_URI=/workspace/project/multi-agent-system/backend/data/qlib/cn_data
-
-# === Workspace & cache (auto-derive dari lokasi file jika tidak di-set) ===
-WORKSPACE_PATH=/workspace/project/multi-agent-system/backend/data/results/workspace
-PICKLE_CACHE_FOLDER_PATH_STR=/workspace/project/multi-agent-system/backend/data/results/pickle_cache
-
-# === Data HDF5 untuk factor mining (auto-derive jika tidak di-set) ===
-FACTOR_CoSTEER_DATA_FOLDER=/workspace/project/multi-agent-system/backend/git_ignore_folder/factor_implementation_source_data
-FACTOR_CoSTEER_DATA_FOLDER_DEBUG=/workspace/project/multi-agent-system/backend/git_ignore_folder/factor_implementation_source_data_debug
-
-# === HuggingFace (cache otomatis ke /workspace/.cache/huggingface via HF_HOME) ===
-HF_TOKEN=hf_...
+HF_TOKEN=hf_...            # opsional; Qwen3 publik bisa diakses anonim
 HF_HOME=/workspace/.cache/huggingface
-
-# === LLM API (opsional jika latent_enabled=true) ===
-# Dibutuhkan hanya jika latent.enabled=false di experiment.yaml
-OPENAI_API_KEY=your-api-key-here
-OPENAI_BASE_URL=https://your-llm-provider/v1
-CHAT_MODEL=your-model-name
-REASONING_MODEL=your-model-name
+HF_LOCAL_ONLY=0            # 0 = boleh unduh; 1 = paksa offline
 ```
 
-> Variabel `WORKSPACE_PATH`, `PICKLE_CACHE_FOLDER_PATH_STR`, `FACTOR_CoSTEER_DATA_FOLDER`, dan `FACTOR_CoSTEER_DATA_FOLDER_DEBUG` **tidak wajib** diset jika kamu tidak mengubah struktur folder — nilainya otomatis di-derive dari lokasi instalasi.
+> Jangan pernah menaruh token asli di berkas yang di-track git. Insiden token
+> bocor di `runpod_env.sh` tercatat di `docs/HASIL_TAHAP0.md` §2.
 
-> Jika `latent.enabled: true` di `configs/experiment.yaml` (default), pipeline menggunakan model lokal Qwen3 — API key tidak diperlukan untuk step utama (propose, construct, feedback).
-
----
-
-## 5. Download Data Qlib + HDF5
-
-> Semua perintah di bagian ini dijalankan dari `/workspace/project/multi-agent-system/backend/`. Folder `backend/data/`, `backend/hf_data/`, dan `backend/git_ignore_folder/` di-ignore oleh git (lihat `.gitignore`).
-
-### 5a. Download dataset dari HuggingFace
+### Data pasar (hanya untuk lengan faktor)
 
 ```bash
-source /workspace/runpod_env.sh
-source /workspace/project/multi-agent-system/.venv/bin/activate
-
 cd /workspace/project/multi-agent-system/backend
-
-# Download semua file sekaligus (cache otomatis ke /workspace/.cache/huggingface)
-hf download QuantaAlpha/qlib_csi300 \
-  --repo-type dataset \
-  --local-dir ./hf_data
-```
-
-> `huggingface-cli` sudah deprecated — gunakan `hf` (sudah termasuk dalam venv via `huggingface_hub`).
-
-### 5b. Extract dan tempatkan Qlib data
-
-```bash
-# cwd: /workspace/project/multi-agent-system/backend
-mkdir -p data/qlib
-
-# unzip tidak tersedia di image RunPod, gunakan Python:
-python -c "import zipfile; zipfile.ZipFile('hf_data/cn_data.zip').extractall('data/qlib/')"
-# Hasil: backend/data/qlib/cn_data/ berisi calendars/, features/, instruments/
-```
-
-### 5c. Tempatkan HDF5 untuk factor mining
-
-```bash
-# cwd: /workspace/project/multi-agent-system/backend
-mkdir -p git_ignore_folder/factor_implementation_source_data
-mkdir -p git_ignore_folder/factor_implementation_source_data_debug
-
-cp hf_data/daily_pv.h5 \
-   git_ignore_folder/factor_implementation_source_data/daily_pv.h5
-
-cp hf_data/daily_pv_debug.h5 \
-   git_ignore_folder/factor_implementation_source_data_debug/daily_pv.h5
-```
-
-> `daily_pv_debug.h5` harus di-rename jadi `daily_pv.h5` di folder debug.
-
-### 5d. Buat folder output
-
-```bash
-# cwd: /workspace/project/multi-agent-system/backend
-mkdir -p data/results
-mkdir -p log
-mkdir -p debug/llm_outputs
-```
-
-### 5e. Download Model Qwen3
-
-> **Penting**: dataset di langkah 5a–5c **tidak** termasuk model LLM. Model `Qwen3-4B` harus tersedia di cache HuggingFace sebelum pipeline dijalankan, jika tidak akan muncul error `We couldn't connect to 'https://huggingface.co' to load the files`.
-
-Kode meload model dengan `local_files_only=True` secara default (mode offline) — dikontrol env var `HF_LOCAL_ONLY` di `backend/llm/client.py`. Ada dua cara:
-
-**Cara A — biarkan ter-download otomatis saat run pertama (direkomendasikan).**
-Set `HF_LOCAL_ONLY=0` di file `.env` (sudah ada di `configs/.env.example`). `launcher.py` memanggil `load_dotenv()` sebelum mengimpor `llm/client.py`, jadi nilai di `.env` pasti terbaca — tidak bergantung pada apakah shell sudah `source runpod_env.sh`. Dengan ini transformers akan cek cache dulu, lalu download dari HF jika belum ada. Run pertama mengunduh ~8 GB; run berikutnya memakai cache.
-
-> `runpod_env.sh` juga mengeset `HF_LOCAL_ONLY=0`, tapi itu hanya berlaku jika shell sudah di-`source`. Menaruhnya di `.env` lebih andal karena selalu dimuat oleh `launcher.py`.
-
-**Cara B — pre-download model secara eksplisit.**
-
-```bash
-source /workspace/runpod_env.sh
-source /workspace/project/multi-agent-system/.venv/bin/activate
-
-# Model di-cache otomatis ke /workspace/.cache/huggingface/hub via HF_HOME
-hf download Qwen/Qwen3-4B
-```
-
-Setelah model tersedia di cache, pipeline bisa berjalan penuh offline (`HF_LOCAL_ONLY=1`).
-
-| Model              | Ukuran download | VRAM saat load |
-| ------------------ | --------------- | -------------- |
-| `Qwen/Qwen3-4B`  | ~8 GB           | ~8 GB          |
-| `Qwen/Qwen3-14B` | ~28 GB          | ~28 GB         |
-
----
-
-## 6. Verifikasi Setup
-
-```bash
-source /workspace/runpod_env.sh
-source /workspace/project/multi-agent-system/.venv/bin/activate
-
-cd /workspace/project/multi-agent-system
-
-# Cek semua artifact ada di /workspace, BUKAN /root
-which uv          # /workspace/.local/bin/uv
-which python      # /workspace/project/multi-agent-system/.venv/bin/python
-echo $HF_HOME     # /workspace/.cache/huggingface
-echo $UV_CACHE_DIR # /workspace/.cache/uv
-
-# Cek pip tersedia di venv (penting untuk runtime diagnostics)
-python -m pip --version
-
-# Cek struktur data
-ls backend/data/qlib/cn_data/          # harus ada: calendars/ features/ instruments/
-ls backend/git_ignore_folder/factor_implementation_source_data/  # harus ada: daily_pv.h5
-
-# Test import pipeline
-PYTHONPATH=backend python -c "from pipeline.settings import ALPHA_AGENT_FACTOR_PROP_SETTING; print('OK:', ALPHA_AGENT_FACTOR_PROP_SETTING.latent_model_name)"
-
-# Verifikasi qlib + mlflow kompatibel (wajib — ini path yang sering error)
-python -c "
-import qlib, mlflow
-from qlib.workflow import R
-from qlib.model.trainer import task_train
-from mlflow.exceptions import MlflowException
-print('qlib:', qlib.__version__, '| mlflow:', mlflow.__version__)
-print('qlib + mlflow: OK')
-"
-
-# Cek GPU
-nvidia-smi
-python -c "import torch; print('CUDA:', torch.cuda.is_available(), '| GPU:', torch.cuda.get_device_name(0))"
-```
-
----
-
-## 7. Jalankan Eksperimen Alt 3
-
-```bash
-source /workspace/runpod_env.sh
-source /workspace/project/multi-agent-system/.venv/bin/activate
-cd /workspace/project/multi-agent-system
-export PYTHONPATH=backend
-```
-
-### Tahap 0 — lengan `raw` pada A9 ✅ SELESAI (2026-08-09)
-
-**Gerbang LOLOS**: `gumbel` > `raw` terbukti meyakinkan di semua sel yang
-diuji. Hasil lengkap + tabel + uji statistik: **`lab/HASIL_TAHAP0.md`**.
-Empat konfigurasi dijalankan (dua WAJIB + dua tambahan murah):
-
-```bash
-python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
-  --latent-steps 10 --k 5 --trials 20 --seed 0
-python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
-  --latent-steps 40 --k 5 --trials 20 --seed 0
-python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode raw \
-  --no-realign --latent-steps 10 --k 5 --trials 20 --seed 0   # default resmi LatentMAS (M=I)
-python lab/channel_capacity.py --model Qwen/Qwen3-8B --latent-mode soft \
-  --latent-steps 10 --k 5 --trials 20 --seed 0                # kontrol: proyeksi tanpa noise Gumbel
-
-python lab/compare_channel_modes.py --out lab/out/tahap0_analysis.json
-```
-
-Ringkasan: `raw` (ridge $W_a$ resmi paper) DAN `raw(M=I)` (default resmi
-repo LatentMAS, realignment OFF) sama-sama memberi `kv_latent_only.recall
-= 0,000` — identik bit-per-bit, di m=10 maupun m=40, di kedua payload.
-`gumbel` memberi 0,35→0,84 (dsl) dan 0,19→0,76 (token) naik dari m=10 ke
-m=40 (Wilcoxon p≤0,001 di semua perbandingan gumbel-vs-raw). Kontrol `soft`
-menunjukkan proyeksi-manifold-tanpa-noise sudah cukup untuk payload `dsl`
-(p=0,975, tak beda dari gumbel) tapi TIDAK cukup untuk payload `token`
-(p=0,005) — noise Gumbel berkontribusi independen untuk muatan tanpa prior
-leksikal. Detail dan batas berlaku: `lab/HASIL_TAHAP0.md` §4–§5.
-
-### Tahap 1-2 — probe simbolik & kontrol gist (langkah berikutnya)
-
-Belum dijalankan. Rekomendasi Tahap 0 (§6 `HASIL_TAHAP0.md`): **lanjut ke
-Tahap 1**. Desainnya ada di `alternatif_gumbel_latentmas.md` §6 Tahap 1-2
-(subsample HumanEval+/MBPP+, lalu subsample GSM8K/MedQA sebagai kontrol).
-Belum ada skrip siap pakai — turunkan dari pola `channel_capacity.py` yang
-sudah ada, bukan dari nol.
-
----
-
-## 9. Ganti Model untuk VRAM Terbatas
-
-Edit `configs/experiment.yaml`, bagian `latent:`:
-
-```yaml
-latent:
-  enabled: true
-  model_name: "Qwen/Qwen3-4B"   # ganti dari Qwen3-14B ke 4B
-  device: "cuda"
-  steps: 10
-  max_new_tokens: 1024           # kurangi untuk hemat VRAM
-  kv_max_tokens: 1024            # kurangi untuk hemat VRAM
-```
-
-| Model              | VRAM   | Keterangan           |
-| ------------------ | ------ | -------------------- |
-| `Qwen/Qwen3-4B`  | ~8 GB  | Cocok untuk RTX 4090 |
-| `Qwen/Qwen3-14B` | ~28 GB | Perlu A100 40 GB     |
-
----
-
-## 10. Konfigurasi Experiment
-
-File utama konfigurasi: `configs/experiment.yaml`
-
-Parameter penting yang sering diubah:
-
-```yaml
-execution:
-  max_loops: 2          # jumlah iterasi mining per direction
-  steps_per_loop: 5     # step per loop (propose/construct/calculate/backtest/feedback)
-
-evolution:
-  enabled: true         # aktifkan evolutionary exploration
-  max_rounds: 3         # jumlah ronde evolusi (Original + Mutation + Crossover)
-
-planning:
-  enabled: true
-  num_directions: 2     # berapa arah eksplorasi yang di-generate
-
-latent:
-  enabled: true         # true = gunakan local Qwen3, false = gunakan API eksternal
-  model_name: "Qwen/Qwen3-4B"
-  steps: 10             # latent reasoning steps (hasil sweep: 10 optimal)
-  steps_construct: null # null = pakai global steps (sweep menunjukkan uniform lebih baik)
-  kv_max_tokens: 2048   # kurangi jika OOM
-  knn_percentage: 0.8   # fraksi KV token yang dipertahankan (hasil sweep: 0.8 optimal)
-```
-
-### Hasil tuning dari lapangan (`/try` sweep)
-
-| Parameter                  | Nilai Lama | Nilai Sekarang        | Alasan                                        |
-| -------------------------- | ---------- | --------------------- | --------------------------------------------- |
-| `latent.steps`           | 20         | **10**          | Lebih cepat, kualitas setara                  |
-| `latent.steps_construct` | 30         | **null** (= 10) | Uniform steps lebih stabil                    |
-| `latent.knn_percentage`  | 0.4        | **0.8**         | Lebih banyak KV token = konteks lebih lengkap |
-
----
-
-## 11. Troubleshooting
-
-### Setelah pod restart, `uv` / `.venv` / model HF "hilang"
-
-**Penyebab**: artifact tersimpan di `/root` (ephemeral), bukan `/workspace`. Cek:
-
-```bash
-ls /workspace/.local/bin/uv                              # harus ada
-ls /workspace/project/multi-agent-system/.venv/bin/      # harus ada
-ls /workspace/.cache/huggingface/hub                     # harus ada model snapshot
-```
-
-Jika kosong, ulangi bagian [0](#0-catatan-penting-runpod--workspace-vs-root) dan [3](#3-install-dependencies-di-runpod-semuanya-ke-workspace) — pastikan `source /workspace/runpod_env.sh` dijalankan **sebelum** install apa pun.
-
-### Pipeline stuck di `Workflow Progress: 0/5`, `nvidia-smi` 0 MiB
-
-**Gejala**: log berhenti tepat setelah `__init__ took ...s` lalu progress bar muncul tapi tidak pernah maju. `nvidia-smi` menunjukkan 0 MiB usage dan "No running processes found" padahal `python launcher.py mine ...` masih berjalan.
-
-**Penyebab**: torch yang terinstall tidak kompatibel dengan driver NVIDIA — `torch.cuda.is_available()` mengembalikan `False`, model fallback ke CPU sehingga generate praktis terbekukan.
-
-**Diagnosa**:
-
-```bash
-.venv/bin/python -c "import torch; print('cuda:', torch.cuda.is_available(), '| torch:', torch.__version__)"
-nvidia-smi | grep "CUDA Version"
-```
-
-Kalau `cuda: False`, kemungkinan uv.lock lama masih memiliki torch 2.11.0+cu130 (butuh driver ≥ 580). Solusi: hapus lock file dan sync ulang:
-
-```bash
-cd /workspace/project/multi-agent-system
-rm uv.lock
-uv sync
-```
-
-`uv sync` akan me-resolve ulang dan menginstall `torch 2.6.0+cu124` sesuai konfigurasi di `pyproject.toml`. Lihat bagian [3a](#3a-torch--cuda--sudah-dikonfigurasi-otomatis-untuk-a40-driver-550).
-
-### Pesan `No module named pip` di stderr
-
-**Penyebab**: venv yang dibuat lewat `uv` secara default tidak menyertakan modul `pip`. Library pihak ketiga (vllm `collect_env`, numba `sysinfo`) memanggil `python -m pip list` untuk diagnostik saat startup sehingga error ini muncul — dan beberapa path eksekusi benar-benar gagal jika `pip` tidak ada.
-
-**Solusi**: `pip` sudah ditambahkan ke `pyproject.toml` sebagai dependency biasa, jadi `uv sync` sudah cukup. Jika error masih muncul (misalnya setelah setup manual), jalankan:
-
-```bash
-uv pip install pip
-```
-
-### `We couldn't connect to 'https://huggingface.co' to load the files`
-
-**Gejala**: pipeline gagal di `[CoreEngine] Loading Qwen/Qwen3-4B on cuda (local_files_only=True) ...` dengan error `couldn't connect to 'https://huggingface.co'` / `couldn't find them in the cached files`.
-
-**Penyebab**: model Qwen3 belum ada di cache HuggingFace, sementara kode meload dengan `local_files_only=True` (mode offline) sehingga transformers tidak mencoba mengunduh.
-
-**Solusi**: tambahkan `HF_LOCAL_ONLY=0` ke file `.env` (paling andal — `launcher.py` selalu memuat `.env`), atau pre-download model — lihat bagian [5e](#5e-download-model-qwen3). Catatan: meng-`export HF_LOCAL_ONLY=0` di shell saja tidak cukup jika `python launcher.py` dijalankan di shell/tmux yang belum di-`source runpod_env.sh`.
-
-### CUDA Out of Memory
-
-```bash
-# Kurangi kv_max_tokens dan max_new_tokens di experiment.yaml
-# Atau ganti model ke Qwen3-4B
-# Cek VRAM usage:
-nvidia-smi -l 1
-```
-
-### `ImportError: cannot import name 'service' from 'google.protobuf'`
-
-**Gejala**: backtest gagal dengan traceback seperti ini:
-
-```
-File ".venv/lib/.../mlflow/protos/service_pb2.py", line 11, in <module>
-    from google.protobuf import service as _service
-ImportError: cannot import name 'service' from 'google.protobuf'
-```
-
-**Penyebab**: `rdagent` menarik `mlflow 1.27.0` sebagai transitive dependency. `mlflow 1.x` bergantung pada `google.protobuf.service` yang **dihapus di protobuf ≥ 4.x**. Karena `grpcio` dan `vllm` membutuhkan `protobuf 6.x`, terjadi konflik versi.
-
-**Verifikasi**:
-
-```bash
-.venv/bin/pip show mlflow protobuf
-# mlflow harus >= 3.0.0
-# protobuf harus < 8.0 dan >= 3.12
-```
-
-**Solusi** (pilih salah satu):
-
-A. **Upgrade mlflow** (rekomendasi, sudah tercover oleh `pyproject.toml`):
-
-```bash
-.venv/bin/pip install "mlflow>=3.0.0"
-```
-
-B. Jika `uv sync` menarik ulang mlflow 1.x (karena rdagent pinning), jalankan setelah sync:
-
-```bash
-uv sync
-.venv/bin/pip install "mlflow>=3.0.0" --force-reinstall
-```
-
-Verifikasi fix:
-
-```bash
-.venv/bin/python -c "
-import qlib, mlflow
-from qlib.model.trainer import task_train
-print('qlib:', qlib.__version__, '| mlflow:', mlflow.__version__)
-"
-# Harus mencetak: qlib: 0.9.7 | mlflow: 3.x.x
-```
-
-**Kompatibilitas yang sudah diverifikasi**:
-
-| Package      | Versi                 | Catatan                                                             |
-| ------------ | --------------------- | ------------------------------------------------------------------- |
-| `pyqlib`   | 0.9.7                 |                                                                     |
-| `mlflow`   | **3.x**         | Versi 1.x tidak kompatibel dengan protobuf ≥4                      |
-| `protobuf` | 6.x                   | mlflow 3.x requires`<8`                                           |
-| `numpy`    | 2.x                   |                                                                     |
-| `vllm`     | **0.8.5**       | Versi lebih baru (0.9+) butuh torch ≥ 2.7 → tidak ada cu124 wheel |
-| `torch`    | **2.6.0+cu124** | Max versi tersedia di cu124; cocok driver 550 (CUDA 12.4)           |
-
-### ImportError / ModuleNotFoundError (umum)
-
-```bash
-# Pastikan PYTHONPATH sudah di-set
-export PYTHONPATH=/workspace/project/multi-agent-system/backend
-# Atau jalankan selalu dari root proyek dengan prefix PYTHONPATH=backend
-PYTHONPATH=backend python launcher.py mine ...
-```
-
-### HDF5 file not found
-
-```bash
-# Pastikan file ada di path yang benar
-ls backend/git_ignore_folder/factor_implementation_source_data/daily_pv.h5
-# Env var override path HDF5 (opsional):
-export FACTOR_CoSTEER_DATA_FOLDER=/custom/path/to/factor_source_data
-```
-
-### Qlib data tidak lengkap
-
-```bash
-# Pastikan ada features/ folder
-ls backend/data/qlib/cn_data/features/ | head -5
-# Jika kosong, re-extract cn_data.zip (gunakan Python karena unzip tidak tersedia):
+hf download QuantaAlpha/qlib_csi300 --repo-type dataset --local-dir ./hf_data
 python -c "import zipfile; zipfile.ZipFile('hf_data/cn_data.zip').extractall('data/qlib/')"
 ```
 
-### SSH terputus saat mining
+`backend/hf_data/daily_pv.h5` adalah satu-satunya berkas yang dibutuhkan
+`eval/ic.py`; `data/qlib/cn_data/` dipakai kalau backtest Qlib penuh
+dihidupkan lagi. Keduanya gitignored.
 
-Gunakan `nohup` seperti di bagian 7, atau gunakan `screen`/`tmux`:
-
-```bash
-tmux new -s mining
-# jalankan mining di dalam tmux
-# Ctrl+B, D untuk detach
-# tmux attach -t mining untuk kembali
-```
-
-### Disk `/workspace` penuh
+### Model
 
 ```bash
-# Cek disk usage breakdown
-du -sh /workspace/.cache/* /workspace/project/multi-agent-system/* | sort -h
-
-# Bersihkan cache uv & pip yang tidak terpakai
-uv cache prune
-rm -rf /workspace/.cache/pip/*
-
-# Bersihkan model HF lama (hati-hati, akan re-download saat dipakai lagi)
-rm -rf /workspace/.cache/huggingface/hub/models--<old-model>
+hf download Qwen/Qwen3-8B     # ~16 GB, atau biarkan terunduh saat run pertama
 ```
 
 ---
 
-## Struktur Folder (setelah setup)
+## 3. Menjalankan
 
-```
-/workspace/                              # PERSISTENT network storage
-├── runpod_env.sh                        # env vars (HF_HOME, UV_CACHE_DIR, dll)
-├── bashrc.template                      # backup ~/.bashrc (re-copy setelah pod restart)
-├── .local/bin/uv                        # binary uv (BUKAN ~/.local/bin)
-├── .cache/
-│   ├── uv/                              # uv wheel cache
-│   ├── pip/                             # pip cache (fallback)
-│   ├── huggingface/hub/                 # model & dataset cache HF
-│   └── torch/                           # torch hub cache
-└── project/
-    └── multi-agent-system/              # PROJECT ROOT
-        ├── .venv/                       # virtualenv (BUKAN ~/.venv)
-        ├── .env                         # konfigurasi environment (dari configs/.env.example)
-        ├── launcher.py                  # entry point utama
-        ├── configs/
-        │   ├── experiment.yaml          # parameter experiment & latent pipeline
-        │   ├── backtest.yaml            # parameter backtest
-        │   └── .env.example             # template konfigurasi environment
-        ├── backend/
-        │   ├── pipeline/
-        │   │   ├── factor_mining.py     # orchestrator utama
-        │   │   └── settings.py          # konfigurasi class pipeline
-        │   ├── llm/
-        │   │   └── client.py            # LocalLLMBackend (Qwen3 inference)
-        │   ├── core/
-        │   │   └── conf.py              # RDAgentSettings (workspace/cache paths)
-        │   ├── data/                    # [git-ignored]
-        │   │   ├── qlib/cn_data/        # Qlib market data (hasil unzip cn_data.zip)
-        │   │   │   ├── calendars/
-        │   │   │   ├── features/
-        │   │   │   └── instruments/
-        │   │   └── results/             # output experiment (auto-created)
-        │   │       ├── workspace/       # temp workspace per coding task
-        │   │       └── pickle_cache/    # cache komputasi
-        │   ├── hf_data/                 # [git-ignored] cache HuggingFace dataset
-        │   ├── log/                     # [git-ignored] trace logs per iterasi
-        │   ├── debug/llm_outputs/       # [TRACKED] snapshot per LLM call (JSON)
-        │   └── git_ignore_folder/       # [git-ignored]
-        │       ├── factor_implementation_source_data/
-        │       │   └── daily_pv.h5      # HDF5 price-volume data (380 MB)
-        │       └── factor_implementation_source_data_debug/
-        │           └── daily_pv.h5      # HDF5 debug subset (1.4 MB)
+Satu proses = **satu sel** matriks. Ini disengaja: satu run hanya memakai ~16 GB
+dari 46 GB dan 70–95% GPU, jadi 2–3 sel sebaiknya jalan bersamaan
+(`docs/HASIL_TAHAP0.md` §8.7).
 
-/root/                                   # EPHEMERAL — JANGAN simpan apa pun penting di sini
+### Lengan 1 — benchmark ala LatentMAS
+
+```bash
+PYTHONPATH=backend python backend/bench/run_bench.py \
+    --task gsm8k --latent-mode gumbel --comm-mode kv \
+    --limit 200 --sample-seed 0 --seed 0
 ```
+
+`--task` ∈ `gsm8k` (math) · `arc_challenge` (commonsense) · `humanevalplus` (code)
+`--latent-mode` ∈ `raw` `gumbel` `moi` `sample` (+ kontrol `soft`)
+`--comm-mode` ∈ `kv` `kv_and_text` `text`; `--baseline` = agen tunggal
+
+> `--sample-seed` HARUS sama di semua sel — itu yang membuat semua metode
+> melihat soal yang sama dan uji berpasangannya sah. `bench/compare.py`
+> memverifikasinya lewat sidik jari dan **mengeluarkan** sel yang tak cocok.
+
+### Lengan 2 — faktor alpha (simbolik/DSL)
+
+```bash
+PYTHONPATH=backend python backend/factor/run_factor.py \
+    --comm-mode kv --latent-mode gumbel --latent-steps 10 \
+    --seeds 0,1,2 --directions d0,d1 --tag kv_gumbel
+```
+
+### Turunkan seluruh matriks dari config
+
+```bash
+python scripts/gen_perintah.py --arm bench                 # 36 sel
+python scripts/gen_perintah.py --arm factor                # 11 sel
+python scripts/gen_perintah.py --arm all --parallel 3 > jalankan.sh
+bash jalankan.sh
+```
+
+### Analisis (tanpa GPU)
+
+```bash
+python backend/bench/compare.py --out results/bench/analisis.json   # McNemar + CI bootstrap
+PYTHONPATH=backend python backend/eval/rescore_all.py               # skor ulang korpus faktor
+python backend/eval/compare_modes.py                                # probe kapasitas kanal (Tahap 0)
+PYTHONPATH=backend python backend/eval/backtest.py                  # smoke metrik portofolio
+```
+
+---
+
+## 4. Verifikasi setup (CPU, tanpa GPU)
+
+```bash
+PYTHONPATH=backend python -c "
+import llm.client, mas.pipeline, bench.pipeline, gate, dsl.expr_parser, eval.ic
+print('import ok')
+from eval.ic import Lab; lab = Lab(mode='fast')
+print(lab.ic('RANK(\$volume)'))         # ~ <IC=-0.04493 t=-6.72 n=243 ...>
+"
+```
+
+Jalur ini diverifikasi setelah perombakan: 243 hari OOS, ~4370 saham/hari,
+IC identik dengan angka produksi lama.
+
+---
+
+## 5. Ganti model untuk VRAM terbatas
+
+| Model | Unduh | VRAM |
+|---|---|---|
+| `Qwen/Qwen3-4B` | ~8 GB | ~8 GB |
+| **`Qwen/Qwen3-8B`** (dipakai skripsi) | ~16 GB | ~16 GB |
+| `Qwen/Qwen3-14B` | ~28 GB | ~28 GB |
+
+Ganti lewat `--model` di kedua runner dan `model:` di `configs/matriks.yaml`.
+**Seluruh angka skripsi dipatok Qwen3-8B** — mencampur backbone membuat sel tak
+sebanding.
+
+---
+
+## 6. Masalah yang sering muncul
+
+**`uv` / `.venv` / model HF hilang setelah pod restart** — semuanya di `/root`
+yang ephemeral. Pastikan `source /workspace/runpod_env.sh` dijalankan SEBELUM
+`uv sync`, dan `XDG_*`/`UV_CACHE_DIR`/`HF_HOME` menunjuk ke `/workspace`.
+
+**`We couldn't connect to 'https://huggingface.co'`** — set `HF_LOCAL_ONLY=0`
+di `.env`, atau pre-download modelnya. Kalau `HF_TOKEN` di-set tapi sudah
+kedaluwarsa, error 401 membuat transformers gagal total alih-alih jatuh ke
+akses anonim — hapus tokennya.
+
+**CUDA OOM** — turunkan `--max-new-tokens`, kurangi proses paralel, atau turun
+ke Qwen3-4B. Cek `--empty-cache-every` di `run_bench.py`.
+
+**`ModuleNotFoundError`** — jalankan dengan `PYTHONPATH=backend` dari root repo,
+bukan dari dalam `backend/`.
+
+**Skoring korpus faktor kena OOM di mesin kecil** — `eval/ic.py` membatasi
+worker joblib lewat `LAB_MAX_WORKERS` (default 3); turunkan ke 1 bila perlu.
+
+---
+
+## 7. Apa yang dihapus di branch ini
+
+Semuanya masih ada di `exp/alt3-gumbel-fidelitas` dan branch `prod/*`.
+
+| dihapus | alasan |
+|---|---|
+| `backend/pipeline/` (evolusi, loop, planning, factor_mining) | lengan faktor kini single-pass; evolusi menambah variabel perancu |
+| `backend/coder/costeer/`, `backend/core/` | kerangka RD-Agent; hanya `core/conf.py` yang tersisa → `backend/conf.py` |
+| `backend/log/` (wrapper `rdagent.log`) | diganti `backend/qlog.py` (loguru polos) — repo tak lagi butuh RD-Agent |
+| `backend/factors/` selain DSL + regulator + template | proposal/runner/feedback/qlib terikat ke pipeline lama |
+| `backend/eksternal/`, `app/`, `components/`, `debug/`, `experiments/` | agen makro/berita & harness lama, di luar pertanyaan branch ini |
+| `backend/runs/`, `backend/log/<ts>/`, `try/`, `books/` | artefak run lama (±440 MB) |
+| `configs/experiment*.yaml`, `backtest.yaml` | dibaca pipeline evolusi yang dihapus; diganti `configs/matriks.yaml` |
+| `launcher.py`, `backend/cli.py`, `main.py` | CLI RD-Agent; diganti dua runner + `scripts/gen_perintah.py` |

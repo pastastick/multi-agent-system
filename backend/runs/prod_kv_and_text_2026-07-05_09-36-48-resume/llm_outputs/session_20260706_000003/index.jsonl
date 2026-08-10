@@ -1,7 +1,0 @@
-{"n": 1, "ts": "2026-07-06 00:01:13", "role": "planning", "mode": "kv_and_text", "step": 0, "conv_id": "7e27eb71", "text_len": 174, "duration_s": 6.4575, "file": "0001_planning_kv_and_text.md", "vars": ["initial_direction", "output_format"]}
-{"n": 2, "ts": "2026-07-06 00:01:56", "role": "crossover", "mode": "kv_and_text", "step": 0, "conv_id": "41f88f13", "text_len": 2306, "duration_s": 21.6462, "file": "0002_crossover_kv_and_text.md", "vars": []}
-{"n": 3, "ts": "2026-07-06 00:02:02", "role": "crossover_guidance", "mode": "kv_and_text", "step": 0, "conv_id": "748e5f7e", "text_len": 302, "duration_s": 5.1219, "file": "0003_crossover_guidance_kv_and_text.md", "vars": []}
-{"n": 4, "ts": "2026-07-06 00:02:09", "role": "proposal", "mode": "kv_and_text", "step": 0, "conv_id": "a2afa0ab", "text_len": 622, "duration_s": 7.0169, "file": "0004_proposal_kv_and_text.md", "vars": []}
-{"n": 5, "ts": "2026-07-06 00:02:38", "role": "design", "mode": "kv_and_text", "step": 0, "conv_id": "f902e5f6", "text_len": 2863, "duration_s": 28.9934, "file": "0005_design_kv_and_text.md", "vars": []}
-{"n": 6, "ts": "2026-07-06 00:02:56", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "b2808255", "text_len": 1625, "duration_s": 18.3853, "file": "0006_construct_kv_and_text.md", "vars": []}
-{"n": 7, "ts": "2026-07-06 00:10:07", "role": "feedback", "mode": "kv_and_text", "step": 0, "conv_id": "2d4ee1fb", "text_len": 573, "duration_s": 9.0896, "file": "0007_feedback_kv_and_text.md", "vars": []}
