@@ -10,7 +10,7 @@ lusinan pemanggil di `mas/`, `bench/`, `eval/`, `factor/`, `gate/` perlu
 berubah.
 
 Peta pemecahan:
-    llm/latent_step.py   SUMBU A skripsi — 4 formula langkah laten, murni
+    llm/methods.py   SUMBU A skripsi — 4 formula langkah laten, murni
     llm/debug_log.py     ConvRecord, TensorConvManager (riwayat tensor debug)
     llm/kv_store.py       KVCacheStore (persistensi KV .pt + indeks SQLite)
     llm/engine.py         LLMResult, _CoreEngine, cache model bersama
@@ -40,7 +40,7 @@ from llm._shared import (
 )
 
 # ── Sumbu A: empat persamaan langkah laten ──────────────────────────────────
-from llm.latent_step import LATENT_STEP_MODES as _LATENT_STEP_MODES, latent_step_vec
+from llm.methods import LATENT_STEP_MODES as _LATENT_STEP_MODES, latent_step_vec
 
 # ── Debug/persistensi ────────────────────────────────────────────────────────
 from llm.debug_log import ConvRecord, TensorConvManager
@@ -64,7 +64,7 @@ __all__ = [
     "KVCache", "OutputMode", "LatentRealigner", "_past_length",
     "_ensure_pad_token", "_kv_to_cpu", "_kv_to_device", "kv_truncate",
     "kv_knn_filter", "kv_size_bytes", "robust_json_parse", "md5_hash",
-    # latent_step
+    # methods
     "_LATENT_STEP_MODES", "latent_step_vec",
     # debug_log / kv_store
     "ConvRecord", "TensorConvManager", "KVCacheStore",

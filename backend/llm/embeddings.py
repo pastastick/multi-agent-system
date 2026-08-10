@@ -1,7 +1,7 @@
 """embeddings.py — utilitas embedding, kompatibilitas APIBackend lama.
 
 Diekstrak dari bekas `client.py` BAGIAN 10. Bukan jalur laten (tidak
-menyentuh `latent_step.py`/`engine.py`) — hanya mean-pool input embeddings
+menyentuh `methods.py`/`engine.py`) — hanya mean-pool input embeddings
 dari satu `LocalLLMBackend` singleton (`latent_steps=0`), dipakai untuk
 kesamaan teks (mis. dedup faktor) di tempat lain di codebase.
 """

@@ -6,7 +6,7 @@ langkah laten yang dibandingkan skripsi ini.
 
 Module structure:
     _shared.py       - KVCache, LatentRealigner, helper KV lintas-modul
-    latent_step.py   - SUMBU A: 4 formula langkah laten (raw/gumbel/moi/sample)
+    methods.py       - SUMBU A: 4 formula langkah laten (raw/gumbel/moi/sample)
     engine.py        - _CoreEngine (model+tokenizer, latent_pass, generate)
     backend.py       - LocalLLMBackend (API publik utama)
     session.py       - LocalChatSession (sesi multi-turn)

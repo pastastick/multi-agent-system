@@ -1,4 +1,4 @@
-"""latent_step.py — SUMBU A skripsi: empat persamaan langkah laten.
+"""methods.py — SUMBU A skripsi: empat persamaan langkah laten.
 
 Fungsi murni yang memetakan satu hidden state ke satu vektor yang diumpankan
 balik sebagai `inputs_embeds` — inilah yang dibandingkan `docs/DESAIN_EKSPERIMEN.md`
@@ -13,7 +13,7 @@ Kesetiaan terhadap paper diverifikasi 2026-08-10 terhadap
 aljabar `moi`, termasuk satu divergensi implementasi yang terdokumentasi di
 sana, bukan di sini, supaya penjelasannya tak terpisah dari angkanya).
 
-    from llm.latent_step import latent_step_vec, LATENT_STEP_MODES
+    from llm.methods import latent_step_vec, LATENT_STEP_MODES
 """
 from __future__ import annotations
 

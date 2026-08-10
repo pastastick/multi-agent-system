@@ -6,7 +6,7 @@ diakses lewat `backend.LocalLLMBackend`, yang membungkus lock, snapshot debug,
 dan API publik di atasnya.
 
 Matematika SUMBU A (empat persamaan langkah laten) TIDAK ada di sini —
-`_latent_step_vec` di bawah hanya memanggil `llm.latent_step.latent_step_vec`.
+`_latent_step_vec` di bawah hanya memanggil `llm.methods.latent_step_vec`.
 Lihat modul itu untuk rumusnya, dan `docs/HASIL_TAHAP0.md` §9 untuk verifikasi
 kesetiaan terhadap paper.
 """
@@ -32,7 +32,7 @@ from llm._shared import (
     _past_length,
     kv_knn_filter,
 )
-from llm.latent_step import LATENT_STEP_MODES, latent_step_vec
+from llm.methods import LATENT_STEP_MODES, latent_step_vec
 
 # Cache-only model load by default. Set HF_LOCAL_ONLY=0 to allow HF Hub fetches
 # (e.g. first download or to refresh an outdated snapshot).
@@ -310,7 +310,7 @@ class _CoreEngine:
             )
         # Cetak PERSAMAAN yang benar-benar berlaku, bukan cuma nama modenya.
         # `use_realign` hanya berpengaruh pada mode "raw": di mode lain matriks
-        # M tidak pernah dipakai (lihat llm.latent_step.latent_step_vec —
+        # M tidak pernah dipakai (lihat llm.methods.latent_step_vec —
         # realigner hanya dimintai `target_norm`), sehingga ablasi use_realign
         # G6 TIDAK berlaku untuk konfigurasi produksi sekarang. Menuliskannya
         # di log mencegah kekeliruan itu terbawa ke analisis.
@@ -364,7 +364,7 @@ class _CoreEngine:
     def _latent_step_vec(self, last_hidden: "torch.Tensor") -> "torch.Tensor":
         """Petakan hidden state ke vektor yang diumpankan sebagai inputs_embeds.
 
-        Rumus keempat mode (SUMBU A skripsi) ada di `llm.latent_step` — modul
+        Rumus keempat mode (SUMBU A skripsi) ada di `llm.methods` — modul
         berdiri sendiri supaya matematikanya bisa dibaca terpisah dari mesin
         KV/generate di kelas ini. Method ini hanya mengoper state engine.
         """
