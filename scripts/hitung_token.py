@@ -36,6 +36,17 @@ from paths import OUT_BENCH, RESULTS  # noqa: E402
 _IN = re.compile(r"^- input_tokens:\s*(\d+)", re.M)
 _OUT = re.compile(r"^- output_tokens:\s*(\d+)", re.M)
 
+# Aksara CJK di jawaban berbahasa Inggris = token dari bahasa lain menyusup.
+# Ini FIDELITAS SIMBOLIK yang bisa dilihat mata: langkah laten `raw` (ridge W_a)
+# menghasilkan vektor yang tidak berada di manifold embedding nyata, sehingga
+# model sesekali men-decode token yang salah sama sekali ("step by步",
+# "1. **确定每"). Terukur 2026-08-10 di GSM8K: nol pada medium TANPA laten
+# (baseline, text), dan terbanyak justru pada `raw` — metode dgn akurasi
+# terendah. `sample`/`gumbel` yang selalu mendarat di embedding token sungguhan
+# mencatat nol. Jadi angka ini bukan sekadar keanehan kosmetik; ia bentuk
+# kegagalan yang menjelaskan selisih akurasinya.
+_CJK = re.compile(r"[一-鿿぀-ヿ가-힯]")
+
 
 def token_sel(dir_sel: Path) -> dict:
     """Jumlahkan token seluruh panggilan LLM di satu sel."""
@@ -73,7 +84,21 @@ def main() -> None:
             d = json.loads(js.read_text())
             m, s = d.get("_meta", {}), d.get("summary", {})
             n = s.get("n") or 0
+            # NB: jangan pakai nama `t` di sini — `t` menampung hasil
+            # `token_sel()` dan masih dibutuhkan di bawah.
+            rusak, contoh = 0, None
+            for r in d.get("results", []):
+                teks = r.get("answer_text") or ""
+                mm = _CJK.search(teks)
+                if mm:
+                    rusak += 1
+                    if contoh is None:
+                        contoh = teks[max(0, mm.start() - 25):
+                                      mm.start() + 4].replace("\n", " ")
             rec.update({
+                "n_jawaban_ber_cjk": rusak,
+                "laju_korupsi_token": round(rusak / n, 4) if n else None,
+                "contoh_korupsi": contoh,
                 "task": m.get("task"),
                 "medium": "baseline" if m.get("baseline") else m.get("comm_mode"),
                 "metode": m.get("latent_mode"),
@@ -92,12 +117,14 @@ def main() -> None:
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     Path(args.out).write_text(json.dumps(baris, indent=2, ensure_ascii=False))
 
-    print(f"{'sel':34s} {'n':>4s} {'akurasi':>8s} {'token/soal':>11s} {'dtk/soal':>9s}")
-    print("-" * 72)
+    print(f"{'sel':34s} {'n':>4s} {'akurasi':>8s} {'token/soal':>11s} "
+          f"{'dtk/soal':>9s} {'CJK':>4s}")
+    print("-" * 78)
     for r in baris:
         if r.get("n_soal"):
             print(f"{r['sel']:34s} {r['n_soal']:4d} {r['akurasi']:8.3f} "
-                  f"{r['token_per_soal']:11.1f} {r['detik_per_soal']:9.1f}")
+                  f"{r['token_per_soal']:11.1f} {r['detik_per_soal']:9.1f} "
+                  f"{r['n_jawaban_ber_cjk']:4d}")
         else:
             print(f"{r['sel']:34s}    - (belum selesai, {r['n_panggilan']} panggilan)")
     print(f"\nditulis → {args.out}")
