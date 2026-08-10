@@ -67,6 +67,17 @@ def build_backend(args: argparse.Namespace):
 
     from llm.client import get_local_backend
 
+    # Snapshot prompt+keluaran tiap panggilan LLM. TANPA argumen ini,
+    # `get_local_backend` memakai defaultnya, `./debug/llm_outputs` — di LUAR
+    # `results/`, sehingga transkrip lengan bench tidak ikut `kemas_hasil.sh`
+    # DAN tidak ikut git (`debug/` gitignored). Di pod sewaan yang akhirnya
+    # dihapus, itu berarti transkripnya hilang permanen tanpa ada yang sadar.
+    # Lengan faktor sudah menaruhnya di `results/factor/llm_outputs/<tag>`;
+    # di sini disamakan supaya kedua lengan punya satu konvensi.
+    # Nama folder dibuat IDENTIK dengan stem berkas keluaran sel (lihat `main`),
+    # supaya transkrip dan hasilnya bisa dipasangkan tanpa menebak.
+    comm = "baseline" if args.baseline else args.comm_mode
+    stem = "_".join(p for p in [args.task, args.latent_mode, comm, args.tag] if p)
     return get_local_backend(
         model_name=args.model,
         latent_steps=args.latent_steps,
@@ -75,6 +86,7 @@ def build_backend(args: argparse.Namespace):
         top_p=args.top_p,
         max_new_tokens=args.max_new_tokens,
         enable_thinking=False,
+        output_log_dir=str(ensure_out(OUT_BENCH) / "llm_outputs" / stem),
     )
 
 
