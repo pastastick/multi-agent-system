@@ -1,10 +1,10 @@
 {
   "arity": 15,
-  "regulator evaluate failed": 14,
-  "regulator reject": 7,
-  "execution": 3,
-  "unparsable expression": 3,
+  "regulator evaluate failed": 15,
+  "regulator reject": 8,
+  "unparsable expression": 7,
   "ParseException": 3,
+  "execution": 3,
   "semantics": 1,
   "variable": 1
 }
