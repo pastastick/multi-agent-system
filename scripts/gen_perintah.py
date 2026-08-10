@@ -39,21 +39,47 @@ def load_cfg(path: Path) -> dict:
 def bench_commands(cfg: dict) -> list[str]:
     b = cfg["bench"]
     model, ls = cfg["model"], cfg["latent_steps"]
+    # `--limit` sengaja TIDAK dimasukkan ke `base`: medium lampiran memakai
+    # limit sendiri (lihat di bawah), dan menaruh dua `--limit` di satu
+    # perintah lalu mengandalkan argparse mengambil yang terakhir adalah
+    # jebakan yang mudah terlewat saat perintahnya dibaca manusia.
     base = (f"{PY} backend/bench/run_bench.py --model {model} "
             f"--latent-steps {ls} --latent-temp {cfg['latent_temp']} "
-            f"--limit {b['limit']} --sample-seed {b['sample_seed']} "
+            f"--sample-seed {b['sample_seed']} "
             f"--temperature {b['temperature']} --top-p {b['top_p']} "
             f"--max-new-tokens {b['max_new_tokens']}")
+    lim = f"--limit {b['limit']}"
+
+    # Medium yang dijalankan HANYA sebagai lampiran, bukan lengan uji: sedikit
+    # soal, semata untuk memperlihatkan seperti apa keluaran LLM ketika
+    # masukannya berupa laten. Diberi limit DAN tag sendiri.
+    #
+    # Tag terpisah itu pengaman, bukan kosmetik. `bench/compare.py`
+    # mengelompokkan sel per `(task, limit, sample_seed, model)` dan
+    # mengeluarkan sel yang sidik jarinya beda — jadi sel lampiran memang sudah
+    # otomatis terpisah dari analisis. Tapi nama berkas yang berbeda
+    # (`..._lampiran.json`, bukan `..._s0.json`) membuat pemisahan itu terlihat
+    # oleh MANUSIA yang membaca direktori hasil, bukan hanya oleh skrip.
+    #
+    # CATATAN PENTING soal apa yang HILANG: dengan `kv_and_text` jadi lampiran,
+    # Sumbu B keluar dari analisis kuantitatif. Perbandingan medium yang tersisa
+    # adalah `kv` vs `text` vs `baseline` — masih menjawab pertanyaan inti
+    # (laten vs teks), tapi tak lagi bisa memisahkan "KV membantu" dari
+    # "menghapus teks merugikan". Itu harus dinyatakan di skripsi, bukan
+    # didiamkan.
+    lampiran_mode = b.get("comm_mode_lampiran")
+    lim_lampiran = f"--limit {b.get('limit_lampiran', 5)}"
+
     cmds = []
     for task in b["tasks"].values():
         for seed in b["seeds"]:
             tag = f"s{seed}"
             # Lantai: agen tunggal. Tak ada rantai → tak ada handoff → satu sel.
             if cfg.get("baseline"):
-                cmds.append(f"{base} --task {task} --seed {seed} --baseline "
+                cmds.append(f"{base} {lim} --task {task} --seed {seed} --baseline "
                             f"--latent-mode raw --comm-mode kv --tag {tag}")
             # Baseline teks: SATU sel, bukan empat (lihat docstring).
-            cmds.append(f"{base} --task {task} --seed {seed} "
+            cmds.append(f"{base} {lim} --task {task} --seed {seed} "
                         f"--comm-mode {cfg['comm_mode_tanpa_laten']} "
                         f"--latent-mode raw --tag {tag}")
             # Matriks penuh Sumbu A × Sumbu B untuk medium ber-KV.
@@ -61,12 +87,15 @@ def bench_commands(cfg: dict) -> list[str]:
             if cfg.get("kontrol_latent_mode"):
                 modes.append(cfg["kontrol_latent_mode"])
             for comm in cfg["comm_modes"]:
+                lampiran = (comm == lampiran_mode)
                 for mode in modes:
                     extra = (f" --latent-beta {cfg['latent_beta']}"
                              if mode == "moi" else "")
-                    cmds.append(f"{base} --task {task} --seed {seed} "
+                    cmds.append(f"{base} {lim_lampiran if lampiran else lim} "
+                                f"--task {task} --seed {seed} "
                                 f"--comm-mode {comm} --latent-mode {mode}"
-                                f"{extra} --tag {tag}")
+                                f"{extra} "
+                                f"--tag {'lampiran' if lampiran else tag}")
     return cmds
 
 

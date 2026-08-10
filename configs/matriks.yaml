@@ -59,6 +59,25 @@ bench:
   # memverifikasinya lewat sidik jari subsample dan MENGELUARKAN sel yang tak
   # cocok — mengubahnya di tengah matriks berarti membuang sel yang sudah jadi.
   limit: 100                    # humanevalplus punya 164 soal → ikut disubsample ke 100
+
+  # Medium yang dijalankan sebagai LAMPIRAN saja, bukan lengan uji. Tujuannya
+  # memperlihatkan seperti apa keluaran LLM ketika masukan yang diterimanya
+  # berupa laten — bukan menghasilkan angka yang dibandingkan.
+  #
+  # Kenapa `kv_and_text`: ia medium termahal (agennya mengeluarkan teks DAN
+  # mengoper KV), 15 sel yang memakan separuh total waktu lengan bench.
+  # Menjadikannya lampiran memangkas ~6,4 jam dinding.
+  #
+  # YANG HILANG, dan harus dinyatakan di skripsi: Sumbu B keluar dari analisis
+  # kuantitatif. Perbandingan medium yang tersisa `kv` vs `text` vs `baseline`
+  # masih menjawab pertanyaan inti (laten vs teks), tapi tak lagi memisahkan
+  # "KV membantu" dari "menghapus teks merugikan".
+  #
+  # Sel lampiran memakai tag `lampiran` (bukan `s0`) sehingga namanya berbeda
+  # di direktori hasil. `compare.py` sudah otomatis memisahkannya (grup per
+  # `limit`), tapi nama yang berbeda membuat pemisahan itu terlihat manusia.
+  comm_mode_lampiran: kv_and_text
+  limit_lampiran: 5
   sample_seed: 0                # WAJIB sama di semua sel → uji berpasangan sah
   seeds: [0]                    # seed generasi; tambah untuk replikasi multi-seed
   temperature: 0.6

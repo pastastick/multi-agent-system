@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -94,6 +95,36 @@ def score_path(cmd: str) -> Path:
 
 def log_path(cmd: str, suffix: str = "") -> Path:
     return LOGS / (output_path(cmd).stem + suffix + ".log")
+
+
+def lock_path(cmd: str) -> Path:
+    return LOGS / (output_path(cmd).stem + ".lock")
+
+
+def sedang_jalan(cmd: str) -> int:
+    """PID sel ini kalau sedang dijalankan proses LAIN, 0 kalau tidak.
+
+    Kenapa berkas kunci, bukan sekadar "lewati kalau keluarannya sudah ada".
+    Deteksi berbasis keluaran punya lubang yang mahal: sel yang SEDANG BERJALAN
+    belum menulis keluaran, sehingga runner kedua menganggapnya belum
+    dikerjakan dan meluncurkan DUPLIKATNYA. Yang terjadi 2026-08-10 09:55:
+    satu sel `text` yang sudah 50/100 diduplikasi dari nol, dua proses menulis
+    ke log yang sama (log aslinya ter-truncate), dan VRAM nyaris jebol karena
+    tiga sel 21GB berebut kartu 46GB.
+
+    Kunci berisi PID. Kunci yatim (PID-nya sudah mati, mis. pod restart)
+    diabaikan otomatis — jadi tak perlu pembersihan manual yang bisa terlupa.
+    """
+    p = lock_path(cmd)
+    try:
+        pid = int(p.read_text().strip())
+    except Exception:  # noqa: BLE001 — tak ada kunci / isinya rusak
+        return 0
+    try:
+        os.kill(pid, 0)          # sinyal 0 = cek keberadaan, tidak membunuh
+        return pid
+    except OSError:
+        return 0                 # kunci yatim
 
 
 def score_cmd(cmd: str) -> str:
@@ -161,9 +192,17 @@ def main() -> None:
         all_cells = ([c for c in all_cells if is_factor(c)]
                      + [c for c in all_cells if not is_factor(c)])
 
-    todo, skipped = [], []
+    todo, skipped, dikunci = [], [], []
     for c in all_cells:
-        (skipped if (not args.rerun and output_path(c).exists()) else todo).append(c)
+        if not args.rerun and output_path(c).exists():
+            skipped.append(c)
+        elif sedang_jalan(c):
+            # Sedang dikerjakan proses lain — JANGAN duplikasi.
+            dikunci.append(c)
+        else:
+            todo.append(c)
+    for c in dikunci:
+        print(f"#   SEDANG JALAN (pid {sedang_jalan(c)}) {output_path(c).name}")
 
     # Sel faktor yang fase GPU-nya sudah selesai di run sebelumnya tapi fase
     # CPU-nya belum — antrikan skoringnya saja, jangan ulangi GPU-nya.
@@ -214,12 +253,26 @@ def main() -> None:
         fh = open(lp, "w")
         p = subprocess.Popen(shell, shell=True, cwd=ROOT,
                              stdout=fh, stderr=subprocess.STDOUT)
+        if on_gpu:
+            lock_path(cmd).write_text(str(p.pid))
         (gpu if on_gpu else cpu).append((p, cmd, time.time()))
         tag = "GPU" if on_gpu else "CPU"
         print(f"[MULAI {tag}] {output_path(cmd).name}  (log: {lp.name})", flush=True)
 
+    def sel_eksternal() -> int:
+        """Sel yang jalan di bawah proses LAIN (kunci hidup, bukan luncuran kita).
+
+        Slot GPU adalah sumber daya BERSAMA satu kartu, bukan milik satu runner.
+        Tanpa ikut menghitung sel eksternal, runner yang dijalankan saat masih
+        ada sel yatim akan menambah `--slots` sel LAGI di atasnya — 4 sel x 21GB
+        di kartu 46GB, yaitu OOM. `dikunci` dihitung ulang tiap iterasi karena
+        sel eksternal bisa selesai kapan saja.
+        """
+        return sum(1 for c in all_cells
+                   if c not in [x[1] for x in gpu] and sedang_jalan(c))
+
     while queue or gpu or cpu_queue or cpu:
-        while queue and len(gpu) < args.slots:
+        while queue and len(gpu) + sel_eksternal() < args.slots:
             # Gerbang VRAM. Slot pertama selalu boleh jalan (kalau tidak, sel
             # yang butuh lebih dari ambang tak akan pernah dapat giliran dan
             # matriks mandek diam-diam).
@@ -242,6 +295,7 @@ def main() -> None:
             if p.poll() is None:
                 continue
             gpu.remove(entry)
+            lock_path(cmd).unlink(missing_ok=True)
             dur, name = (time.time() - t0) / 60, output_path(cmd).name
             if p.returncode == 0 and output_path(cmd).exists():
                 done.append(cmd)
