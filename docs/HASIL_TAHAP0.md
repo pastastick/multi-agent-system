@@ -420,6 +420,33 @@ perbandingan antar-mode adil), bukan bagian dari definisi MoI aslinya.
 GPQA-Diamond/LiveCodeBench) — sweep §9.5b menunjukkan pada domain ini β tidak
 berpengaruh sama sekali, jadi default itu tak perlu diganti.
 
+**Verifikasi terhadap kode rujukan (2026-08-10) — rumus identik, satu
+konstanta berbeda karena keterbatasan API, bukan pilihan desain.**
+Implementasi resmi (`reference/mixinputs/mixinputs/gpu_model_runner.py:1190–1243`,
+vLLM patch) menulis rumusnya dalam DUA langkah — campur `posterior_probs =
+(p+β·onehot)/(1+β)` atas kandidat, lalu gerbang entropi `H·(Σ posterior·e) +
+(1-H)·e_ŷ` — alih-alih satu closed-form. Substitusi aljabar keduanya
+membuktikan **identik**:
+
+$$z_{\text{ref}} = \frac{H\bar p + (1{+}\beta{-}H)\,e_{\hat y}}{1+\beta}
+= w\cdot W_\text{in} = z$$
+
+Yang **berbeda**: referensi menghitung $p$ dan $H$ di atas **top-20 slice**
+API logprobs vLLM (`gpu_input_batch.py:330`, default `num_logprobs=20` bila
+tak diset eksplisit), dengan $H_\max=\log(20)$ — bukan $\log(V)$, $V\approx
+151.936$ untuk Qwen3. Harness ini menghitung $p$/$H$ dari **logit vocab
+penuh** karena hidden state diakses langsung lewat
+`model.get_output_embeddings()` (HF), tanpa lapisan sampler vLLM yang
+membatasi ke top-k. Akibatnya entropi ternormalisasi referensi secara
+sistematis lebih tinggi untuk tingkat "kepastian" model yang sama (denominator
+$\log(20)\approx3$ vs $\log(V)\approx12$), sehingga bobot campuran $H$ tidak
+akan bit-identik antar dua implementasi meski rumusnya sama persis. Ini
+kompromi rekayasa mixinputs (dibatasi API logprobs vLLM), bukan bagian dari
+definisi konseptual paper — versi harness ini (vocab penuh) karenanya lebih
+setia ke definisi Bayesian paper, tapi **bukan replikasi bit-identik** kode
+rujukan. Klaim yang sah: "rumus MoI diimplementasikan tepat sesuai definisi
+paper", bukan "direplikasi identik dari kode rujukan mixinputs".
+
 ### 9.3. `sample` — pengambilan sampel kategoris standar
 
 Tidak berasal dari satu paper tunggal — ini teknik dekode standar tekstual

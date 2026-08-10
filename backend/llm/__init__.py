@@ -1,13 +1,22 @@
 """
 llm package
 ===========
-Public API for all LLM backends used in 
+Public API untuk mesin LLM lokal (Qwen3 via HuggingFace) + empat persamaan
+langkah laten yang dibandingkan skripsi ini.
 
 Module structure:
-    _shared.py      - Shared utilities (KVCache, LatentRealigner, helpers)
-    client.py       - LocalLLMBackend (primary backend for pipeline)
-    models.py       - Latent formula utilities (called by client.py)
-    config.py       - LLM_SETTINGS
+    _shared.py       - KVCache, LatentRealigner, helper KV lintas-modul
+    latent_step.py   - SUMBU A: 4 formula langkah laten (raw/gumbel/moi/sample)
+    engine.py        - _CoreEngine (model+tokenizer, latent_pass, generate)
+    backend.py       - LocalLLMBackend (API publik utama)
+    session.py       - LocalChatSession (sesi multi-turn)
+    embeddings.py    - utilitas embedding (kompat APIBackend lama)
+    debug_log.py     - ConvRecord/TensorConvManager (tensor debug)
+    kv_store.py      - KVCacheStore (persistensi KV .pt + SQLite)
+    config.py        - LLM_SETTINGS
+    guided_decoding.py - constrained decoding (construct step)
+    client.py        - facade impor tunggal, re-export semua di atas
+                        (kode baru dianjurkan impor modul spesifik langsung)
 """
 
 # Shared types and utilities

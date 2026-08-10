@@ -34,7 +34,12 @@ Yang **ikut** disalin dan penting:
   hulu. Tidak dipakai skripsi ini (kategori sains diwakili GSM8K), disimpan
   kalau-kalau lengan MedQA ditambahkan.
 - `mixinputs/mixinputs/` — implementasi MoI rujukan untuk memverifikasi
-  persamaan di `_latent_step_vec` mode `"moi"`.
+  persamaan di `_latent_step_vec` mode `"moi"`. Diverifikasi 2026-08-10:
+  rumus **aljabar-identik** (dibuktikan lewat substitusi, lihat
+  `docs/HASIL_TAHAP0.md` §9.2), tapi entropi $H$ dinormalisasi berbeda —
+  rujukan pakai $\log(20)$ (top-k slice API logprobs vLLM), harness ini pakai
+  $\log(V)$ (vocab penuh, karena logit diakses langsung via HF). Bukan bug;
+  keterbatasan rekayasa vLLM di kode rujukan, bukan definisi paper.
 
 Memperbarui pinning: clone ulang, salin bagian yang sama, perbarui tabel di
 atas. Jangan menyunting isi `reference/` — kalau ada yang perlu berubah,
