@@ -1,0 +1,47 @@
+{
+  "faktor": {
+    "frontend_kv_gumbel": {
+      "comm_mode": "kv",
+      "latent_mode": "gumbel",
+      "n_run": 6,
+      "total_s": 323.8,
+      "rerata_s": 54.0
+    },
+    "frontend_kv_moi": {
+      "comm_mode": "kv",
+      "latent_mode": "moi",
+      "n_run": 6,
+      "total_s": 212.2,
+      "rerata_s": 35.4
+    },
+    "frontend_kv_raw": {
+      "comm_mode": "kv",
+      "latent_mode": "raw",
+      "n_run": 6,
+      "total_s": 392.1,
+      "rerata_s": 65.3
+    },
+    "frontend_kv_sample": {
+      "comm_mode": "kv",
+      "latent_mode": "sample",
+      "n_run": 6,
+      "total_s": 224.5,
+      "rerata_s": 37.4
+    },
+    "frontend_kv_soft": {
+      "comm_mode": "kv",
+      "latent_mode": "soft",
+      "n_run": 6,
+      "total_s": 392.2,
+      "rerata_s": 65.4
+    },
+    "frontend_text": {
+      "comm_mode": "text",
+      "latent_mode": "raw",
+      "n_run": 6,
+      "total_s": 1173.0,
+      "rerata_s": 195.5
+    }
+  },
+  "bench": {}
+}

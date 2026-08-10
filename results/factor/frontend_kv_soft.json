@@ -1,0 +1,944 @@
+{
+  "args": {
+    "model": "Qwen/Qwen3-8B",
+    "comm_mode": "kv",
+    "latent_steps": 10,
+    "latent_mode": "soft",
+    "latent_temp": 0.7,
+    "early_stop_cos": null,
+    "no_realign": false,
+    "seeds": "0,1,2",
+    "directions": "d0,d1",
+    "prompts": "",
+    "temperature": 0.8,
+    "max_new_tokens": 4096,
+    "max_repair": 3,
+    "holdout": false,
+    "chain": "proposal,innovate,construct",
+    "free_form": null,
+    "tag": "kv_soft",
+    "score_only": false,
+    "skip_score": true
+  },
+  "runs": [
+    {
+      "duration_s": 79.4,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal after abnormally high-volume days in small-cap stocks",
+      "factors": [
+        {
+          "name": "vol_reversal_rank",
+          "expression": "RANK(TS_ZSCORE(TS_SUM($volume, 5), 5))",
+          "explanation": "Measures the abnormality of volume over 5 days and ranks it to capture short-term reversal"
+        },
+        {
+          "name": "vol_skew_factor",
+          "expression": "TS_SKEW(TS_PCTCHANGE($volume, 20), 20) * TS_PCTCHANGE($return, 1)",
+          "explanation": "Captures skew in volume changes and links it to return direction for short-term reversal"
+        },
+        {
+          "name": "vol_quantile_factor",
+          "expression": "TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1) * TS_PCTCHANGE($return, 1)",
+          "explanation": "Compares upper and lower volume quantiles and links to return movement for reversal"
+        },
+        {
+          "name": "vol_resid_factor",
+          "expression": "REGRESI(TS_PCTCHANGE($return, 5), TS_PCTCHANGE($volume, 5), 5) * TS_PCTCHANGE($return, 1)",
+          "explanation": "Uses residual from volume-return regression to identify short-term reversal patterns"
+        },
+        {
+          "name": "vol_shape_factor",
+          "expression": "TS_KURT(TS_PCTCHANGE($volume, 10), 10) * TS_PCTCHANGE($return, 1)",
+          "explanation": "Examines kurtosis in volume changes and its relation to return direction for reversal"
+        },
+        {
+          "name": "vol_asym_factor",
+          "expression": "(TS_PCTCHANGE($volume, 1) > 0 ? TS_ZSCORE($return, 1) : 0) - (TS_PCTCHANGE($volume, 1) < 0 ? TS_ZSCORE($return, 1) : 0)",
+          "explanation": "Creates asymmetric signal based on volume direction and return z-scores for reversal"
+        }
+      ],
+      "passing": [
+        "RANK(TS_ZSCORE(TS_SUM($volume, 5), 5))",
+        "TS_SKEW(TS_PCTCHANGE($volume, 20), 20) * TS_PCTCHANGE($return, 1)",
+        "TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1) * TS_PCTCHANGE($return, 1)",
+        "REGRESI(TS_PCTCHANGE($return, 5), TS_PCTCHANGE($volume, 5), 5) * TS_PCTCHANGE($return, 1)",
+        "TS_KURT(TS_PCTCHANGE($volume, 10), 10) * TS_PCTCHANGE($return, 1)"
+      ],
+      "gate_log": [
+        {
+          "name": "vol_reversal_rank",
+          "expression": "RANK(TS_ZSCORE(TS_SUM($volume, 5), 5))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_skew_factor",
+          "expression": "TS_SKEW(TS_PCTCHANGE($volume, 20), 20) * TS_PCTCHANGE($return, 1)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_quantile_factor",
+          "expression": "TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1) * TS_PCTCHANGE($return, 1)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_resid_factor",
+          "expression": "REGRESI(TS_PCTCHANGE($return, 5), TS_PCTCHANGE($volume, 5), 5) * TS_PCTCHANGE($return, 1)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_shape_factor",
+          "expression": "TS_KURT(TS_PCTCHANGE($volume, 10), 10) * TS_PCTCHANGE($return, 1)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_asym_factor",
+          "expression": "(TS_PCTCHANGE($volume, 1) > 0 ? TS_ZSCORE($return, 1) : 0) - (TS_PCTCHANGE($volume, 1) < 0 ? TS_ZSCORE($return, 1) : 0)",
+          "ok": false,
+          "reason": "semantics: `TS_ZSCORE` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 3 days.",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1664,
+      "construct_rep_ratio": 0.582,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"vol_reversal_rank\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_SUM($volume, 5), 5))\",\n      \"explanation\": \"Measures the abnormality of volume over 5 days and ranks it to capture short-term reversal\"\n    },\n    {\n      \"name\": \"vol_skew_factor\",\n      \"expression\": \"TS_SKEW(TS_PCTCHANGE($volume, 20), 20) * TS_PCTCHANGE($return, 1)\",\n      \"explanation\": \"Captures skew in volume changes and links it to return direction for short-term reversal\"\n    },\n    {\n      \"name\":",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.04,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 812,
+          "n_out_tok": 0,
+          "n_in_tok": 809,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 0.85,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2391,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 20.92,
+          "latent_s": 0.862,
+          "gen_s": 19.973,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4497,
+          "n_out_tok": 497,
+          "n_in_tok": 1598,
+          "text_len": 1664,
+          "rep_ratio": 0.582,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"vol_reversal_rank\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_SUM($volume, 5), 5))\",\n      \"explanation\": \"Measures the abnormality of volume over 5 days and ranks it to capture short-term reversal\"\n    },\n    {\n      \"name\": \"vol_skew_factor\",\n      \"expression\": \"TS_SKEW(TS_PCTCHANGE($volume, 20), 20) * TS_PCTCHANGE($return, 1)\",\n      \"explanation\": \"Captures skew in volume changes and links it to return direction for short-term reversal\"\n    },\n    {\n      \"name\": \"vol_quantile_factor\",\n      \"expression\": \"TS_QUANTILE($volume, 20, 0.9) - TS_QUANTILE($volume, 20, 0.1) * TS_PCTCHANGE($return, 1)\",\n      \"explanation\": \"Compares upper and lower volume quantiles and links to return movement for reversal\"\n    },\n    {\n      \"name\": \"vol_resid_factor\",\n      \"expression\": \"REGRESI(TS_PCTCHANGE($return, 5), TS_PCTCHANGE($volume, 5), 5) * TS_PCTCHANGE($return, 1)\",\n      \"explanation\": \"Uses residual from volume-return regression to identify short-term reversal patterns\"\n    },\n    {\n      \"name\": \"vol_shape_factor\",\n      \"expression\": \"TS_KURT(TS_PCTCHANGE($volume, 10), 10) * TS_PCTCHANGE($return, 1)\",\n      \"explanation\": \"Examines kurtosis in volume changes and its relation to return direction for reversal\"\n    },\n    {\n      \"name\": \"vol_asym_factor\",\n      \"expression\": \"(TS_PCTCHANGE($volume, 1) > 0 ? TS_ZSCORE($return, 1) : 0) - (TS_PCTCHANGE($volume, 1) < 0 ? TS_ZSCORE($return, 1) : 0)\",\n      \"explanation\": \"Creates asymmetric signal based on volume direction and return z-scores for reversal\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "vol_asym_factor",
+          "expr": "(TS_PCTCHANGE($volume, 1) > 0 ? TS_ZSCORE($return, 1) : 0) - (TS_PCTCHANGE($volume, 1) < 0 ? TS_ZSCORE($return, 1) : 0)",
+          "reason": "semantics: `TS_ZSCORE` got window 1, which is degenerate (the result is constant, NaN, or equals its own input). Use a window of at least 3 days."
+        }
+      ],
+      "direction": "d0",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "soft",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/prompts/factor.yaml"
+    },
+    {
+      "duration_s": 63.69,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal after abnormally high-volume days in small-cap stocks",
+      "factors": [
+        {
+          "name": "vol_reversal_rank",
+          "expression": "RANK(TS_ZSCORE($volume, 5) * TS_PCTCHANGE($return, 5))",
+          "explanation": "Measures the rank of the interaction between volume volatility and return change, exploring the reversal mechanism through a conditional signal"
+        },
+        {
+          "name": "vol_mad_diff",
+          "expression": "TS_QUANTILE($return, 5, 0.9) - TS_QUANTILE($return, 5, 0.1) / TS_MAD($return, 5)",
+          "explanation": "Calculates the difference between upper and lower quantiles of returns relative to MAD, exploring shape asymmetry in high-volume days"
+        },
+        {
+          "name": "vol_resid_rank",
+          "expression": "RANK(REGRESI($return, $volume, 5))",
+          "explanation": "Ranks the residual of returns regressed against volume, testing if unexplained variance contains reversal signals"
+        },
+        {
+          "name": "vol_skew_kurt",
+          "expression": "TS_SKEW($return, 5) * TS_KURT($return, 5)",
+          "explanation": "Multiples skewness and kurtosis of returns over 5-day window, exploring higher-moment effects in volume-driven regimes"
+        },
+        {
+          "name": "vol_argmin_argmax",
+          "expression": "TS_ARGMIN($volume, 5) - TS_ARGMAX($volume, 5)",
+          "explanation": "Compares positions of extreme volume days, testing if reversal patterns emerge from volume concentration"
+        }
+      ],
+      "passing": [
+        "RANK(TS_ZSCORE($volume, 5) * TS_PCTCHANGE($return, 5))",
+        "TS_QUANTILE($return, 5, 0.9) - TS_QUANTILE($return, 5, 0.1) / TS_MAD($return, 5)",
+        "RANK(REGRESI($return, $volume, 5))",
+        "TS_SKEW($return, 5) * TS_KURT($return, 5)",
+        "TS_ARGMIN($volume, 5) - TS_ARGMAX($volume, 5)"
+      ],
+      "gate_log": [
+        {
+          "name": "vol_reversal_rank",
+          "expression": "RANK(TS_ZSCORE($volume, 5) * TS_PCTCHANGE($return, 5))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_mad_diff",
+          "expression": "TS_QUANTILE($return, 5, 0.9) - TS_QUANTILE($return, 5, 0.1) / TS_MAD($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_resid_rank",
+          "expression": "RANK(REGRESI($return, $volume, 5))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_skew_kurt",
+          "expression": "TS_SKEW($return, 5) * TS_KURT($return, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_argmin_argmax",
+          "expression": "TS_ARGMIN($volume, 5) - TS_ARGMAX($volume, 5)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1447,
+      "construct_rep_ratio": 0.43,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"vol_reversal_rank\",\n      \"expression\": \"RANK(TS_ZSCORE($volume, 5) * TS_PCTCHANGE($return, 5))\",\n      \"explanation\": \"Measures the rank of the interaction between volume volatility and return change, exploring the reversal mechanism through a conditional signal\"\n    },\n    {\n      \"name\": \"vol_mad_diff\",\n      \"expression\": \"TS_QUANTILE($return, 5, 0.9) - TS_QUANTILE($return, 5, 0.1) / TS_MAD($return, 5)\",\n      \"explanation\": \"Calculates the difference between u",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.25,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 812,
+          "n_out_tok": 0,
+          "n_in_tok": 809,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 1.71,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2391,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 34.61,
+          "latent_s": 1.822,
+          "gen_s": 32.644,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4390,
+          "n_out_tok": 390,
+          "n_in_tok": 1598,
+          "text_len": 1447,
+          "rep_ratio": 0.43,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"vol_reversal_rank\",\n      \"expression\": \"RANK(TS_ZSCORE($volume, 5) * TS_PCTCHANGE($return, 5))\",\n      \"explanation\": \"Measures the rank of the interaction between volume volatility and return change, exploring the reversal mechanism through a conditional signal\"\n    },\n    {\n      \"name\": \"vol_mad_diff\",\n      \"expression\": \"TS_QUANTILE($return, 5, 0.9) - TS_QUANTILE($return, 5, 0.1) / TS_MAD($return, 5)\",\n      \"explanation\": \"Calculates the difference between upper and lower quantiles of returns relative to MAD, exploring shape asymmetry in high-volume days\"\n    },\n    {\n      \"name\": \"vol_resid_rank\",\n      \"expression\": \"RANK(REGRESI($return, $volume, 5))\",\n      \"explanation\": \"Ranks the residual of returns regressed against volume, testing if unexplained variance contains reversal signals\"\n    },\n    {\n      \"name\": \"vol_skew_kurt\",\n      \"expression\": \"TS_SKEW($return, 5) * TS_KURT($return, 5)\",\n      \"explanation\": \"Multiples skewness and kurtosis of returns over 5-day window, exploring higher-moment effects in volume-driven regimes\"\n    },\n    {\n      \"name\": \"vol_argmin_argmax\",\n      \"expression\": \"TS_ARGMIN($volume, 5) - TS_ARGMAX($volume, 5)\",\n      \"explanation\": \"Compares positions of extreme volume days, testing if reversal patterns emerge from volume concentration\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [],
+      "direction": "d0",
+      "seed": 1,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "soft",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/prompts/factor.yaml"
+    },
+    {
+      "duration_s": 68.21,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "Short-term reversal after abnormally high-volume days in small-cap stocks",
+      "factors": [
+        {
+          "name": "vol_reversal_rank",
+          "expression": "RANK(TS_ZSCORE($volume, 20) * (TS_PCTCHANGE($close, 1) < -0.01))",
+          "explanation": "Measures the rank of volume anomalies weighted by negative close returns, exploring the reversal axis"
+        },
+        {
+          "name": "vol_momentum_filter",
+          "expression": "TS_CORR($volume, $return, 10) * (TS_ARGMAX($volume, 5) == $symbol)",
+          "explanation": "Captures volume-momentum relationship with a conditional filter on extreme volume days, exploring the unusual pairing axis"
+        },
+        {
+          "name": "vol_quantile_diff",
+          "expression": "TS_QUANTILE($volume, 60, 0.9) - TS_QUANTILE($volume, 60, 0.1)",
+          "explanation": "Compares upper and lower volume quantiles across a 60-day window, exploring the shape axis"
+        },
+        {
+          "name": "vol_resid_reversal",
+          "expression": "REGRESI($volume, SEQUENCE(60), 60) * (TS_PCTCHANGE($close, 1) < -0.01)",
+          "explanation": "Uses volume residuals from a time trend to detect reversal patterns, exploring the residual axis"
+        },
+        {
+          "name": "vol_skew_kurt",
+          "expression": "TS_SKEW($volume, 30) + TS_KURT($volume, 30)",
+          "explanation": "Combines skewness and kurtosis of volume over 30 days, exploring the shape axis"
+        },
+        {
+          "name": "vol_asymmetry",
+          "expression": "(TS_PCTCHANGE($close, 1) > 0.01 ? TS_ZSCORE($volume, 20) : 0)",
+          "explanation": "Asymmetrically weights volume z-scores based on positive returns, exploring the asymmetry axis"
+        }
+      ],
+      "passing": [
+        "RANK(TS_ZSCORE($volume, 20) * (TS_PCTCHANGE($close, 1) < -0.01))",
+        "TS_QUANTILE($volume, 60, 0.9) - TS_QUANTILE($volume, 60, 0.1)",
+        "REGRESI($volume, SEQUENCE(60), 60) * (TS_PCTCHANGE($close, 1) < -0.01)",
+        "TS_SKEW($volume, 30) + TS_KURT($volume, 30)",
+        "(TS_PCTCHANGE($close, 1) > 0.01 ? TS_ZSCORE($volume, 20) : 0)"
+      ],
+      "gate_log": [
+        {
+          "name": "vol_reversal_rank",
+          "expression": "RANK(TS_ZSCORE($volume, 20) * (TS_PCTCHANGE($close, 1) < -0.01))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_momentum_filter",
+          "expression": "TS_CORR($volume, $return, 10) * (TS_ARGMAX($volume, 5) == $symbol)",
+          "ok": false,
+          "reason": "variable: `$symbol` is not a known variable. Use only: $open $high $low $close $volume $return.",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_quantile_diff",
+          "expression": "TS_QUANTILE($volume, 60, 0.9) - TS_QUANTILE($volume, 60, 0.1)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_resid_reversal",
+          "expression": "REGRESI($volume, SEQUENCE(60), 60) * (TS_PCTCHANGE($close, 1) < -0.01)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_skew_kurt",
+          "expression": "TS_SKEW($volume, 30) + TS_KURT($volume, 30)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_asymmetry",
+          "expression": "(TS_PCTCHANGE($close, 1) > 0.01 ? TS_ZSCORE($volume, 20) : 0)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1632,
+      "construct_rep_ratio": 0.466,
+      "construct_text_head": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"vol_reversal_rank\",\n      \"expression\": \"RANK(TS_ZSCORE($volume, 20) * (TS_PCTCHANGE($close, 1) < -0.01))\",\n      \"explanation\": \"Measures the rank of volume anomalies weighted by negative close returns, exploring the reversal axis\"\n    },\n    {\n      \"name\": \"vol_momentum_filter\",\n      \"expression\": \"TS_CORR($volume, $return, 10) * (TS_ARGMAX($volume, 5) == $symbol)\",\n      \"explanation\": \"Captures volume-momentum relationship with a conditional filter on extreme",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.26,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 812,
+          "n_out_tok": 0,
+          "n_in_tok": 809,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 1.43,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2391,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 42.1,
+          "latent_s": 1.799,
+          "gen_s": 40.132,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4485,
+          "n_out_tok": 485,
+          "n_in_tok": 1598,
+          "text_len": 1632,
+          "rep_ratio": 0.466,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"Short-term reversal after abnormally high-volume days in small-cap stocks\",\n  \"factors\": [\n    {\n      \"name\": \"vol_reversal_rank\",\n      \"expression\": \"RANK(TS_ZSCORE($volume, 20) * (TS_PCTCHANGE($close, 1) < -0.01))\",\n      \"explanation\": \"Measures the rank of volume anomalies weighted by negative close returns, exploring the reversal axis\"\n    },\n    {\n      \"name\": \"vol_momentum_filter\",\n      \"expression\": \"TS_CORR($volume, $return, 10) * (TS_ARGMAX($volume, 5) == $symbol)\",\n      \"explanation\": \"Captures volume-momentum relationship with a conditional filter on extreme volume days, exploring the unusual pairing axis\"\n    },\n    {\n      \"name\": \"vol_quantile_diff\",\n      \"expression\": \"TS_QUANTILE($volume, 60, 0.9) - TS_QUANTILE($volume, 60, 0.1)\",\n      \"explanation\": \"Compares upper and lower volume quantiles across a 60-day window, exploring the shape axis\"\n    },\n    {\n      \"name\": \"vol_resid_reversal\",\n      \"expression\": \"REGRESI($volume, SEQUENCE(60), 60) * (TS_PCTCHANGE($close, 1) < -0.01)\",\n      \"explanation\": \"Uses volume residuals from a time trend to detect reversal patterns, exploring the residual axis\"\n    },\n    {\n      \"name\": \"vol_skew_kurt\",\n      \"expression\": \"TS_SKEW($volume, 30) + TS_KURT($volume, 30)\",\n      \"explanation\": \"Combines skewness and kurtosis of volume over 30 days, exploring the shape axis\"\n    },\n    {\n      \"name\": \"vol_asymmetry\",\n      \"expression\": \"(TS_PCTCHANGE($close, 1) > 0.01 ? TS_ZSCORE($volume, 20) : 0)\",\n      \"explanation\": \"Asymmetrically weights volume z-scores based on positive returns, exploring the asymmetry axis\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "vol_momentum_filter",
+          "expr": "TS_CORR($volume, $return, 10) * (TS_ARGMAX($volume, 5) == $symbol)",
+          "reason": "variable: `$symbol` is not a known variable. Use only: $open $high $low $close $volume $return."
+        }
+      ],
+      "direction": "d0",
+      "seed": 2,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "soft",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/prompts/factor.yaml"
+    },
+    {
+      "duration_s": 61.31,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "When low-volatility stocks exhibit regime transitions, mean-reversion in their returns follows in the next period.",
+      "factors": [
+        {
+          "name": "vol_revert_gap",
+          "expression": "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1))",
+          "explanation": "Computes the gap between upper and lower quantiles of return in low-volatility stocks, then ranks it to capture mean-reversion during regime shifts."
+        },
+        {
+          "name": "vol_revert_slope",
+          "expression": "TS_COVARIANCE($return, $volume, 20)",
+          "explanation": "Measures the covariance between returns and volume for low-volatility stocks to detect regime transitions linked to mean-reversion."
+        },
+        {
+          "name": "vol_revert_residual",
+          "expression": "REGRESI($return, SEQUENCE(20), 20)",
+          "explanation": "Strips time trends from returns of low-volatility stocks and uses residuals to identify mean-reversion during regime transitions."
+        },
+        {
+          "name": "vol_revert_skew",
+          "expression": "RANK(TS_SKEW($return, 20))",
+          "explanation": "Captures asymmetry in return distributions of low-volatility stocks to detect regime shifts associated with mean-reversion."
+        },
+        {
+          "name": "vol_revert_diff",
+          "expression": "RANK(TS_PCTCHANGE($close, 10) - TS_PCTCHANGE($close, 60))",
+          "explanation": "Compares short- and long-term price changes in low-volatility stocks to highlight mean-reversion during regime transitions."
+        }
+      ],
+      "passing": [
+        "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1))",
+        "REGRESI($return, SEQUENCE(20), 20)",
+        "RANK(TS_SKEW($return, 20))",
+        "RANK(TS_PCTCHANGE($close, 10) - TS_PCTCHANGE($close, 60))"
+      ],
+      "gate_log": [
+        {
+          "name": "vol_revert_gap",
+          "expression": "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_revert_slope",
+          "expression": "TS_COVARIANCE($return, $volume, 20)",
+          "ok": false,
+          "reason": "regulator reject: sl=35, base_feat=2, dup=0",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_revert_residual",
+          "expression": "REGRESI($return, SEQUENCE(20), 20)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_revert_skew",
+          "expression": "RANK(TS_SKEW($return, 20))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_revert_diff",
+          "expression": "RANK(TS_PCTCHANGE($close, 10) - TS_PCTCHANGE($close, 60))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1502,
+      "construct_rep_ratio": 0.515,
+      "construct_text_head": "{\n  \"hypothesis\": \"When low-volatility stocks exhibit regime transitions, mean-reversion in their returns follows in the next period.\",\n  \"factors\": [\n    {\n      \"name\": \"vol_revert_gap\",\n      \"expression\": \"RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1))\",\n      \"explanation\": \"Computes the gap between upper and lower quantiles of return in low-volatility stocks, then ranks it to capture mean-reversion during regime shifts.\"\n    },\n    {\n      \"name\": \"vol_revert_slope\",\n      \"expression\": \"TS_COVARIANCE($return, $volume, 20)\",\n      \"explanation\": \"Measures the covaria",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.26,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 811,
+          "n_out_tok": 0,
+          "n_in_tok": 808,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 1.72,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2390,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 35.45,
+          "latent_s": 1.824,
+          "gen_s": 33.464,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4401,
+          "n_out_tok": 402,
+          "n_in_tok": 1598,
+          "text_len": 1502,
+          "rep_ratio": 0.515,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"When low-volatility stocks exhibit regime transitions, mean-reversion in their returns follows in the next period.\",\n  \"factors\": [\n    {\n      \"name\": \"vol_revert_gap\",\n      \"expression\": \"RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1))\",\n      \"explanation\": \"Computes the gap between upper and lower quantiles of return in low-volatility stocks, then ranks it to capture mean-reversion during regime shifts.\"\n    },\n    {\n      \"name\": \"vol_revert_slope\",\n      \"expression\": \"TS_COVARIANCE($return, $volume, 20)\",\n      \"explanation\": \"Measures the covariance between returns and volume for low-volatility stocks to detect regime transitions linked to mean-reversion.\"\n    },\n    {\n      \"name\": \"vol_revert_residual\",\n      \"expression\": \"REGRESI($return, SEQUENCE(20), 20)\",\n      \"explanation\": \"Strips time trends from returns of low-volatility stocks and uses residuals to identify mean-reversion during regime transitions.\"\n    },\n    {\n      \"name\": \"vol_revert_skew\",\n      \"expression\": \"RANK(TS_SKEW($return, 20))\",\n      \"explanation\": \"Captures asymmetry in return distributions of low-volatility stocks to detect regime shifts associated with mean-reversion.\"\n    },\n    {\n      \"name\": \"vol_revert_diff\",\n      \"expression\": \"RANK(TS_PCTCHANGE($close, 10) - TS_PCTCHANGE($close, 60))\",\n      \"explanation\": \"Compares short- and long-term price changes in low-volatility stocks to highlight mean-reversion during regime transitions.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "vol_revert_slope",
+          "expr": "TS_COVARIANCE($return, $volume, 20)",
+          "reason": "regulator reject: sl=35, base_feat=2, dup=0"
+        }
+      ],
+      "direction": "d1",
+      "seed": 0,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "soft",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/prompts/factor.yaml"
+    },
+    {
+      "duration_s": 57.71,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "When low-volatility stocks experience regime transitions, their returns reverse in the next period.",
+      "factors": [
+        {
+          "name": "lowvol_regime_rev",
+          "expression": "RANK(TS_ZSCORE(TS_ARGMAX(TS_PCTCHANGE($volume, 20), 10), 60))",
+          "explanation": "Computes the rank of the z-score of the top 10% of volume changes over 20 days, across 60 days, exploring order statistics in volume dynamics."
+        },
+        {
+          "name": "vol_trans_reversal",
+          "expression": "RANK(TS_QUANTILE($return, 60, 0.9) - TS_QUANTILE($return, 60, 0.1))",
+          "explanation": "Calculates the difference between the top and bottom 10% quantiles of returns over 60 days, exploring shape and dispersion in return distribution."
+        },
+        {
+          "name": "regime_shift_vol",
+          "expression": "TS_MEAN(TS_PCTCHANGE($volume, 20), 60) * TS_STD($return, 60)",
+          "explanation": "Multiplies the mean of 20-day volume changes over 60 days with the standard deviation of returns, exploring timescale contrast in volatility and returns."
+        },
+        {
+          "name": "lowvol_reversal",
+          "expression": "RANK(TS_CORR($volume, $return, 20) - TS_CORR($volume, $return, 60))",
+          "explanation": "Ranks the difference in correlation between volume and returns over 20 and 60 days, exploring unusual pairing of volume and return dynamics."
+        },
+        {
+          "name": "vol_mad_reversal",
+          "expression": "RANK(TS_MAD($return, 60) / TS_PCTCHANGE($volume, 20))",
+          "explanation": "Ranks the ratio of return MAD to 20-day volume change, exploring odd normalisation of volatility and volume metrics."
+        },
+        {
+          "name": "regime_vol_diff",
+          "expression": "TS_ARGMAX(TS_PCTCHANGE($volume, 5), 20) - TS_ARGMIN(TS_PCTCHANGE($volume, 5), 20)",
+          "explanation": "Computes the difference between the top and bottom volume changes over 5 days within a 20-day window, exploring order statistics in short-term volume shifts."
+        }
+      ],
+      "passing": [
+        "RANK(TS_ZSCORE(TS_ARGMAX(TS_PCTCHANGE($volume, 20), 10), 60))",
+        "RANK(TS_QUANTILE($return, 60, 0.9) - TS_QUANTILE($return, 60, 0.1))",
+        "TS_MEAN(TS_PCTCHANGE($volume, 20), 60) * TS_STD($return, 60)",
+        "RANK(TS_CORR($volume, $return, 20) - TS_CORR($volume, $return, 60))",
+        "RANK(TS_MAD($return, 60) / TS_PCTCHANGE($volume, 20))",
+        "TS_ARGMAX(TS_PCTCHANGE($volume, 5), 20) - TS_ARGMIN(TS_PCTCHANGE($volume, 5), 20)"
+      ],
+      "gate_log": [
+        {
+          "name": "lowvol_regime_rev",
+          "expression": "RANK(TS_ZSCORE(TS_ARGMAX(TS_PCTCHANGE($volume, 20), 10), 60))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_trans_reversal",
+          "expression": "RANK(TS_QUANTILE($return, 60, 0.9) - TS_QUANTILE($return, 60, 0.1))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "regime_shift_vol",
+          "expression": "TS_MEAN(TS_PCTCHANGE($volume, 20), 60) * TS_STD($return, 60)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "lowvol_reversal",
+          "expression": "RANK(TS_CORR($volume, $return, 20) - TS_CORR($volume, $return, 60))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "vol_mad_reversal",
+          "expression": "RANK(TS_MAD($return, 60) / TS_PCTCHANGE($volume, 20))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "regime_vol_diff",
+          "expression": "TS_ARGMAX(TS_PCTCHANGE($volume, 5), 20) - TS_ARGMIN(TS_PCTCHANGE($volume, 5), 20)",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1954,
+      "construct_rep_ratio": 0.608,
+      "construct_text_head": "{\n  \"hypothesis\": \"When low-volatility stocks experience regime transitions, their returns reverse in the next period.\",\n  \"factors\": [\n    {\n      \"name\": \"lowvol_regime_rev\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_ARGMAX(TS_PCTCHANGE($volume, 20), 10), 60))\",\n      \"explanation\": \"Computes the rank of the z-score of the top 10% of volume changes over 20 days, across 60 days, exploring order statistics in volume dynamics.\"\n    },\n    {\n      \"name\": \"vol_trans_reversal\",\n      \"expression\": \"RANK(TS_QUANTILE($return, 60, 0.9) - TS_QUANTILE($return, 60, 0.1))\",\n      \"explanation\": \"Calculates",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.26,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 811,
+          "n_out_tok": 0,
+          "n_in_tok": 808,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 1.72,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2390,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 48.81,
+          "latent_s": 1.828,
+          "gen_s": 46.827,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4567,
+          "n_out_tok": 568,
+          "n_in_tok": 1598,
+          "text_len": 1954,
+          "rep_ratio": 0.608,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"When low-volatility stocks experience regime transitions, their returns reverse in the next period.\",\n  \"factors\": [\n    {\n      \"name\": \"lowvol_regime_rev\",\n      \"expression\": \"RANK(TS_ZSCORE(TS_ARGMAX(TS_PCTCHANGE($volume, 20), 10), 60))\",\n      \"explanation\": \"Computes the rank of the z-score of the top 10% of volume changes over 20 days, across 60 days, exploring order statistics in volume dynamics.\"\n    },\n    {\n      \"name\": \"vol_trans_reversal\",\n      \"expression\": \"RANK(TS_QUANTILE($return, 60, 0.9) - TS_QUANTILE($return, 60, 0.1))\",\n      \"explanation\": \"Calculates the difference between the top and bottom 10% quantiles of returns over 60 days, exploring shape and dispersion in return distribution.\"\n    },\n    {\n      \"name\": \"regime_shift_vol\",\n      \"expression\": \"TS_MEAN(TS_PCTCHANGE($volume, 20), 60) * TS_STD($return, 60)\",\n      \"explanation\": \"Multiplies the mean of 20-day volume changes over 60 days with the standard deviation of returns, exploring timescale contrast in volatility and returns.\"\n    },\n    {\n      \"name\": \"lowvol_reversal\",\n      \"expression\": \"RANK(TS_CORR($volume, $return, 20) - TS_CORR($volume, $return, 60))\",\n      \"explanation\": \"Ranks the difference in correlation between volume and returns over 20 and 60 days, exploring unusual pairing of volume and return dynamics.\"\n    },\n    {\n      \"name\": \"vol_mad_reversal\",\n      \"expression\": \"RANK(TS_MAD($return, 60) / TS_PCTCHANGE($volume, 20))\",\n      \"explanation\": \"Ranks the ratio of return MAD to 20-day volume change, exploring odd normalisation of volatility and volume metrics.\"\n    },\n    {\n      \"name\": \"regime_vol_diff\",\n      \"expression\": \"TS_ARGMAX(TS_PCTCHANGE($volume, 5), 20) - TS_ARGMIN(TS_PCTCHANGE($volume, 5), 20)\",\n      \"explanation\": \"Computes the difference between the top and bottom volume changes over 5 days within a 20-day window, exploring order statistics in short-term volume shifts.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [],
+      "direction": "d1",
+      "seed": 1,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "soft",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/prompts/factor.yaml"
+    },
+    {
+      "duration_s": 61.88,
+      "chain": "proposal,innovate,construct",
+      "free_form": true,
+      "hypothesis": "When low-volatility stocks show increasing dispersion in returns during regime transitions, they tend to underperform in the next period.",
+      "factors": [
+        {
+          "name": "vol_dispersion_transition",
+          "expression": "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1) - TS_MAD($return, 20))",
+          "explanation": "Measures the gap between top and bottom deciles of returns minus the median absolute deviation, capturing dispersion in low-volatility stocks during regime shifts."
+        },
+        {
+          "name": "volatility_asymmetry",
+          "expression": "RANK((TS_PCTCHANGE($high, 10) - TS_PCTCHANGE($low, 10)) / TS_STD($return, 10))",
+          "explanation": "Compares the asymmetry of price movements (high vs low) relative to return volatility, highlighting regime shifts in low-volatility stocks."
+        },
+        {
+          "name": "volatility_residue",
+          "expression": "RANK(REGRESI($return, $volume, 10) - MEAN(REGRESI($return, $volume, 10)))",
+          "explanation": "Captures the residual return after removing the volume trend, focusing on unexplained volatility patterns in low-volatility stocks."
+        },
+        {
+          "name": "regime_gap",
+          "expression": "RANK(TS_ARGMAX($return, 60) - TS_ARGMIN($return, 60))",
+          "explanation": "Identifies extreme price movements by ranking the gap between the highest and lowest returns over a 60-day window, highlighting regime transitions."
+        },
+        {
+          "name": "volatility_skew",
+          "expression": "RANK(SKEW(TS_ZSCORE($return, 20)))",
+          "explanation": "Measures the skewness of return distributions in low-volatility stocks, capturing asymmetric regime behavior."
+        }
+      ],
+      "passing": [
+        "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1) - TS_MAD($return, 20))",
+        "RANK((TS_PCTCHANGE($high, 10) - TS_PCTCHANGE($low, 10)) / TS_STD($return, 10))",
+        "RANK(REGRESI($return, $volume, 10) - MEAN(REGRESI($return, $volume, 10)))",
+        "RANK(TS_ARGMAX($return, 60) - TS_ARGMIN($return, 60))"
+      ],
+      "gate_log": [
+        {
+          "name": "vol_dispersion_transition",
+          "expression": "RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1) - TS_MAD($return, 20))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "volatility_asymmetry",
+          "expression": "RANK((TS_PCTCHANGE($high, 10) - TS_PCTCHANGE($low, 10)) / TS_STD($return, 10))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "volatility_residue",
+          "expression": "RANK(REGRESI($return, $volume, 10) - MEAN(REGRESI($return, $volume, 10)))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "regime_gap",
+          "expression": "RANK(TS_ARGMAX($return, 60) - TS_ARGMIN($return, 60))",
+          "ok": true,
+          "reason": "",
+          "repaired_by": null
+        },
+        {
+          "name": "volatility_skew",
+          "expression": "RANK(SKEW(TS_ZSCORE($return, 20)))",
+          "ok": false,
+          "reason": "execution: the expression gives only 1.0 distinct values per day, so it cannot rank stocks against each other. Let the data reach the VALUE (gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return,5)) : (0)`), not just the condition.",
+          "repaired_by": null
+        }
+      ],
+      "repaired": false,
+      "repair_attempts": 0,
+      "gate_error": "",
+      "construct_text_len": 1677,
+      "construct_rep_ratio": 0.5,
+      "construct_text_head": "{\n  \"hypothesis\": \"When low-volatility stocks show increasing dispersion in returns during regime transitions, they tend to underperform in the next period.\",\n  \"factors\": [\n    {\n      \"name\": \"vol_dispersion_transition\",\n      \"expression\": \"RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1) - TS_MAD($return, 20))\",\n      \"explanation\": \"Measures the gap between top and bottom deciles of returns minus the median absolute deviation, capturing dispersion in low-volatility stocks during regime shifts.\"\n    },\n    {\n      \"name\": \"volatility_asymmetry\",\n      \"expression\": \"RANK(",
+      "agent_trace": [
+        {
+          "agent": "proposal",
+          "mode": "kv_only",
+          "s": 1.25,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 811,
+          "n_out_tok": 0,
+          "n_in_tok": 808,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "innovate",
+          "mode": "kv_only",
+          "s": 1.81,
+          "latent_s": 0.0,
+          "gen_s": 0.0,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 2390,
+          "n_out_tok": 0,
+          "n_in_tok": 1576,
+          "text_len": 0,
+          "rep_ratio": 0.0,
+          "parsed_ok": false,
+          "text": ""
+        },
+        {
+          "agent": "construct",
+          "mode": "kv_and_text",
+          "s": 47.31,
+          "latent_s": 1.877,
+          "gen_s": 45.302,
+          "n_latent_steps": 10,
+          "latent_stop": "budget",
+          "kv_len": 4455,
+          "n_out_tok": 456,
+          "n_in_tok": 1598,
+          "text_len": 1677,
+          "rep_ratio": 0.5,
+          "parsed_ok": true,
+          "text": "{\n  \"hypothesis\": \"When low-volatility stocks show increasing dispersion in returns during regime transitions, they tend to underperform in the next period.\",\n  \"factors\": [\n    {\n      \"name\": \"vol_dispersion_transition\",\n      \"expression\": \"RANK(TS_QUANTILE($return, 20, 0.9) - TS_QUANTILE($return, 20, 0.1) - TS_MAD($return, 20))\",\n      \"explanation\": \"Measures the gap between top and bottom deciles of returns minus the median absolute deviation, capturing dispersion in low-volatility stocks during regime shifts.\"\n    },\n    {\n      \"name\": \"volatility_asymmetry\",\n      \"expression\": \"RANK((TS_PCTCHANGE($high, 10) - TS_PCTCHANGE($low, 10)) / TS_STD($return, 10))\",\n      \"explanation\": \"Compares the asymmetry of price movements (high vs low) relative to return volatility, highlighting regime shifts in low-volatility stocks.\"\n    },\n    {\n      \"name\": \"volatility_residue\",\n      \"expression\": \"RANK(REGRESI($return, $volume, 10) - MEAN(REGRESI($return, $volume, 10)))\",\n      \"explanation\": \"Captures the residual return after removing the volume trend, focusing on unexplained volatility patterns in low-volatility stocks.\"\n    },\n    {\n      \"name\": \"regime_gap\",\n      \"expression\": \"RANK(TS_ARGMAX($return, 60) - TS_ARGMIN($return, 60))\",\n      \"explanation\": \"Identifies extreme price movements by ranking the gap between the highest and lowest returns over a 60-day window, highlighting regime transitions.\"\n    },\n    {\n      \"name\": \"volatility_skew\",\n      \"expression\": \"RANK(SKEW(TS_ZSCORE($return, 20)))\",\n      \"explanation\": \"Measures the skewness of return distributions in low-volatility stocks, capturing asymmetric regime behavior.\"\n    }\n  ]\n}"
+        }
+      ],
+      "events": [
+        {
+          "level": "WARNING",
+          "msg": "GATE REJECT",
+          "name": "volatility_skew",
+          "expr": "RANK(SKEW(TS_ZSCORE($return, 20)))",
+          "reason": "execution: the expression gives only 1.0 distinct values per day, so it cannot rank stocks against each other. Let the data reach the VALUE (gate a magnitude, e.g. `(C) ? (TS_ZSCORE($return,5)) : (0)`), not just the condition."
+        }
+      ],
+      "direction": "d1",
+      "seed": 2,
+      "comm_mode": "kv",
+      "latent_steps": 10,
+      "latent_mode": "soft",
+      "model": "Qwen/Qwen3-8B",
+      "use_realign": true,
+      "prompts": "/workspace/project/multi-agent-system/backend/prompts/factor.yaml"
+    }
+  ]
+}

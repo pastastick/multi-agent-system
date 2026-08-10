@@ -13,3 +13,10 @@ icseries_*.parquet
 # Jejak per-agen `run_bench.py --save-traces` bisa ratusan MB per sel; ringkasan
 # + hasil per-soal (yang menopang seluruh angka skripsi) TETAP di-track.
 *_traces.json
+
+# Snapshot prompt+keluaran mentah per panggilan LLM (27 MB dan terus tumbuh).
+# TIDAK di-track supaya repo tak membengkak — TAPI ia BUKAN artefak yang bisa
+# dibangkitkan ulang: isinya transkrip agen dari run yang sudah lewat. Kalau
+# dibutuhkan sebagai lampiran (contoh dialog antar-agen), salin keluar
+# sebelum pod dihapus, jangan mengandalkan git.
+llm_outputs/

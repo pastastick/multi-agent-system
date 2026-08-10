@@ -396,14 +396,28 @@ def main() -> None:
                          "lalu keluar. Pasangan dari --score-only: fase GPU "
                          "berhenti begitu ekspresi jadi, dan skoringnya "
                          "dijalankan sebagai proses CPU terpisah yang boleh "
-                         "berjalan BERSAMAAN dengan sel GPU berikutnya.")
+                         "berjalan BERSAMAAN dengan sel GPU berikutnya — atau "
+                         "di mesin lain sama sekali (skoring tak butuh GPU).")
+    ap.add_argument("--budget", type=int, default=900,
+                    help="anggaran detik per ekspresi saat skoring. Dinaikkan "
+                         "dari 90 ke 900 (2026-08-10): anggaran ketat itu "
+                         "peninggalan saat skoring dikira menahan GPU. Ia "
+                         "TIDAK, dan efek sampingnya buruk — beberapa fungsi "
+                         "DSL (TS_SKEW/TS_KURT/TS_MAD/REGRESI, semuanya "
+                         "`rolling().apply` dengan callback Python) berada di "
+                         "bibir 90 dtk, sehingga ekspresi yang sama bisa "
+                         "ber-IC atau `ic=None` TERGANTUNG BEBAN MESIN. Itu "
+                         "membuat perbandingan antar-metode bergantung pada "
+                         "hal yang tak ada kaitannya dengan metode. Terukur: "
+                         "5 ekspresi hilang begitu di run 2026-08-10 "
+                         "(results/pendukung/ragam_eval_error.json).")
     args = ap.parse_args()
 
     if args.score_only:
         path = OUT / f"frontend_{args.tag}.json"
         doc = json.loads(path.read_text())
         window = ("2022-01-01", "2025-12-26") if args.holdout else None
-        score_expressions(doc["runs"], window=window,
+        score_expressions(doc["runs"], window=window, budget_s=args.budget,
                           series_path=OUT / f"icseries_{args.tag}.parquet")
         path.write_text(json.dumps(doc, indent=2, default=str))
         print(f"di-skor ulang → {path}")
@@ -454,7 +468,7 @@ def main() -> None:
 
     window = ("2022-01-01", "2025-12-26") if args.holdout else None
     print("\n[probe] skoring ekspresi di CPU ...", flush=True)
-    score_expressions(runs, window=window,
+    score_expressions(runs, window=window, budget_s=args.budget,
                       series_path=OUT / f"icseries_{args.tag}.parquet")
     path.write_text(json.dumps({"args": vars(args), "runs": runs}, indent=2, default=str))
     print(f"tersimpan → {path}")

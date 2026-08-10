@@ -48,7 +48,17 @@ bench:
     math:      gsm8k            # openai/gsm8k, split test
     commonsense: arc_challenge  # allenai/ai2_arc ARC-Challenge, split test
     code:      humanevalplus    # evalplus/humanevalplus, split test
-  limit: 200                    # subsample berpasangan; humanevalplus hanya 164 soal
+  # Subsample berpasangan. Diturunkan 200 → 100 pada 2026-08-10 setelah laju
+  # nyata terukur di A40 (2 sel serentak): `text` 57,3 dtk/soal, `kv` 20,1
+  # dtk/soal. Pada limit 200 seluruh 36 sel ≈ 62 jam kerja sel ≈ 31 jam dinding
+  # — biaya sewa GPU yang tak sepadan dengan tambahan presisinya. Pada 100:
+  # ≈ 16 jam, dengan DESAIN UTUH (kedua sumbu, kontrol `soft`, dan lantai
+  # `baseline` semuanya tetap dijalankan); yang berkurang hanya presisi, dan
+  # ketiga tugas masih bisa digabung untuk menaikkan daya uji.
+  # PERINGATAN: angka ini harus SAMA di semua sel. `bench/compare.py`
+  # memverifikasinya lewat sidik jari subsample dan MENGELUARKAN sel yang tak
+  # cocok — mengubahnya di tengah matriks berarti membuang sel yang sudah jadi.
+  limit: 100                    # humanevalplus punya 164 soal → ikut disubsample ke 100
   sample_seed: 0                # WAJIB sama di semua sel → uji berpasangan sah
   seeds: [0]                    # seed generasi; tambah untuk replikasi multi-seed
   temperature: 0.6

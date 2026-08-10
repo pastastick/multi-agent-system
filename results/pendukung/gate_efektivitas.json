@@ -1,0 +1,14 @@
+{
+  "arsip_dsl_lama_2026-08-10": {
+    "ekspresi": 160,
+    "lolos_gate": 19,
+    "bisa_dievaluasi": 21,
+    "BOCOR_lolos_tapi_mati": 3
+  },
+  "arsip_gate_mati_2026-08-10": {
+    "ekspresi": 105,
+    "lolos_gate": 7,
+    "bisa_dievaluasi": 3,
+    "BOCOR_lolos_tapi_mati": 4
+  }
+}

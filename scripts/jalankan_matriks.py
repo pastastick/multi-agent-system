@@ -119,6 +119,16 @@ def main() -> None:
     ap.add_argument("--cpu-slots", type=int, default=3,
                     help="proses skoring CPU serentak (tiap proses pakai "
                          "LAB_MAX_WORKERS=3 core joblib)")
+    ap.add_argument("--tanpa-skor-cpu", action="store_true",
+                    help="JANGAN jalankan tahap skoring CPU sama sekali; sel "
+                         "faktor berhenti setelah `frontend_<tag>.json` ditulis. "
+                         "Dipakai saat sewa GPU ditagih per WAKTU HIDUP "
+                         "instance: skoring tak butuh GPU, jadi menahan pod "
+                         "hidup untuk mengerjakannya berarti membayar harga "
+                         "GPU untuk pekerjaan CPU. Skor belakangan di mesin "
+                         "sendiri: `python backend/eval/rescore_all.py "
+                         "--budget 900` (memuat data pasar sekali dan berbagi "
+                         "cache antar-tag, jadi lebih murah daripada per-sel).")
     ap.add_argument("--stagger", type=int, default=30,
                     help="jeda detik antar-start GPU; fase muat model rebutan "
                          "I/O network storage kalau serentak")
@@ -157,8 +167,8 @@ def main() -> None:
 
     # Sel faktor yang fase GPU-nya sudah selesai di run sebelumnya tapi fase
     # CPU-nya belum — antrikan skoringnya saja, jangan ulangi GPU-nya.
-    pending_score = [c for c in skipped
-                     if is_factor(c) and not score_path(c).exists()]
+    pending_score = [] if args.tanpa_skor_cpu else [
+        c for c in skipped if is_factor(c) and not score_path(c).exists()]
 
     print(f"# {len(todo)} sel GPU, {len(skipped)} dilewati, "
           f"{len(pending_score)} skoring CPU tertunggak")
@@ -237,7 +247,7 @@ def main() -> None:
                 done.append(cmd)
                 print(f"[OK  GPU {len(done)}/{len(todo)}] {name}  {dur:.1f} mnt",
                       flush=True)
-                if is_factor(cmd):
+                if is_factor(cmd) and not args.tanpa_skor_cpu:
                     cpu_queue.append(cmd)   # fase CPU-nya menyusul, paralel
             else:
                 n = percobaan.get(cmd, 0) + 1
