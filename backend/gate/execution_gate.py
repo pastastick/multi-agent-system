@@ -34,7 +34,16 @@ from typing import List, Optional, Tuple
 
 from qlog import logger
 
-_BACKEND = Path(__file__).resolve().parent.parent.parent
+# Rombakan 9d4e0bf memindahkan berkas ini dari `backend/factors/regulator/`
+# (3 tingkat di bawah root) ke `backend/gate/` (2 tingkat), tapi rantai
+# `.parent.parent.parent`-nya ikut terbawa — sehingga `_BACKEND` menunjuk ROOT
+# PROYEK, bukan `backend/`, dan `daily_pv.h5` tak pernah ketemu. Gate ini
+# fail-open saat datanya hilang, jadi kegagalannya SENYAP: ekspresi yang
+# kolomnya kosong/konstan tetap lolos tanpa satu pun pesan error. Dipakai
+# `paths.BACKEND` (jalur kanonik repo) supaya tidak bisa melenceng lagi kalau
+# berkas ini dipindah sekali lagi.
+from paths import BACKEND as _BACKEND
+
 _CACHE = _BACKEND / "hf_data" / ".cache" / "exec_gate_sample.parquet"
 _SOURCE = _BACKEND / "hf_data" / "daily_pv.h5"
 

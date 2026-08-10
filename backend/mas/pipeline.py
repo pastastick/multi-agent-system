@@ -313,7 +313,23 @@ class FrontEndPipeline:
                 validate_known_variables, validate_no_degenerate_args,
                 validate_semantics,
             )
-            from dsl.config import FACTOR_COSTEER_SETTINGS as S
+            # `dsl/config.py` (FACTOR_COSTEER_SETTINGS, warisan CoSTEER RD-Agent)
+            # ikut terhapus di rombakan 9d4e0bf, sementara baris ini tidak.
+            # Akibatnya ImportError-nya ditelan `except Exception` di bawah dan
+            # SELURUH rantai gate (arity, variabel, degenerate, semantik,
+            # eksekusi) diam-diam mati — gate jatuh ke `default_quality_gate`
+            # yang hanya memeriksa sintaks, sehingga `IF(...)`, `TS_RESIDUAL(...)`
+            # (fungsi yang tak ada) dan `RANK($x, 60)` (arity salah) semuanya
+            # LOLOS lalu baru meledak saat evaluasi.
+            #
+            # Objek settings ini hanya menyediakan OVERRIDE opsional: keempat
+            # nilainya dibaca lewat getattr berdefault, dan defaultnya sama
+            # dengan setelan produksi yang ditulis di metodologi (SL<=300,
+            # ER<=6, duplikasi=8). Jadi ketiadaannya tidak boleh mematikan gate.
+            try:
+                from dsl.config import FACTOR_COSTEER_SETTINGS as S
+            except ImportError:
+                S = None
             reg = FactorRegulator(
                 factor_zoo_path=getattr(S, "factor_zoo_path", None),
                 duplication_threshold=getattr(S, "duplication_threshold", 8),

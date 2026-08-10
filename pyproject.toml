@@ -6,53 +6,28 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 dependencies = [
-    # LLM Inference
-    "vllm==0.8.5",
+    # LLM Inference — HF murni (inputs_embeds), TANPA vLLM (lihat komentar di bawah)
+    "torch==2.6.0",       # eksplisit: sebelumnya cuma transitive lewat vllm/accelerate;
+                           # pin cocok driver A40 cu124 (setup_runpod.sh) via [tool.uv.sources]
     "transformers",
-    "tiktoken>=0.12.0",
-    "accelerate",
-    "sentencepiece",
-    "pip",
+    "accelerate",          # dipakai transformers from_pretrained; juga dipin di reference/LatentMAS
+    "datasets",            # DITAMBAHKAN 2026-08-10: backend/bench/data.py `from datasets import
+                           # load_dataset` (GSM8K/ARC-Challenge/HumanEval+) — sebelumnya HILANG dari
+                           # pyproject/uv.lock sama sekali, lengan bench akan ModuleNotFoundError.
+    "tqdm",
     # Data & Analysis
     "numpy>=2.2.6",
     "pandas",
     "scipy",
-    "scikit-learn",
-    "matplotlib",
-    "seaborn",
-    "pandarallel",
     "joblib",
-    # Agent Framework
-    "rdagent",
-    "langchain-community",
-    "pyqlib",
-    # mlflow: pin >= 3.0.0 agar tidak tertarik ke 1.27.0 via rdagent transitive dep.
-    # mlflow 1.x tidak kompatibel dengan protobuf >=4 (google.protobuf.service dihapus).
-    # mlflow 3.x requires protobuf <8 → cocok dengan protobuf 6.x yang dipakai grpcio/vllm.
-    "mlflow>=3.0.0",
     # API & Web
-    "requests",
     "python-dotenv",
-    "fastapi",
-    "uvicorn[standard]",
-    "docker",
-    "fire",
-    # Document & Image Processing
-    "pymupdf",
-    "pillow",
-    "azure-ai-formrecognizer",
     # Utilities
     "pydantic",
     "pydantic-settings",
     "jinja2",
     "pyyaml",
-    "rich",
-    "tqdm",
-    "filelock",
-    "dill",
     "pyparsing",
-    "fuzzywuzzy",
-    "setuptools-scm",
 ]
 
 [project.optional-dependencies]

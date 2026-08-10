@@ -242,8 +242,9 @@ class _time_budget:
 
 def score_expressions(runs: list[dict], window=None, series_path: Path | None = None,
                       budget_s: int = 90, cache: dict | None = None,
-                      lab=None, series_cache: dict | None = None) -> None:
-    """Isi setiap faktor dengan cacat semantik + IC/ICIR OOS (in-place).
+                      lab=None, series_cache: dict | None = None,
+                      quantile: float = 0.1, cost_bps: float = 0.0) -> None:
+    """Isi tiap faktor dengan cacat semantik + IC/ICIR + metrik backtest (in-place).
 
     Deret IC harian juga disimpan (parquet) supaya analisis bisa mengelompokkan
     faktor jadi KLASTER SINYAL — ukuran keragaman pencarian (AUDIT_KRITIS §2.4)
@@ -253,11 +254,28 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
     tag berjalan dalam satu proses tanpa memuat ulang data pasar dan tanpa
     mengevaluasi ulang ekspresi yang sama (631 ekspresi unik dari 805 total
     lintas-tag). Dipakai `eval/rescore_all.py`.
+
+    METRIK SELAIN IC (ditambahkan 2026-08-10). `configs/matriks.yaml` sudah
+    lama mendeklarasikan `backtest: [ann_return, sharpe, max_drawdown,
+    turnover, hit_rate]` sebagai metrik lengan faktor, dan `eval/backtest.py`
+    sudah mengimplementasikannya, tapi tak ada satu pun pemanggil yang
+    menyambungkan keduanya — sehingga yang benar-benar tercatat hanya IC.
+    Sekarang tersambung. RankIC menjawab "apakah ekspresi ini punya daya
+    prediksi lintas-saham"; ia TIDAK menjawab "kalau diperdagangkan, apa
+    hasilnya" — return, drawdown, dan biaya perputaran posisi tak muncul di
+    korelasi peringkat sama sekali.
+
+    Ketiganya (IC · deret harian · backtest) dihitung dari SATU kali evaluasi
+    ekspresi. Itu sengaja: evaluasi DSL adalah bagian termahal skoring korpus,
+    dan memanggil `ic_full()` lalu `backtest_expression()` akan mengevaluasi
+    ekspresi yang sama dua kali — pada ekspresi rolling bersarang itu berarti
+    puluhan detik terbuang per ekspresi.
     """
     import pandas as pd
 
+    from eval.backtest import backtest_values
     from eval.ic import Lab
-    from lab.audit_batch import static_flags
+    from gate.static_flags import static_flags
     # Pre-import factor_ast memutus circular import factor_regulator →
     # coder/__init__ → evaluators → factor_regulator (sama seperti yang
     # dilakukan FrontEndPipeline._build_regulator_gate saat import COLD).
@@ -278,13 +296,27 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
                 continue
             if e not in cache:
                 ok, errs = validate_semantics(e)
+                bt = None
                 try:
                     with _time_budget(budget_s):
-                        res, ser = lab.ic_full(e)
+                        # Satu evaluasi → dipakai bertiga. `_ic_core` dipanggil
+                        # langsung (bukan `ic_full`) justru supaya `values`
+                        # hasil evaluasi itu bisa dioper juga ke backtest;
+                        # `ic_full` menelan values-nya di dalam.
+                        vals = lab.values(e)
+                        res, ser = lab._ic_core(vals)
+                        if res.error is not None or res.ic is None:
+                            ser = None
+                        bt = backtest_values(lab, vals, quantile=quantile,
+                                             cost_bps=cost_bps)
                 except TimeoutError:
                     from eval.ic import ICResult
                     res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
                                         error=f"timeout>{budget_s}s"), None
+                except Exception as ex:  # noqa: BLE001 — ekspresi LLM gagal ribuan cara
+                    from eval.ic import ICResult
+                    res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
+                                        error=f"{type(ex).__name__}: {ex}"), None
                 cache[e] = {
                     "sem_ok": bool(ok), "sem_errors": errs,
                     "flags": static_flags(e),
@@ -292,6 +324,27 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
                     "n_days": res.n_days, "coverage": res.coverage,
                     "n_unique": res.n_unique, "eval_error": res.error,
                 }
+                # Metrik backtest di-flatten dengan awalan `bt_` supaya tabel
+                # analisis bisa membacanya sejajar dengan ic/icir tanpa perlu
+                # membongkar dict bersarang.
+                #
+                # TAPI hanya untuk ekspresi yang HIDUP. Ekspresi degenerate
+                # tetap menghasilkan angka backtest yang kelihatan masuk akal:
+                # `TS_RANK($return,1)` ≡ 1.0 konstan (n_unique=1) ditolak jalur
+                # IC (ic=None) namun portofolionya tetap "berkinerja"
+                # sharpe≈-0,92 — itu murni artefak pemecahan seri peringkat
+                # pada skor yang seragam, bukan sinyal. Melaporkannya
+                # berdampingan dengan IC yang kosong akan menyesatkan pembaca
+                # tabel skripsi. Ambangnya memakai kriteria `alive` yang sudah
+                # dipakai ringkasan run_factor sendiri (n_unique > 2), supaya
+                # tidak ada dua definisi "faktor hidup" yang bersaing.
+                hidup = (res.ic is not None and (res.n_unique or 0) > 2)
+                if bt is not None and hidup:
+                    cache[e].update({f"bt_{k}": v for k, v in bt.as_dict().items()})
+                elif bt is not None:
+                    cache[e]["bt_error"] = (
+                        f"tak dilaporkan: ekspresi degenerate "
+                        f"(n_unique={res.n_unique}, ic={res.ic})")
                 if ser is not None:
                     series_all[e] = ser
             if e in series_all:
@@ -338,6 +391,12 @@ def main() -> None:
     ap.add_argument("--tag", default="probe")
     ap.add_argument("--score-only", action="store_true",
                     help="lewati GPU; skor ulang frontend_<tag>.json yang sudah ada")
+    ap.add_argument("--skip-score", action="store_true",
+                    help="lewati tahap skoring CPU; tulis frontend_<tag>.json "
+                         "lalu keluar. Pasangan dari --score-only: fase GPU "
+                         "berhenti begitu ekspresi jadi, dan skoringnya "
+                         "dijalankan sebagai proses CPU terpisah yang boleh "
+                         "berjalan BERSAMAAN dengan sel GPU berikutnya.")
     args = ap.parse_args()
 
     if args.score_only:
@@ -384,6 +443,14 @@ def main() -> None:
     # tahap CPU (skoring bisa diulang dengan --score-only).
     path = OUT / f"frontend_{args.tag}.json"
     path.write_text(json.dumps({"args": vars(args), "runs": runs}, indent=2, default=str))
+
+    if args.skip_score:
+        # GPU sudah selesai; skoring diserahkan ke proses CPU terpisah supaya
+        # kartu langsung bisa dipakai sel berikutnya alih-alih menganggur
+        # beberapa menit menunggu evaluasi DSL lintas ~4.370 saham × 243 hari.
+        print(f"tersimpan (BELUM di-skor) → {path}")
+        print(f"skor nanti dengan: --score-only --tag {args.tag}")
+        return
 
     window = ("2022-01-01", "2025-12-26") if args.holdout else None
     print("\n[probe] skoring ekspresi di CPU ...", flush=True)
