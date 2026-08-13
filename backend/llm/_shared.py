@@ -122,7 +122,7 @@ def kv_size_bytes(kv: KVCache) -> int:
     return total
 
 
-def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
+def kv_truncate(kv: KVCache, max_tokens: int, model=None) -> KVCache:
     """
     Truncate KV-cache to keep only the last `max_tokens` tokens.
 
@@ -132,6 +132,20 @@ def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
     transformers 5.x DynamicCache: dimodifikasi in-place (layer tensors di-slice)
     dan dikembalikan sebagai DynamicCache agar bisa langsung dipakai sebagai
     past_key_values di model.generate() / model.forward() berikutnya.
+
+    PEMBUKUAN RoPE (B8 — HASIL_GPU §8.2). Memotong ekor cache menyisakan token
+    yang KEY-nya masih membawa fase RoPE dari posisi ASLI [N−k, N), sementara
+    panjang fisik cache menyusut jadi k. Token berikutnya diberi posisi mulai
+    dari k oleh HF → seluruh konteks lama tampak "bergeser" sejauh N−k posisi.
+    Ini persis kelas galat yang sudah ditangani `kv_knn_filter` lewat
+    `_rerotate_keys_contiguous`, tetapi jalur truncate tak pernah memakainya.
+
+    Karena itu `model` diminta di sini: dengan model tersedia, key di-re-rotasi
+    dari posisi asli ke posisi kontigu [0, k) sehingga cache tampak persis
+    seperti cache normal panjang k. Tanpa `model` fungsi ini FAIL-OPEN ke
+    perilaku lama (slice saja) supaya pemanggil lama tidak pecah — tetapi
+    jalur produksi WAJIB mengoper model, kalau tidak menyalakan anggaran KV
+    (B9) hanya menukar satu bug dengan bug lain.
     """
     seq_len = _past_length(kv)
     if seq_len <= max_tokens:
@@ -141,12 +155,23 @@ def kv_truncate(kv: KVCache, max_tokens: int) -> KVCache:
             if getattr(layer, 'is_initialized', False) and layer.keys is not None:
                 layer.keys = layer.keys[..., -max_tokens:, :]
                 layer.values = layer.values[..., -max_tokens:, :]
-        return kv
-    # Legacy tuple format
-    return tuple(
-        tuple(t[..., -max_tokens:, :] for t in layer if t is not None)
-        for layer in kv
-    )
+        out = kv
+    else:
+        # Legacy tuple format
+        out = tuple(
+            tuple(t[..., -max_tokens:, :] for t in layer if t is not None)
+            for layer in kv
+        )
+    if model is None:
+        return out
+    pairs = _kv_pairs(out)
+    if not pairs:
+        return out
+    batch = pairs[0][0].shape[0]
+    device = pairs[0][0].device
+    orig = torch.arange(seq_len - max_tokens, seq_len, device=device)
+    orig = orig.unsqueeze(0).expand(batch, -1)
+    return _rerotate_keys_contiguous(out, orig, model)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -180,6 +205,83 @@ def _kv_from_pairs(pairs: list, original_kv) -> KVCache:
     return tuple(pairs)
 
 
+def _rotate_half(x: torch.Tensor) -> torch.Tensor:
+    """Rotasi separuh dimensi terakhir (konvensi RoPE HF)."""
+    half = x.shape[-1] // 2
+    x1 = x[..., :half]
+    x2 = x[..., half:]
+    return torch.cat((-x2, x1), dim=-1)
+
+
+def _get_rotary_emb(model):
+    """Ambil modul rotary embedding model (Qwen3 & sejenis). None bila tak ada."""
+    inner = getattr(model, "model", model)
+    return getattr(inner, "rotary_emb", None) or getattr(model, "rotary_emb", None)
+
+
+@torch.no_grad()
+def _rerotate_keys_contiguous(
+    kv: KVCache,
+    orig_positions: torch.Tensor,
+    model,
+) -> KVCache:
+    """Re-rotasi key cache dari posisi RoPE ASLI ke posisi KONTIGU [0..k-1].
+
+    Setelah `kv_knn_filter` menyeleksi subset token (posisi asli berlubang,
+    mis. [3, 7, 12, 400, 401]), key yang tersimpan masih membawa fase RoPE dari
+    posisi aslinya — sementara panjang fisik cache menyusut jadi k. Token baru
+    yang ditambahkan setelahnya akan diberi posisi mulai dari k oleh HF →
+    desync RoPE → output degenerate.
+
+    Karena RoPE additif (R(a)·R(b) = R(a+b)), kita terapkan R(new−old) pada tiap
+    key sehingga key yang semula ter-rotasi di `old` menjadi seakan ter-rotasi di
+    `new` (kontigu). Hasilnya cache tampak persis seperti cache normal panjang k:
+    semua forward/generate berikutnya memakai penomoran posisi default tanpa
+    perlu thread position_ids, dan invarian "panjang == posisi+1" terjaga lintas
+    agent. Hanya KEY yang dirotasi (value tak terkena RoPE).
+
+    Args:
+        kv             : cache hasil filter (DynamicCache atau tuple).
+        orig_positions : [B, k] posisi asli tiap token yang dipertahankan
+                         (urut menaik, dari `selected` di kv_knn_filter).
+        model          : model HF (untuk mengakses rotary_emb).
+
+    Returns:
+        KV-cache dengan key ter-rotasi ulang; bila rotary_emb tak tersedia,
+        kembalikan kv apa adanya (fail-open, perilaku lama).
+    """
+    rotary = _get_rotary_emb(model)
+    if rotary is None:
+        print("[KNN] rotary_emb tak ditemukan — re-rotasi dilewati (RoPE mungkin desync)")
+        return kv
+
+    pairs = _kv_pairs(kv)
+    if not pairs:
+        return kv
+    ref_key = pairs[0][0]                       # [B, H, k, D]
+    device = ref_key.device
+    batch, _, k, _ = ref_key.shape
+
+    new_positions = torch.arange(k, device=device).unsqueeze(0).expand(batch, -1)
+    delta = (new_positions - orig_positions.to(device)).to(torch.float32)  # [B, k] ≤ 0
+
+    # cos/sin untuk sudut delta. Pakai ref float32 agar presisi rotasi terjaga.
+    # Asumsi: attention_scaling == 1.0 (RoPE standar Qwen3-4B), sehingga rotasi
+    # murni dan komposisi R(a)·R(b)=R(a+b) eksak. Untuk varian long-context
+    # (YaRN/linear scaling, scaling≠1) komposisi ini hanya hampiran.
+    ref_f32 = torch.zeros(1, dtype=torch.float32, device=device)
+    cos, sin = rotary(ref_f32, delta)           # [B, k, D]
+    cos = cos.unsqueeze(1)                       # [B, 1, k, D] broadcast atas heads
+    sin = sin.unsqueeze(1)
+
+    rotated = []
+    for key, value in pairs:
+        key_f = key.float()
+        key_rot = key_f * cos + _rotate_half(key_f) * sin
+        rotated.append((key_rot.to(key.dtype), value))
+    return _kv_from_pairs(rotated, kv)
+
+
 @torch.no_grad()
 def kv_knn_filter(
     kv: KVCache,
@@ -187,6 +289,8 @@ def kv_knn_filter(
     percentage: float = 0.8,
     min_keep: int = 5,
     strategy: str = "top",
+    model=None,
+    rerotate: bool = True,
 ) -> KVCache:
     """
     KNN-based KV-cache selective filtering.
@@ -218,9 +322,16 @@ def kv_knn_filter(
                         terlepas dari skor similarity.
         strategy      : "top" (paling mirip), "bottom" (paling beda),
                         "random" (baseline acak).
+        model         : model HF. Bila diberikan + rerotate, key yang
+                        dipertahankan di-rotasi ulang ke posisi RoPE kontigu
+                        (lihat _rerotate_keys_contiguous) sehingga tidak ada
+                        desync posisi saat token baru ditambahkan. Bila None,
+                        perilaku lama (RoPE bisa desync) dipertahankan.
+        rerotate      : Aktifkan re-rotasi (hanya berlaku bila model != None).
 
     Returns:
-        Filtered KV-cache dalam format tuple yang sama.
+        Filtered KV-cache dalam format yang sama; key sudah dire-rotasi ke
+        posisi kontigu bila model diberikan.
     """
     seq_len = _past_length(kv)
     if seq_len == 0:
@@ -322,7 +433,14 @@ def kv_knn_filter(
             seq_len - k, seq_len, device=device,
         ).unsqueeze(0).expand(batch_size, -1)
 
-    return _kv_select_indices(kv, pairs, selected)
+    filtered = _kv_select_indices(kv, pairs, selected)
+
+    # Re-rotasi key dari posisi asli (berlubang) ke posisi kontigu [0..k-1]
+    # agar token baru berikutnya tidak mengalami desync RoPE.
+    if model is not None and rerotate:
+        filtered = _rerotate_keys_contiguous(filtered, selected, model)
+
+    return filtered
 
 
 def _kv_select_indices(kv: KVCache, pairs: list, indices: torch.Tensor) -> KVCache:
@@ -548,10 +666,29 @@ def robust_json_parse(text: str, max_retries: int = 3) -> dict:
 # ─────────────────────────────────────────────────────────────────────────────
 # LatentRealigner
 # ─────────────────────────────────────────────────────────────────────────────
-
+# [terjawab — skripsi Bab 4 §Realignment Laten]: M = (Wout^T Wout + lambda I)^-1
+#   Wout^T Win (ridge), lalu normalisasi ke magnitudo rata-rata embedding masukan.
+#
+# ── STATUS SEJAK B7 (2026-08-07) ─────────────────────────────────────────────
+# Matriks ridge M BUKAN LAGI jalur produksi. `_CoreEngine.latent_step_mode`
+# default "gumbel", dan pada semua mode selain "raw" M tidak pernah diterapkan —
+# kelas ini hanya dimintai `target_norm`. Konsekuensi yang harus ikut dilaporkan
+# di Bab 4, bukan disembunyikan:
+#   (a) ablasi `use_realign` (G6) hanya bermakna pada mode "raw";
+#   (b) pada Qwen3-8B, M memutar hidden state sampai cos(h, hM) = 0,011 —
+#       praktis ortogonal (lab/out/realign_probe_Qwen_Qwen3-8B.json), dan
+#       hasilnya berada di luar manifold embedding (cos ke embedding terdekat
+#       0,275 vs 0,940 pada gumbel).
+# Kelas ini DIPERTAHANKAN karena (i) `target_norm` dipakai semua mode, dan
+# (ii) mode "raw" masih harus bisa dijalankan untuk mereplikasi baseline
+# G1/G3/G6 yang sudah dilaporkan.
 class LatentRealigner:
     """
     Membangun dan menerapkan matriks realignment untuk latent reasoning.
+
+    CATATAN: sejak B7 hanya dipakai penuh oleh mode langkah laten "raw"
+    (baseline lama). Mode produksi memakai proyeksi convex-hull embedding
+    dan hanya meminjam `target_norm` dari sini.
 
     Masalah:
         last_hidden_state h ada di "output space" (setelah semua transformer layer).

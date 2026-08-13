@@ -1,2 +1,0 @@
-{"n": 1, "ts": "2026-05-03 01:27:43", "role": "propose", "mode": "kv_and_text", "step": 0, "conv_id": "7b2796e7", "text_len": 1131, "duration_s": 76.3805, "file": "0001_propose_kv_and_text.json"}
-{"n": 2, "ts": "2026-05-03 01:29:18", "role": "construct", "mode": "kv_and_text", "step": 0, "conv_id": "06c77ff0", "text_len": 660, "duration_s": 90.3986, "file": "0002_construct_kv_and_text.json"}

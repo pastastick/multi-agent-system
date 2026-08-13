@@ -26,9 +26,13 @@ Shared logic (realignment, KV-cache helpers) didelegasikan ke _shared.py
 untuk menghindari duplikasi.
 """
 
+import os
 import torch
 from typing import Dict, List, Optional, Tuple
 from transformers import AutoModelForCausalLM, AutoTokenizer
+
+# Cache-only model load by default. Set HF_LOCAL_ONLY=0 to allow HF Hub fetches.
+_HF_LOCAL_ONLY = os.environ.get("HF_LOCAL_ONLY", "1") not in ("0", "false", "False")
 
 # ── Shared utilities from _shared.py (single source of truth) ─────────
 from llm._shared import (
@@ -74,12 +78,15 @@ class ModelWrapper:
         use_realign = bool(getattr(args, "latent_space_realign", False)) if args else False
 
         # Load model + tokenizer
-        self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            model_name, use_fast=True, local_files_only=_HF_LOCAL_ONLY,
+        )
         _ensure_pad_token(self.tokenizer)
         with torch.no_grad():
             self.model = AutoModelForCausalLM.from_pretrained(
                 model_name,
                 dtype=(torch.bfloat16 if torch.cuda.is_available() else torch.float32),
+                local_files_only=_HF_LOCAL_ONLY,
             )
         if len(self.tokenizer) != self.model.get_input_embeddings().weight.shape[0]:
             self.model.resize_token_embeddings(len(self.tokenizer))

@@ -1,46 +1,28 @@
-# ── LLM Inference ─────────────────────────────────────────────────────────────
-vllm
+# Berkas ini TIDAK dipakai proses setup mana pun (README §2 pakai `uv sync`
+# dari pyproject.toml; grep repo-wide 2026-08-10 membuktikan tak ada skrip yang
+# `pip install -r requirements.txt`). Dipertahankan hanya sebagai cermin
+# manual dari pyproject.toml `[project.dependencies]` untuk pembaca yang lebih
+# familiar dengan format ini — kalau berubah salah satu, ubah dua-duanya.
+
+# ── LLM Inference — HF murni (inputs_embeds), TANPA vLLM ────────────────────
+torch==2.6.0
 transformers
-tiktoken
 accelerate
-sentencepiece
+datasets
+tqdm
 
 # ── Data & Analysis ───────────────────────────────────────────────────────────
 numpy
 pandas
 scipy
-scikit-learn
-matplotlib
-seaborn
-pandarallel
 joblib
 
-# ── Agent Framework ───────────────────────────────────────────────────────────
-rdagent
-langchain-community
-
 # ── API & Web ─────────────────────────────────────────────────────────────────
-requests
 python-dotenv
-fastapi
-uvicorn[standard]
-docker
-fire
-
-# ── Document & Image Processing ───────────────────────────────────────────────
-pymupdf
-pillow
-azure-ai-formrecognizer
 
 # ── Utilities ─────────────────────────────────────────────────────────────────
 pydantic
 pydantic-settings
 jinja2
 pyyaml
-rich
-tqdm
-filelock
-dill
 pyparsing
-fuzzywuzzy
-setuptools-scm

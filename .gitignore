@@ -1,4 +1,4 @@
-# Python-generated files
+# Python
 __pycache__/
 *.py[oc]
 .uv/
@@ -14,8 +14,9 @@ venv/
 .env.*
 !.env.example
 
-# heavy
-books/
+# Berkas berat / biner. *.parquet termasuk deret IC harian
+# (results/icseries_*.parquet) — regenerable dengan
+# `PYTHONPATH=backend python backend/eval/rescore_all.py`.
 *.pkl
 *.h5
 *.pt
@@ -26,37 +27,26 @@ books/
 *.bin
 *.gguf
 
-# logs & runtime artifacts
-*.log
-*.jsonl
-backend/debug/conv_logs/
-backend/workspace/
-backend/__session__/
-backend/factors/data_template/daily_pv*.h5
-
-# model checkpoints / cache
+# Data pasar & model — diunduh saat setup, bukan di-commit (lihat README §2).
+backend/hf_data/
+backend/data/
 .cache/
 huggingface/
+
+# Keluaran runtime.
+# `llm/client.py` menulis snapshot output LLM ke ./debug/llm_outputs relatif cwd,
+# dan pemanggilan lama meninggalkan direktori log per-run.
+debug/
+log/
+backend/workspace/
+backend/latent_runs/
+
+# results/ DI-TRACK (probe Tahap 0, hasil bench & faktor menopang angka skripsi).
+# Pengecualian per-jenis ada di results/.gitignore.
 
 # IDE
 .vscode/
 .idea/
 *.swp
 .DS_Store
-
-# downloaded datasets & runtime data (post-setup, regenerated from HF)
-hf_data/
-backend/hf_data/
-backend/data/
-data/results/
-data/qlib/
-
-git_ignore_folder/
-
-# LLM output snapshots — KEEP tracked for debugging/reproducibility
-!backend/debug/llm_outputs/
-!backend/debug/llm_outputs/**
-!backend/debug/llm_outputs/**/*.jsonl
-!backend/data/factorlib/*.json
-## output agent
 ~
