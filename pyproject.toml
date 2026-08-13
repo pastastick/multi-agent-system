@@ -1,10 +1,11 @@
 [project]
-name = "ai-agent"
-version = "0.1.0"
-description = "QuantaAlpha — Latent Multi-Agent System for quantitative factor mining"
+name = "quantalatent"
+version = "1.0.0"
+description = "Controlled comparison of latent-step formulations for multi-agent collaboration"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
+authors = [{ name = "Harun Yahya" }]
 dependencies = [
     # LLM Inference — HF murni (inputs_embeds), TANPA vLLM (lihat komentar di bawah)
     "torch==2.6.0",       # eksplisit: sebelumnya cuma transitive lewat vllm/accelerate;

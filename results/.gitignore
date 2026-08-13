@@ -20,3 +20,7 @@ icseries_*.parquet
 # dibutuhkan sebagai lampiran (contoh dialog antar-agen), salin keluar
 # sebelum pod dihapus, jangan mengandalkan git.
 llm_outputs/
+
+# Arsip hasil yang dikemas `scripts/kemas_hasil.sh` untuk ditarik keluar pod.
+# Isinya duplikat berkas yang sudah di-track di sini.
+*.tar.gz
