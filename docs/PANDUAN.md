@@ -305,7 +305,156 @@ python scripts/rakit_transkrip.py                                   # transkrip 
 
 ---
 
-## 4. Status matriks dan urutan menjalankan berikutnya
+## 4. Kenapa GPU, dan seperti apa keluaran yang benar
+
+### 4.1 Apa yang butuh GPU dan apa yang tidak
+
+Yang dijalankan di GPU **hanya pembangkitan langkah laten dan teks oleh LLM** —
+tiap langkah laten adalah satu *forward pass* Qwen3-8B, dan tiap agen teks
+adalah satu `model.generate`. Itu saja. Semua penilaian dilakukan di CPU,
+sengaja, supaya jam GPU tidak terbakar untuk aritmetika:
+
+| kerja | di mana | kenapa |
+|---|---|---|
+| rollout $m$ langkah laten + generasi teks agen | **GPU** | forward pass model 8 B; tak ada jalan lain |
+| geometri $M$ (‖M−I‖, cos(h,hM)) | CPU | `realign_probe.py` cuma membaca `safetensors`, tak menjalankan model |
+| geometri vektor laten (`b7_probe`) | **GPU** | butuh vektor laten *produksi* yang hanya ada saat model berjalan |
+| parsing ekspresi DSL, RankIC, backtest | CPU | `eval/ic.py` + `eval/backtest.py`, tervalidasi identik 7 desimal vs produksi |
+| uji statistik (McNemar, Cochran, bootstrap, Holm) | CPU | `bench/compare.py`, murni pandas/numpy |
+| skor holdout 2022–2025 | CPU | `skor_holdout.py`; lihat §3 soal `--workers` |
+| rakit transkrip, tabel LaTeX | CPU | `scripts/`, `../analisis/` |
+
+**Konsekuensi praktis:** sesi cloud dengan GPU sebaiknya menjalankan **hanya**
+sel matriks (`run_bench.py`, `run_factor.py`) dan `b7_probe.py`, lalu
+mematikan GPU. Skoring (`rescore_all.py`, `skor_holdout.py`, `compare.py`) bisa
+— dan sebaiknya — dijalankan setelahnya di mesin CPU biasa.
+
+`scripts/jalankan_matriks.py` sudah menegakkan pemisahan ini untuk lengan
+faktor: ia menambahkan `--skip-score` ke tiap sel (GPU menulis
+`frontend_<tag>.json` lalu langsung keluar, kartu bebas untuk sel berikutnya),
+lalu menjalankan satu lewatan `--score-only` di CPU setelah semua sel GPU
+selesai. Kalau menjalankan `run_factor.py` sendiri tanpa runner, tambahkan
+`--skip-score` manual bila ingin perilaku yang sama; tanpanya ia menskor
+in-line di proses yang sama (menahan GPU beberapa menit per sel).
+
+### 4.2 Berkas yang dihasilkan tiap jenis run
+
+| perintah | menulis | isi inti |
+|---|---|---|
+| `run_bench.py --task T --latent-mode M --comm-mode C --tag s0` | `results/bench/bench_T_M_C_s0.json` + `results/bench/llm_outputs/bench_T_M_C_s0/session_*/` | ringkasan sel + hasil per soal + transkrip tiap panggilan LLM |
+| `run_bench.py ... --latent-mode mix --latent-alpha A --tag s0_aXX` | `results/bench/bench_T_mix_C_s0_aXX.json` | sama; `_meta.latent_alpha` terisi |
+| `run_factor.py --comm-mode C --latent-mode M --tag C_M` | `results/factor/frontend_C_M.json` + `results/factor/llm_outputs/C_M/session_*/` | `args` + daftar `runs` (satu per arah×seed), tiap run berisi ekspresi mentah, verdikt gate, `agent_trace` |
+| `b7_probe.py --alphas ...` | `results/probe/b7_probe_Qwen_Qwen3-8B.json` | `inertness` (uji `use_realign`), `geometry` (5 mode), `geometry_mix` (kurva $\alpha$) |
+| `eval/skor_holdout.py` | `results/factor/holdout_<awal>_<akhir>.json` + `results/.cache/holdout_cache_*.json` | `per_tag` + `per_ekspresi` dengan ic seleksi vs holdout berdampingan |
+| `eval/rescore_all.py` | **menimpa** `results/factor/frontend_*.json` + `results/factor/icseries_*.parquet` | mengisi field `ic`/`bt_*` tiap ekspresi + deret IC harian |
+
+### 4.3 Skema ringkas keluaran
+
+**Sel bench** — `{_meta, summary, results}`:
+
+```
+_meta    : task, latent_mode, latent_alpha, comm_mode, chain, model, limit,
+           sample_seed, seed, total_time_s, ...            (konfigurasi lengkap run)
+summary  : {n, n_correct, accuracy, format_rate}
+results  : [ {index, question, gold, answer_text, prediction, correct,
+              format_ok, duration_s, pipeline_error, error}, ... ]   (satu per soal)
+```
+
+**Sel faktor** — `{args, runs}`:
+
+```
+args : seluruh argumen CLI + latent_alpha
+runs : [ {
+    direction, seed, comm_mode, latent_mode,
+    hypothesis,                          # hipotesis yang dibawa agen proposal
+    factors : [ {name, expression, explanation,
+                 sem_ok, flags,          # cacat semantik statis
+                 ic, icir, tstat, n_days, coverage, n_unique, eval_error,
+                 bt_ann_return, bt_sharpe, bt_max_drawdown, bt_turnover, ...,
+                 passed_gate} ],
+    passing : [ekspresi yang lolos gate],
+    gate_log, gate_error, repaired, repair_attempts,
+    construct_text_head,                 # 200 char pertama keluaran construct — cek prefiks
+    agent_trace : [ {agent, mode, s, latent_s, gen_s, kv_len,
+                     n_in_tok, n_out_tok, text_len, rep_ratio, parsed_ok, text} ]
+  }, ... ]
+```
+
+Sebelum `rescore_all.py`/`skor_holdout.py` dijalankan, field `ic`/`bt_*` pada
+`factors` **belum ada** — itu normal, bukan run yang gagal.
+
+### 4.4 Bentuk keluaran yang SEHAT vs RUSAK
+
+Ini yang paling sering salah baca oleh sesi baru. Sebuah run bisa "selesai
+tanpa error" tetapi menghasilkan data yang tak berguna.
+
+**Sel bench sehat:**
+- `summary.n` **sama persis** dengan `--limit` (100). Kurang dari itu = pipeline
+  jatuh di tengah; cek `results[*].pipeline_error`.
+- `summary.format_rate` ≥ 0,95. Di bawah itu, model gagal menghasilkan format
+  yang bisa dinilai — biasanya kerusakan langkah laten.
+- `summary.accuracy` dalam rentang yang masuk akal: GSM8K/ARC-C 0,83–0,94,
+  HumanEval+ 0,69–0,76 untuk keluarga relaksasi. **`raw` di HumanEval+ ~0,42
+  adalah temuan, bukan bug** — jangan "perbaiki".
+- Sebar buka 2–3 `results[*].answer_text`: harus kalimat Inggris wajar. Aksara
+  Tionghoa yang menyusup, spasi hilang, suku kata berulang = korupsi token
+  (diharapkan sesekali pada `raw`, alarm bila pada mode lain).
+
+**Sel faktor sehat:**
+- Tiap `runs[*].agent_trace` punya 3 entri agen (`proposal`, `innovate`,
+  `construct`) + mungkin `repair`. `construct` harus `parsed_ok: true` pada
+  mayoritas jalan.
+- `runs[*].construct_text_head` **dimulai dengan `{`**. Kalau dimulai dengan
+  `"` atau langsung nama field, prefill tidak bekerja — cek `prefill:` di
+  `backend/prompts/factor.yaml`.
+- `gate_error: "no expression from construct"` pada **semua** jalan satu sel =
+  sel itu gagal total (inilah gejala `kv_and_text` sebelum perbaikan prefill).
+  Pada beberapa jalan saja = wajar.
+- Setelah skoring: sel keluarga relaksasi menghasilkan ~15–30 ekspresi ber-`ic`
+  per 20 jalan; `raw` jauh lebih sedikit (itu temuan).
+
+**`b7_probe` sehat:**
+- `geometry` memuat **lima** kunci: `raw, soft, gumbel, sample, moi`. Kalau
+  `moi` hilang, `ALL_MODES` belum diperbarui.
+- `geometry.sample.max_cos_embed_mean` = **1,000 persis** — uji kewarasan
+  pipeline; kalau bukan 1, probenya rusak, bukan modelnya.
+- `geometry.raw.max_cos_embed_mean` ≈ 0,31; keluarga relaksasi 0,93–1,00.
+- `geometry_mix` memuat kurva dari `0.0` (= `raw`) sampai `1.0` (= `soft`).
+
+**`skor_holdout` sehat:**
+- `per_tag[*].berpasangan` > 0 untuk sel yang punya ekspresi hidup (artinya ada
+  ekspresi yang bisa dibandingkan seleksi↔holdout).
+- `n_ekspresi_unik` mendekati jumlah ekspresi unik di korpus (≈150 untuk run
+  6-jalan; lebih banyak untuk 20-jalan).
+
+### 4.5 Verifikasi cepat pasca-run
+
+```bash
+# Bench: satu sel
+python -c "import json; d=json.load(open('results/bench/bench_gsm8k_gumbel_kv_s0.json'));
+print('n', d['summary']['n'], '| acc', d['summary']['accuracy'],
+      '| fmt', d['summary']['format_rate'],
+      '| errors', sum(1 for r in d['results'] if r['pipeline_error']))"
+
+# Faktor: semua sel sekaligus
+python -c "
+import json, glob
+for f in sorted(glob.glob('results/factor/frontend_*.json')):
+    d=json.load(open(f)); runs=d['runs']
+    head_ok=sum(1 for r in runs if (r.get('construct_text_head') or '').lstrip().startswith('{'))
+    parsed=sum(1 for r in runs for t in (r.get('agent_trace') or [])
+               if t['agent']=='construct' and t.get('parsed_ok'))
+    print(f'{f.split(\"/\")[-1]:34s} runs={len(runs):2d} head-{{={head_ok:2d} construct-parsed={parsed:2d}')
+"
+
+# compare.py sudah punya verifikasi bawaan: ia MENGELUARKAN sel yang sidik
+# jari soalnya tak cocok dan mencetak alasannya.
+python backend/bench/compare.py --out results/bench/analisis.json
+```
+
+---
+
+## 5. Status matriks dan urutan menjalankan berikutnya
 
 Diperbarui **2026-08-27**. Sebuah sesi baru harus membaca bagian ini sebelum
 menyalakan GPU, supaya tidak menjalankan ulang sel yang sudah ada atau
@@ -377,7 +526,7 @@ keluaran `construct` yang tersimpan — pemulihannya menaikkan yang terurai dari
 
 ---
 
-## 5. Verifikasi setup (CPU, tanpa GPU)
+## 6. Verifikasi setup (CPU, tanpa GPU)
 
 ```bash
 PYTHONPATH=backend python -c "
@@ -393,7 +542,7 @@ IC identik dengan angka produksi lama.
 
 ---
 
-## 6. Ganti model untuk VRAM terbatas
+## 7. Ganti model untuk VRAM terbatas
 
 | Model | Unduh | VRAM bobot |
 |---|---|---|
@@ -407,7 +556,7 @@ sebanding.
 
 ---
 
-## 7. Masalah yang sering muncul
+## 8. Masalah yang sering muncul
 
 **`uv` / `.venv` / model HF hilang setelah pod restart** — semuanya di `/root`
 yang ephemeral. Pastikan `source /workspace/runpod_env.sh` dijalankan SEBELUM
@@ -443,7 +592,7 @@ mengirisnya. Cache-nya ditulis sekali ke
 `results/.cache/pv_fast_<awal>_<akhir>.parquet` dan dipakai ulang seterusnya.
 
 **Sel `kv_and_text` lengan faktor menghasilkan nol ekspresi** — itu gejala yang
-sudah dijelaskan dan diperbaiki; lihat §4 "Perubahan perilaku". Kalau muncul
+sudah dijelaskan dan diperbaiki; lihat §5 "Perubahan perilaku" dan §4.4. Kalau muncul
 lagi setelah perbaikan, periksa bahwa `prefill:` masih ada di
 `backend/prompts/factor.yaml` pada agen `construct`, dan bahwa
 `_CoreEngine._join_prefill` tidak membuangnya karena keluaran model kebetulan
@@ -451,7 +600,7 @@ diawali `{`.
 
 ---
 
-## 8. Apa yang dihapus saat perombakan
+## 9. Apa yang dihapus saat perombakan
 
 Semuanya masih ada di `exp/alt3-gumbel-fidelitas`, branch `prod/*`, dan di
 riwayat `main` sebelum commit perombakan.
