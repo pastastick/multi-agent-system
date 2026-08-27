@@ -333,6 +333,16 @@ class _CoreEngine:
                 "moi":    "z = [(H·p + (β+1−H)·onehot(i~p)) / (β+1)] @ W_in, "
                           f"p = softmax(W_out h / T), β={self.latent_step_beta}"
                           "   [MoI arXiv:2505.14827; M ridge TIDAK dipakai]",
+                # Sumbu C (interpolasi). Entri ini WAJIB ada: `_EQ` diindeks
+                # langsung oleh mode, jadi mode yang hilang di sini membuat
+                # constructor melempar KeyError — bukan sekadar log yang
+                # kurang. `mix` sudah lama ada di `llm.methods` (α=0 → `raw`
+                # persis, α=1 → `soft` persis), tapi tak pernah dijalankan
+                # lewat engine sampai 2026-08-27, sehingga celah ini baru
+                # muncul saat b7_probe menghitung kurva α.
+                "mix":    "z = normalisasi((1−α)·z_raw + α·z_soft)   "
+                          f"[α={self.latent_step_alpha}; sumbu ukur, bukan "
+                          "metode: M ridge DIPAKAI lewat suku z_raw bila α<1]",
             }
             print(f"[CoreEngine] latent step mode={self.latent_step_mode} "
                   f"T={self.latent_step_temp} → {_EQ[self.latent_step_mode]}")

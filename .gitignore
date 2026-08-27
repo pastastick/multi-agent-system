@@ -53,3 +53,12 @@ backend/latent_runs/
 *.swp
 .DS_Store
 ~
+
+# Hasil eksperimen — TIDAK di-track sejak 2026-08-27.
+# Alasan: 181 MB dan terus tumbuh (probe/ 22M, factor/ 33M, bench/ 54M,
+# ditambah llm_outputs/), sementara isinya artefak run yang dibaca lewat
+# ringkasan di docs/ dan figur Bab IV — bukan sumber kode.
+# Salinannya dikemas ke /workspace/hasil_results_lengkap_<stamp>.tar.gz
+# (lihat scripts/kemas_hasil.sh). ARSIP ITU SATU-SATUNYA SALINAN begitu pod
+# RunPod dihapus — scp keluar sebelum menghapus pod.
+results/

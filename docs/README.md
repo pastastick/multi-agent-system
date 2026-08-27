@@ -20,5 +20,6 @@ ditopangnya. Ringkasan berbahasa Inggris ada di [`../README.md`](../README.md).
 | berkas | isi |
 |---|---|
 | [`HASIL_TAHAP4.md`](HASIL_TAHAP4.md) | hasil bertahap (B6, B7, sumbu A9) pada jalur produksi, Agustus 2026 |
+| [`HASIL_TAHAP5.md`](HASIL_TAHAP5.md) | matriks faktor 20-jalan + uji formal keluarga R vs raw, efisiensi KV, 24 figur Bab IV, dan daftar pekerjaan tertunda (27 Agustus 2026) |
 | [`AUDIT_KRITIS.md`](AUDIT_KRITIS.md) | audit kritis mutu faktor — seluruh angkanya reproducible di CPU |
 | [`arsip/`](arsip/) | dokumen dari branch sebelum perombakan; jalur berkas di dalamnya sebagian sudah tidak ada |
