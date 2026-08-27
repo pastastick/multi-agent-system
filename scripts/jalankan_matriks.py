@@ -143,7 +143,11 @@ def score_cmd(cmd: str) -> str:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--arm", required=True, choices=["bench", "factor", "all"])
+    ap.add_argument("--arm", required=True,
+                    choices=["bench", "factor", "interpolasi", "all"],
+                    help="'interpolasi' = hanya sel sumbu C (mode `mix`); "
+                         "campuran run_bench.py + run_factor.py, keduanya "
+                         "ditangani dispatch yang sama")
     ap.add_argument("--slots", type=int, default=2,
                     help="sel GPU serentak; A40 46GB muat 2 aman (~16GB/sel, "
                          "docs/HASIL_TAHAP0.md §8.7)")
