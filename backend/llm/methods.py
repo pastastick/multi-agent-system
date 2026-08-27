@@ -1,8 +1,9 @@
-"""methods.py — SUMBU A skripsi: empat persamaan langkah laten.
+"""methods.py — SUMBU A skripsi: lima persamaan langkah laten.
 
 Fungsi murni yang memetakan satu hidden state ke satu vektor yang diumpankan
 balik sebagai `inputs_embeds` — inilah yang dibandingkan `docs/DESAIN_EKSPERIMEN.md`
-§2 antar `raw`/`gumbel`/`moi`/`sample` (+ kontrol `soft`). Diekstrak dari
+§2 antar M = {`raw`, `soft`, `sample`, `gumbel`, `moi`}, dengan keluarga
+relaksasi diskret R = M \\ {`raw`}. Diekstrak dari
 `engine.py::_CoreEngine._latent_step_vec` ke modul berdiri sendiri supaya
 matematikanya bisa dibaca, disitir, dan (bila perlu) diuji terisolasi tanpa
 menyisir mesin KV-cache/generate di sekitarnya.
@@ -29,7 +30,13 @@ from llm._shared import LatentRealigner
 # input berikutnya = ekspektasi posterior (campuran one-hot + distribusi).
 # Training-free seperti mode lain; ditambahkan 2026-08-09 untuk Tahap 0 lanjutan
 # (kandidat literatur yang menjembatani `sample` dan `soft`).
-LATENT_STEP_MODES = ("raw", "soft", "gumbel", "sample", "moi")
+# "mix" = keluarga interpolasi raw<->soft, ditambahkan 2026-08-27. Ia BUKAN
+# metode dari literatur dan bukan usulan metode baru: ia sumbu ukur. Kelima
+# mode di atas memberi lima titik terpisah, sehingga hubungan antara geometri
+# representasi dan kinerja hanya bisa dibaca sebagai "searah". `mix` mengisi
+# jarak di antaranya secara kontinu, sehingga BENTUK hubungan itu yang diuji —
+# monoton, ber-ambang, atau tidak berpola sama sekali. Ketiganya temuan.
+LATENT_STEP_MODES = ("raw", "soft", "gumbel", "sample", "moi", "mix")
 
 
 def latent_step_vec(
@@ -40,6 +47,7 @@ def latent_step_vec(
     realigner: LatentRealigner,
     temp: float,
     beta: float,
+    alpha: float = 1.0,
 ) -> "torch.Tensor":
     """Petakan hidden state ke vektor yang diumpankan sebagai inputs_embeds.
 
@@ -56,9 +64,42 @@ def latent_step_vec(
             lain hanya dipinjam `target_norm`-nya (matriks M tak pernah dipakai).
         temp: suhu softmax T (di-clamp minimal 1e-6).
         beta: parameter β mode `moi` (tak dipakai mode lain).
+        alpha: parameter α mode `mix` (tak dipakai mode lain). α=0 memberi
+            `raw` persis, α=1 memberi `soft` persis.
     """
     if mode == "raw":
         return realigner.apply(last_hidden, model)
+
+    if mode == "mix":
+        # z(α) = normalisasi( (1-α)·z_raw + α·z_soft ).
+        #
+        # Kedua ujung dihitung lebih dulu SECARA PENUH lewat jalur mode
+        # aslinya, bukan disusun ulang di sini. Itu yang menjamin α=0 dan α=1
+        # menghasilkan vektor yang identik dengan sel `raw` dan `soft` yang
+        # sudah dijalankan — sehingga kedua titik ujung kurva tak perlu
+        # dijalankan ulang di GPU, dan kurvanya tersambung ke matriks
+        # eksperimen yang sudah ada alih-alih berdiri sendiri.
+        #
+        # Keduanya sudah ternormalisasi ke `target_norm` yang sama, jadi
+        # campurannya adalah titik pada tali busur antara dua vektor
+        # sepanjang itu; normalisasi ulang mengembalikannya ke sfera yang
+        # sama. Akibatnya yang berubah sepanjang α murni ARAH — dan arah
+        # itulah yang diukur `max_i cos(z, W_in[i])`, sehingga jarak ke
+        # convex hull embedding bergerak kontinu tanpa dicampuri perubahan
+        # panjang vektor.
+        a = min(max(float(alpha), 0.0), 1.0)
+        z_raw = realigner.apply(last_hidden, model).float()
+        z_soft = latent_step_vec(last_hidden, mode="soft", model=model,
+                                 realigner=realigner, temp=temp,
+                                 beta=beta).float()
+        if a <= 0.0:
+            return z_raw.to(last_hidden.dtype)
+        if a >= 1.0:
+            return z_soft.to(last_hidden.dtype)
+        z = (1.0 - a) * z_raw + a * z_soft
+        tn = realigner._ensure_matrix(model)[1].to(last_hidden.device)
+        z = z * (tn / z.norm(dim=-1, keepdim=True).clamp_min(1e-6))
+        return z.to(last_hidden.dtype)
 
     W_in = model.get_input_embeddings().weight                     # [V, d]
     target_norm = realigner._ensure_matrix(model)[1].to(last_hidden.device)

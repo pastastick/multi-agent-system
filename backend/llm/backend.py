@@ -99,6 +99,9 @@ class LocalLLMBackend:
         latent_step_temp: Optional[float] = None,
         # β untuk mode "moi" (MoI arXiv:2505.14827). None = env LATENT_STEP_BETA.
         latent_step_beta: Optional[float] = None,
+        # α untuk mode "mix" (sumbu interpolasi raw<->soft). None = env
+        # LATENT_STEP_ALPHA.
+        latent_step_alpha: Optional[float] = None,
         # Early-stop rollout laten (B6). None = pakai env LATENT_EARLY_STOP_COS
         # (default 0.999); ≥ 1.0 mematikan early-stop.
         latent_early_stop_cos: Optional[float] = None,
@@ -130,6 +133,7 @@ class LocalLLMBackend:
             knn_min_keep=knn_min_keep, knn_strategy=knn_strategy,
             latent_step_mode=latent_step_mode, latent_step_temp=latent_step_temp,
             latent_step_beta=latent_step_beta,
+            latent_step_alpha=latent_step_alpha,
             latent_early_stop_cos=latent_early_stop_cos,
         )
         self._conv_mgr = TensorConvManager(conv_dir) if log_tensors else None
@@ -174,6 +178,7 @@ class LocalLLMBackend:
         mode           : Optional[OutputMode] = None,
         latent_steps   : Optional[int] = None,
         json_schema    : Optional[Dict[str, Any]] = None,
+        prefill        : str = "",
     ) -> str:
         """
         Drop-in replacement untuk APIBackend.build_messages_and_create_chat_completion.
@@ -200,6 +205,7 @@ class LocalLLMBackend:
             max_new_tokens=max_new_tokens, temperature=temperature, top_p=top_p,
             json_mode=json_mode, conv_id=conv_id, step=step, role=role,
             latent_steps=latent_steps, json_schema=json_schema,
+            prefill=prefill,
         )
         return result.text or ""
 
@@ -221,6 +227,7 @@ class LocalLLMBackend:
         latent_steps   : Optional[int] = None,
         json_schema    : Optional[Dict[str, Any]] = None,
         crop_after_generate: bool = True,
+        prefill        : str = "",
     ) -> LLMResult:
         """
         Sama seperti build_messages_and_create_chat_completion, tapi return
@@ -247,6 +254,7 @@ class LocalLLMBackend:
             json_mode=json_mode, conv_id=conv_id, step=step, role=role,
             latent_steps=latent_steps, json_schema=json_schema,
             crop_after_generate=crop_after_generate,
+            prefill=prefill,
         )
 
     # ── Titik masuk fleksibel ──────────────────────────────────────────────
@@ -268,6 +276,7 @@ class LocalLLMBackend:
         latent_steps       : Optional[int] = None,
         json_schema        : Optional[Dict[str, Any]] = None,
         crop_after_generate: bool = True,
+        prefill            : str = "",
     ) -> LLMResult:
         """
         Titik masuk tunggal untuk semua mode.
@@ -323,6 +332,36 @@ class LocalLLMBackend:
                 f"[GuidedDecoding] role={role}, mode={mode}: "
                 f"enforcing JSON schema via prefix_allowed_tokens_fn"
             )
+
+        # ── Prefill pembuka objek JSON ─────────────────────────────────────
+        # Agen yang mewarisi KV berisi objek JSON utuh dari agen hulu cenderung
+        # melanjutkan seolah masih berada di dalam objek itu: keluarannya mulai
+        # dari NILAI, tanpa `{` pembuka, sehingga `_fix_json` (yang mencari
+        # `{` pertama) tak menemukan apa pun dan seluruh jalan tercatat gagal.
+        # Terukur pada lengan faktor 2026-08-10: empat dari lima sel
+        # `kv_and_text` menghasilkan nol ekspresi karena ini. Bukan pemotongan
+        # oleh harness — `text_len` yang dicatat sama persis dengan panjang
+        # yang dibangkitkan model.
+        #
+        # Prefill menutupnya dengan biaya nol: pembuka objek dikirim sebagai
+        # bagian giliran asisten, bukan diminta lewat prompt, sehingga model
+        # tak punya kesempatan melewatinya. Alternatifnya guided decoding,
+        # yang menjamin lebih banyak tetapi menambah 10--20% latensi per token
+        # — dan yang selama ini hanya AKTIF bila env `LATENTMAS_GUIDED=1`
+        # di-set oleh `pipeline/loop.py`, modul yang sudah dihapus bersama
+        # pipeline evolusi. Jadi ia tak pernah menyala pada run mana pun.
+        #
+        # Isinya datang dari `prefill:` di prompts.yaml, bukan dari sini:
+        # teks pembuka yang tepat bergantung pada kontrak keluaran agen, dan
+        # lapisan ini tak boleh tahu skema agen mana pun.
+        #
+        # Diterapkan di SEMUA medium yang membangkitkan teks, termasuk medium
+        # yang keluarannya sudah sehat. Menerapkannya hanya pada medium
+        # bermasalah akan membuat prosedur pembangkitan berbeda antar-medium,
+        # dan perbandingan medium adalah salah satu pertanyaan penelitian.
+        # Untuk keluaran yang memang sudah utuh, `_join_prefill` membuangnya
+        # lagi, sehingga penerapan seragam ini tak mengubah sel yang sehat.
+        _prefill = prefill if mode != "kv_only" else ""
 
         # Pipeline monitor (safe — no-op if unavailable)
         try:
@@ -422,6 +461,7 @@ class LocalLLMBackend:
                     max_new_tokens=_max_tok, temperature=_temp, top_p=_top_p,
                     return_kv=False,
                     prefix_allowed_tokens_fn=_prefix_fn,
+                    prefill=_prefill,
                 )
                 if json_mode:
                     text = self._fix_json(text)
@@ -471,6 +511,7 @@ class LocalLLMBackend:
                     max_new_tokens=_max_tok, temperature=_temp, top_p=_top_p,
                     return_kv=False,
                     prefix_allowed_tokens_fn=_prefix_fn,
+                    prefill=_prefill,
                 )
                 result.gen_s = round(time.time() - _t_gen, 3)
                 if crop_after_generate:

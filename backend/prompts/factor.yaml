@@ -414,7 +414,29 @@ agents:
     # agent._resolve_json_schema): 38% tolakan gate di G5 adalah output
     # tak-terparse, dan seluruh kolaps ls>=20 bermanifestasi seperti itu.
     # Grammar JSON menjamin BENTUK, bukan ISI — gate tetap yang menilai isi.
+    #
+    # STATUS TERUKUR 2026-08-27: env itu TIDAK PERNAH di-set. Ia dulu diisi
+    # `settings.guided_decoding` dari `pipeline/loop.py`, modul yang terhapus
+    # bersama pipeline evolusi, dan tak ada penggantinya. Bukti dari keluaran:
+    # tak satu pun memuat field `reasoning` yang diwajibkan schema ini. Jadi
+    # seluruh angka lengan faktor yang terbit dihasilkan TANPA guided decoding.
     json_schema: latent_construct
+    # Prefill pembuka objek. Pada medium `kv_and_text`, agen ini mewarisi KV
+    # yang berakhir dengan objek JSON utuh dari agen `innovate` (±4000 karakter,
+    # ditutup `}\n ]\n}`) dan melanjutkan seolah masih berada di dalamnya:
+    # keluarannya mulai dari nilai hipotesis, tanpa `{\n  "hypothesis": `, lalu
+    # gagal diurai. Empat dari lima sel `kv_and_text` menghasilkan nol ekspresi
+    # karena ini pada run 2026-08-10.
+    #
+    # Isi prefill = persis potongan yang dilewatkan model, sama dengan aturan
+    # pemulihan pasca-hoc yang terbukti mengembalikan 12--14 ekspresi per sel
+    # (`analisis/07_faktor_pelengkap.py::PREFIKS`). Bedanya, di sini ia dicegah
+    # di muka alih-alih ditambal setelahnya, sehingga hasilnya tak perlu
+    # disertai catatan kaki "dipulihkan".
+    #
+    # Untuk sel yang keluarannya sudah dibuka `{` sendiri, `_join_prefill`
+    # membuang prefill lagi — jadi ini tak mengubah sel yang sehat.
+    prefill: "{\n  \"hypothesis\": "
     system: |-
       You are the Builder in a quantitative alpha-mining team. A market hypothesis and
       a candidate-function palette reach you either through shared latent memory or as

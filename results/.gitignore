@@ -24,3 +24,10 @@ llm_outputs/
 # Arsip hasil yang dikemas `scripts/kemas_hasil.sh` untuk ditarik keluar pod.
 # Isinya duplikat berkas yang sudah di-track di sini.
 *.tar.gz
+
+# Transkrip per sel yang dirakit jadi satu berkas Markdown untuk dibaca manusia
+# (`scripts/rakit_transkrip.py`). 73 MB, dan seluruhnya TURUNAN: sumbernya
+# `bench/*.json` + `factor/*.json` yang di-track, ditambah `llm_outputs/` dari
+# arsip `hasil_*.tar.gz`. Bangkitkan ulang dengan
+#   python scripts/rakit_transkrip.py
+lampiran_dibaca/

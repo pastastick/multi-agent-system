@@ -49,12 +49,27 @@ Implementasi: `backend/llm/client.py::_CoreEngine._latent_step_vec`.
 | `gumbel` | $z = \mathrm{softmax}((\log\pi + g)/\tau)\,W_\text{in}$, $g\sim$Gumbel | **Stochastic Soft Thinking**, arXiv:2508.03440 Eq. 4 |
 | `moi` | $w = [H p + (\beta{+}1{-}H)\,\mathbb{1}_y]/(\beta{+}1)$, $z = w W_\text{in}$ | **Mixture of Inputs**, arXiv:2505.14827 (NeurIPS 2025) |
 | `sample` | $y\sim\mathrm{Cat}(\mathrm{softmax}(\ell/T))$, $z = W_\text{in}[y]$ | dekode kategoris standar (baseline di ketiga paper) |
-| `soft` | $z = \mathrm{softmax}(\ell/T)\,W_\text{in}$ | **kontrol**, bukan salah satu dari empat |
+| `soft` | $z = \mathrm{softmax}(\ell/T)\,W_\text{in}$ | **Soft Thinking** |
 
-`soft` ada untuk memisahkan dua efek yang mudah tertukar: "berada di manifold
-embedding" (dimiliki `soft`) versus "entropi tambahan" (dimiliki `gumbel`).
-Tanpa `soft`, kemenangan `gumbel` atas `raw` tak bisa diatribusikan ke salah
-satunya. Ia dilaporkan terpisah dan **tidak dihitung sebagai metode keempat**.
+Himpunan yang dibandingkan dinyatakan sebagai
+
+$$\mathcal M = \{\texttt{raw},\ \texttt{soft},\ \texttt{sample},\ \texttt{gumbel},\ \texttt{moi}\},
+\qquad
+\mathcal R = \mathcal M \setminus \{\texttt{raw}\}.$$
+
+$\mathcal R$ adalah **keluarga relaksasi diskret**: setiap anggotanya membentuk
+$z$ sebagai kombinasi konveks baris $W_\text{in}$, sehingga hasilnya selalu di
+dalam convex hull embedding. `raw` satu-satunya yang di luar, karena fungsi
+objektif ridge tak memaksa koefisiennya taknegatif dan berjumlah satu.
+
+> **Perubahan 2026-08-27.** Sampai tanggal itu `soft` dicatat sebagai
+> "kontrol, bukan salah satu dari empat". Label itu dibatalkan karena
+> bertentangan dengan analisis yang sudah terbit: kontras keluarga-vs-`raw`
+> merata-ratakan keempat anggota $\mathcal R$ termasuk `soft`, dan uji Cochran
+> $Q$ dijalankan dengan $k=5$. Peran `soft` sebagai pemisah dua efek — "berada
+> di manifold embedding" (dimiliki `soft`) versus "entropi tambahan" (dimiliki
+> `gumbel`) — tetap berlaku sebagai **cara membaca hasil**, bukan sebagai
+> status desain yang berbeda.
 
 Catatan penting dari Tahap 0 yang harus diulang di skripsi: flag `use_realign`
 **inert** di luar mode `raw`, dan bahkan di dalam `raw` ia tak mengubah apa pun
@@ -81,21 +96,35 @@ salinan angka yang sama akan terbaca sebagai empat pengamatan independen di
 tabel dan membuat uji statistiknya salah. `scripts/gen_perintah.py` menegakkan
 aturan ini.
 
-## 3. Empat tugas
+## 3. Dua lengan yang setara
 
-Tiga dari LatentMAS (satu per kategori, dipilih dari loader yang ada di
-`reference/LatentMAS/data.py`), satu dari domain proyek ini:
+Eksperimen berdiri di atas **dua lengan**, bukan satu lengan utama plus satu
+tambahan. Keduanya memakai mesin laten yang sama persis, sehingga selisih yang
+terukur tak bisa dituduh berasal dari implementasi yang berbeda.
+
+| lengan | pertanyaan yang dijawab | rantai |
+|---|---|---|
+| **bench** (replikasi LatentMAS) | apakah agen masih bisa **bernalar** setelah teks dihapus dari handoff | planner → critic → refiner → judger |
+| **faktor** (generasi DSL) | apakah agen masih bisa **membawa struktur yang harus tepat** | proposal → innovate → construct |
+
+Lengan bench:
 
 | kategori | benchmark | n | metrik utama |
 |---|---|---:|---|
 | math & science reasoning | **GSM8K** (`openai/gsm8k`, test) | 1319 | exact-match `\boxed{}` |
 | commonsense reasoning | **ARC-Challenge** (`allenai/ai2_arc`, test) | 1172 | exact-match `\boxed{}` |
 | code generation | **HumanEval+** (`evalplus/humanevalplus`, test) | 164 | pass@1 (eksekusi tes) |
-| **simbolik (DSL)** | **generasi faktor alpha** | — | gate + RankIC + backtest |
 
-Tugas keempat adalah kontribusi yang membedakan skripsi ini dari replikasi:
-ia menguji medium yang sama pada muatan **simbolik**, tempat Tahap 0 sudah
-menunjukkan kanal laten resmi gagal total.
+Lengan faktor adalah **stress test** yang membedakan skripsi ini dari
+replikasi: ia menguji medium yang sama pada muatan yang seluruhnya simbolik,
+tempat Tahap 0 sudah menunjukkan kanal laten resmi gagal total. Ia juga lengan
+dengan data terkaya — `agent_trace` merekam per-agen (`kv_len`, token masuk /
+keluar, waktu laten / generasi, `parsed_ok`), sehingga kerusakan bisa dilacak
+sampai ke hop mana ia muncul. Lengan bench tak menyimpan itu.
+
+> **Perubahan 2026-08-27.** Dokumen ini sebelumnya menyebut lengan faktor
+> sebagai "tugas keempat". Penyebutan itu diganti: ia lengan uji tersendiri
+> dengan enam level bukti (lihat §4d), bukan satu tugas di antara empat.
 
 Subsample `--limit 200` dengan `--sample-seed` yang sama di semua sel. Soal
 yang sama untuk semua metode adalah syarat uji berpasangan; `bench/compare.py`
@@ -132,6 +161,31 @@ hit-rate dari portofolio desil long–short dollar-neutral.
 > terlihat. Perbandingan antar-metode tetap sah karena semua metode dinilai
 > pipeline yang sama persis — yang tidak sah adalah membaca angkanya sebagai
 > ramalan keuntungan.
+
+**(d) Enam level bukti lengan faktor.** Dengan 20 jalan per sel, uji hipotesis
+formal tak akan punya daya. Yang dipakai adalah bukti berjenjang yang saling
+menguatkan, disusun dari yang paling tak bergantung data pasar ke yang paling
+bergantung — sehingga temuan intinya tidak bisa dituduh bergantung pada mutu
+backtest:
+
+| level | ukuran | alat |
+|---|---|---|
+| 1 keandalan | `parse_rate` keluaran agen `construct` | `analisis/` |
+| 2 eksekusi | `evaluable_rate` (ekspresi bisa dievaluasi) | `eval/ic.py` |
+| 3 fidelitas | lolos gate, korupsi token, fidelitas hop | `gate/`, `eval/fidelity.py` |
+| 4 keberagaman | ekspresi unik, cakupan fungsi DSL, klaster sinyal | `eval/rescore_all.py` |
+| 5 mutu prediktif | RankIC, ICIR, t-stat pada jendela seleksi 2021 | `eval/ic.py` |
+| 6 ketahanan | RankIC pada holdout 2022–2025, berbalik tanda | `eval/skor_holdout.py` |
+
+Level 6 memakai jendela yang **tak pernah** dipakai menyaring ekspresi mana
+pun. Tanpa level itu, pembaca berhak bertanya apakah ekspresi yang dilaporkan
+membawa sinyal atau hanya kebetulan cocok pada 2021.
+
+**(e) Efisiensi per formulasi.** Token keluaran dan waktu dilaporkan **per
+formulasi**, bukan hanya sebagai rentang sel terbaik. Rentang agregat menjawab
+"apakah laten lebih murah dari teks"; ia tidak menjawab "formulasi mana yang
+murahnya berbeda", padahal biaya berhubungan langsung dengan berapa banyak
+teks yang harus dihasilkan ulang ketika keluaran rusak.
 
 ## 5. Uji statistik
 

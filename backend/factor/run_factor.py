@@ -362,13 +362,16 @@ def main() -> None:
     ap.add_argument("--comm-mode", default="kv",
                     choices=["kv", "kv_and_text", "text", "summary"])
     ap.add_argument("--latent-steps", type=int, default=10)
-    # SUMBU A skripsi: persamaan langkah laten. `raw` = ridge W_a resmi
-    # LatentMAS (Teorema A.1); tiga sisanya memproyeksikan balik ke convex hull
-    # embedding. `soft` dipertahankan sebagai kontrol (proyeksi tanpa entropi).
+    # SUMBU A skripsi: persamaan langkah laten, M = {raw, soft, sample, gumbel,
+    # moi}. `raw` = ridge W_a resmi LatentMAS (Teorema A.1) dan satu-satunya
+    # anggota di luar keluarga relaksasi diskret R; keempat sisanya
+    # memproyeksikan balik ke convex hull embedding.
     ap.add_argument("--latent-mode", default="raw",
-                    choices=["raw", "gumbel", "moi", "sample", "soft"],
+                    choices=["raw", "gumbel", "moi", "sample", "soft", "mix"],
                     help="persamaan langkah laten (diteruskan via LATENT_STEP_MODE)")
     ap.add_argument("--latent-temp", type=float, default=0.7)
+    ap.add_argument("--latent-alpha", type=float, default=None,
+                    help="hanya mode mix: 0 = raw persis, 1 = soft persis")
     ap.add_argument("--early-stop-cos", dest="early_stop_cos", type=float,
                     default=None,
                     help="B6: berhenti bila cos(h_k,h_k-1) > nilai ini. "
@@ -426,6 +429,8 @@ def main() -> None:
     # G3: mode langkah laten diteruskan ke client.py lewat env (patch minimal).
     os.environ["LATENT_STEP_MODE"] = args.latent_mode
     os.environ["LATENT_STEP_TEMP"] = str(args.latent_temp)
+    if getattr(args, "latent_alpha", None) is not None:
+        os.environ["LATENT_STEP_ALPHA"] = str(args.latent_alpha)
 
     OUT.mkdir(parents=True, exist_ok=True)
     prompts_path = Path(args.prompts) if args.prompts else FACTOR_PROMPTS

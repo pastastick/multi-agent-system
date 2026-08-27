@@ -1,0 +1,178 @@
+"""Skor ulang korpus ekspresi pada jendela HOLDOUT — tanpa GPU, tanpa merusak angka seleksi.
+
+Kenapa alat ini ada. Seluruh angka IC yang dilaporkan skripsi dihitung pada
+segmen `test` konfigurasi (2021), yaitu jendela yang SAMA dengan yang dipakai
+sistem untuk menilai dan menyaring ekspresi. Pembaca berhak bertanya apakah
+ekspresi itu benar-benar membawa sinyal atau hanya kebetulan cocok pada periode
+tersebut. `daily_pv.h5` memuat data sampai 2026-01, jadi pertanyaan itu bisa
+dijawab langsung: nilai ulang korpus yang sama pada 2022--2025, periode yang tak
+pernah dilihat sistem maupun penulisnya.
+
+Beda dengan `rescore_all.py`, yang MENIMPA field `ic` di dalam
+`frontend_*.json` supaya angka dokumen bisa diverifikasi ulang. Di sini
+penimpaan itu justru berbahaya: ia akan mengganti angka seleksi 2021 yang
+menopang seluruh Bab IV dengan angka holdout. Karena itu skrip ini bekerja pada
+SALINAN, menulis ke berkasnya sendiri, dan memakai cache terpisah supaya kedua
+jendela tak pernah bercampur di satu kunci ekspresi.
+
+Keluaran `results/factor/holdout_<awal>_<akhir>.json`:
+  - `per_ekspresi` : ic/icir/tstat/n_days + metrik backtest pada holdout,
+                     berdampingan dengan ic seleksi yang tersimpan (`ic_seleksi`)
+  - `per_tag`      : agregat per sel (jumlah hidup, rerata |IC|, berapa yang
+                     tetap signifikan, berapa yang berbalik tanda)
+
+Pemakaian:
+    PYTHONPATH=backend python backend/eval/skor_holdout.py
+    PYTHONPATH=backend python backend/eval/skor_holdout.py --window 2022-01-01,2025-12-26
+"""
+from __future__ import annotations
+
+import argparse
+import copy
+import json
+import sys
+import time
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from paths import bootstrap, ensure_out, CACHE, OUT_FACTOR
+bootstrap()
+
+OUT = ensure_out(OUT_FACTOR)
+
+# Split test QuantaAlpha — periode setelah jendela seleksi 2021, belum pernah
+# dipakai untuk menilai maupun menyaring ekspresi mana pun di penelitian ini.
+HOLDOUT = ("2022-01-01", "2025-12-26")
+BUDGET_S = 90
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--window", default=",".join(HOLDOUT),
+                    help="AWAL,AKHIR jendela penilaian (format YYYY-MM-DD)")
+    ap.add_argument("--tags", default="", help="daftar tag dipisah koma (kosong = semua)")
+    ap.add_argument("--budget", type=int, default=BUDGET_S,
+                    help="anggaran detik per ekspresi")
+    ap.add_argument("--fresh", action="store_true",
+                    help="abaikan cache holdout di disk")
+    args = ap.parse_args()
+
+    awal, akhir = [s.strip() for s in args.window.split(",")]
+    label = f"{awal}_{akhir}"
+
+    from eval.ic import Lab
+    from factor.run_factor import score_expressions
+
+    paths = sorted(OUT.glob("frontend_*.json"))
+    if args.tags:
+        ingin = {t.strip() for t in args.tags.split(",") if t.strip()}
+        paths = [p for p in paths if p.stem[len("frontend_"):] in ingin]
+    if not paths:
+        print("tidak ada frontend_*.json yang cocok", file=sys.stderr)
+        raise SystemExit(1)
+
+    # Cache DIPISAH per jendela. Kalau ia berbagi berkas dengan `rescore_all`,
+    # kunci cache-nya (ekspresi) akan menunjuk ke IC dari jendela yang salah.
+    cache_path = ensure_out(CACHE) / f"holdout_cache_{label}.json"
+    cache: dict = {}
+    if cache_path.exists() and not args.fresh:
+        cache = json.loads(cache_path.read_text())
+        print(f"[holdout] cache dipulihkan: {len(cache)} ekspresi", flush=True)
+
+    lab = Lab(mode="fast", window=(awal, akhir))
+    print(f"[holdout] {len(paths)} tag · jendela {awal}..{akhir} · "
+          f"anggaran {args.budget}s/ekspresi", flush=True)
+
+    per_tag: list[dict] = []
+    per_ekspresi: list[dict] = []
+    terlihat: set[tuple[str, str]] = set()
+    t0 = time.time()
+
+    for i, path in enumerate(paths, 1):
+        tag = path.stem[len("frontend_"):]
+        doc = json.loads(path.read_text())
+
+        # IC seleksi (2021) yang tersimpan, dipotret SEBELUM salinan diskor —
+        # inilah pembanding yang membuat holdout punya arti.
+        seleksi = {}
+        for r in doc["runs"]:
+            for f in (r.get("factors") or []):
+                e = f.get("expression", "")
+                if e:
+                    seleksi[e] = {k: f.get(k) for k in
+                                  ("ic", "icir", "tstat", "n_days", "n_unique")}
+
+        runs = copy.deepcopy(doc["runs"])
+        ts = time.time()
+        # series_path=None: deret IC harian holdout tidak ditulis. Analisis
+        # klaster sinyal memakai jendela seleksi, dan menulis deret 4 tahun
+        # untuk 151 ekspresi hanya membebani disk tanpa dipakai.
+        score_expressions(runs, series_path=None, budget_s=args.budget,
+                          cache=cache, lab=lab)
+        dt = time.time() - ts
+
+        allf = [f for r in runs for f in (r.get("factors") or [])]
+        hidup = [f for f in allf
+                 if f.get("ic") is not None and (f.get("n_unique") or 0) > 2]
+        n_sig = sum(1 for f in hidup
+                    if f.get("tstat") is not None and abs(f["tstat"]) >= 1.96)
+
+        # Berbalik tanda = ekspresi yang IC-nya positif di seleksi lalu negatif
+        # di holdout (atau sebaliknya). Ini ukuran ketahanan yang lebih tegas
+        # daripada rerata |IC|, yang bisa tetap tinggi meski arahnya kacau.
+        n_balik = 0
+        n_pasangan = 0
+        for f in hidup:
+            e = f["expression"]
+            lama = (seleksi.get(e) or {}).get("ic")
+            if lama is None:
+                continue
+            n_pasangan += 1
+            if float(lama) * float(f["ic"]) < 0:
+                n_balik += 1
+
+        for f in allf:
+            e = f.get("expression", "")
+            if not e or (tag, e) in terlihat:
+                continue
+            terlihat.add((tag, e))
+            baris = {"tag": tag, "expression": e,
+                     "ic_seleksi": (seleksi.get(e) or {}).get("ic"),
+                     "tstat_seleksi": (seleksi.get(e) or {}).get("tstat"),
+                     "lolos_gate": f.get("passed_gate")}
+            baris.update({k: f.get(k) for k in
+                          ("ic", "icir", "tstat", "n_days", "coverage",
+                           "n_unique", "eval_error", "sem_ok")})
+            baris.update({k: v for k, v in f.items() if k.startswith("bt_")})
+            per_ekspresi.append(baris)
+
+        per_tag.append({
+            "tag": tag,
+            "ekspresi": len(allf),
+            "hidup": len(hidup),
+            "signifikan": n_sig,
+            "berpasangan": n_pasangan,
+            "berbalik_tanda": n_balik,
+            "mean_abs_ic": (sum(abs(f["ic"]) for f in hidup) / len(hidup)
+                            if hidup else None),
+        })
+        print(f"[{i:2d}/{len(paths)}] {tag:28s} ekspr={len(allf):3d} "
+              f"hidup={len(hidup):3d} sig={n_sig:3d} balik={n_balik:2d}  "
+              f"({dt:5.1f}s)", flush=True)
+        cache_path.write_text(json.dumps(cache, indent=1, default=str))
+
+    rep = OUT / f"holdout_{label}.json"
+    rep.write_text(json.dumps({
+        "window": [awal, akhir],
+        "budget_s": args.budget,
+        "n_ekspresi_unik": len(cache),
+        "per_tag": per_tag,
+        "per_ekspresi": per_ekspresi,
+    }, indent=2, default=str))
+    print(f"\n[holdout] selesai dalam {time.time() - t0:.0f}s · "
+          f"{len(cache)} ekspresi unik dievaluasi", flush=True)
+    print(f"laporan → {rep}", flush=True)
+
+
+if __name__ == "__main__":
+    main()

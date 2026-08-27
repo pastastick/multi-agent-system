@@ -64,6 +64,8 @@ def build_backend(args: argparse.Namespace):
     os.environ["LATENT_STEP_TEMP"] = str(args.latent_temp)
     if args.latent_beta is not None:
         os.environ["LATENT_STEP_BETA"] = str(args.latent_beta)
+    if args.latent_alpha is not None:
+        os.environ["LATENT_STEP_ALPHA"] = str(args.latent_alpha)
 
     from llm.client import get_local_backend
 
@@ -152,6 +154,7 @@ def run_cell(args: argparse.Namespace) -> dict:
             "latent_steps": args.latent_steps,
             "latent_temp": args.latent_temp,
             "latent_beta": args.latent_beta,
+            "latent_alpha": args.latent_alpha,
             "use_realign": not args.no_realign,
             "comm_mode": args.comm_mode,
             "chain": list(chain),
@@ -175,15 +178,18 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--task", required=True,
                     choices=["gsm8k", "arc_challenge", "humanevalplus"])
-    # ── SUMBU A: persamaan langkah laten (4 metode + kontrol `soft`) ────────
+    # ── SUMBU A: persamaan langkah laten, M = {raw, soft, sample, gumbel, moi} ──
     ap.add_argument("--latent-mode", default="raw",
-                    choices=["raw", "gumbel", "moi", "sample", "soft"],
-                    help="raw = ridge W_a resmi LatentMAS; sisanya proyeksi "
-                         "balik ke convex hull embedding")
+                    choices=["raw", "gumbel", "moi", "sample", "soft", "mix"],
+                    help="raw = ridge W_a resmi LatentMAS; keempat sisanya "
+                         "keluarga relaksasi diskret R (proyeksi balik ke "
+                         "convex hull embedding)")
     ap.add_argument("--latent-steps", type=int, default=10)
     ap.add_argument("--latent-temp", type=float, default=0.7)
     ap.add_argument("--latent-beta", type=float, default=None,
                     help="hanya mode moi (default paper: 1.0)")
+    ap.add_argument("--latent-alpha", type=float, default=None,
+                    help="hanya mode mix: 0 = raw persis, 1 = soft persis")
     ap.add_argument("--no-realign", action="store_true",
                     help="use_realign=False; hanya berpengaruh di mode raw")
     # ── SUMBU B: medium komunikasi antar-agen ──────────────────────────────

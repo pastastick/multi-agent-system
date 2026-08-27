@@ -36,6 +36,21 @@ def load_cfg(path: Path) -> dict:
     return yaml.safe_load(path.read_text(encoding="utf8"))
 
 
+def _latent_modes(cfg: dict) -> list[str]:
+    """Himpunan M = {raw, soft, sample, gumbel, moi}, satu sumber untuk kedua lengan.
+
+    `kontrol_latent_mode` masih dibaca supaya konfigurasi lama (yang menaruh
+    `soft` terpisah sebagai kontrol) tetap menghasilkan daftar sel yang sama.
+    Sejak 2026-08-27 kunci itu tak lagi dipakai `matriks.yaml`: `soft` adalah
+    anggota penuh, bukan kontrol.
+    """
+    modes = list(cfg["latent_modes"])
+    kontrol = cfg.get("kontrol_latent_mode")
+    if kontrol and kontrol not in modes:
+        modes.append(kontrol)
+    return modes
+
+
 def bench_commands(cfg: dict) -> list[str]:
     b = cfg["bench"]
     model, ls = cfg["model"], cfg["latent_steps"]
@@ -83,9 +98,7 @@ def bench_commands(cfg: dict) -> list[str]:
                         f"--comm-mode {cfg['comm_mode_tanpa_laten']} "
                         f"--latent-mode raw --tag {tag}")
             # Matriks penuh Sumbu A × Sumbu B untuk medium ber-KV.
-            modes = list(cfg["latent_modes"])
-            if cfg.get("kontrol_latent_mode"):
-                modes.append(cfg["kontrol_latent_mode"])
+            modes = _latent_modes(cfg)
             for comm in cfg["comm_modes"]:
                 lampiran = (comm == lampiran_mode)
                 for mode in modes:
@@ -114,19 +127,60 @@ def factor_commands(cfg: dict) -> list[str]:
     # berlaku saat run tercatat bersama sel-selnya, bukan supaya diteruskan.
     cmds = [f"{base} --comm-mode {cfg['comm_mode_tanpa_laten']} "
             f"--latent-mode raw --tag text"]
-    modes = list(cfg["latent_modes"])
-    if cfg.get("kontrol_latent_mode"):
-        modes.append(cfg["kontrol_latent_mode"])
     for comm in cfg["comm_modes"]:
-        for mode in modes:
+        for mode in _latent_modes(cfg):
             cmds.append(f"{base} --comm-mode {comm} --latent-mode {mode} "
                         f"--tag {comm}_{mode}")
     return cmds
 
 
+def interpolasi_commands(cfg: dict) -> list[str]:
+    """Sumbu C: kurva dose-response lewat mode `mix`.
+
+    Hanya nilai alpha di `alphas_perlu_run` yang dikeluarkan. Titik ujung
+    (alpha 0 dan 1) sengaja dilewati karena menghasilkan vektor yang identik
+    dengan sel `raw` dan `soft` yang sudah ada — menjalankannya ulang hanya
+    membakar GPU untuk angka yang sudah dimiliki, dan hasilnya pun tak akan
+    persis sama karena sampling ulang, sehingga kurvanya justru jadi lebih
+    sulit dibaca, bukan lebih mudah.
+    """
+    it = cfg.get("interpolasi")
+    if not it:
+        return []
+    b = cfg["bench"]
+    base_bench = (f"{PY} backend/bench/run_bench.py --model {cfg['model']} "
+                  f"--latent-steps {cfg['latent_steps']} "
+                  f"--latent-temp {cfg['latent_temp']} "
+                  f"--sample-seed {b['sample_seed']} "
+                  f"--temperature {b['temperature']} --top-p {b['top_p']} "
+                  f"--max-new-tokens {b['max_new_tokens']} --limit {b['limit']}")
+    f = cfg["factor"]
+    base_faktor = (f"{PY} backend/factor/run_factor.py --model {cfg['model']} "
+                   f"--latent-steps {cfg['latent_steps']} "
+                   f"--latent-temp {cfg['latent_temp']} "
+                   f"--seeds {','.join(str(x) for x in f['seeds'])} "
+                   f"--directions {','.join(f['directions'])} "
+                   f"--chain {f['chain']} --max-repair {f['max_repair']}")
+
+    cmds = []
+    for a in it["alphas_perlu_run"]:
+        tanda = f"a{a}".replace(".", "")          # 0.25 -> a025
+        for task in it["bench_tasks"]:
+            for seed in b["seeds"]:
+                cmds.append(f"{base_bench} --task {task} --seed {seed} "
+                            f"--comm-mode {it['comm_mode']} --latent-mode mix "
+                            f"--latent-alpha {a} --tag s{seed}_{tanda}")
+        if it.get("jalankan_lengan_faktor"):
+            cmds.append(f"{base_faktor} --comm-mode {it['comm_mode']} "
+                        f"--latent-mode mix --latent-alpha {a} "
+                        f"--tag {it['comm_mode']}_mix_{tanda}")
+    return cmds
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--arm", required=True, choices=["bench", "factor", "all"])
+    ap.add_argument("--arm", required=True,
+                    choices=["bench", "factor", "interpolasi", "all"])
     ap.add_argument("--config", default=str(CONFIGS / "matriks.yaml"))
     ap.add_argument("--parallel", type=int, default=0,
                     help="bila >0, keluarkan skrip shell yang menjalankan N sel "
@@ -139,6 +193,8 @@ def main() -> None:
         cmds += bench_commands(cfg)
     if args.arm in ("factor", "all"):
         cmds += factor_commands(cfg)
+    if args.arm in ("interpolasi", "all"):
+        cmds += interpolasi_commands(cfg)
 
     if args.parallel <= 0:
         print(f"# {len(cmds)} sel dari {args.config}")

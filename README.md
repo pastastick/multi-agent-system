@@ -50,17 +50,43 @@ topology, prompts, backbone, and the exact questions:
 | `sample` | $w = e_y$ | ✓ | categorical sampling (discrete control) |
 | `moi` | entropy-weighted posterior of $p$ and $e_y$ | ✓ | Mixture of Inputs |
 
-The harness spans **three communication media** (`text`, `kv`, `kv_and_text`,
-plus a single-agent reference) and **four tasks** — GSM8K, ARC-Challenge,
-HumanEval+, and alpha-factor DSL generation, ordered by how exactly the output
-symbols must be written. The headline benchmark comparison covers `text`, `kv`,
-and the single-agent reference at 100 questions per cell; `kv_and_text` ran at
-5 questions per cell as a transcript supplier only, and is excluded from every
-table and test below. All runs are training-free on a
-local **Qwen3-8B** with $m = 10$ latent steps and a fixed sequential chain —
-four agents on the benchmark arm (planner → critic → refiner → judger), three
-on the factor arm (proposal → innovate → construct), single-pass, no evolution
-layer.
+Write $\mathcal M$ for the five and $\mathcal R = \mathcal M \setminus \{\texttt{raw}\}$
+for the **discrete-relaxation family** — every member of $\mathcal R$ builds the
+latent step as a convex combination of $W_\text{in}$ rows, so it always lands
+inside the embedding convex hull. `raw` is the only one outside it, because the
+ridge objective never forces its coefficients to be non-negative and sum to one.
+
+A sixth mode, `mix`, interpolates continuously between `raw` and `soft`:
+$z(\alpha) = \mathrm{normalize}\!\left((1-\alpha)\,z_\texttt{raw} + \alpha\,z_\texttt{soft}\right)$.
+It is not a proposed method — it is a **measuring axis**. Five separate
+formulations can only show that geometry and performance move together; `mix`
+fills the gap between them so the *shape* of that relationship can be tested.
+At $\alpha = 0$ and $\alpha = 1$ it reduces exactly to `raw` and `soft`
+(verified numerically), so the curve's endpoints reuse cells that already ran.
+
+The harness runs **two arms of equal standing**, not one main arm plus an
+add-on. They share the same latent engine, so any difference between them
+cannot be blamed on differing implementations:
+
+| arm | question it answers | chain |
+|---|---|---|
+| **benchmark** | can agents still **reason** once text is removed from the handoff? | planner → critic → refiner → judger |
+| **factor** | can agents still **carry structure that has to be exact**? | proposal → innovate → construct |
+
+The benchmark arm covers GSM8K, ARC-Challenge and HumanEval+ across **three
+communication media** (`text`, `kv`, `kv_and_text`, plus a single-agent
+reference). Its headline comparison covers `text`, `kv`, and the single-agent
+reference at 100 questions per cell; `kv_and_text` ran at 5 questions per cell
+as a transcript supplier only, and is excluded from every table and test below.
+
+The factor arm is the stricter of the two, and the better instrumented: its
+`agent_trace` records per-hop KV length, tokens in/out, latent and generation
+time, and parse status — none of which the benchmark arm keeps. Its evidence is
+deliberately **tiered** rather than forced into one hypothesis test: parse rate
+→ evaluable rate → symbolic fidelity → diversity → RankIC → holdout robustness.
+
+All runs are training-free on a local **Qwen3-8B** with $m = 10$ latent steps
+and fixed sequential chains, single-pass, no evolution layer.
 
 ## 📊 Key results
 
@@ -78,11 +104,20 @@ involving `raw`**. No pair inside the convex family survives anywhere. The
 contrast between the family mean and `raw` is $+0.062$ on GSM8K and $+0.035$ on
 ARC-C (both CIs contain zero) but $+0.295$ on HumanEval+ (CI $[+0.205, +0.388]$).
 
-**2 — Latent communication replicates the efficiency claim.**
+**2 — Latent communication replicates the efficiency claim — on both arms.**
 Against the text medium: **75.0%–87.8% fewer output tokens** and
-**1.8×–6.1× faster**, bracketing the 70.8%–83.7% reported by LatentMAS on
-different hardware and a different implementation. Accuracy is comparable, not
-better — the supported claim is *same accuracy, far lower cost*.
+**1.8×–6.1× faster** on the benchmark arm, bracketing the 70.8%–83.7% reported
+by LatentMAS on different hardware and a different implementation. The factor
+arm lands on **75.5%–87.4%** and **2.0×–5.8×** — an independent replication
+with a different agent chain, different prompts, and a different task.
+Accuracy is comparable, not better; the supported claim is *same accuracy, far
+lower cost*.
+
+The saving is also **not uniform across formulations**, and the ordering is
+the same on both arms: `raw` is the *least* efficient everywhere (75.0% / 79.7%
+/ 82.3% on the three benchmarks, the minimum on each; 75.5% on the factor arm).
+It is not a cheaper-but-worse trade — corrupted latent input makes the final
+agent write more, so `raw` is worse on **both** axes at once.
 
 **3 — The mechanism is geometric, and it is visible.**
 
@@ -100,11 +135,24 @@ payload while the convex family recalls 0.34–0.38 at $m=10$ and 0.72–0.87 at
 $m=40$.
 
 **4 — On symbolic output the gap becomes a wall.**
-In the alpha-factor arm, `raw` produced unparsable output on **14 of 18 calls
-(78%)**, versus 0%–40% for the convex family, and yielded 11 expressions (3
-evaluable) against 22–33 (21–26 evaluable). Damage shows up as sub-word
-corruption — `"f actor"`, `"abnormallylyhigh-volumeolumedays"` — harmless in a
-one-number answer, fatal in an identifier.
+Measured per **trajectory** (one direction × seed), so the denominator is the
+same in every cell — earlier figures counted LLM calls, which differ per cell
+because the quality gate re-invokes `construct` on failure:
+
+| cell | produced an expression | passed the gate | `construct` calls per trajectory |
+|---|---:|---:|---:|
+| `text` | 100% | 100% | 1.33 |
+| `kv` + `soft` | 100% | 100% | 1.00 |
+| `kv` + `gumbel` | 83% | 83% | 1.33 |
+| `kv` + `moi` | 83% | 83% | 1.17 |
+| `kv` + `sample` | 67% | 67% | 1.33 |
+| `kv` + `raw` | 67% | **17%** | **2.50** |
+
+`raw` produces expressions as often as `sample` but only 17% of them survive
+the gate, and it needs 2.5 attempts per trajectory to get there — its failure
+is one of *quality*, not of production. Damage shows up as sub-word corruption
+— `"f actor"`, `"abnormallylyhigh-volumeolumedays"` — harmless in a one-number
+answer, fatal in an identifier.
 
 > Full statistics, ablations, and threats to validity live in
 > [`docs/HASIL_TAHAP0.md`](docs/HASIL_TAHAP0.md) and the thesis (Indonesian).
@@ -121,10 +169,12 @@ backend/
   gate/       expression quality gate: regulator, arity, redundancy, complexity
   eval/       ic.py · backtest.py · stats.py · fidelity.py · channel_capacity.py
               compare_modes.py · realign_probe.py · b7_probe.py · rescore_all.py
+              skor_holdout.py — rescore the corpus on an untouched window
   prompts/    factor.yaml (QuantaLatent) · bench.yaml (ported from LatentMAS)
   paths.py    canonical paths + sys.path bootstrap     qlog.py  logger (loguru)
 configs/      matriks.yaml — the experiment cell list (single source of truth)
 scripts/      gen_perintah.py (derive run commands) · jalankan_matriks.py (runner)
+              rakit_transkrip.py (one readable Markdown per cell)
 reference/    LatentMAS @9a9e4d3 · mixinputs @7aef34b (pinned, READ-ONLY)
 docs/         experiment design, staged results, critical audit (Indonesian)
 results/      tracked run artifacts — probe/ · bench/ · factor/ · pendukung/
@@ -242,6 +292,7 @@ thesis they support.
 |---|---|
 | [`docs/PANDUAN.md`](docs/PANDUAN.md) | setup on RunPod, environment, data, troubleshooting |
 | [`docs/DESAIN_EKSPERIMEN.md`](docs/DESAIN_EKSPERIMEN.md) | what is measured and why — read this first |
+| [`docs/TEORI.md`](docs/TEORI.md) | assumptions and proofs: the unifying framework, the interpolation axis, the statistics (incl. a power analysis for the factor arm) |
 | [`docs/HASIL_TAHAP0.md`](docs/HASIL_TAHAP0.md) | Stage-0 numbers, per-mode formulas, fidelity derivations |
 | [`docs/HASIL_TAHAP4.md`](docs/HASIL_TAHAP4.md) | earlier staged results on the production path |
 | [`docs/AUDIT_KRITIS.md`](docs/AUDIT_KRITIS.md) | critical audit of factor quality, reproducible on CPU |

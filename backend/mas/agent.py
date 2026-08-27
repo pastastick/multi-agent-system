@@ -74,6 +74,13 @@ class AgentSpec:
     # Efek: struktur output dipaksa valid token-per-token, bukan dijinjit prompt.
     # Biaya: latensi +10–20%. Batas: grammar menjamin BENTUK, bukan ISI.
     json_schema: Optional[Any] = None
+    # Prefill: teks yang mengisi awal giliran asisten, dikirim sebagai input
+    # dan dipasang kembali ke hasil dekode. Menutup kasus agen yang mewarisi
+    # KV berisi objek JSON utuh dari agen hulu lalu melanjutkan seolah masih
+    # di dalam objek itu — keluarannya mulai dari NILAI, tanpa pembuka, dan
+    # gagal diurai. Isinya spesifik kontrak keluaran agen, karena itu
+    # ditulis di prompts.yaml, bukan di lapisan engine.
+    prefill: str = ""
     # NO-CROP default (prod): pertahankan jawaban yang di-generate di KV agar
     # agent berikut membaca output ASLI, bukan cuma vektor laten yang lossy.
     # Set False (di YAML) untuk perilaku lama (crop, anti-contamination).
@@ -196,6 +203,7 @@ class LatentAgent:
                 json_mode=self.spec.json_mode,
                 json_schema=self.spec.json_schema,
                 crop_after_generate=not self.spec.keep_answer_in_kv,
+                prefill=self.spec.prefill,
             )
         dur = time.time() - t0
 
@@ -292,6 +300,7 @@ def _load_specs(path: Path = _PROMPTS_PATH) -> Dict[str, AgentSpec]:
             parser=PARSERS.get(parser_name),
             json_mode=cfg.get("json_mode", False),
             json_schema=_resolve_json_schema(cfg.get("json_schema")),
+            prefill=cfg.get("prefill", ""),
             keep_answer_in_kv=cfg.get("keep_answer_in_kv", True),
         )
     return specs

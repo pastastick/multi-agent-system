@@ -210,6 +210,7 @@ class _CoreEngine:
         latent_step_mode: Optional[str]   = None,
         latent_step_temp: Optional[float] = None,
         latent_step_beta: Optional[float] = None,
+        latent_step_alpha: Optional[float] = None,
         latent_early_stop_cos: Optional[float] = None,
     ) -> None:
         self.model_name      = model_name
@@ -303,6 +304,14 @@ class _CoreEngine:
             if latent_step_beta is not None
             else os.environ.get("LATENT_STEP_BETA", "1.0")
         )
+        # α hanya dipakai mode "mix" (sumbu interpolasi raw<->soft).
+        # Default 1.0 = ujung `soft`, dipilih supaya salah setel tak
+        # diam-diam menghasilkan campuran yang tak dimaksudkan siapa pun.
+        self.latent_step_alpha = float(
+            latent_step_alpha
+            if latent_step_alpha is not None
+            else os.environ.get("LATENT_STEP_ALPHA", "1.0")
+        )
         if self.latent_step_mode not in LATENT_STEP_MODES:
             raise ValueError(
                 f"LATENT_STEP_MODE={self.latent_step_mode!r} tidak dikenal; "
@@ -375,6 +384,7 @@ class _CoreEngine:
             realigner=self.realigner,
             temp=self.latent_step_temp,
             beta=self.latent_step_beta,
+            alpha=self.latent_step_alpha,
         )
 
     # ── Chat formatting ────────────────────────────────────────────────────
@@ -635,11 +645,18 @@ class _CoreEngine:
         repetition_penalty: float = 1.05,
         return_kv      : bool  = False,
         prefix_allowed_tokens_fn: Optional[Any] = None,
+        prefill        : str   = "",
     ) -> Tuple[str, torch.Tensor, torch.Tensor, Optional[KVCache]]:
         """
         Generate teks. Opsional kembalikan KV-cache sesudah generate.
 
         Args:
+            prefill: teks yang mengisi awal giliran asisten (lihat
+                `generate_from_kv`). Dipasang di sini juga — bukan hanya di
+                jalur KV yang bermasalah — supaya prosedur pembangkitan
+                IDENTIK di ketiga medium. Perbedaan prosedur antar-medium
+                justru akan mencemari perbandingan medium yang menjadi salah
+                satu pertanyaan penelitian.
             prefix_allowed_tokens_fn: Callable (batch_id, input_ids) -> list[int]
                 yang membatasi token boleh-keluar di setiap step dekoder.
                 Diteruskan ke model.generate() untuk guided decoding
@@ -648,7 +665,11 @@ class _CoreEngine:
         Returns:
             (text, input_ids [1,L], output_ids [1,G], kv atau None)
         """
-        prompt = self.format_messages(messages)
+        # prefill disambung sebagai STRING sebelum tokenisasi supaya BPE merge
+        # di batas prefix-asisten/prefill sama dengan yang dilihat model saat
+        # dilatih; menokenisasinya terpisah lalu menyambung id bisa memecah
+        # merge itu.
+        prompt = self.format_messages(messages) + prefill
         ids, mask = self.tokenize(prompt)
         prompt_len = int(mask.sum())
 
@@ -689,6 +710,7 @@ class _CoreEngine:
 
         if not self.enable_thinking:
             text = self._strip_thinking(text)
+        text = self._join_prefill(prefill, text)
 
         kv_out = out.past_key_values if return_kv else None
         return text, ids, generated_ids.unsqueeze(0), kv_out
@@ -696,20 +718,43 @@ class _CoreEngine:
     # ── Generation from existing KV (kv_and_text mode) ──────────────────
     # [terjawab — skripsi Bab 4 §Pemrosesan Prompt]:
     #   prefix_ids = tok_with[len(tok_without):] (selisih tokenisasi full-text).
+    @staticmethod
+    def _join_prefill(prefill: str, text: str) -> str:
+        """Sambung kembali prefill ke lanjutan yang dibangkitkan model.
+
+        Prefill ikut dikirim sebagai input, sehingga ia TIDAK ada di
+        `generated_ids` dan harus dipasang lagi di depan teks.
+
+        Satu penjagaan, dan sengaja yang paling sederhana: bila lanjutan itu
+        sendiri sudah dibuka `{`, model mengabaikan prefill dan menulis
+        objeknya sendiri dari awal — menempelkan prefill di depannya justru
+        akan MERUSAK keluaran yang sehat (`{"hypothesis": {"hypothesis": …`).
+        Dalam kasus itu prefill dibuang dan teks model dipakai apa adanya.
+
+        Akibatnya perubahan ini no-op untuk sel yang keluarannya memang sudah
+        utuh, dan hanya menutup kasus keluaran yang mulai dari tengah objek.
+        """
+        if not prefill or text.lstrip().startswith("{"):
+            return text
+        return prefill + text
+
     def _get_generation_prefix_ids(
-        self, messages: List[Dict[str, str]],
+        self, messages: List[Dict[str, str]], prefill: str = "",
     ) -> torch.Tensor:
         """
         Ekstrak token IDs untuk assistant generation prefix.
 
         Cara kerja:
-            1. Tokenize prompt DENGAN add_generation_prompt=True
+            1. Tokenize prompt DENGAN add_generation_prompt=True (+ prefill)
             2. Tokenize prompt TANPA add_generation_prompt
             3. Selisih = token prefix assistant (misal ``<|im_start|>assistant\\n``)
 
-        Menggunakan tokenisasi full-text untuk menjaga BPE merge di batas.
+        Menggunakan tokenisasi full-text untuk menjaga BPE merge di batas —
+        termasuk batas antara prefix asisten dan `prefill`, yang karena itu
+        disambung sebagai STRING sebelum ditokenisasi, bukan ditokenisasi
+        terpisah lalu digabung sebagai id.
         """
-        prompt_with = self.format_messages(messages, add_generation_prompt=True)
+        prompt_with = self.format_messages(messages, add_generation_prompt=True) + prefill
         prompt_without = self.format_messages(messages, add_generation_prompt=False)
 
         ids_with = self.tokenizer(
@@ -740,11 +785,20 @@ class _CoreEngine:
         repetition_penalty: float = 1.05,
         return_kv      : bool  = True,
         prefix_allowed_tokens_fn: Optional[Any] = None,
+        prefill        : str   = "",
     ) -> Tuple[str, torch.Tensor, torch.Tensor, Optional[KVCache]]:
         """
         Generate teks dari KV-cache yang sudah ada TANPA re-encode pesan.
 
         Dipakai setelah latent_pass() di kv_and_text mode.
+
+        `prefill` mengisi awal giliran asisten dengan teks yang SUDAH pasti,
+        lalu memasangnya kembali ke hasil dekode. Ini yang menutup artefak
+        `kv_and_text` pada lengan faktor: agen yang mewarisi KV berisi objek
+        JSON utuh dari agen hulu cenderung melanjutkan seolah masih berada di
+        dalam objek itu, sehingga keluarannya dimulai dari nilai — tanpa `{`
+        pembuka — dan gagal diurai. Bukan pemotongan oleh harness: panjang
+        teks yang tercatat sama persis dengan yang dibangkitkan model.
 
         Flow:
             latent_pass(messages, add_generation_prompt=False)
@@ -759,7 +813,7 @@ class _CoreEngine:
         Returns:
             (text, prefix_ids [1, P], output_ids [1, G], kv atau None)
         """
-        prefix_ids = self._get_generation_prefix_ids(messages)
+        prefix_ids = self._get_generation_prefix_ids(messages, prefill)
         prefix_len = prefix_ids.shape[-1]
 
         past_len = _past_length(past_kv)
@@ -790,6 +844,10 @@ class _CoreEngine:
 
         if not self.enable_thinking:
             text = self._strip_thinking(text)
+        # Prefill dipasang SESUDAH strip thinking: ia bukan bagian dari
+        # lanjutan yang dibangkitkan model, jadi ia tak boleh ikut tersapu
+        # regex penghapus blok <think>.
+        text = self._join_prefill(prefill, text)
 
         kv_out = out.past_key_values if return_kv else None
         return text, prefix_ids, generated_ids.unsqueeze(0), kv_out
