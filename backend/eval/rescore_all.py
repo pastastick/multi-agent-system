@@ -96,7 +96,15 @@ def main() -> None:
                     help="ambang |ΔIC| yang dianggap tak sama")
     ap.add_argument("--fresh", action="store_true",
                     help="abaikan cache di disk dan hitung ulang semuanya")
+    ap.add_argument("--workers", type=int, default=1,
+                    help="proses pekerja untuk skoring ekspresi (1 = serial). "
+                         "Pekerja berbagi satu salinan data pasar lewat fork; "
+                         "aman karena jalur skoring hanya membaca. Naikkan ke "
+                         "min(4, ncpu) untuk korpus besar.")
     args = ap.parse_args()
+    import os as _os
+    if args.workers <= 0:
+        args.workers = min(4, _os.cpu_count() or 1)
 
     from eval.ic import Lab
     from factor.run_factor import score_expressions
@@ -146,6 +154,28 @@ def main() -> None:
     missing_before: list[tuple] = []  # faktor yang dulu tak punya IC tersimpan
     per_tag: list[dict] = []
     t0 = time.time()
+
+    # ── Pra-lewat paralel atas SELURUH korpus ──────────────────────────────
+    # Deret IC harian ikut terkumpul di `series_cache` (dioper by-ref), jadi
+    # loop per-tag di bawah tinggal menulis parquet-nya tanpa evaluasi ulang.
+    if args.workers > 1:
+        gabungan = [r for p in paths if p.exists()
+                    for r in json.loads(p.read_text())["runs"]]
+        n0 = len(cache)
+        tk = [time.time()]
+
+        def _prog(i, total, e, entry):
+            if time.time() - tk[0] >= 20 or i == total:
+                tk[0] = time.time()
+                print(f"[rescore/paralel] {i:3d}/{total}  {e[:64]}", flush=True)
+
+        score_expressions(gabungan, series_path=None, budget_s=args.budget,
+                          cache=cache, lab=lab, series_cache=series_cache,
+                          workers=args.workers, on_progress=_prog)
+        if not args.dry_run:
+            save_cache(cache, series_cache)
+        print(f"[rescore/paralel] {len(cache) - n0} ekspresi baru diskor "
+              f"({time.time() - t0:.0f}s); lanjut menulis per-tag\n", flush=True)
 
     for i, path in enumerate(paths, 1):
         tag = path.stem[len("frontend_"):]

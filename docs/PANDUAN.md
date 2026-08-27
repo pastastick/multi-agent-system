@@ -281,11 +281,21 @@ itu hanya bisa diasumsikan linier, dan asumsi itu tak diuji.
 
 ```bash
 python backend/bench/compare.py --out results/bench/analisis.json   # McNemar + CI bootstrap
-PYTHONPATH=backend python backend/eval/rescore_all.py               # skor ulang korpus faktor (2021)
-PYTHONPATH=backend python backend/eval/skor_holdout.py              # level 6: jendela 2022-2025
+PYTHONPATH=backend python backend/eval/rescore_all.py --workers 4    # skor ulang korpus faktor (2021)
+PYTHONPATH=backend python backend/eval/skor_holdout.py --workers 4   # level 6: jendela 2022-2025
 python backend/eval/compare_modes.py                                # probe kapasitas kanal (Tahap 0)
 python scripts/rakit_transkrip.py                                   # transkrip -> 1 Markdown per sel
 ```
+
+> **`--workers`** memparalelkan evaluasi ekspresi. Proses pekerja mewarisi satu
+> salinan data pasar lewat `fork` copy-on-write — aman karena jalur skoring
+> hanya membaca — jadi RAM tidak berlipat sejumlah pekerja. Anggaran memori:
+> data pasar jendela 4 tahun ≈ 1,1 GB dibagi bersama, plus ≈ 0,5–1 GB sementara
+> per pekerja untuk ekspresi rolling-bersarang. Di mesin 8 GB, `--workers 3`
+> aman; `--workers 4` kalau ≥ 12 GB. `skor_holdout` auto-memilih `min(4, ncpu)`;
+> `rescore_all` default serial (naikkan manual untuk korpus besar). Set
+> `LAB_MAX_WORKERS=1` bila memakai `--workers` — joblib di dalam pekerja
+> otomatis turun ke satu utas, jadi tak ada fan-out bersarang.
 
 > `rescore_all.py` **menimpa** field `ic` di `frontend_*.json` (itu memang
 > tujuannya: memverifikasi angka dokumen bisa direproduksi di CPU).
@@ -324,8 +334,9 @@ python scripts/gen_perintah.py --arm factor > /tmp/faktor.sh
 python scripts/jalankan_matriks.py --arm factor --slots 2
 
 # 3. Skoring CPU untuk hasil baru (tak butuh GPU — boleh di mesin lain).
-PYTHONPATH=backend python backend/eval/rescore_all.py
-PYTHONPATH=backend python backend/eval/skor_holdout.py
+#    Korpus 20 jalan/sel jauh lebih besar — pakai --workers.
+LAB_MAX_WORKERS=1 PYTHONPATH=backend python backend/eval/rescore_all.py --workers 4
+LAB_MAX_WORKERS=1 PYTHONPATH=backend python backend/eval/skor_holdout.py --workers 4
 
 # 4. Interpolasi — ±2-3 jam dinding.
 python scripts/jalankan_matriks.py --arm interpolasi --slots 2
@@ -413,12 +424,22 @@ ke Qwen3-4B. Cek `--empty-cache-every` di `run_bench.py`.
 **`ModuleNotFoundError`** — jalankan dengan `PYTHONPATH=backend` dari root repo,
 bukan dari dalam `backend/`.
 
-**Skoring korpus faktor kena OOM di mesin kecil** — `eval/ic.py` membatasi
-worker joblib lewat `LAB_MAX_WORKERS` (default 3); turunkan ke 1 bila perlu.
-Terukur di mesin 8 GB RAM: `skor_holdout.py` dengan `LAB_MAX_WORKERS=2` puncak
-±1,3 GB dan jalan sampai selesai. Yang mahal justru **membangun cache data
-pasar** untuk jendela baru — `pd.read_hdf` memuat seluruh 14,2 juta baris
-sekaligus (puncak ±0,8 GB), lalu mengirisnya. Cache-nya ditulis sekali ke
+**Skoring korpus faktor lambat / kena OOM** — skoring ekspresi DSL adalah beban
+CPU dominan (rolling bersarang atas jutaan baris; jendela holdout 4 tahun ≈ 4x
+data jendela seleksi). Dua kenop:
+
+- **Kecepatan:** `--workers N` (lihat catatan di §3 "Analisis"). Terukur di
+  mesin 16-core / 8 GB: jendela holdout, `--workers 3` memberi ≈ 2,4x terhadap
+  serial, RAM puncak ≈ 4,6 GB (data pasar ≈ 1,1 GB dibagi bersama lewat fork
+  COW + ≈ 1,1 GB per pekerja).
+- **Memori:** `eval/ic.py` membatasi worker joblib internal lewat
+  `LAB_MAX_WORKERS` (default 3); set `=1` saat memakai `--workers` (joblib di
+  dalam pekerja `multiprocessing` otomatis turun ke satu utas — ada peringatan
+  Loky yang tidak berbahaya).
+
+Yang mahal sekali di awal: **membangun cache data pasar** untuk jendela baru —
+`pd.read_hdf` memuat seluruh 14,2 juta baris sekaligus (puncak ≈ 0,8 GB), lalu
+mengirisnya. Cache-nya ditulis sekali ke
 `results/.cache/pv_fast_<awal>_<akhir>.parquet` dan dipakai ulang seterusnya.
 
 **Sel `kv_and_text` lengan faktor menghasilkan nol ekspresi** — itu gejala yang

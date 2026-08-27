@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import multiprocessing as mp
 import os
 import re
 import sys
@@ -240,10 +241,79 @@ class _time_budget:
         return False
 
 
+def _score_one_expr(e: str, lab, budget_s: int, quantile: float, cost_bps: float):
+    """Skor SATU ekspresi. Dipisah dari `score_expressions` supaya bisa
+    dijalankan di proses pekerja terpisah (paralelisasi skoring korpus).
+
+    Mengembalikan `(entry, series_or_None)` — `entry` adalah dict cache yang
+    sama persis dengan yang dulu disusun inline. Tak menyentuh `runs`, `cache`,
+    atau state bersama apa pun, sehingga aman dipanggil dari `Pool`.
+    """
+    from eval.backtest import backtest_values
+    from eval.ic import ICResult
+    from gate.static_flags import static_flags
+    from gate.factor_regulator import validate_semantics
+
+    ok, errs = validate_semantics(e)
+    bt = None
+    try:
+        with _time_budget(budget_s):
+            vals = lab.values(e)
+            res, ser = lab._ic_core(vals)
+            if res.error is not None or res.ic is None:
+                ser = None
+            bt = backtest_values(lab, vals, quantile=quantile, cost_bps=cost_bps)
+    except TimeoutError:
+        res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
+                            error=f"timeout>{budget_s}s"), None
+    except Exception as ex:  # noqa: BLE001 — ekspresi LLM gagal ribuan cara
+        res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
+                            error=f"{type(ex).__name__}: {ex}"), None
+
+    entry = {
+        "sem_ok": bool(ok), "sem_errors": errs,
+        "flags": static_flags(e),
+        "ic": res.ic, "icir": res.icir, "tstat": res.tstat,
+        "n_days": res.n_days, "coverage": res.coverage,
+        "n_unique": res.n_unique, "eval_error": res.error,
+    }
+    hidup = (res.ic is not None and (res.n_unique or 0) > 2)
+    if bt is not None and hidup:
+        entry.update({f"bt_{k}": v for k, v in bt.as_dict().items()})
+    elif bt is not None:
+        entry["bt_error"] = (f"tak dilaporkan: ekspresi degenerate "
+                             f"(n_unique={res.n_unique}, ic={res.ic})")
+    return entry, ser
+
+
+# ── paralelisasi skoring: pekerja mewarisi `lab` lewat fork (copy-on-write) ──
+# `Lab` memegang DataFrame data pasar (~1 GB pada jendela 4 tahun). Ia TIDAK
+# dioper lewat argumen Pool — itu akan mem-pickle DataFrame-nya ke tiap pekerja.
+# Sebagai gantinya ia ditaruh di global modul SEBELUM Pool dibuat, dan proses
+# anak hasil `fork` mewarisinya tanpa menyalin selama hanya dibaca (semua jalur
+# `values`/`_ic_core`/`backtest_values` hanya membaca). Ini yang membuat N
+# pekerja berbagi SATU salinan data alih-alih N salinan.
+_MP_LAB = None
+
+
+def _mp_init() -> None:
+    import os as _os
+    # REGBETA/REGRESI memanggil joblib `n_jobs=-1`; tanpa batas ini tiap pekerja
+    # men-spawn 16 sub-pekerja lagi → N*16 proses berebut CPU dan meledakkan RAM.
+    _os.environ["LOKY_MAX_CPU_COUNT"] = "1"
+    _os.environ.setdefault("OMP_NUM_THREADS", "1")
+
+
+def _mp_score_one(args):
+    e, budget_s, quantile, cost_bps = args
+    return e, _score_one_expr(e, _MP_LAB, budget_s, quantile, cost_bps)
+
+
 def score_expressions(runs: list[dict], window=None, series_path: Path | None = None,
                       budget_s: int = 90, cache: dict | None = None,
                       lab=None, series_cache: dict | None = None,
-                      quantile: float = 0.1, cost_bps: float = 0.0) -> None:
+                      quantile: float = 0.1, cost_bps: float = 0.0,
+                      workers: int = 1, on_progress=None) -> None:
     """Isi tiap faktor dengan cacat semantik + IC/ICIR + metrik backtest (in-place).
 
     Deret IC harian juga disimpan (parquet) supaya analisis bisa mengelompokkan
@@ -273,14 +343,14 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
     """
     import pandas as pd
 
-    from eval.backtest import backtest_values
     from eval.ic import Lab
-    from gate.static_flags import static_flags
     # Pre-import factor_ast memutus circular import factor_regulator →
     # coder/__init__ → evaluators → factor_regulator (sama seperti yang
     # dilakukan FrontEndPipeline._build_regulator_gate saat import COLD).
+    # Dilakukan di INDUK sebelum fork supaya modulnya sudah termuat di semua
+    # proses anak.
     import dsl.factor_ast  # noqa: F401
-    from gate.factor_regulator import validate_semantics
+    import gate.factor_regulator  # noqa: F401
 
     if lab is None:
         lab = Lab(mode="fast", window=window)
@@ -289,64 +359,50 @@ def score_expressions(runs: list[dict], window=None, series_path: Path | None = 
     series_all: dict[str, "pd.Series"] = series_cache if series_cache is not None else {}
     series: dict[str, "pd.Series"] = {}
 
+    # Ekspresi unik yang BELUM ada di cache — inilah kerja mahal sebenarnya.
+    perlu = list(dict.fromkeys(
+        f["expression"] for r in runs for f in (r.get("factors") or [])
+        if f.get("expression") and f["expression"] not in cache
+    ))
+
+    if workers > 1 and perlu:
+        # Materialkan data pasar di INDUK dulu — `.df` dan `.label` adalah
+        # properti malas; menyentuhnya sekarang membuat proses anak hasil fork
+        # mewarisi DataFrame yang sudah jadi, bukan memuat ulang HDF5 ~1 GB
+        # masing-masing.
+        _ = lab.df, lab.label
+
+        global _MP_LAB
+        _MP_LAB = lab
+        ctx = mp.get_context("fork")
+        tugas = [(e, budget_s, quantile, cost_bps) for e in perlu]
+        # maxtasksperchild: ekspresi rolling-bersarang patologis bisa
+        # meninggalkan memori yang tak dibebaskan pandas; daur ulang pekerja
+        # secara berkala mengembalikannya ke OS.
+        with ctx.Pool(workers, initializer=_mp_init, maxtasksperchild=12) as pool:
+            for i, (e, (entry, ser)) in enumerate(
+                    pool.imap_unordered(_mp_score_one, tugas, chunksize=1), 1):
+                cache[e] = entry
+                if ser is not None:
+                    series_all[e] = ser
+                if on_progress:
+                    on_progress(i, len(perlu), e, entry)
+        _MP_LAB = None
+    else:
+        for i, e in enumerate(perlu, 1):
+            entry, ser = _score_one_expr(e, lab, budget_s, quantile, cost_bps)
+            cache[e] = entry
+            if ser is not None:
+                series_all[e] = ser
+            if on_progress:
+                on_progress(i, len(perlu), e, entry)
+
+    # Tempel hasil ke `runs` (in-place) — murah, tak ada evaluasi di sini.
     for r in runs:
         for f in r.get("factors", []) or []:
             e = f.get("expression", "")
-            if not e:
+            if not e or e not in cache:
                 continue
-            if e not in cache:
-                ok, errs = validate_semantics(e)
-                bt = None
-                try:
-                    with _time_budget(budget_s):
-                        # Satu evaluasi → dipakai bertiga. `_ic_core` dipanggil
-                        # langsung (bukan `ic_full`) justru supaya `values`
-                        # hasil evaluasi itu bisa dioper juga ke backtest;
-                        # `ic_full` menelan values-nya di dalam.
-                        vals = lab.values(e)
-                        res, ser = lab._ic_core(vals)
-                        if res.error is not None or res.ic is None:
-                            ser = None
-                        bt = backtest_values(lab, vals, quantile=quantile,
-                                             cost_bps=cost_bps)
-                except TimeoutError:
-                    from eval.ic import ICResult
-                    res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
-                                        error=f"timeout>{budget_s}s"), None
-                except Exception as ex:  # noqa: BLE001 — ekspresi LLM gagal ribuan cara
-                    from eval.ic import ICResult
-                    res, ser = ICResult(None, None, 0, None, 0.0, 0.0,
-                                        error=f"{type(ex).__name__}: {ex}"), None
-                cache[e] = {
-                    "sem_ok": bool(ok), "sem_errors": errs,
-                    "flags": static_flags(e),
-                    "ic": res.ic, "icir": res.icir, "tstat": res.tstat,
-                    "n_days": res.n_days, "coverage": res.coverage,
-                    "n_unique": res.n_unique, "eval_error": res.error,
-                }
-                # Metrik backtest di-flatten dengan awalan `bt_` supaya tabel
-                # analisis bisa membacanya sejajar dengan ic/icir tanpa perlu
-                # membongkar dict bersarang.
-                #
-                # TAPI hanya untuk ekspresi yang HIDUP. Ekspresi degenerate
-                # tetap menghasilkan angka backtest yang kelihatan masuk akal:
-                # `TS_RANK($return,1)` ≡ 1.0 konstan (n_unique=1) ditolak jalur
-                # IC (ic=None) namun portofolionya tetap "berkinerja"
-                # sharpe≈-0,92 — itu murni artefak pemecahan seri peringkat
-                # pada skor yang seragam, bukan sinyal. Melaporkannya
-                # berdampingan dengan IC yang kosong akan menyesatkan pembaca
-                # tabel skripsi. Ambangnya memakai kriteria `alive` yang sudah
-                # dipakai ringkasan run_factor sendiri (n_unique > 2), supaya
-                # tidak ada dua definisi "faktor hidup" yang bersaing.
-                hidup = (res.ic is not None and (res.n_unique or 0) > 2)
-                if bt is not None and hidup:
-                    cache[e].update({f"bt_{k}": v for k, v in bt.as_dict().items()})
-                elif bt is not None:
-                    cache[e]["bt_error"] = (
-                        f"tak dilaporkan: ekspresi degenerate "
-                        f"(n_unique={res.n_unique}, ic={res.ic})")
-                if ser is not None:
-                    series_all[e] = ser
             if e in series_all:
                 series[e] = series_all[e]
             f.update(cache[e])

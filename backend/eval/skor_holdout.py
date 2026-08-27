@@ -30,6 +30,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import sys
 import time
 from pathlib import Path
@@ -55,7 +56,14 @@ def main() -> None:
                     help="anggaran detik per ekspresi")
     ap.add_argument("--fresh", action="store_true",
                     help="abaikan cache holdout di disk")
+    ap.add_argument("--workers", type=int, default=0,
+                    help="proses pekerja untuk skoring ekspresi (0 = auto: "
+                         "min(4, ncpu); 1 = serial). Pekerja berbagi satu "
+                         "salinan data pasar lewat fork copy-on-write.")
     args = ap.parse_args()
+
+    if args.workers <= 0:
+        args.workers = min(4, os.cpu_count() or 1)
 
     awal, akhir = [s.strip() for s in args.window.split(",")]
     label = f"{awal}_{akhir}"
@@ -81,7 +89,31 @@ def main() -> None:
 
     lab = Lab(mode="fast", window=(awal, akhir))
     print(f"[holdout] {len(paths)} tag · jendela {awal}..{akhir} · "
-          f"anggaran {args.budget}s/ekspresi", flush=True)
+          f"anggaran {args.budget}s/ekspresi · {args.workers} pekerja", flush=True)
+
+    # ── Pra-lewat: skor SELURUH korpus lintas-tag dalam satu kumpulan pekerja.
+    # Tanpa ini, tiap tag memanggil score_expressions sendiri dan kumpulan
+    # pekerjanya dibongkar-pasang berulang; digabung, satu Pool mengerjakan
+    # semua ekspresi unik dan penjadwalannya jauh lebih rapat.
+    gabungan = [r for p in paths
+                for r in json.loads(p.read_text())["runs"]]
+    n_awal = len(cache)
+    tick = [time.time()]
+
+    def _progres(i, total, e, entry):
+        cache_path.write_text(json.dumps(cache, indent=1, default=str))
+        now = time.time()
+        if now - tick[0] >= 15 or i == total:
+            tick[0] = now
+            ic = entry.get("ic")
+            print(f"[holdout]   {i:3d}/{total}  ic={ic if ic is None else f'{ic:+.4f}'}"
+                  f"  {e[:60]}", flush=True)
+
+    from factor.run_factor import score_expressions as _score
+    _score(gabungan, series_path=None, budget_s=args.budget, cache=cache,
+           lab=lab, workers=args.workers, on_progress=_progres)
+    print(f"[holdout] korpus: {len(cache) - n_awal} ekspresi baru diskor, "
+          f"{len(cache)} total di cache", flush=True)
 
     per_tag: list[dict] = []
     per_ekspresi: list[dict] = []
