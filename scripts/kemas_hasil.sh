@@ -31,10 +31,16 @@ APA="${1:-semua}"
 RINGKAS=0
 [ "${2:-}" = "--ringkas" ] && RINGKAS=1
 
-# `.cache/` selalu dikecualikan: cache data pasar (~60 MB) yang dibangkitkan
-# ulang otomatis dari `backend/hf_data/daily_pv.h5`. Membawanya hanya
-# memperbesar unduhan tanpa menyelamatkan apa pun.
-EXCL="--exclude=.cache"
+# Yang dikecualikan hanyalah cache data pasar `pv_fast_*.parquet` (~58 MB):
+# itu memang dibangkitkan ulang otomatis dari `backend/hf_data/daily_pv.h5`,
+# jadi membawanya hanya memperbesar unduhan.
+#
+# BUKAN seluruh `.cache/`. Sejak rework checkpoint 2026-08-28, direktori yang
+# sama juga menampung `rescore_cache.json` + `rescore_series.parquet` —
+# 1004 ekspresi terskor, ~4,2 jam CPU pada 16 pekerja, dan TIDAK dibangkitkan
+# ulang dari daily_pv.h5. `--exclude=.cache` yang lama membuangnya diam-diam
+# tepat saat arsip dibuat untuk menyelamatkan isi pod.
+EXCL="--exclude=pv_fast_*.parquet"
 [ $RINGKAS -eq 1 ] && EXCL="$EXCL --exclude=llm_outputs"
 
 kemas() {
@@ -56,16 +62,25 @@ kemas() {
 # tabel pendukung yang diregenerasi dari artefak run).
 KONTEKS="configs/matriks.yaml docs results/pendukung"
 
+# Turunan + arsip yang HARUS ikut. results/ tidak di-track git, jadi arsip ini
+# satu-satunya salinan begitu pod dihapus (§4 PANDUAN). Sebelum 2026-08-28,
+# `semua` melewatkan results/visual/ — `finalisasi.sh --kemas` membangkitkan
+# 24 figur Bab IV lalu tidak memasukkannya ke arsip mana pun. Arsip run lama
+# juga tertinggal, padahal justru itu yang menjelaskan kenapa sel tertentu
+# tidak ikut matriks.
+TURUNAN="results/visual"
+ARSIP=$(ls -d results/arsip_* 2>/dev/null | tr '\n' ' ')
+
 echo "Mengemas (ringkas=$RINGKAS) ..."
 case "$APA" in
     faktor|factor)
-        kemas faktor results/factor results/arsip_gate_mati_2026-08-10 $KONTEKS ;;
+        kemas faktor results/factor $ARSIP $TURUNAN $KONTEKS ;;
     bench)
         kemas bench results/bench results/logs $KONTEKS ;;
     semua|all)
-        kemas faktor results/factor results/arsip_gate_mati_2026-08-10 $KONTEKS
+        kemas faktor results/factor $ARSIP $TURUNAN $KONTEKS
         kemas bench  results/bench results/logs $KONTEKS
-        kemas probe  results/probe ;;
+        kemas probe  results/probe results/.cache ;;
     *)
         echo "pemakaian: bash scripts/kemas_hasil.sh {faktor|bench|semua} [--ringkas]"
         exit 1 ;;
