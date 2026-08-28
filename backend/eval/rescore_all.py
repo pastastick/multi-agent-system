@@ -29,6 +29,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 import sys
 import time
 from pathlib import Path
@@ -96,6 +97,13 @@ def main() -> None:
                     help="ambang |ΔIC| yang dianggap tak sama")
     ap.add_argument("--fresh", action="store_true",
                     help="abaikan cache di disk dan hitung ulang semuanya")
+    ap.add_argument("--checkpoint-detik", type=int, default=180,
+                    help="setiap berapa detik cache disk disimpan di TENGAH "
+                         "skoring paralel. Sebelum ini cache hanya ditulis "
+                         "SETELAH seluruh pra-lewat selesai, sehingga proses "
+                         "yang dibunuh di jam ke-3 (mis. pod GPU habis sewa) "
+                         "kehilangan SELURUH progresnya — persis yang terjadi "
+                         "pada `text` dan `kv_gumbel` 2026-08-27. 0 = matikan.")
     ap.add_argument("--workers", type=int, default=1,
                     help="proses pekerja untuk skoring ekspresi (1 = serial). "
                          "Pekerja berbagi satu salinan data pasar lewat fork; "
@@ -158,20 +166,66 @@ def main() -> None:
     # ── Pra-lewat paralel atas SELURUH korpus ──────────────────────────────
     # Deret IC harian ikut terkumpul di `series_cache` (dioper by-ref), jadi
     # loop per-tag di bawah tinggal menulis parquet-nya tanpa evaluasi ulang.
+    # Berhenti anggun. Skoring korpus berjam-jam dan biasanya dijalankan
+    # menumpang umur pod GPU, jadi ia HAMPIR SELALU dibunuh dari luar
+    # (SIGTERM saat pod dimatikan, SIGINT saat Ctrl-C). Tanpa penanganan ini
+    # sinyal itu membunuh proses di tengah `imap_unordered` dan seluruh
+    # ekspresi yang sudah diskor sejak checkpoint terakhir hilang. Dengan ini,
+    # sinyal cuma menyalakan bendera: pekerjaan yang sedang berjalan
+    # diselesaikan, cache disimpan, lalu tag yang ekspresinya SUDAH lengkap
+    # tetap ditulis ke JSON-nya.
+    dihentikan = {"ya": False}
+
+    def _tangkap(signum, _frame):
+        if not dihentikan["ya"]:
+            dihentikan["ya"] = True
+            print(f"\n[rescore] sinyal {signum} diterima — menghentikan skoring "
+                  f"dengan rapi, menyimpan cache, lalu menulis tag yang sudah "
+                  f"lengkap. Jalankan perintah yang sama untuk melanjutkan.",
+                  flush=True)
+
+    for _sig in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(_sig, _tangkap)
+        except (ValueError, OSError):   # bukan thread utama / platform aneh
+            pass
+
+    class _Dihentikan(Exception):
+        """Dipakai untuk keluar dari loop konsumen Pool, bukan error sungguhan."""
+
     if args.workers > 1:
         gabungan = [r for p in paths if p.exists()
                     for r in json.loads(p.read_text())["runs"]]
         n0 = len(cache)
         tk = [time.time()]
+        tc = [time.time()]
 
         def _prog(i, total, e, entry):
             if time.time() - tk[0] >= 20 or i == total:
                 tk[0] = time.time()
-                print(f"[rescore/paralel] {i:3d}/{total}  {e[:64]}", flush=True)
+                sisa = ""
+                if i > 1:
+                    laju = (time.time() - t0) / i
+                    sisa = f"  ~{(total - i) * laju / 60:.0f} mnt lagi"
+                print(f"[rescore/paralel] {i:3d}/{total}  {e[:56]}{sisa}", flush=True)
+            # Checkpoint berkala: inilah yang membuat proses yang terbunuh
+            # kehilangan paling banyak `--checkpoint-detik` detik kerja,
+            # bukan berjam-jam.
+            if (args.checkpoint_detik and not args.dry_run
+                    and time.time() - tc[0] >= args.checkpoint_detik):
+                tc[0] = time.time()
+                save_cache(cache, series_cache)
+                print(f"[rescore/checkpoint] {len(cache)} ekspresi tersimpan "
+                      f"→ {CACHE_JSON.name}", flush=True)
+            if dihentikan["ya"]:
+                raise _Dihentikan
 
-        score_expressions(gabungan, series_path=None, budget_s=args.budget,
-                          cache=cache, lab=lab, series_cache=series_cache,
-                          workers=args.workers, on_progress=_prog)
+        try:
+            score_expressions(gabungan, series_path=None, budget_s=args.budget,
+                              cache=cache, lab=lab, series_cache=series_cache,
+                              workers=args.workers, on_progress=_prog)
+        except _Dihentikan:
+            pass
         if not args.dry_run:
             save_cache(cache, series_cache)
         print(f"[rescore/paralel] {len(cache) - n0} ekspresi baru diskor "
@@ -184,6 +238,19 @@ def main() -> None:
             continue
         doc = json.loads(path.read_text())
         runs = doc["runs"]
+
+        # Kalau pra-lewat dihentikan, tag yang ekspresinya belum lengkap di
+        # cache DILEWATI — bukan diskor serial di sini. Menskornya serial
+        # justru mengabaikan alasan kita berhenti (waktu habis) dan bisa
+        # menggantung berjam-jam pada satu tag.
+        if dihentikan["ya"]:
+            belum = [f.get("expression") for r in runs
+                     for f in (r.get("factors") or [])
+                     if f.get("expression") and f["expression"] not in cache]
+            if belum:
+                print(f"[{i:2d}/{len(paths)}] {tag:28s} DILEWATI — "
+                      f"{len(belum)} ekspresi belum diskor", flush=True)
+                continue
 
         # potret angka lama SEBELUM ditimpa
         before = {}

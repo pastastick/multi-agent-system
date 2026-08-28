@@ -41,9 +41,6 @@ log/
 backend/workspace/
 backend/latent_runs/
 
-# results/ DI-TRACK (probe Tahap 0, hasil bench & faktor menopang angka skripsi).
-# Pengecualian per-jenis ada di results/.gitignore.
-
 # Perkakas agen (lock/state lokal, bukan konfigurasi yang dibagikan)
 .claude/
 

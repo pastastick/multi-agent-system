@@ -298,10 +298,24 @@ _MP_LAB = None
 
 def _mp_init() -> None:
     import os as _os
+    import signal as _signal
     # REGBETA/REGRESI memanggil joblib `n_jobs=-1`; tanpa batas ini tiap pekerja
     # men-spawn 16 sub-pekerja lagi → N*16 proses berebut CPU dan meledakkan RAM.
     _os.environ["LOKY_MAX_CPU_COUNT"] = "1"
     _os.environ.setdefault("OMP_NUM_THREADS", "1")
+    # Pekerja hasil `fork` MEWARISI penangan sinyal induk. Kalau induk memasang
+    # penangan "berhenti anggun" (eval/rescore_all.py memasangnya supaya
+    # skoring berjam-jam yang dibunuh saat pod mati tetap menyimpan progres),
+    # pekerja ikut mewarisi penangan itu — dan `Pool.terminate()`, yang bekerja
+    # dengan MENGIRIM SIGTERM ke pekerja, jadi tidak mematikan siapa pun.
+    # Akibatnya proses menggantung selamanya justru saat diminta berhenti.
+    # Terukur 2026-08-28: 4 salinan pesan "sinyal diterima" lalu hang.
+    # Pekerja harus kembali ke perilaku default: mati kalau disuruh mati.
+    for _s in (_signal.SIGTERM, _signal.SIGINT):
+        try:
+            _signal.signal(_s, _signal.SIG_DFL)
+        except (ValueError, OSError):   # bukan thread utama
+            pass
 
 
 def _mp_score_one(args):

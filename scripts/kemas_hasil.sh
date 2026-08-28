@@ -18,7 +18,14 @@
 #     bash scripts/kemas_hasil.sh faktor --ringkas   # tanpa transkrip llm_outputs
 set -u
 
-cd /workspace/project/multi-agent-system || exit 1
+# Akar repo diturunkan dari lokasi skrip, bukan dipatok ke
+# /workspace/project/multi-agent-system: pod baru sering di-clone ke
+# jalur lain dan patokan lama membuat skrip mengemas direktori yang salah
+# (atau gagal senyap) tepat saat pod hendak dihapus.
+AKAR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$AKAR" || exit 1
+# Arsip ditaruh di induk repo kalau /workspace tak ada (mis. mesin lokal).
+TUJUAN="/workspace"; [ -d "$TUJUAN" ] || TUJUAN="$(dirname "$AKAR")"
 STAMP=$(date +%Y%m%d_%H%M)
 APA="${1:-semua}"
 RINGKAS=0
@@ -32,7 +39,7 @@ EXCL="--exclude=.cache"
 
 kemas() {
     local nama="$1"; shift
-    local out="/workspace/hasil_${nama}_${STAMP}.tar.gz"
+    local out="${TUJUAN}/hasil_${nama}_${STAMP}.tar.gz"
     local ada=0 p
     for p in "$@"; do [ -e "$p" ] && ada=1; done
     if [ $ada -eq 0 ]; then
@@ -66,5 +73,5 @@ esac
 
 echo
 echo "Unduh dari mesin lokalmu:"
-echo "  scp -P <PORT> root@<HOST>:/workspace/hasil_*.tar.gz ."
-echo "  atau lewat file browser RunPod di /workspace/"
+echo "  scp -P <PORT> root@<HOST>:${TUJUAN}/hasil_*.tar.gz ."
+echo "  atau lewat file browser RunPod di ${TUJUAN}/"
