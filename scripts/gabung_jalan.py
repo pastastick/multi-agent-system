@@ -207,10 +207,25 @@ def main() -> None:
         return
 
     # ── (5) tulis, dengan cadangan berkas lama ──────────────────────────────
+    # Cadangan TIDAK boleh mendarat di `results/factor/`. Setiap pembaca korpus
+    # menandai sumber lewat nama direktori induk — `kumpulkan_pendukung.py`
+    # korpus_faktor() dan `agregasi_agent_trace.py` korpus() memakai
+    # `sumber = "matriks" if p.parent.name == "factor" else p.parent.name`,
+    # sementara `faktor_perhop.py`, `eval/skor_holdout.py`, dan
+    # `eval/rescore_all.py` men-glob `frontend_*.json` di direktori itu langsung.
+    # Cadangan bernama `frontend_<tag>.sebelum_gabung_*.json` cocok dengan pola
+    # itu, jadi ia terhitung sebagai sel matriks tambahan yang isinya jalan yang
+    # SAMA dengan sel gabungannya — korpus tercacah dua kali tanpa peringatan.
+    # Terjadi 2026-08-28 pada tiga sel kv_and_text (60 jalan ganda); pecahannya
+    # ada di results/arsip_pecahan_gabung_2026-08-28/. Sama alasannya dengan
+    # results/arsip_faktor_6jalan_2026-08-10/: yang tak boleh ikut matriks
+    # dipisah DIREKTORINYA, bukan dihapus.
     if keluar.exists():
-        cadangan = keluar.with_suffix(f".sebelum_gabung_{time.strftime('%Y%m%d_%H%M%S')}.json")
+        arsip = keluar.parent.parent / f"arsip_pecahan_gabung_{time.strftime('%Y-%m-%d')}"
+        arsip.mkdir(parents=True, exist_ok=True)
+        cadangan = arsip / f"{keluar.stem}.sebelum_gabung_{time.strftime('%Y%m%d_%H%M%S')}.json"
         shutil.copy2(keluar, cadangan)
-        print(f"\ncadangan lama → {cadangan.name}")
+        print(f"\ncadangan lama → {cadangan.parent.name}/{cadangan.name}")
 
     doc_baru = dict(pecahan[0][2])          # salin struktur pecahan pertama
     args_baru = dict(pecahan[0][2]["args"])

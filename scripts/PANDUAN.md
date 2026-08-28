@@ -9,6 +9,44 @@ Sumber angka terkini: [`docs/HASIL_TAHAP5.md`](../docs/HASIL_TAHAP5.md)
 
 ---
 
+## 0. Status per 2026-08-28 (sesi pod A40)
+
+Matriks faktor **lengkap: 14 sel × 20 jalan, semuanya sudah diskor IC.**
+Yang tersisa dari §3 hanya **§3.3 (holdout)** — sengaja tidak dijalankan di pod
+karena murni CPU dan diperkirakan 8–16 jam (ia menskor seluruh korpus di jendela
+2022–2025, 4× data jendela seleksi; jendela seleksi sendiri makan 4,2 jam pada
+16 pekerja). Menyewa GPU untuk itu membayar tarif kartu demi kerja tanpa kartu.
+
+| tugas | status |
+|---|---|
+| §3.1 `kv_and_text` ×3 → 20 jalan | **selesai** — digabung, 20/20 lolos gate, 0 error |
+| §3.2 skoring IC 8 sel | **selesai** — 3 batch, verifikasi replika CPU nol selisih |
+| §3.3 holdout 2022–2025 | **BELUM** — jalankan di mesin CPU, lihat §3.3 |
+| §3.4 sumbu `mix` | **selesai** — 6 sel, 105 mnt |
+| §3.5 finalisasi | **selesai sebagian** — analisis + 24/24 figur regenerasi dengan `LEWATI_HOLDOUT=1`; **ulangi penuh setelah §3.3** supaya v14 & Level 6 ikut baru |
+
+Hasil sumbu `mix` (§3.4), kedua lengan sepakat dan bentuknya **ber-ambang**:
+
+| α | 0 (`raw`) | 0,25 | 0,5 | 0,75 | 1 (`soft`) |
+|---|---:|---:|---:|---:|---:|
+| cos ke embedding | 0,3120 | 0,4519 | 0,7197 | 0,9244 | 0,9269 |
+| lolos gate | 10/20 | 11/20 | 20/20 | 20/20 | 20/20 |
+| HumanEval+ | — | 0,28 | 0,68 | 0,69 | — |
+
+Loncatannya di ruas 0,25→0,5 — ruas tercuram kurva geometri. α=0,75, titik
+falsifikasi terkuat yang disebut §3.4, berkinerja seperti `soft`.
+
+⚠️ **Volume `/workspace` ini FUSE dan tidak tepercaya.** Dua kali menggigit
+dalam satu sesi: (a) `import torch` gagal dengan berkas `.so` "hilang" yang
+muncul lagi setelah beberapa kali coba — retry dulu sebelum memasang ulang apa
+pun; (b) `backend/eval/rescore_all.py`, `backend/factor/run_factor.py`, dan
+`scripts/kemas_hasil.sh` **mundur ke isi pra-commit di working tree** padahal
+HEAD benar — ketahuan karena `--checkpoint-detik` tiba-tiba "unrecognized".
+Jalankan `git status` sebelum percaya bahwa skrip yang dipanggil adalah skrip
+yang di-commit.
+
+---
+
 ## 1. Konteks 60 detik
 
 Skripsi ini membandingkan **lima formulasi langkah laten** dalam sistem
@@ -122,8 +160,19 @@ Angka Level 6 / figur v14 yang ada sekarang berasal dari **arsip run 6-jalan**
 dijalankan oleh `finalisasi.sh`, atau sendiri:
 
 ```bash
-PYTHONPATH=backend .venv/bin/python backend/eval/skor_holdout.py --budget 900
+PYTHONPATH=backend .venv/bin/python backend/eval/skor_holdout.py \
+    --budget 900 --workers 16
 ```
+
+⚠️ **Jalankan di mesin CPU, jangan di pod GPU.** Ia menskor seluruh korpus
+(~1000 ekspresi unik) di jendela 2022–2025 — 4× data jendela seleksi, yang
+sendirian sudah makan 4,2 jam pada 16 pekerja. Perkiraan 8–16 jam tanpa
+menyentuh kartu sama sekali. Default `--workers` adalah `min(4, ncpu)`; naikkan
+kalau mesinnya besar. Cache-nya `results/.cache/holdout_cache_<jendela>.json`
+dan ditulis tiap ekspresi, jadi proses yang mati bisa dilanjutkan.
+
+Setelah ini selesai, ulang `finalisasi.sh` **penuh** (tanpa `LEWATI_HOLDOUT=1`)
+supaya v14 dan Level 6 ikut terbarui.
 
 ### 3.4 Sumbu interpolasi `mix` · ~1,5–2 jam GPU · 6 sel
 
@@ -227,3 +276,4 @@ git push git@github.com:pastastick/multi-agent-system.git main
 | [`docs/PANDUAN.md`](../docs/PANDUAN.md) | panduan repo umum |
 | [`configs/matriks.yaml`](../configs/matriks.yaml) | sumber kebenaran tunggal matriks eksperimen |
 | `results/arsip_faktor_6jalan_2026-08-10/README.md` | kenapa run lama diarsipkan, bukan ditimpa |
+| `results/arsip_pecahan_gabung_2026-08-28/README.md` | pecahan `_s234` + cadangan penggabungan §3.1; kenapa ia HARUS di luar `results/factor/` |

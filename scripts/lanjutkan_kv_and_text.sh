@@ -28,6 +28,14 @@ set -euo pipefail
 AKAR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$AKAR"
 
+# Interpreter: SAMA seperti skrip lain di repo (setup_pod.sh, skor_cpu.sh,
+# jalankan_interpolasi.sh) — `.venv/bin/python` kalau ada. `python` telanjang
+# TIDAK boleh dipakai: di pod, PATH bisa menunjuk venv lain (mis.
+# /workspace/.dlvenv milik pengunduh HF) yang tak punya torch, dan selnya mati
+# di baris impor setelah slot GPU terlanjur dipakai.
+PY="${PY:-$AKAR/.venv/bin/python}"
+[ -x "$PY" ] || PY=python
+
 MODEL="${MODEL:-Qwen/Qwen3-8B}"
 SEEDS_KURANG="${SEEDS_KURANG:-2,3,4}"
 SUFIKS="${SUFIKS:-_s234}"
@@ -44,7 +52,7 @@ MODE=""
 MODES=(sample gumbel moi)
 
 perintah() {  # $1 = latent_mode, $2 = tag keluaran
-    echo "PYTHONPATH=backend python backend/factor/run_factor.py \
+    echo "PYTHONPATH=backend $PY backend/factor/run_factor.py \
 --model $MODEL --comm-mode kv_and_text --latent-mode $1 \
 --latent-steps 10 --latent-temp 0.7 \
 --seeds $SEEDS_KURANG --directions d0,d1,opp_mom,opp_rev \
@@ -55,16 +63,33 @@ perintah() {  # $1 = latent_mode, $2 = tag keluaran
 if [[ "$MODE" == "gabung" ]]; then
     for m in "${MODES[@]}"; do
         asli="kv_and_text_${m}"
-        python scripts/gabung_jalan.py --keluaran "$asli" \
+        "$PY" scripts/gabung_jalan.py --keluaran "$asli" \
             --dari "$asli" "${asli}${SUFIKS}"
         echo
     done
+    # Pecahan `_s234` harus KELUAR dari results/factor/ begitu tergabung.
+    # Selama ia di sana, ia terhitung sebagai sel matriks tersendiri oleh setiap
+    # pembaca korpus (kumpulkan_pendukung.py, agregasi_agent_trace.py,
+    # faktor_perhop.py, eval/skor_holdout.py, eval/rescore_all.py) — padahal
+    # jalan-jalannya sudah ikut masuk ke sel gabungan, jadi korpus tercacah dua
+    # kali tanpa peringatan. Terjadi 2026-08-28: 36 jalan pecahan + 24 jalan
+    # cadangan terbaca sebagai matriks.
+    ARSIP="results/arsip_pecahan_gabung_$(date +%Y-%m-%d)"
+    mkdir -p "$ARSIP"
+    for m in "${MODES[@]}"; do
+        for f in "results/factor/frontend_kv_and_text_${m}${SUFIKS}.json" \
+                 "results/factor/icseries_kv_and_text_${m}${SUFIKS}.parquet"; do
+            [[ -e "$f" ]] && mv "$f" "$ARSIP"/ && echo "arsip → $ARSIP/$(basename "$f")"
+        done
+    done
+    echo
+
     echo "Setelah SEMUA tergabung, skor ulang ketiganya (CPU, boleh paralel):"
     for m in "${MODES[@]}"; do
-        echo "  PYTHONPATH=backend python backend/factor/run_factor.py \
+        echo "  PYTHONPATH=backend $PY backend/factor/run_factor.py \
 --score-only --tag kv_and_text_${m} --budget 900"
     done
-    echo "Lalu: python scripts/kekuatan_uji_faktor.py --comm-mode kv_and_text"
+    echo "Lalu: $PY scripts/kekuatan_uji_faktor.py --comm-mode kv_and_text"
     exit 0
 fi
 
@@ -118,7 +143,7 @@ echo
 echo "Periksa dulu sebelum menggabung — tiap sel harus 12 jalan (3 seed x 4 arah):"
 for m in "${MODES[@]}"; do
     tag="kv_and_text_${m}${SUFIKS}"
-    python - "$tag" <<'PY'
+    "$PY" - "$tag" <<'PY'
 import json, sys
 from pathlib import Path
 tag = sys.argv[1]
